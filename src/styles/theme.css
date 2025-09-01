@@ -185,6 +185,13 @@ input[type="range"] {
   transform: scaleX(-1);
 }
 
+.fretboard svg,
+.lefty {
+  display: block;
+  width: 100%;
+  height: auto; /* CSS ok; attribute must be omitted */
+}
+
 /* — microtonal fret visualization — */
 .fretLine.micro {
   stroke: var(--fret);

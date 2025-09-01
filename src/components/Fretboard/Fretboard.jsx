@@ -99,10 +99,12 @@ const Fretboard = forwardRef(function Fretboard(
   if (!Array.isArray(intervals) || intervals.length === 0) {
     return (
       <svg
+        ref={svgRef}
         width="100%"
-        height="auto"
+        /* height attribute removed — let viewBox + width control size */
         preserveAspectRatio="xMidYMid meet"
         className={lefty ? "lefty" : ""}
+        style={{ display: "block" }}
       >
         <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
           No scale selected
@@ -115,9 +117,10 @@ const Fretboard = forwardRef(function Fretboard(
     <svg
       ref={svgRef}
       width="100%"
-      height="auto"
+      /* height attribute removed — let viewBox + width control size */
       preserveAspectRatio="xMidYMid meet"
       className={lefty ? "lefty" : ""}
+      style={{ display: "block" }}
     >
       {/* board */}
       <rect
@@ -217,25 +220,51 @@ const Fretboard = forwardRef(function Fretboard(
         const cx = wireX(f);
         const topY = padTop - 10;
         const botY = height - padBottom + 10;
+        const rSide = 3.5; // ensure a visible radius
 
         return (
           <g key={`side-${f}`}>
             {isDouble ? (
               <>
-                <circle className="inlay small" cx={cx} cy={botY} />
-                <circle className="inlay small" cx={cx + 10} cy={botY} />
+                <circle className="inlay small" cx={cx} cy={botY} r={rSide} />
+                <circle
+                  className="inlay small"
+                  cx={cx + 10}
+                  cy={botY}
+                  r={rSide}
+                />
                 {mirrorInlays && (
                   <>
-                    <circle className="inlay small" cx={cx} cy={topY} />
-                    <circle className="inlay small" cx={cx + 10} cy={topY} />
+                    <circle
+                      className="inlay small"
+                      cx={cx}
+                      cy={topY}
+                      r={rSide}
+                    />
+                    <circle
+                      className="inlay small"
+                      cx={cx + 10}
+                      cy={topY}
+                      r={rSide}
+                    />
                   </>
                 )}
               </>
             ) : (
               <>
-                <circle className="inlay small" cx={cx + 5} cy={botY} />
+                <circle
+                  className="inlay small"
+                  cx={cx + 5}
+                  cy={botY}
+                  r={rSide}
+                />
                 {mirrorInlays && (
-                  <circle className="inlay small" cx={cx + 5} cy={topY} />
+                  <circle
+                    className="inlay small"
+                    cx={cx + 5}
+                    cy={topY}
+                    r={rSide}
+                  />
                 )}
               </>
             )}

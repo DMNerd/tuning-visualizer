@@ -1,14 +1,37 @@
 {
   "compilerOptions": {
-    "target": "ES2020", // ES2015 or newer is enough; ES2020 is comfy
+    "target": "ES2020",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "moduleResolution": "Bundler", // or "NodeNext"/"Node" depending on your toolchain
-    "strict": true,
+    "moduleResolution": "Bundler",
+
+    "jsx": "react-jsx",
+
+    "allowJs": true, // allow .js/.jsx
+    "checkJs": false, // set to true if you want TS to type-check JS files too
+    "noEmit": true, // bundler will emit
+    "isolatedModules": true, // plays nice with bundlers
+    "resolveJsonModule": true,
+
+    "strict": true, // TS files get strict checking
     "skipLibCheck": true,
-    "baseUrl": ".", // optional, if you use paths/aliases
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"] // optional, if you want "@/..."
-    }
-  }
+      "@/*": ["src/*"]
+    },
+
+    "types": ["react", "react-dom"] // makes @types/* “used” and available everywhere
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "vite-env.d.ts"
+  ],
+  "exclude": ["dist", "build", "node_modules"]
 }

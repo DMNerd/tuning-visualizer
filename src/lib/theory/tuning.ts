@@ -7,7 +7,6 @@ export type TuningSystem = {
   divisions: number; // N: divisions per octave
   refFreq: number; // A4 reference
   refMidi: number; // A4 midi (69)
-  // OPTIONAL accidental preference (sharp | flat). Systems may ignore it.
   nameForPc: (pc: number, accidental?: Accidental) => string; // name for pitch-class [0..N-1]
 };
 
