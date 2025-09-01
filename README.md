@@ -1,12 +1,42 @@
-# React + Vite
+# Tuning Visualizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.  
+Built with React
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Scales
+  - Standard 12-TET scales (Major, Minor, Harmonic Minor, etc.)
+  - 24-TET microtonal scales
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Tunings
+  - Standard 6-string, 7-string, and 8-string guitar tunings
+  - Violin family tunings (GDAE)
+  - Experimental tunings (e.g. King Gizzard C#–F#–C#–F#–B–E)
+  - Custom tuning presets
+
+- Export & Print
+  - Export fretboard as PNG or SVG
+  - Print directly from the browser
+
+- Customization
+  - Show note names, intervals, or degrees
+  - Mirror side inlays
+  - Light and dark mode
+  - Choose root note and accidentals (sharps/flats)
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js (>=18)
+- pnpm or npm
+
+### Installation
+```bash
+git clone https://github.com/DMNerd/tuning-visualizer.git
+cd tuning-visualizer
+pnpm install
