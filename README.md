@@ -32,11 +32,14 @@ Built with React
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (>=18)
 - pnpm or npm
 
 ### Installation
+
 ```bash
 git clone https://github.com/DMNerd/tuning-visualizer.git
 cd tuning-visualizer
 pnpm install
+```
