@@ -1,10 +1,10 @@
 // Generic N-TET utilities + 24-TET names
 
 export type TuningSystem = {
-  id: string;           // e.g. "12-TET", "24-TET"
-  divisions: number;    // N: divisions per octave
-  refFreq: number;      // A4 reference
-  refMidi: number;      // A4 midi (69)
+  id: string; // e.g. "12-TET", "24-TET"
+  divisions: number; // N: divisions per octave
+  refFreq: number; // A4 reference
+  refMidi: number; // A4 midi (69)
   nameForPc: (pc: number) => string; // name for pitch-class [0..N-1]
 };
 
@@ -14,12 +14,30 @@ export const nameFallback = (pc: number) => `N${pc}`;
  *  ASCII fallback in parentheses if you prefer: ↑ => (+), ↓ => (-)
  */
 const N24_NAMES = [
-  "C", "C↑", "C#", "C#↑",
-  "D", "D↑", "D#", "D#↑",
-  "E", "E↑", "F",  "F↑",
-  "F#", "F#↑", "G", "G↑",
-  "G#", "G#↑", "A", "A↑",
-  "A#", "A#↑", "B", "B↑",
+  "C",
+  "C↑",
+  "C#",
+  "C#↑",
+  "D",
+  "D↑",
+  "D#",
+  "D#↑",
+  "E",
+  "E↑",
+  "F",
+  "F↑",
+  "F#",
+  "F#↑",
+  "G",
+  "G↑",
+  "G#",
+  "G#↑",
+  "A",
+  "A↑",
+  "A#",
+  "A#↑",
+  "B",
+  "B↑",
 ];
 
 export const TUNINGS: Record<string, TuningSystem> = {
@@ -29,7 +47,20 @@ export const TUNINGS: Record<string, TuningSystem> = {
     refFreq: 440,
     refMidi: 69,
     nameForPc: (pc) => {
-      const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+      const SHARP = [
+        "C",
+        "C#",
+        "D",
+        "D#",
+        "E",
+        "F",
+        "F#",
+        "G",
+        "G#",
+        "A",
+        "A#",
+        "B",
+      ];
       return SHARP[((pc % 12) + 12) % 12];
     },
   },
@@ -68,7 +99,10 @@ export function stepToPc(step: number, sys: TuningSystem): number {
 }
 
 /** Cents deviation of a frequency from the nearest N-TET step (for your tuner needle). */
-export function centsFromNearest(f: number, sys: TuningSystem): { cents: number; nearestStep: number } {
+export function centsFromNearest(
+  f: number,
+  sys: TuningSystem,
+): { cents: number; nearestStep: number } {
   const raw = sys.divisions * Math.log2(f / sys.refFreq);
   const nearest = Math.round(raw);
   const deltaSteps = raw - nearest;

@@ -10,6 +10,9 @@ export const namesFor = (accidental) =>
 export function degreeFor(noteIx, rootIx, intervals) {
   const semis = mod(noteIx - rootIx, 12);
   const diatonicOrder = intervals.indexOf(semis);
-  if (diatonicOrder >= 0) return diatonicOrder === 0 ? "1" : (["2","3","4","#4","5","6","7"][diatonicOrder] ?? "•");
+  if (diatonicOrder >= 0)
+    return diatonicOrder === 0
+      ? "1"
+      : (["2", "3", "4", "#4", "5", "6", "7"][diatonicOrder] ?? "•");
   return DEGREE_NAMES[semis];
 }

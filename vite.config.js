@@ -1,12 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+// ESM-friendly __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      "@": resolve(__dirname, "src"),
     },
   },
-})
+});
