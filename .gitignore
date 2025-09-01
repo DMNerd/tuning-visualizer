@@ -63,3 +63,6 @@ public/external-bundle.*.js
 
 # Misc
 *.log
+
+# Docker
+*.tar
