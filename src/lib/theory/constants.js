@@ -17,7 +17,6 @@ export const DEFAULT_TUNINGS = {
     6: ["E", "B", "G", "D", "A", "E"],
     7: ["E", "B", "G", "D", "A", "E", "B"],
     8: ["E", "B", "G", "D", "A", "E", "B", "F#"],
-
   },
 };
 
@@ -34,7 +33,7 @@ export const PRESET_TUNINGS = {
       "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
       "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
       "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
-      "Bass (EADG, high→low)": ["G", "D", "A", "E"], 
+      "Bass (EADG, high→low)": ["G", "D", "A", "E"],
     },
 
     // 6-string guitar

@@ -203,6 +203,44 @@ input[type="range"] {
   opacity: 0.55;
 }
 
+/* Instrument panel layout */
+.instrument { display: grid; gap: 12px; min-width: 0; }
+
+/* “Strings / Frets” row */
+.instrument .row-2 { 
+  display: grid; 
+  grid-template-columns: repeat(2, minmax(0, 1fr)); 
+  gap: 12px; 
+  min-width: 0;
+}
+
+/* String selectors: auto-wrap into as many columns as fit */
+.instrument .strings-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); 
+  gap: 12px; 
+  min-width: 0;
+}
+
+/* Make controls shrink properly inside grids */
+.instrument input,
+.instrument select {
+  width: 100%;
+  min-width: 0;           /* critical to prevent overflow in grid/flex */
+  box-sizing: border-box;
+}
+
+/* Let long button labels wrap instead of pushing container wider */
+.instrument .btn {
+  width: 100%;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+/* If your Section/Panel uses flex, ensure children can shrink */
+.section, .panel, .sidebar { min-width: 0; }
+
+
 svg {
   display: block;
   width: 100%;

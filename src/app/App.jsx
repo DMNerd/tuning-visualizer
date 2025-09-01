@@ -42,7 +42,25 @@ export default function App() {
   const [dotSize, setDotSize] = useState(14);
 
   const [lefty, setLefty] = useState(false);
-  const [theme, setTheme] = useState("light");
+  const THEME_KEY = "fb.theme";
+
+  const getInitialTheme = () => {
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return saved;
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        return "dark";
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return "light";
+  };
+
+  const [theme, setTheme] = useState(getInitialTheme);
 
   const boardRef = useRef(null);
 
@@ -187,6 +205,11 @@ export default function App() {
   // theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // ignore storage errors
+    }
   }, [theme]);
 
   // When accidental preference changes, keep same PCs but respell root & tuning
@@ -228,18 +251,22 @@ export default function App() {
     <div className="layout">
       <div className="panel">
         <div className="panel-header">
-          <h1>Fretboard Visualizer</h1>
+          <h1>TunningViz</h1>
           <div className="toggles">
-            <label className="switch">
+            <label className="switch" htmlFor="darkMode">
               <input
+                id="darkMode"
+                name="darkMode"
                 type="checkbox"
                 checked={theme === "dark"}
                 onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
               />
-              Dark
+              Dark Mode
             </label>
-            <label className="switch">
+            <label className="switch" htmlFor="lefty">
               <input
+                id="lefty"
+                name="lefty"
                 type="checkbox"
                 checked={lefty}
                 onChange={(e) => setLefty(e.target.checked)}
@@ -254,6 +281,8 @@ export default function App() {
           <div className="field">
             <span>System</span>
             <select
+              id="system"
+              name="system"
               value={systemId}
               onChange={(e) => setSystemId(e.target.value)}
             >
@@ -270,7 +299,12 @@ export default function App() {
           <div className="grid2">
             <div className="field">
               <span>Root</span>
-              <select value={root} onChange={(e) => setRoot(e.target.value)}>
+              <select
+                id="root"
+                name="root"
+                value={root}
+                onChange={(e) => setRoot(e.target.value)}
+              >
                 {sysNames.map((n) => (
                   <option key={n}>{n}</option>
                 ))}
@@ -278,7 +312,12 @@ export default function App() {
             </div>
             <div className="field">
               <span>Scale</span>
-              <select value={scale} onChange={(e) => setScale(e.target.value)}>
+              <select
+                id="scale"
+                name="scale"
+                value={scale}
+                onChange={(e) => setScale(e.target.value)}
+              >
                 {scaleOptions.map((s) => (
                   <option key={s.label} value={s.label}>
                     {s.label}
@@ -295,22 +334,31 @@ export default function App() {
         <Section title="Display">
           <div className="field">
             <span>Labels</span>
-            <select value={show} onChange={(e) => setShow(e.target.value)}>
+            <select
+              id="labels"
+              name="labels"
+              value={show}
+              onChange={(e) => setShow(e.target.value)}
+            >
               <option value="names">Note names</option>
               <option value="degrees">Degrees</option>
               <option value="off">Off</option>
             </select>
           </div>
-          <label className="check">
+          <label className="check" htmlFor="showOpen">
             <input
+              id="showOpen"
+              name="showOpen"
               type="checkbox"
               checked={showOpen}
               onChange={(e) => setShowOpen(e.target.checked)}
             />{" "}
             Show open notes
           </label>
-          <label className="check">
+          <label className="check" htmlFor="showFretNums">
             <input
+              id="showFretNums"
+              name="showFretNums"
               type="checkbox"
               checked={showFretNums}
               onChange={(e) => setShowFretNums(e.target.checked)}
@@ -320,6 +368,8 @@ export default function App() {
           <div className="field">
             <span>Dot size</span>
             <input
+              id="dotSize"
+              name="dotSize"
               type="range"
               min="8"
               max="24"
@@ -335,99 +385,116 @@ export default function App() {
           onMirrorChange={setMirrorInlays}
         />
 
+        {/* Instrument */}
         <Section title="Instrument">
-          <div className="grid2">
-            <div className="field">
-              <span>Strings</span>
-              <input
-                type="number"
-                min="4"
-                max="8"
-                value={strings}
-                onChange={(e) => handleStringsChange(parseInt(e.target.value))}
-              />
+          <div className="instrument">
+            {/* Strings / Frets row */}
+            <div className="row-2">
+              <div className="field">
+                <span>Strings</span>
+                <input
+                  id="strings"
+                  name="strings"
+                  type="number"
+                  min="4"
+                  max="8"
+                  value={strings}
+                  onChange={(e) =>
+                    handleStringsChange(parseInt(e.target.value))
+                  }
+                />
+              </div>
+              <div className="field">
+                <span>Frets</span>
+                <input
+                  id="frets"
+                  name="frets"
+                  type="number"
+                  min="12"
+                  max="30"
+                  value={frets}
+                  onChange={(e) => setFrets(parseInt(e.target.value))}
+                />
+              </div>
             </div>
-            <div className="field">
-              <span>Frets</span>
-              <input
-                type="number"
-                min="12"
-                max="30"
-                value={frets}
-                onChange={(e) => setFrets(parseInt(e.target.value))}
-              />
-            </div>
-          </div>
 
-          <div className="tuning-grid">
-            {tuning.map((note, i) => (
-              <div key={i} className="field">
-                <span>String {strings - i}</span>
+            {/* Per-string selectors */}
+            <div className="strings-grid">
+              {tuning.map((note, i) => {
+                const stringNum = strings - i;
+                return (
+                  <div key={i} className="field">
+                    <span>String {stringNum}</span>
+                    <select
+                      id={`string-${stringNum}`}
+                      name={`string-${stringNum}`}
+                      value={note}
+                      onChange={(e) => {
+                        const copy = [...tuning];
+                        copy[i] = e.target.value;
+                        setTuning(copy);
+                      }}
+                    >
+                      {sysNames.map((n) => (
+                        <option key={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Presets picker */}
+            <div className="field" style={{ marginTop: 8 }}>
+              <span>Preset</span>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
                 <select
-                  value={note}
-                  onChange={(e) => {
-                    const copy = [...tuning];
-                    copy[i] = e.target.value;
-                    setTuning(copy);
-                  }}
+                  id="preset"
+                  name="preset"
+                  value={selectedPreset}
+                  onChange={(e) => setSelectedPreset(e.target.value)}
                 >
-                  {sysNames.map((n) => (
-                    <option key={n}>{n}</option>
+                  {presetNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
                   ))}
                 </select>
+                <button className="btn" onClick={applySelectedPreset}>
+                  Apply preset
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Presets picker */}
-          <div className="presets-row" style={{ marginTop: 12 }}>
+            {/* Defaults UI */}
             <div
-              className="field"
-              style={{
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
+              className="defaults-row"
+              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
             >
-              <span>Preset</span>
-              <select
-                value={selectedPreset}
-                onChange={(e) => setSelectedPreset(e.target.value)}
+              <button className="btn" onClick={handleSaveDefault}>
+                Save as default ({systemId}, {strings}-string)
+              </button>
+              <button
+                className="btn"
+                onClick={handleLoadSavedDefault}
+                disabled={!savedExists}
+                title={
+                  savedExists ? "" : "No saved default for this system/count"
+                }
               >
-                {presetNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <button className="btn" onClick={applySelectedPreset}>
-                Apply preset
+                Load saved
+              </button>
+              <button className="btn" onClick={handleResetFactoryDefault}>
+                Reset to factory default
               </button>
             </div>
-          </div>
-
-          {/* Defaults UI */}
-          <div
-            className="defaults-row"
-            style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}
-          >
-            <button className="btn" onClick={handleSaveDefault}>
-              Save as default ({systemId}, {strings}-string)
-            </button>
-            <button
-              className="btn"
-              onClick={handleLoadSavedDefault}
-              disabled={!savedExists}
-              title={
-                savedExists ? "" : "No saved default for this system/count"
-              }
-            >
-              Load saved
-            </button>
-            <button className="btn" onClick={handleResetFactoryDefault}>
-              Reset to factory default
-            </button>
           </div>
         </Section>
 

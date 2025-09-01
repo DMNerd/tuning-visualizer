@@ -3,8 +3,10 @@ import Section from "@/components/UI/Section";
 export default function InlayControls({ mirrorInlays, onMirrorChange }) {
   return (
     <Section title="Inlays">
-      <label className="check">
+      <label className="check" htmlFor="mirrorInlays">
         <input
+          id="mirrorInlays"
+          name="mirrorInlays"
           type="checkbox"
           checked={mirrorInlays}
           onChange={(e) => onMirrorChange(e.target.checked)}
