@@ -1,0 +1,65 @@
+# Node dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+.next/
+.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage / testing
+coverage/
+*.lcov
+.jest/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Lock files (if you want to exclude them, otherwise keep)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Exported images
+export.png
+export-*.png
+
+# External bundles
+public/external-bundle.*.js
+
+# Misc
+*.log
