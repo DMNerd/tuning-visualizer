@@ -163,14 +163,44 @@ input[type="range"] {
 
 /* Fretboard visuals */
 .fretboard-wrap {
+  flex: 1; /* let it expand */
+  display: flex; /* svg can flex inside */
+  align-items: stretch;
+  justify-content: stretch;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
   padding: 10px;
 }
+
+.fretboard-wrap svg {
+  flex: 1;
+  width: 100%;
+  height: 100%; /* fill parent vertically */
+  display: block;
+}
+
 .fretboard-wrap.lefty svg {
   transform: scaleX(-1);
+}
+
+/* — microtonal fret visualization — */
+.fretLine.micro {
+  stroke: var(--fret);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 7;
+  opacity: 0.7;
+}
+
+/* octave wires already have .strong; ensure they pop */
+.fretLine.strong {
+  stroke-width: 2;
+}
+
+/* micro fret numbers are dimmer */
+.fretNum.microNum {
+  opacity: 0.55;
 }
 
 svg {

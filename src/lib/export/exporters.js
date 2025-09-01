@@ -16,7 +16,12 @@ function getBox(svg) {
     : svg.getBBox();
 }
 
-export async function downloadPNG(svgNode, filename = "fretboard.png", scale = 3, pad = 16) {
+export async function downloadPNG(
+  svgNode,
+  filename = "fretboard.png",
+  scale = 3,
+  pad = 16,
+) {
   if (!svgNode) return;
   const box = getBox(svgNode);
 
@@ -27,7 +32,9 @@ export async function downloadPNG(svgNode, filename = "fretboard.png", scale = 3
     width: Math.ceil(box.width + pad * 2),
     height: Math.ceil(box.height + pad * 2),
     backgroundColor:
-      getComputedStyle(document.documentElement).getPropertyValue("--bg")?.trim() || "#ffffff",
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--bg")
+        ?.trim() || "#ffffff",
   });
 }
 
@@ -35,7 +42,9 @@ export async function downloadSVG(svgNode, filename = "fretboard.svg") {
   if (!svgNode) return;
   const dataUri = await svgAsDataUri(svgNode, {
     backgroundColor:
-      getComputedStyle(document.documentElement).getPropertyValue("--bg")?.trim() || "#ffffff",
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--bg")
+        ?.trim() || "#ffffff",
   });
   const a = document.createElement("a");
   a.href = dataUri;
@@ -47,7 +56,9 @@ export async function printFretboard(svgNode) {
   if (!svgNode) return;
   const dataUri = await svgAsDataUri(svgNode, {
     backgroundColor:
-      getComputedStyle(document.documentElement).getPropertyValue("--bg")?.trim() || "#ffffff",
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--bg")
+        ?.trim() || "#ffffff",
   });
 
   const html = `<!doctype html>

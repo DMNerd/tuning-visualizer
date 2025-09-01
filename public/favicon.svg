@@ -1,0 +1,39 @@
+<!-- public/favicon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-labelledby="title" role="img">
+  <title>Fretboard – Tuning Visualizer</title>
+  <defs>
+    <style>
+      .bg { fill: #f2f3f6; }          /* light board */
+      .string, .fret { stroke: #c9cdd3; }
+      .nut { stroke: #9aa0a6; }
+      .dot { fill: #ff6a00; stroke: #ffffff; }
+
+      @media (prefers-color-scheme: dark) {
+        .bg { fill: #1a1d21; }        /* dark board */
+        .string, .fret { stroke: #2a2f35; }
+        .nut { stroke: #3a3f46; }
+        .dot { fill: #ff7a3d; stroke: #0b0c0f; }
+      }
+    </style>
+  </defs>
+
+  <!-- rounded board -->
+  <rect class="bg" x="2" y="2" width="60" height="60" rx="12"></rect>
+
+  <!-- strings -->
+  <g fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <path class="string" d="M18 12 V52" stroke-width="2.4"></path>
+    <path class="string" d="M32 12 V52" stroke-width="2.4"></path>
+    <path class="string" d="M46 12 V52" stroke-width="2.4"></path>
+
+    <!-- frets -->
+    <path class="fret" d="M12 28 H52" stroke-width="1.8"></path>
+    <path class="fret" d="M12 42 H52" stroke-width="1.8"></path>
+
+    <!-- nut -->
+    <path class="nut" d="M12 16 H52" stroke-width="3.2"></path>
+  </g>
+
+  <!-- root/scale dot -->
+  <circle class="dot" cx="32" cy="42" r="5.5" stroke-width="2"></circle>
+</svg>

@@ -1,19 +1,28 @@
 // Generic N-TET utilities + 24-TET names
 
+export type Accidental = "sharp" | "flat";
+
 export type TuningSystem = {
   id: string; // e.g. "12-TET", "24-TET"
   divisions: number; // N: divisions per octave
   refFreq: number; // A4 reference
   refMidi: number; // A4 midi (69)
-  nameForPc: (pc: number) => string; // name for pitch-class [0..N-1]
+  // OPTIONAL accidental preference (sharp | flat). Systems may ignore it.
+  nameForPc: (pc: number, accidental?: Accidental) => string; // name for pitch-class [0..N-1]
 };
 
 export const nameFallback = (pc: number) => `N${pc}`;
 
-/** 24-TET pitch-class names (C=0) with quarter-tone arrows.
- *  ASCII fallback in parentheses if you prefer: ↑ => (+), ↓ => (-)
+/** 24-TET pitch-class names (C=0)
+ *  We provide both "sharp-oriented" (↑ and #) and "flat-oriented" (↓ and b) views.
+ *  Indices:
+ *    0:C  1:quarter↑  2:semitone  3:3/4↑  4:D  5:D↑  6:D#  7:D#↑  8:E  9:E↑
+ *   10:F 11:F↑        12:F#       13:F#↑ 14:G 15:G↑  16:G# 17:G#↑ 18:A 19:A↑
+ *   20:A# 21:A#↑      22:B        23:B↑
  */
-const N24_NAMES = [
+
+// Sharp-oriented (default)
+const N24_NAMES_SHARP = [
   "C",
   "C↑",
   "C#",
@@ -40,13 +49,42 @@ const N24_NAMES = [
   "B↑",
 ];
 
+// Flat-oriented
+// Choose flats where enharmonic with a sharp degree; quarter-tones use ↓ relative to the next flat.
+const N24_NAMES_FLAT = [
+  "C",
+  "Db↓",
+  "Db",
+  "Db↑",
+  "D",
+  "Eb↓",
+  "Eb",
+  "Eb↑",
+  "E",
+  "F↓",
+  "F",
+  "Gb↓",
+  "Gb",
+  "G↓",
+  "G",
+  "Ab↓",
+  "Ab",
+  "A↓",
+  "A",
+  "Bb↓",
+  "Bb",
+  "B↓",
+  "B",
+  "C↓",
+];
+
 export const TUNINGS: Record<string, TuningSystem> = {
   "12-TET": {
     id: "12-TET",
     divisions: 12,
     refFreq: 440,
     refMidi: 69,
-    nameForPc: (pc) => {
+    nameForPc: (pc, accidental = "sharp") => {
       const SHARP = [
         "C",
         "C#",
@@ -61,7 +99,22 @@ export const TUNINGS: Record<string, TuningSystem> = {
         "A#",
         "B",
       ];
-      return SHARP[((pc % 12) + 12) % 12];
+      const FLAT = [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B",
+      ];
+      const idx = ((pc % 12) + 12) % 12;
+      return (accidental === "flat" ? FLAT : SHARP)[idx];
     },
   },
   "24-TET": {
@@ -69,7 +122,11 @@ export const TUNINGS: Record<string, TuningSystem> = {
     divisions: 24,
     refFreq: 440,
     refMidi: 69,
-    nameForPc: (pc) => N24_NAMES[((pc % 24) + 24) % 24] ?? nameFallback(pc),
+    nameForPc: (pc, accidental = "sharp") => {
+      const idx = ((pc % 24) + 24) % 24;
+      const arr = accidental === "flat" ? N24_NAMES_FLAT : N24_NAMES_SHARP;
+      return arr[idx] ?? nameFallback(pc);
+    },
   },
 };
 
@@ -106,6 +163,6 @@ export function centsFromNearest(
   const raw = sys.divisions * Math.log2(f / sys.refFreq);
   const nearest = Math.round(raw);
   const deltaSteps = raw - nearest;
-  const cents = deltaSteps * (1200 / 1); // 1200 cents per octave; 1 step = 1200/N of an octave; the factor is baked into raw
+  const cents = deltaSteps * 1200; // 1200 cents per octave
   return { cents, nearestStep: nearest };
 }

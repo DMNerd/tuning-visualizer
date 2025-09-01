@@ -1,16 +1,13 @@
 import React, { forwardRef, useMemo, useLayoutEffect, useRef } from "react";
-
-// fallback names for 12-TET when accidentals need forcing
-const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const NOTES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+import { buildFrets } from "@/components/Fretboard/geometry";
 
 const Fretboard = forwardRef(function Fretboard(
   {
     strings = 6,
     frets = 22,
-    tuning = ["E","A","D","G","B","E"], // names in active system
+    tuning = ["E", "A", "D", "G", "B", "E"],
     rootIx = 0,
-    intervals = [0,2,4,5,7,9,11],
+    intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp",
     show = "names", // 'names' | 'degrees' | 'off'
     showOpen = true,
@@ -18,26 +15,36 @@ const Fretboard = forwardRef(function Fretboard(
     showFretNums = true,
     dotSize = 14,
     lefty = false,
-    system, // { divisions, nameForPc, ... }
+    system, // { divisions, nameForPc(pc, accidental?) }
   },
-  ref
+  ref,
 ) {
   const svgRef = useRef(null);
 
-  // --- Geometry ---
+  // --- Layout (virtual drawing size) ---
   const nutW = 16;
   const stringGap = 56;
-  const fretGap = 56;
-  const padX = 24;
-  const padY = 28;
+  const padRight = 12;
+  const padTop = 28;
+  const padBottom = 28;
 
-  const { width, height } = useMemo(() => {
-    const w = padX * 2 + nutW + fretGap * frets;
-    const h = padY * 2 + stringGap * (strings - 1);
-    return { width: w, height: h };
-  }, [frets, strings]);
+  const openNoteMargin = dotSize * 3;
+  const padLeft = 24 + openNoteMargin;
 
-  // expose <svg> to parent via ref
+  const fullScaleLen = useMemo(() => 56 * frets, [frets]);
+  const fretXs = useMemo(
+    () => buildFrets(fullScaleLen, frets, system),
+    [fullScaleLen, frets, system],
+  );
+
+  const lastWire = fretXs[fretXs.length - 1] ?? 0;
+  const prevWire = fretXs[fretXs.length - 2] ?? lastWire - fullScaleLen * 0.03;
+  const lastGap = Math.max(8, lastWire - prevWire);
+  const drawScaleLen = lastWire + lastGap * 1.1;
+
+  const width = padLeft + nutW + drawScaleLen + padRight;
+  const height = padTop + padBottom + stringGap * (strings - 1);
+
   useLayoutEffect(() => {
     if (!svgRef.current) return;
     svgRef.current.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -45,33 +52,39 @@ const Fretboard = forwardRef(function Fretboard(
     else if (ref) ref.current = svgRef.current;
   }, [ref, width, height]);
 
-  const xForFret = (f) => padX + nutW + f * fretGap;
-  const yForString = (s) => padY + s * stringGap;
-
-  // pc from system name
-  const sysNames = useMemo(
-    () => Array.from({ length: system.divisions }, (_, pc) => system.nameForPc(pc)),
-    [system]
-  );
-  const pcForName = (name) => {
-    const ix = sysNames.indexOf(name);
-    return ix >= 0 ? ix : 0;
+  const wireX = (f) => padLeft + nutW + (f === 0 ? 0 : fretXs[f - 1]);
+  const noteCenterX = (f) => {
+    if (f === 0) return padLeft - dotSize * 1.5;
+    const prev = f === 1 ? 0 : fretXs[f - 2];
+    const curr = fretXs[f - 1];
+    return padLeft + nutW + (prev + curr) / 2;
   };
+  const boardEndX = padLeft + nutW + drawScaleLen;
+  const yForString = (s) => padTop + s * stringGap;
 
-  // name for pc honoring accidentals for 12-TET
-  const nameForPc = (pc) => {
-    if (system.divisions === 12) {
-      const arr = accidental === "flat" ? NOTES_FLAT : NOTES_SHARP;
-      return arr[pc % 12];
+  // Build name→pc map for BOTH accidental variants so incoming names always resolve.
+  const nameToPc = useMemo(() => {
+    const map = new Map();
+    for (let pc = 0; pc < system.divisions; pc++) {
+      map.set(system.nameForPc(pc, "sharp"), pc);
+      map.set(system.nameForPc(pc, "flat"), pc);
     }
-    return system.nameForPc(pc);
+    return map;
+  }, [system]);
+
+  const pcForName = (name) => {
+    const pc = nameToPc.get(name);
+    return typeof pc === "number" ? pc : 0;
   };
 
-  const scaleSet = useMemo(() => new Set(intervals.map((v) => (v + rootIx) % system.divisions)), [
-    intervals,
-    rootIx,
-    system.divisions,
-  ]);
+  // Use system's accidental-aware printer for labels
+  const nameForPc = (pc) => system.nameForPc(pc, accidental);
+
+  // scale membership
+  const scaleSet = useMemo(
+    () => new Set(intervals.map((v) => (v + rootIx) % system.divisions)),
+    [intervals, rootIx, system.divisions],
+  );
 
   const degreeForPc = (pc) => {
     const rel = (pc - rootIx + system.divisions) % system.divisions;
@@ -79,8 +92,24 @@ const Fretboard = forwardRef(function Fretboard(
     return ix >= 0 ? ix + 1 : null;
   };
 
+  // Inlays
   const inlaySingles = [3, 5, 7, 9, 15, 17, 19, 21].filter((f) => f <= frets);
   const inlayDoubles = [12, 24].filter((f) => f <= frets);
+
+  if (!Array.isArray(intervals) || intervals.length === 0) {
+    return (
+      <svg
+        width="100%"
+        height="auto"
+        preserveAspectRatio="xMidYMid meet"
+        className={lefty ? "lefty" : ""}
+      >
+        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
+          No scale selected
+        </text>
+      </svg>
+    );
+  }
 
   return (
     <svg
@@ -90,16 +119,23 @@ const Fretboard = forwardRef(function Fretboard(
       preserveAspectRatio="xMidYMid meet"
       className={lefty ? "lefty" : ""}
     >
-      {/* board background */}
-      <rect x="0" y="0" width={width} height={height} rx="14" fill="var(--panel)" />
+      {/* board */}
+      <rect
+        x="0"
+        y="0"
+        width={width}
+        height={height}
+        rx="14"
+        fill="var(--panel)"
+      />
 
       {/* nut */}
       <rect
         className="nut"
-        x={padX}
-        y={padY - 8}
+        x={padLeft}
+        y={padTop - 8}
         width={nutW}
-        height={height - padY * 2 + 16}
+        height={height - padTop - padBottom + 16}
         rx="2"
       />
 
@@ -107,36 +143,61 @@ const Fretboard = forwardRef(function Fretboard(
       {Array.from({ length: strings }).map((_, s) => (
         <line
           key={`string-${s}`}
-          x1={padX}
+          x1={padLeft}
           y1={yForString(s)}
-          x2={padX + nutW + frets * fretGap}
+          x2={boardEndX}
           y2={yForString(s)}
           className="stringLine"
         />
       ))}
 
       {/* frets */}
-      {Array.from({ length: frets + 1 }).map((_, f) => (
-        <line
-          key={`fret-${f}`}
-          x1={xForFret(f)}
-          y1={padY}
-          x2={xForFret(f)}
-          y2={height - padY}
-          className={`fretLine ${f % 12 === 0 ? "strong" : ""}`}
-        />
-      ))}
+      {Array.from({ length: frets + 1 }).map((_, f) => {
+        const isOctave = f % system.divisions === 0;
+        const isStandard = (f * 12) % system.divisions === 0;
+        const isMicro = !isStandard;
 
-      {/* Inlays – center */}
+        return (
+          <line
+            key={`fret-${f}`}
+            x1={wireX(f)}
+            y1={padTop}
+            x2={wireX(f)}
+            y2={height - padBottom}
+            className={[
+              "fretLine",
+              isOctave ? "strong" : "",
+              isStandard ? "standard" : "",
+              isMicro ? "micro" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          />
+        );
+      })}
+
+      {/* center inlays */}
       {inlaySingles.map((f) => {
-        const cx = xForFret(f) + fretGap / 2;
-        const cy = padY + (height - padY * 2) / 2;
-        return <circle key={`inlay-s-${f}`} className="inlay" cx={cx} cy={cy} r="6.5" />;
+        const prev = f === 1 ? 0 : fretXs[f - 2];
+        const curr = fretXs[f - 1];
+        const cx = padLeft + nutW + (prev + curr) / 2;
+        const cy = padTop + (height - padTop - padBottom) / 2;
+        return (
+          <circle
+            key={`inlay-s-${f}`}
+            className="inlay"
+            cx={cx}
+            cy={cy}
+            r="6.5"
+          />
+        );
       })}
       {inlayDoubles.map((f) => {
-        const cx = xForFret(f) + fretGap / 2;
-        const cy1 = padY + (height - padY * 2) / 2 - 14;
-        const cy2 = padY + (height - padY * 2) / 2 + 14;
+        const prev = f === 1 ? 0 : fretXs[f - 2];
+        const curr = fretXs[f - 1];
+        const cx = padLeft + nutW + (prev + curr) / 2;
+        const cy1 = padTop + (height - padTop - padBottom) / 2 - 14;
+        const cy2 = padTop + (height - padTop - padBottom) / 2 + 14;
         return (
           <g key={`inlay-d-${f}`}>
             <circle className="inlay" cx={cx} cy={cy1} r="6.5" />
@@ -145,15 +206,17 @@ const Fretboard = forwardRef(function Fretboard(
         );
       })}
 
-      {/* Side inlays (mirrored optional) */}
+      {/* side inlays */}
       {Array.from({ length: frets + 1 }).map((_, f) => {
-        const isSingle = inlaySingles.includes(f);
-        const isDouble = inlayDoubles.includes(f);
+        const inlaySinglesSet = new Set(inlaySingles);
+        const inlayDoublesSet = new Set(inlayDoubles);
+        const isSingle = inlaySinglesSet.has(f);
+        const isDouble = inlayDoublesSet.has(f);
         if (!isSingle && !isDouble) return null;
 
-        const cx = xForFret(f);
-        const topY = padY - 10;
-        const botY = height - padY + 10;
+        const cx = wireX(f);
+        const topY = padTop - 10;
+        const botY = height - padBottom + 10;
 
         return (
           <g key={`side-${f}`}>
@@ -171,24 +234,24 @@ const Fretboard = forwardRef(function Fretboard(
             ) : (
               <>
                 <circle className="inlay small" cx={cx + 5} cy={botY} />
-                {mirrorInlays && <circle className="inlay small" cx={cx + 5} cy={topY} />}
+                {mirrorInlays && (
+                  <circle className="inlay small" cx={cx + 5} cy={topY} />
+                )}
               </>
             )}
           </g>
         );
       })}
 
-      {/* notes (including open if enabled) */}
+      {/* notes */}
       {tuning.map((openName, s) => {
         const openPc = pcForName(openName);
         return Array.from({ length: frets + 1 }).map((_, f) => {
           const pc = (openPc + f) % system.divisions;
           if (!scaleSet.has(pc)) {
-            // still draw open markers when showOpen is true?
             if (!(showOpen && f === 0)) return null;
           }
-
-          const cx = f === 0 ? padX + nutW / 2 : xForFret(f - 1) + fretGap / 2;
+          const cx = noteCenterX(f);
           const cy = yForString(s);
 
           const isRoot = pc === rootIx;
@@ -196,8 +259,8 @@ const Fretboard = forwardRef(function Fretboard(
             show === "off"
               ? ""
               : show === "degrees"
-              ? degreeForPc(pc) ?? ""
-              : nameForPc(pc);
+                ? (degreeForPc(pc) ?? "")
+                : nameForPc(pc);
 
           const r = (isRoot ? 1.1 : 1) * dotSize;
           const visible = f > 0 || (f === 0 && showOpen);
@@ -212,7 +275,12 @@ const Fretboard = forwardRef(function Fretboard(
                   fill={isRoot ? "var(--root)" : "var(--accent)"}
                 />
                 {label !== "" && (
-                  <text className={`noteText ${isRoot ? "big" : ""}`} x={cx} y={cy + 4} textAnchor="middle">
+                  <text
+                    className={`noteText ${isRoot ? "big" : ""}`}
+                    x={cx}
+                    y={cy + 4}
+                    textAnchor="middle"
+                  >
                     {label}
                   </text>
                 )}
@@ -225,10 +293,15 @@ const Fretboard = forwardRef(function Fretboard(
       {/* fret numbers */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
-          const x = xForFret(f);
-          const y = height - 6;
+          const isStandard = (f * 12) % system.divisions === 0;
           return (
-            <text key={`num-${f}`} className="fretNum" x={x} y={y} textAnchor="middle">
+            <text
+              key={`num-${f}`}
+              className={`fretNum ${isStandard ? "" : "microNum"}`}
+              x={wireX(f)}
+              y={height - 6}
+              textAnchor="middle"
+            >
               {f}
             </text>
           );

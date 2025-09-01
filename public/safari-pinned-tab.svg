@@ -1,0 +1,21 @@
+<!-- public/safari-pinned-tab.svg -->
+<!-- Monochrome, stroke-less. Safari uses this as a mask and tints it via the `color` attribute. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Use pure black; Safari treats it as the opaque mask area. -->
+  <g fill="#000">
+    <!-- Rounded tile -->
+    <rect x="4" y="4" width="56" height="56" rx="12"></rect>
+    <!-- Cut out three vertical strings and two horizontal frets to keep the silhouette recognizable -->
+    <g fill="#fff">
+      <!-- strings -->
+      <rect x="20" y="12" width="4" height="40" rx="2"></rect>
+      <rect x="30" y="12" width="4" height="40" rx="2"></rect>
+      <rect x="40" y="12" width="4" height="40" rx="2"></rect>
+      <!-- frets -->
+      <rect x="12" y="26" width="40" height="3" rx="1.5"></rect>
+      <rect x="12" y="38" width="40" height="3" rx="1.5"></rect>
+      <!-- root dot -->
+      <circle cx="32" cy="38" r="6"></circle>
+    </g>
+  </g>
+</svg>

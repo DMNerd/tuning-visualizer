@@ -13,50 +13,154 @@ import {
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 
-// preset tunings (your existing)
-import { DEFAULT_TUNINGS } from "@/lib/theory/constants";
+// per-system defaults + (optional) named presets
+import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/constants";
 
 // split UI controls
 import AccidentalControls from "@/components/UI/AccidentalControls";
 import InlayControls from "@/components/UI/InlayControls";
 
 export default function App() {
-  // default to 24-TET (flexible)
+  // choose your startup system here
   const [systemId, setSystemId] = useState("12-TET");
   const system = TUNINGS[systemId];
 
-  // existing UI state
+  // strings / frets
+  const [strings, setStrings] = useState(6);
+  const [frets, setFrets] = useState(22);
+
+  // scale / root / accidental
   const [scale, setScale] = useState("Major (Ionian)");
   const [root, setRoot] = useState("C");
-  const [accidental, setAccidental] = useState("sharp");
+  const [accidental, setAccidental] = useState("sharp"); // "sharp" | "flat"
 
+  // display options
   const [show, setShow] = useState("names");
   const [showOpen, setShowOpen] = useState(true);
   const [showFretNums, setShowFretNums] = useState(true);
   const [mirrorInlays, setMirrorInlays] = useState(false);
   const [dotSize, setDotSize] = useState(14);
 
-  const [strings, setStrings] = useState(6);
-  const [frets, setFrets] = useState(22);
-  const [tuning, setTuning] = useState(DEFAULT_TUNINGS[6]);
-
   const [lefty, setLefty] = useState(false);
   const [theme, setTheme] = useState("light");
 
   const boardRef = useRef(null);
 
-  // names for active system
-  const sysNames = useMemo(
-    () =>
-      Array.from({ length: system.divisions }, (_, pc) => system.nameForPc(pc)),
-    [system],
+  // ---------- User default tuning persistence (localStorage) ----------
+  const lsKey = useMemo(
+    () => `fb.defaultTuning.${systemId}.${strings}`,
+    [systemId, strings],
   );
 
-  // root index
-  const rootIx = useMemo(() => {
-    const ix = sysNames.indexOf(root);
-    return ix >= 0 ? ix : 0;
-  }, [root, sysNames]);
+  const readSavedDefault = () => {
+    try {
+      const raw = localStorage.getItem(lsKey);
+      if (!raw) return null;
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const saveCurrentAsDefault = (val) => {
+    try {
+      localStorage.setItem(lsKey, JSON.stringify(val));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const clearSavedDefault = () => {
+    try {
+      localStorage.removeItem(lsKey);
+    } catch {
+      // ignore
+    }
+  };
+
+  const hasSavedDefault = () => readSavedDefault() !== null;
+
+  // ---------- Default resolution (user default → built-in → fallback) ----------
+  const getDefaultTuning = (sysId, count) => {
+    // 1) user-saved default (for sys+count)
+    const key = `fb.defaultTuning.${sysId}.${count}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2) built-in per-system default
+    const sysDefaults = DEFAULT_TUNINGS?.[sysId] || {};
+    if (sysDefaults[count]) return sysDefaults[count];
+
+    // 3) built-in 12-TET fallback
+    const twelve = DEFAULT_TUNINGS?.["12-TET"] || {};
+    if (twelve[count]) return twelve[count];
+
+    // 4) ultra-safe fallback (standard 6-string spelling)
+    return ["E", "B", "G", "D", "A", "E"];
+  };
+
+  // tuning state, initialized per system + string count (using user default if present)
+  const [tuning, setTuning] = useState(() =>
+    getDefaultTuning(systemId, strings),
+  );
+
+  // ---------- Presets (named, per system + string count) ----------
+  const presetMap = useMemo(() => {
+    const bySys = PRESET_TUNINGS?.[systemId];
+    const byCount = bySys?.[strings];
+    // Always offer at least a factory default
+    const factory = getDefaultTuning(systemId, strings);
+    if (byCount && Object.keys(byCount).length) {
+      return { "Factory default": factory, ...byCount };
+    }
+    return { "Factory default": factory };
+  }, [systemId, strings]);
+
+  const presetNames = useMemo(() => Object.keys(presetMap), [presetMap]);
+
+  const [selectedPreset, setSelectedPreset] = useState("Factory default");
+  useEffect(() => {
+    // reset selection when system/strings change so UI reflects context
+    setSelectedPreset("Factory default");
+  }, [systemId, strings]);
+
+  const applySelectedPreset = () => {
+    const arr = presetMap[selectedPreset];
+    if (Array.isArray(arr) && arr.length) setTuning(arr);
+  };
+
+  // names for active system (spelled with current accidental preference)
+  const sysNames = useMemo(
+    () =>
+      Array.from({ length: system.divisions }, (_, pc) =>
+        system.nameForPc(pc, accidental),
+      ),
+    [system, accidental],
+  );
+
+  // map any valid spelling (sharp or flat) to a pitch class
+  const pcFromName = useMemo(() => {
+    const map = new Map();
+    for (let pc = 0; pc < system.divisions; pc++) {
+      map.set(system.nameForPc(pc, "sharp"), pc);
+      map.set(system.nameForPc(pc, "flat"), pc);
+    }
+    return (name) => {
+      const v = map.get(name);
+      return typeof v === "number" ? v : 0;
+    };
+  }, [system]);
+
+  // root index from current root label
+  const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
 
   // scales for system
   const scaleOptions = useMemo(
@@ -85,10 +189,40 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  // When accidental preference changes, keep same PCs but respell root & tuning
+  useEffect(() => {
+    const toName = (pc) => system.nameForPc(pc, accidental);
+    setRoot((prev) => toName(pcFromName(prev)));
+    setTuning((prev) => prev.map((n) => toName(pcFromName(n))));
+  }, [accidental, system, pcFromName]);
+
+  // When temperament or string count change, adopt default (user → built-in)
+  useEffect(() => {
+    setTuning(getDefaultTuning(systemId, strings));
+  }, [systemId, strings]);
+
+  // When string count changes via UI
   const handleStringsChange = (s) => {
     setStrings(s);
-    setTuning(DEFAULT_TUNINGS[s] || DEFAULT_TUNINGS[6]);
+    setTuning(getDefaultTuning(systemId, s));
   };
+
+  // ---------- UI actions for defaults ----------
+  const handleSaveDefault = () => {
+    saveCurrentAsDefault(tuning);
+  };
+
+  const handleLoadSavedDefault = () => {
+    const saved = readSavedDefault();
+    if (saved) setTuning(saved);
+  };
+
+  const handleResetFactoryDefault = () => {
+    clearSavedDefault();
+    setTuning(getDefaultTuning(systemId, strings));
+  };
+
+  const savedExists = hasSavedDefault();
 
   return (
     <div className="layout">
@@ -155,7 +289,7 @@ export default function App() {
           </div>
         </Section>
 
-        {/* Split out: Accidentals */}
+        {/* Accidentals */}
         <AccidentalControls value={accidental} onChange={setAccidental} />
 
         <Section title="Display">
@@ -195,7 +329,7 @@ export default function App() {
           </div>
         </Section>
 
-        {/* Split out: Inlays */}
+        {/* Inlays */}
         <InlayControls
           mirrorInlays={mirrorInlays}
           onMirrorChange={setMirrorInlays}
@@ -243,6 +377,57 @@ export default function App() {
                 </select>
               </div>
             ))}
+          </div>
+
+          {/* Presets picker */}
+          <div className="presets-row" style={{ marginTop: 12 }}>
+            <div
+              className="field"
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <span>Preset</span>
+              <select
+                value={selectedPreset}
+                onChange={(e) => setSelectedPreset(e.target.value)}
+              >
+                {presetNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <button className="btn" onClick={applySelectedPreset}>
+                Apply preset
+              </button>
+            </div>
+          </div>
+
+          {/* Defaults UI */}
+          <div
+            className="defaults-row"
+            style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <button className="btn" onClick={handleSaveDefault}>
+              Save as default ({systemId}, {strings}-string)
+            </button>
+            <button
+              className="btn"
+              onClick={handleLoadSavedDefault}
+              disabled={!savedExists}
+              title={
+                savedExists ? "" : "No saved default for this system/count"
+              }
+            >
+              Load saved
+            </button>
+            <button className="btn" onClick={handleResetFactoryDefault}>
+              Reset to factory default
+            </button>
           </div>
         </Section>
 

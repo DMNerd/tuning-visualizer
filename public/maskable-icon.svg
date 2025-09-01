@@ -1,0 +1,32 @@
+<!-- public/icons/maskable-icon.svg -->
+<!-- Designed with a safe "content zone" ~80% so it survives circle/squircle crops -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Board background -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#f2f3f6"></rect>
+  <!-- Dark-mode friendly: set fill via currentColor for pinned-like effects when exported, 
+       but for PNG we keep colors fixed. Optional media queries are ignored in PNG export. -->
+
+  <!-- Strings -->
+  <g stroke="#c9cdd3" stroke-width="20" stroke-linecap="round" fill="none">
+    <line x1="176" y1="96" x2="176" y2="416"></line>
+    <line x1="256" y1="96" x2="256" y2="416"></line>
+    <line x1="336" y1="96" x2="336" y2="416"></line>
+    <!-- Frets -->
+    <line x1="112" y1="224" x2="400" y2="224"></line>
+    <line x1="112" y1="320" x2="400" y2="320"></line>
+    <!-- Nut -->
+    <line x1="112" y1="144" x2="400" y2="144" stroke="#9aa0a6" stroke-width="26"></line>
+  </g>
+
+  <!-- Root dot: keep within 80% safe area -->
+  <circle cx="256" cy="320" r="36" fill="#ff6a00" stroke="#ffffff" stroke-width="14"></circle>
+
+  <!-- Optional dark mode when used as SVG (has no effect on exported PNGs) -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      rect { fill: #1a1d21; }
+      g { stroke: #2a2f35; }
+      .nut { stroke: #3a3f46; }
+    }
+  </style>
+</svg>
