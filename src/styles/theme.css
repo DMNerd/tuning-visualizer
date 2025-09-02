@@ -46,6 +46,10 @@
   gap: 12px;
   padding: 8px 12px;
 }
+.panel-header a svg {
+  width: 20px !important;
+  height: 20px !important;
+}
 .app-title {
   margin: 0;
   font-size: 1.125rem;
