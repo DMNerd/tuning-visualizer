@@ -1,30 +1,46 @@
-import Section from "@/components/UI/Section";
+import { FaGithub } from "react-icons/fa";
 
-export default function AccidentalControls({ value, onChange }) {
+export default function PanelHeader({ theme, setTheme, lefty, setLefty }) {
   return (
-    <Section title="Accidentals">
-      <div className="grid2">
-        <label className="check">
-          <input
-            type="radio"
-            name="accidentals"
-            value="sharp"
-            checked={value === "sharp"}
-            onChange={() => onChange("sharp")}
-          />
-          Use sharps (♯)
-        </label>
-        <label className="check">
-          <input
-            type="radio"
-            name="accidentals"
-            value="flat"
-            checked={value === "flat"}
-            onChange={() => onChange("flat")}
-          />
-          Use flats (♭)
-        </label>
+    <div className="panel-header">
+      <h1 className="app-title">TunningViz</h1>
+
+      <div className="header-right">
+        <div className="toggles">
+          <label className="switch" htmlFor="darkMode">
+            <input
+              id="darkMode"
+              name="darkMode"
+              type="checkbox"
+              checked={theme === "dark"}
+              onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
+            />
+            <span>Dark Mode</span>
+          </label>
+
+          <label className="switch" htmlFor="lefty">
+            <input
+              id="lefty"
+              name="lefty"
+              type="checkbox"
+              checked={lefty}
+              onChange={(e) => setLefty(e.target.checked)}
+            />
+            <span>Lefty</span>
+          </label>
+        </div>
+
+        <a
+          className="gh-link"
+          href="https://github.com/DMNerd/tuning-visualizer"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View source on GitHub"
+          title="View source on GitHub"
+        >
+          <FaGithub />
+        </a>
       </div>
-    </Section>
+    </div>
   );
 }

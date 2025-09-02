@@ -47,3 +47,4 @@ Built with React
 git clone https://github.com/DMNerd/tuning-visualizer.git
 cd tuning-visualizer
 pnpm install
+```

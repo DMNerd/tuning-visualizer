@@ -48,7 +48,12 @@ export default function DisplayControls({
       {/* Labels */}
       <div className="field">
         <span>Labels</span>
-        <select id="labels" name="labels" value={show} onChange={(e) => setShow(e.target.value)}>
+        <select
+          id="labels"
+          name="labels"
+          value={show}
+          onChange={(e) => setShow(e.target.value)}
+        >
           <option value="names">Note names</option>
           <option value="degrees">Degrees</option>
           <option value="off">Off</option>

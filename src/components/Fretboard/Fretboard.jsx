@@ -129,7 +129,14 @@ const Fretboard = forwardRef(function Fretboard(
       style={{ display: "block" }}
     >
       {/* board */}
-      <rect x="0" y="0" width={width} height={height} rx="14" fill="var(--panel)" />
+      <rect
+        x="0"
+        y="0"
+        width={width}
+        height={height}
+        rx="14"
+        fill="var(--panel)"
+      />
 
       {/* nut */}
       <rect
@@ -184,7 +191,15 @@ const Fretboard = forwardRef(function Fretboard(
         const curr = fretXs[f - 1];
         const cx = padLeft + nutW + (prev + curr) / 2;
         const cy = padTop + (height - padTop - padBottom) / 2;
-        return <circle key={`inlay-s-${f}`} className="inlay" cx={cx} cy={cy} r="6.5" />;
+        return (
+          <circle
+            key={`inlay-s-${f}`}
+            className="inlay"
+            cx={cx}
+            cy={cy}
+            r="6.5"
+          />
+        );
       })}
       {inlayDoubles.map((f) => {
         const prev = f === 1 ? 0 : fretXs[f - 2];
@@ -215,7 +230,12 @@ const Fretboard = forwardRef(function Fretboard(
             {isDouble ? (
               <>
                 <circle className="inlay small" cx={cx} cy={topY} r={rSide} />
-                <circle className="inlay small" cx={cx + 10} cy={topY} r={rSide} />
+                <circle
+                  className="inlay small"
+                  cx={cx + 10}
+                  cy={topY}
+                  r={rSide}
+                />
               </>
             ) : (
               <circle className="inlay small" cx={cx + 5} cy={topY} r={rSide} />
@@ -240,8 +260,8 @@ const Fretboard = forwardRef(function Fretboard(
             show === "off"
               ? ""
               : show === "degrees"
-              ? (degreeForPc(pc) ?? "")
-              : nameForPc(pc);
+                ? (degreeForPc(pc) ?? "")
+                : nameForPc(pc);
 
           const r = (isRoot ? 1.1 : 1) * dotSize;
           const visible = f > 0 || (f === 0 && showOpen);

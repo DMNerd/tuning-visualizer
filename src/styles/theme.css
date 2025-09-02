@@ -41,9 +41,20 @@
 }
 .panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+}
+.app-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .panel h1 {
   font-size: 16px;
@@ -51,7 +62,27 @@
 }
 .toggles {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+}
+.gh-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.gh-link:hover {
+  color: var(--fg);
+  background: var(--line);
+}
+.gh-link svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 .switch {
   display: flex;
@@ -357,7 +388,6 @@ svg {
   }
 }
 
-/* Print from main page (alternative to print window) */
 @media print {
   * {
     -webkit-print-color-adjust: exact;

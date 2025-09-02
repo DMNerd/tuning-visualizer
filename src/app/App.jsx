@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import Fretboard from "@/components/Fretboard/Fretboard";
 
 // exporters
-import { downloadPNG, downloadSVG, printFretboard, slug } from "@/lib/export/exporters";
+import {
+  downloadPNG,
+  downloadSVG,
+  printFretboard,
+  slug,
+} from "@/lib/export/exporters";
 
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -45,7 +50,10 @@ export default function App() {
     try {
       const saved = localStorage.getItem(THEME_KEY);
       if (saved === "dark" || saved === "light") return saved;
-      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
         return "dark";
       }
     } catch {
@@ -59,7 +67,10 @@ export default function App() {
   const boardRef = useRef(null);
 
   // ---------- User default tuning persistence (localStorage) ----------
-  const lsKey = useMemo(() => `fb.defaultTuning.${systemId}.${strings}`, [systemId, strings]);
+  const lsKey = useMemo(
+    () => `fb.defaultTuning.${systemId}.${strings}`,
+    [systemId, strings],
+  );
 
   const readSavedDefault = () => {
     try {
@@ -117,7 +128,9 @@ export default function App() {
   };
 
   // tuning state, initialized per system + string count (using user default if present)
-  const [tuning, setTuning] = useState(() => getDefaultTuning(systemId, strings));
+  const [tuning, setTuning] = useState(() =>
+    getDefaultTuning(systemId, strings),
+  );
 
   // ---------- Presets (named, per system + string count) ----------
   const presetMap = useMemo(() => {
@@ -146,7 +159,10 @@ export default function App() {
 
   // names for active system (spelled with current accidental preference)
   const sysNames = useMemo(
-    () => Array.from({ length: system.divisions }, (_, pc) => system.nameForPc(pc, accidental)),
+    () =>
+      Array.from({ length: system.divisions }, (_, pc) =>
+        system.nameForPc(pc, accidental),
+      ),
     [system, accidental],
   );
 
@@ -236,10 +252,19 @@ export default function App() {
   return (
     <div className="layout">
       <div className="panel">
-        <PanelHeader theme={theme} setTheme={setTheme} lefty={lefty} setLefty={setLefty} />
+        <PanelHeader
+          theme={theme}
+          setTheme={setTheme}
+          lefty={lefty}
+          setLefty={setLefty}
+        />
 
         {/* 1) Tuning */}
-        <TuningSystemSelector systemId={systemId} setSystemId={setSystemId} systems={TUNINGS} />
+        <TuningSystemSelector
+          systemId={systemId}
+          setSystemId={setSystemId}
+          systems={TUNINGS}
+        />
 
         {/* 2) Scale */}
         <ScaleControls
