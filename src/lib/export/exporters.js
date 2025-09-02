@@ -57,7 +57,7 @@ function createSvgWithHeader(svgNode, header, pad = 16) {
 
   const NS = "http://www.w3.org/2000/svg";
   const origBox = getBox(svgNode);
-  const lineHeight = 18; 
+  const lineHeight = 18;
   const topPadding = 12;
   const headerHeight = lines.length * lineHeight + topPadding;
 
@@ -97,11 +97,11 @@ function createSvgWithHeader(svgNode, header, pad = 16) {
     // center horizontally
     t.setAttribute("x", String(width / 2));
     t.setAttribute("y", String((i + 1) * lineHeight - 4));
-    t.setAttribute("font-size", "14"); 
+    t.setAttribute("font-size", "14");
     t.setAttribute("font-weight", "600");
     t.setAttribute("font-family", fontFamily);
     t.setAttribute("fill", textColor);
-    t.setAttribute("text-anchor", "middle"); 
+    t.setAttribute("text-anchor", "middle");
     gHeader.appendChild(t);
   });
   composed.appendChild(gHeader);

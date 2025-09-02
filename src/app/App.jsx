@@ -245,13 +245,32 @@ export default function App() {
   // When temperament or string count change, adopt default (user → built-in)
   useEffect(() => {
     setTuning(getDefaultTuning(systemId, strings));
-  }, [systemId, strings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemId]);
 
-  // When string count changes via UI
-  const handleStringsChange = (s) => {
-    setStrings(s);
-    setTuning(getDefaultTuning(systemId, s));
-  };
+  const arraysEqual = (a, b) =>
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((v, i) => v === b[i]);
+
+  function handleStringsChange(nextCount) {
+    setStrings(nextCount);
+    setTuning((prev) => {
+      if (!Array.isArray(prev)) return getDefaultTuning(systemId, nextCount);
+
+      const prevFactory = getDefaultTuning(systemId, prev.length);
+      const wasFactory = arraysEqual(prev, prevFactory);
+
+      if (wasFactory) return getDefaultTuning(systemId, nextCount);
+
+      if (nextCount <= prev.length) {
+        return prev.slice(0, nextCount);
+      }
+      const targetDefault = getDefaultTuning(systemId, nextCount);
+      return [...prev, ...targetDefault.slice(prev.length)];
+    });
+  }
 
   // ---------- UI actions for defaults ----------
   const handleSaveDefault = () => {

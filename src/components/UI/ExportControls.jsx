@@ -8,7 +8,7 @@ export default function ExportControls({
   downloadPNG,
   downloadSVG,
   printFretboard,
-  buildHeader, 
+  buildHeader,
 }) {
   const [includeHeader, setIncludeHeader] = useState(false);
 
@@ -39,13 +39,7 @@ export default function ExportControls({
         className="btn"
         onClick={() =>
           boardRef.current &&
-          downloadPNG(
-            boardRef.current,
-            `${fileBase}.png`,
-            3, 
-            16, 
-            header, 
-          )
+          downloadPNG(boardRef.current, `${fileBase}.png`, 3, 16, header)
         }
       >
         Export PNG
@@ -55,12 +49,7 @@ export default function ExportControls({
         className="btn"
         onClick={() =>
           boardRef.current &&
-          downloadSVG(
-            boardRef.current,
-            `${fileBase}.svg`,
-            header, 
-            16, 
-          )
+          downloadSVG(boardRef.current, `${fileBase}.svg`, header, 16)
         }
       >
         Export SVG
