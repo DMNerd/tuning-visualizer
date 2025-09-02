@@ -273,10 +273,6 @@ svg {
 :root[data-theme="dark"] .noteText {
   fill: #0b0b0b;
 }
-.fretNum {
-  font-size: 12px; /* was 11 */
-  fill: var(--muted);
-}
 
 .nut {
   fill: #111;
@@ -302,7 +298,14 @@ svg {
   r: 7;
 }
 .inlay.small {
-  r: 4.5;
+  fill: var(--line);
+  stroke: var(--fg);
+  stroke-width: 0.6;
+  opacity: 0.9;
+}
+.fretNum {
+  font-size: 12px;
+  fill: var(--muted);
 }
 
 .nut {

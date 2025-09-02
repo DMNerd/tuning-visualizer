@@ -5,6 +5,12 @@ Built with React
 
 ---
 
+## Live Demo
+
+[Try it here](https://tune.nrds.cz/)
+
+---
+
 ## Features
 
 - Scales
@@ -23,7 +29,6 @@ Built with React
 
 - Customization
   - Show note names, intervals, or degrees
-  - Mirror side inlays
   - Light and dark mode
   - Choose root note and accidentals (sharps/flats)
 
@@ -42,4 +47,3 @@ Built with React
 git clone https://github.com/DMNerd/tuning-visualizer.git
 cd tuning-visualizer
 pnpm install
-```

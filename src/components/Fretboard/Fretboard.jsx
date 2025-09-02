@@ -8,10 +8,9 @@ const Fretboard = forwardRef(function Fretboard(
     tuning = ["E", "A", "D", "G", "B", "E"],
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
-    accidental = "sharp",
+    accidental = "sharp", // 'sharp' | 'flat'
     show = "names", // 'names' | 'degrees' | 'off'
     showOpen = true,
-    mirrorInlays = false,
     showFretNums = true,
     dotSize = 14,
     lefty = false,
@@ -26,7 +25,7 @@ const Fretboard = forwardRef(function Fretboard(
   const stringGap = 56;
   const padRight = 12;
   const padTop = 28;
-  const padBottom = 28;
+  const padBottom = 36; // extra room for numbers
 
   const openNoteMargin = dotSize * 3;
   const padLeft = 24 + openNoteMargin;
@@ -53,16 +52,26 @@ const Fretboard = forwardRef(function Fretboard(
   }, [ref, width, height]);
 
   const wireX = (f) => padLeft + nutW + (f === 0 ? 0 : fretXs[f - 1]);
+
+  // Center between frets (labels / fret numbers)
+  const betweenFretsX = (f) => {
+    if (f === 0) return padLeft + nutW / 2; // "0" on the nut area
+    const prev = f === 1 ? 0 : fretXs[f - 2];
+    const curr = fretXs[f - 1];
+    return padLeft + nutW + (prev + curr) / 2;
+  };
+
   const noteCenterX = (f) => {
     if (f === 0) return padLeft - dotSize * 1.5;
     const prev = f === 1 ? 0 : fretXs[f - 2];
     const curr = fretXs[f - 1];
     return padLeft + nutW + (prev + curr) / 2;
   };
+
   const boardEndX = padLeft + nutW + drawScaleLen;
   const yForString = (s) => padTop + s * stringGap;
 
-  // Build name→pc map for BOTH accidental variants so incoming names always resolve.
+  // Build name→pc map for BOTH accidentals
   const nameToPc = useMemo(() => {
     const map = new Map();
     for (let pc = 0; pc < system.divisions; pc++) {
@@ -77,10 +86,9 @@ const Fretboard = forwardRef(function Fretboard(
     return typeof pc === "number" ? pc : 0;
   };
 
-  // Use system's accidental-aware printer for labels
   const nameForPc = (pc) => system.nameForPc(pc, accidental);
 
-  // scale membership
+  // Scale membership
   const scaleSet = useMemo(
     () => new Set(intervals.map((v) => (v + rootIx) % system.divisions)),
     [intervals, rootIx, system.divisions],
@@ -101,7 +109,6 @@ const Fretboard = forwardRef(function Fretboard(
       <svg
         ref={svgRef}
         width="100%"
-        /* height attribute removed — let viewBox + width control size */
         preserveAspectRatio="xMidYMid meet"
         className={lefty ? "lefty" : ""}
         style={{ display: "block" }}
@@ -117,20 +124,12 @@ const Fretboard = forwardRef(function Fretboard(
     <svg
       ref={svgRef}
       width="100%"
-      /* height attribute removed — let viewBox + width control size */
       preserveAspectRatio="xMidYMid meet"
       className={lefty ? "lefty" : ""}
       style={{ display: "block" }}
     >
       {/* board */}
-      <rect
-        x="0"
-        y="0"
-        width={width}
-        height={height}
-        rx="14"
-        fill="var(--panel)"
-      />
+      <rect x="0" y="0" width={width} height={height} rx="14" fill="var(--panel)" />
 
       {/* nut */}
       <rect
@@ -185,15 +184,7 @@ const Fretboard = forwardRef(function Fretboard(
         const curr = fretXs[f - 1];
         const cx = padLeft + nutW + (prev + curr) / 2;
         const cy = padTop + (height - padTop - padBottom) / 2;
-        return (
-          <circle
-            key={`inlay-s-${f}`}
-            className="inlay"
-            cx={cx}
-            cy={cy}
-            r="6.5"
-          />
-        );
+        return <circle key={`inlay-s-${f}`} className="inlay" cx={cx} cy={cy} r="6.5" />;
       })}
       {inlayDoubles.map((f) => {
         const prev = f === 1 ? 0 : fretXs[f - 2];
@@ -209,64 +200,25 @@ const Fretboard = forwardRef(function Fretboard(
         );
       })}
 
-      {/* side inlays */}
+      {/* side inlays (TOP EDGE ONLY to avoid number collisions) */}
       {Array.from({ length: frets + 1 }).map((_, f) => {
-        const inlaySinglesSet = new Set(inlaySingles);
-        const inlayDoublesSet = new Set(inlayDoubles);
-        const isSingle = inlaySinglesSet.has(f);
-        const isDouble = inlayDoublesSet.has(f);
+        const isSingle = inlaySingles.includes(f);
+        const isDouble = inlayDoubles.includes(f);
         if (!isSingle && !isDouble) return null;
 
-        const cx = wireX(f);
-        const topY = padTop - 10;
-        const botY = height - padBottom + 10;
-        const rSide = 3.5; // ensure a visible radius
+        const cx = wireX(f); // on the wire
+        const topY = padTop - 10; // top edge
+        const rSide = 3.5;
 
         return (
           <g key={`side-${f}`}>
             {isDouble ? (
               <>
-                <circle className="inlay small" cx={cx} cy={botY} r={rSide} />
-                <circle
-                  className="inlay small"
-                  cx={cx + 10}
-                  cy={botY}
-                  r={rSide}
-                />
-                {mirrorInlays && (
-                  <>
-                    <circle
-                      className="inlay small"
-                      cx={cx}
-                      cy={topY}
-                      r={rSide}
-                    />
-                    <circle
-                      className="inlay small"
-                      cx={cx + 10}
-                      cy={topY}
-                      r={rSide}
-                    />
-                  </>
-                )}
+                <circle className="inlay small" cx={cx} cy={topY} r={rSide} />
+                <circle className="inlay small" cx={cx + 10} cy={topY} r={rSide} />
               </>
             ) : (
-              <>
-                <circle
-                  className="inlay small"
-                  cx={cx + 5}
-                  cy={botY}
-                  r={rSide}
-                />
-                {mirrorInlays && (
-                  <circle
-                    className="inlay small"
-                    cx={cx + 5}
-                    cy={topY}
-                    r={rSide}
-                  />
-                )}
-              </>
+              <circle className="inlay small" cx={cx + 5} cy={topY} r={rSide} />
             )}
           </g>
         );
@@ -288,8 +240,8 @@ const Fretboard = forwardRef(function Fretboard(
             show === "off"
               ? ""
               : show === "degrees"
-                ? (degreeForPc(pc) ?? "")
-                : nameForPc(pc);
+              ? (degreeForPc(pc) ?? "")
+              : nameForPc(pc);
 
           const r = (isRoot ? 1.1 : 1) * dotSize;
           const visible = f > 0 || (f === 0 && showOpen);
@@ -319,7 +271,7 @@ const Fretboard = forwardRef(function Fretboard(
         });
       })}
 
-      {/* fret numbers */}
+      {/* fret numbers (centered between frets, bottom) */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const isStandard = (f * 12) % system.divisions === 0;
@@ -327,9 +279,10 @@ const Fretboard = forwardRef(function Fretboard(
             <text
               key={`num-${f}`}
               className={`fretNum ${isStandard ? "" : "microNum"}`}
-              x={wireX(f)}
-              y={height - 6}
+              x={betweenFretsX(f)}
+              y={height - 8}
               textAnchor="middle"
+              pointerEvents="none"
             >
               {f}
             </text>

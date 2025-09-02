@@ -10,12 +10,7 @@ export default function DisplayControls({
   setShowFretNums,
   dotSize,
   setDotSize,
-
-  // inlays (merged)
-  mirrorInlays,
-  setMirrorInlays,
-
-  // accidentals (merged)
+  // accidentals
   accidental,
   setAccidental,
 }) {
@@ -53,12 +48,7 @@ export default function DisplayControls({
       {/* Labels */}
       <div className="field">
         <span>Labels</span>
-        <select
-          id="labels"
-          name="labels"
-          value={show}
-          onChange={(e) => setShow(e.target.value)}
-        >
+        <select id="labels" name="labels" value={show} onChange={(e) => setShow(e.target.value)}>
           <option value="names">Note names</option>
           <option value="degrees">Degrees</option>
           <option value="off">Off</option>
@@ -86,18 +76,6 @@ export default function DisplayControls({
           onChange={(e) => setShowFretNums(e.target.checked)}
         />{" "}
         Show fret numbers
-      </label>
-
-      {/* Inlays (merged) */}
-      <label className="check" htmlFor="mirrorInlays">
-        <input
-          id="mirrorInlays"
-          name="mirrorInlays"
-          type="checkbox"
-          checked={mirrorInlays}
-          onChange={(e) => setMirrorInlays(e.target.checked)}
-        />{" "}
-        Mirror side inlays (both edges)
       </label>
 
       {/* Dot size */}
