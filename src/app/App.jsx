@@ -347,10 +347,18 @@ export default function App() {
         {/* 5) Export */}
         <ExportControls
           boardRef={boardRef}
-          fileBase={fileBase}
+          fileBase={slug(fileBase)}
           downloadPNG={downloadPNG}
           downloadSVG={downloadSVG}
           printFretboard={printFretboard}
+          buildHeader={() => ({
+            system: systemId, // e.g., "12-TET" | "24-TET"
+            tuning: tuning, // e.g., ["E","B","G","D","A","E"] (high→low)
+            scale: scale, // e.g., "Major (Ionian)"
+            chordEnabled: showChord, // boolean
+            chordRoot: chordRoot, // e.g., "C"
+            chordType: chordType, // e.g., "maj7"
+          })}
         />
       </div>
 
