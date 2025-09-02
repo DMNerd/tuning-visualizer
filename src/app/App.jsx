@@ -13,6 +13,7 @@ import {
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/constants";
+import { buildChordPCsFromPc } from "@/lib/theory/chords";
 
 // existing UI atoms
 import Section from "@/components/UI/Section";
@@ -22,6 +23,7 @@ import ScaleControls from "@/components/UI/ScaleControls";
 import DisplayControls from "@/components/UI/DisplayControls";
 import InstrumentControls from "@/components/UI/InstrumentControls";
 import ExportControls from "@/components/UI/ExportControls";
+import ChordBuilder from "@/components/UI/ChordBuilder";
 
 export default function App() {
   // choose your startup system here
@@ -36,6 +38,11 @@ export default function App() {
   const [scale, setScale] = useState("Major (Ionian)");
   const [root, setRoot] = useState("C");
   const [accidental, setAccidental] = useState("sharp"); // "sharp" | "flat"
+
+  // ----- Chords -----
+  const [chordRoot, setChordRoot] = useState("C");
+  const [chordType, setChordType] = useState("maj"); 
+  const [showChord, setShowChord] = useState(false);
 
   // display options
   const [show, setShow] = useState("names");
@@ -182,6 +189,19 @@ export default function App() {
   // root index from current root label
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
 
+  const chordRootIx = useMemo(
+    () => pcFromName(chordRoot),
+    [chordRoot, pcFromName],
+  );
+
+  const chordPCs = useMemo(
+    () =>
+      showChord
+        ? buildChordPCsFromPc(chordRootIx, chordType, system.divisions)
+        : null,
+    [showChord, chordRootIx, chordType, system.divisions],
+  );
+
   // scales for system
   const scaleOptions = useMemo(
     () => ALL_SCALES.filter((s) => s.systemId === system.id),
@@ -219,6 +239,7 @@ export default function App() {
     const toName = (pc) => system.nameForPc(pc, accidental);
     setRoot((prev) => toName(pcFromName(prev)));
     setTuning((prev) => prev.map((n) => toName(pcFromName(n))));
+    setChordRoot((prev) => toName(pcFromName(prev)));
   }, [accidental, system, pcFromName]);
 
   // When temperament or string count change, adopt default (user → built-in)
@@ -274,6 +295,16 @@ export default function App() {
           setScale={setScale}
           sysNames={sysNames}
           scaleOptions={scaleOptions}
+        />
+
+        <ChordBuilder
+          root={chordRoot}
+          onRootChange={setChordRoot}
+          sysNames={sysNames}
+          type={chordType}
+          onTypeChange={setChordType}
+          showChord={showChord}
+          setShowChord={setShowChord}
         />
 
         {/* 3) Instrument */}
@@ -339,6 +370,8 @@ export default function App() {
             dotSize={dotSize}
             lefty={lefty}
             system={system}
+            chordPCs={chordPCs}
+            chordRootPc={chordRootIx}
           />
         </div>
       </div>
