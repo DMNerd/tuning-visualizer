@@ -36,7 +36,7 @@ export const PRESET_TUNINGS = {
   "12-TET": {
     // 4-string: common double-courses & short-scale instruments
     4: {
-      "Mandolin / Violin (GDAE)": ["G", "D", "A", "E"],
+      "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
       "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
       "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
       "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
