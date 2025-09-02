@@ -110,7 +110,7 @@ export const PRESET_TUNINGS = {
   "24-TET": {
     // 4-string
     4: {
-      "Mandolin / Violin (GDAE)": ["G", "D", "A", "E"],
+      "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
       "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
       "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
 
