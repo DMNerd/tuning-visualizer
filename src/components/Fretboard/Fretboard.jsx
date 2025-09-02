@@ -15,6 +15,8 @@ const Fretboard = forwardRef(function Fretboard(
     dotSize = 14,
     lefty = false,
     system, // { divisions, nameForPc(pc, accidental?) }
+    chordPCs = null, // Set<number> | null
+    chordRootPc = null, // number | null
   },
   ref,
 ) {
@@ -215,39 +217,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {Array.from({ length: frets + 1 }).map((_, f) => {
-          const isSingle = inlaySingles.includes(f);
-          const isDouble = inlayDoubles.includes(f);
-          if (!isSingle && !isDouble) return null;
-
-          const cx = wireX(f); 
-          const topY = padTop - 10; 
-          const rSide = 3.5;
-
-          return (
-            <g key={`side-${f}`}>
-              {isDouble ? (
-                <>
-                  <circle className="inlay small" cx={cx} cy={topY} r={rSide} />
-                  <circle
-                    className="inlay small"
-                    cx={cx + 10}
-                    cy={topY}
-                    r={rSide}
-                  />
-                </>
-              ) : (
-                <circle
-                  className="inlay small"
-                  cx={cx + 5}
-                  cy={topY}
-                  r={rSide}
-                />
-              )}
-            </g>
-          );
-        })}
-
+        {/* note circles */}
         {tuning.map((openName, s) => {
           const openPc = pcForName(openName);
           return Array.from({ length: frets + 1 }).map((_, f) => {
@@ -259,7 +229,13 @@ const Fretboard = forwardRef(function Fretboard(
             const cy = yForString(s);
 
             const isRoot = pc === rootIx;
-            const r = (isRoot ? 1.1 : 1) * dotSize;
+
+            const inChord = chordPCs ? chordPCs.has(pc) : false;
+            const isChordRoot = inChord && chordRootPc === pc;
+
+            const rBase = (isRoot ? 1.1 : 1) * dotSize;
+            const r = inChord ? rBase * 1.05 : rBase;
+
             const visible = f > 0 || (f === 0 && showOpen);
 
             return (
@@ -270,6 +246,8 @@ const Fretboard = forwardRef(function Fretboard(
                   cy={cy}
                   r={r}
                   fill={isRoot ? "var(--root)" : "var(--accent)"}
+                  stroke={inChord ? "var(--fg)" : "none"}
+                  strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
                 />
               )
             );
@@ -277,6 +255,7 @@ const Fretboard = forwardRef(function Fretboard(
         })}
       </g>
 
+      {/* note labels */}
       {tuning.map((openName, s) => {
         const openPc = pcForName(openName);
         return Array.from({ length: frets + 1 }).map((_, f) => {
@@ -311,6 +290,7 @@ const Fretboard = forwardRef(function Fretboard(
         });
       })}
 
+      {/* fret numbers */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const isStandard = (f * 12) % system.divisions === 0;

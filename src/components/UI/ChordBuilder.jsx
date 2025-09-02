@@ -1,0 +1,61 @@
+import Section from "@/components/UI/Section";
+import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
+
+export default function ChordBuilder({
+  root,
+  onRootChange,
+  sysNames,
+  type,
+  onTypeChange,
+  showChord,
+  setShowChord,
+}) {
+  return (
+    <Section title="Chord Builder">
+      <div className="grid2">
+        <div className="field">
+          <span>Root</span>
+          <select
+            id="chord-root"
+            name="chord-root"
+            value={root}
+            onChange={(e) => onRootChange(e.target.value)}
+          >
+            {sysNames.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <span>Type</span>
+          <select
+            id="chord-type"
+            name="chord-type"
+            value={type}
+            onChange={(e) => onTypeChange(e.target.value)}
+          >
+            {CHORD_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {CHORD_LABELS[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <label className="check" htmlFor="showChord">
+        <input
+          id="showChord"
+          name="showChord"
+          type="checkbox"
+          checked={showChord}
+          onChange={(e) => setShowChord(e.target.checked)}
+        />
+        Show chord on fretboard
+      </label>
+    </Section>
+  );
+}
