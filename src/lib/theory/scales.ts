@@ -224,6 +224,22 @@ export const SCALES_24: ScaleDef[] = [
     systemId: "24-TET",
     pcs: [0, 3, 10, 12, 16, 18, 22],
   },
+  {
+    label: "24TET Uşşak (Uşşâk)",
+    systemId: "24-TET",
+
+    pcs: [0, 3, 6, 10, 14, 17, 20],
+  },
+  {
+    label: "24TET Hüseyni",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 18, 20],
+  },
+  {
+    label: "24TET Uşak Maṣri (Hijaz on 5th)",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 16, 21],
+  },
 
   // Neutral pentatonic (roughly equidistant-ish without semitones)
   {

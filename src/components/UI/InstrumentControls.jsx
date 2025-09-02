@@ -2,7 +2,6 @@ import Section from "@/components/UI/Section";
 
 export default function InstrumentControls({
   strings,
-  setStrings,
   frets,
   setFrets,
   sysNames,

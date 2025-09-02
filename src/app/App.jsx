@@ -41,7 +41,7 @@ export default function App() {
 
   // ----- Chords -----
   const [chordRoot, setChordRoot] = useState("C");
-  const [chordType, setChordType] = useState("maj"); 
+  const [chordType, setChordType] = useState("maj");
   const [showChord, setShowChord] = useState(false);
 
   // display options
