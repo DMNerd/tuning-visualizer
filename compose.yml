@@ -1,0 +1,18 @@
+services:
+  web:
+    container_name: tuning-visualizer
+    build:
+      context: .
+    image: tuning-visualizer:latest
+    ports:
+      - "8080:8080" # host:container (rootless-safe)
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 10s
+      timeout: 2s
+      retries: 5
