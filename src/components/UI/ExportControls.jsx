@@ -10,7 +10,7 @@ export default function ExportControls({
   printFretboard,
   buildHeader,
 }) {
-  const [includeHeader, setIncludeHeader] = useState(false);
+  const [includeHeader, setIncludeHeader] = useState(true);
 
   const header = useMemo(() => {
     if (!includeHeader || !buildHeader) return null;
