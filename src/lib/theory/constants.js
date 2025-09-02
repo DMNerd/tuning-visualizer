@@ -16,7 +16,7 @@ export const DEFAULT_TUNINGS = {
 
   "24-TET": {
     // Same concert-pitch names (even PCs in 24-TET)
-    4: ["G", "D", "A", "E"],
+    4: ["E", "A", "D", "G"],
 
     // Bass (high → low)
     5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
@@ -115,7 +115,7 @@ export const PRESET_TUNINGS = {
       "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
 
       // Microtonal flavors (quarter-tone accents)
-      "Mandolin +Q on A (A↑)": ["G", "D", "A↑", "E"],
+      "Mandolin +Q on A (A↑)": ["E", "A↑", "D", "G"],
 
       // Bass (4)
       "Bass 4 Standard (EADG)": ["G", "D", "A", "E"],
