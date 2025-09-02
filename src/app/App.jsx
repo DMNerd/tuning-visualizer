@@ -324,7 +324,7 @@ export default function App() {
       </div>
 
       <div className="stage">
-        <div className={`fretboard-wrap ${lefty ? "lefty" : ""}`}>
+        <div className="fretboard-wrap">
           <Fretboard
             ref={boardRef}
             strings={strings}
