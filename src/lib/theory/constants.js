@@ -3,7 +3,7 @@
 export const DEFAULT_TUNINGS = {
   "12-TET": {
     // Violin / Mandolin family (high → low)
-    4: ["G", "D", "A", "E"],
+    4: ["E", "A", "D", "G"],
 
     // Bass (high → low)
     5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
