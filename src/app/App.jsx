@@ -1,7 +1,8 @@
+// src/App.jsx
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Fretboard from "@/components/Fretboard/Fretboard";
-import Section from "@/components/UI/Section";
 
+// exporters
 import {
   downloadPNG,
   downloadSVG,
@@ -9,16 +10,19 @@ import {
   slug,
 } from "@/lib/export/exporters";
 
-// generalized theory
+// theory
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
-
-// per-system defaults + (optional) named presets
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/constants";
 
-// split UI controls
-import AccidentalControls from "@/components/UI/AccidentalControls";
-import InlayControls from "@/components/UI/InlayControls";
+// existing UI atoms
+import Section from "@/components/UI/Section";
+import PanelHeader from "@/components/UI/PanelHeader";
+import TuningSystemSelector from "@/components/UI/TuningSystemSelector";
+import ScaleControls from "@/components/UI/ScaleControls";
+import DisplayControls from "@/components/UI/DisplayControls";
+import InstrumentControls from "@/components/UI/InstrumentControls";
+import ExportControls from "@/components/UI/ExportControls";
 
 export default function App() {
   // choose your startup system here
@@ -250,280 +254,78 @@ export default function App() {
   return (
     <div className="layout">
       <div className="panel">
-        <div className="panel-header">
-          <h1>TunningViz</h1>
-          <div className="toggles">
-            <label className="switch" htmlFor="darkMode">
-              <input
-                id="darkMode"
-                name="darkMode"
-                type="checkbox"
-                checked={theme === "dark"}
-                onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
-              />
-              Dark Mode
-            </label>
-            <label className="switch" htmlFor="lefty">
-              <input
-                id="lefty"
-                name="lefty"
-                type="checkbox"
-                checked={lefty}
-                onChange={(e) => setLefty(e.target.checked)}
-              />
-              Lefty
-            </label>
-          </div>
-        </div>
-
-        {/* Tuning system selector */}
-        <Section title="Tuning System">
-          <div className="field">
-            <span>System</span>
-            <select
-              id="system"
-              name="system"
-              value={systemId}
-              onChange={(e) => setSystemId(e.target.value)}
-            >
-              {Object.keys(TUNINGS).map((id) => (
-                <option key={id} value={id}>
-                  {id}
-                </option>
-              ))}
-            </select>
-          </div>
-        </Section>
-
-        <Section title="Scale">
-          <div className="grid2">
-            <div className="field">
-              <span>Root</span>
-              <select
-                id="root"
-                name="root"
-                value={root}
-                onChange={(e) => setRoot(e.target.value)}
-              >
-                {sysNames.map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <span>Scale</span>
-              <select
-                id="scale"
-                name="scale"
-                value={scale}
-                onChange={(e) => setScale(e.target.value)}
-              >
-                {scaleOptions.map((s) => (
-                  <option key={s.label} value={s.label}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </Section>
-
-        {/* Accidentals */}
-        <AccidentalControls value={accidental} onChange={setAccidental} />
-
-        <Section title="Display">
-          <div className="field">
-            <span>Labels</span>
-            <select
-              id="labels"
-              name="labels"
-              value={show}
-              onChange={(e) => setShow(e.target.value)}
-            >
-              <option value="names">Note names</option>
-              <option value="degrees">Degrees</option>
-              <option value="off">Off</option>
-            </select>
-          </div>
-          <label className="check" htmlFor="showOpen">
-            <input
-              id="showOpen"
-              name="showOpen"
-              type="checkbox"
-              checked={showOpen}
-              onChange={(e) => setShowOpen(e.target.checked)}
-            />{" "}
-            Show open notes
-          </label>
-          <label className="check" htmlFor="showFretNums">
-            <input
-              id="showFretNums"
-              name="showFretNums"
-              type="checkbox"
-              checked={showFretNums}
-              onChange={(e) => setShowFretNums(e.target.checked)}
-            />{" "}
-            Show fret numbers
-          </label>
-          <div className="field">
-            <span>Dot size</span>
-            <input
-              id="dotSize"
-              name="dotSize"
-              type="range"
-              min="8"
-              max="24"
-              value={dotSize}
-              onChange={(e) => setDotSize(parseInt(e.target.value))}
-            />
-          </div>
-        </Section>
-
-        {/* Inlays */}
-        <InlayControls
-          mirrorInlays={mirrorInlays}
-          onMirrorChange={setMirrorInlays}
+        <PanelHeader
+          theme={theme}
+          setTheme={setTheme}
+          lefty={lefty}
+          setLefty={setLefty}
         />
 
-        {/* Instrument */}
-        <Section title="Instrument">
-          <div className="instrument">
-            {/* Strings / Frets row */}
-            <div className="row-2">
-              <div className="field">
-                <span>Strings</span>
-                <input
-                  id="strings"
-                  name="strings"
-                  type="number"
-                  min="4"
-                  max="8"
-                  value={strings}
-                  onChange={(e) =>
-                    handleStringsChange(parseInt(e.target.value))
-                  }
-                />
-              </div>
-              <div className="field">
-                <span>Frets</span>
-                <input
-                  id="frets"
-                  name="frets"
-                  type="number"
-                  min="12"
-                  max="30"
-                  value={frets}
-                  onChange={(e) => setFrets(parseInt(e.target.value))}
-                />
-              </div>
-            </div>
+        {/* 1) Tunning */}
+        <TuningSystemSelector
+          systemId={systemId}
+          setSystemId={setSystemId}
+          systems={TUNINGS}
+        />
 
-            {/* Per-string selectors */}
-            <div className="strings-grid">
-              {tuning.map((note, i) => {
-                const stringNum = strings - i;
-                return (
-                  <div key={i} className="field">
-                    <span>String {stringNum}</span>
-                    <select
-                      id={`string-${stringNum}`}
-                      name={`string-${stringNum}`}
-                      value={note}
-                      onChange={(e) => {
-                        const copy = [...tuning];
-                        copy[i] = e.target.value;
-                        setTuning(copy);
-                      }}
-                    >
-                      {sysNames.map((n) => (
-                        <option key={n}>{n}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
+        {/* 2) Scale */}
+        <ScaleControls
+          root={root}
+          setRoot={setRoot}
+          scale={scale}
+          setScale={setScale}
+          sysNames={sysNames}
+          scaleOptions={scaleOptions}
+        />
 
-            {/* Presets picker */}
-            <div className="field" style={{ marginTop: 8 }}>
-              <span>Preset</span>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                <select
-                  id="preset"
-                  name="preset"
-                  value={selectedPreset}
-                  onChange={(e) => setSelectedPreset(e.target.value)}
-                >
-                  {presetNames.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-                <button className="btn" onClick={applySelectedPreset}>
-                  Apply preset
-                </button>
-              </div>
-            </div>
+        {/* 3) Instrument */}
+        <InstrumentControls
+          strings={strings}
+          setStrings={setStrings}
+          frets={frets}
+          setFrets={setFrets}
+          sysNames={sysNames}
+          tuning={tuning}
+          setTuning={setTuning}
+          handleStringsChange={handleStringsChange}
+          presetNames={presetNames}
+          selectedPreset={selectedPreset}
+          setSelectedPreset={setSelectedPreset}
+          applySelectedPreset={applySelectedPreset}
+          savedExists={savedExists}
+          handleSaveDefault={handleSaveDefault}
+          handleLoadSavedDefault={handleLoadSavedDefault}
+          handleResetFactoryDefault={handleResetFactoryDefault}
+          systemId={systemId}
+        />
 
-            {/* Defaults UI */}
-            <div
-              className="defaults-row"
-              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-            >
-              <button className="btn" onClick={handleSaveDefault}>
-                Save as default ({systemId}, {strings}-string)
-              </button>
-              <button
-                className="btn"
-                onClick={handleLoadSavedDefault}
-                disabled={!savedExists}
-                title={
-                  savedExists ? "" : "No saved default for this system/count"
-                }
-              >
-                Load saved
-              </button>
-              <button className="btn" onClick={handleResetFactoryDefault}>
-                Reset to factory default
-              </button>
-            </div>
-          </div>
-        </Section>
+        {/* 4) Display (includes Accidentals + Inlays) */}
+        <DisplayControls
+          /* labels & visibility */
+          show={show}
+          setShow={setShow}
+          showOpen={showOpen}
+          setShowOpen={setShowOpen}
+          showFretNums={showFretNums}
+          setShowFretNums={setShowFretNums}
+          dotSize={dotSize}
+          setDotSize={setDotSize}
+          /* inlays (merged) */
+          mirrorInlays={mirrorInlays}
+          setMirrorInlays={setMirrorInlays}
+          /* accidentals (merged) */
+          accidental={accidental}
+          setAccidental={setAccidental}
+        />
 
-        <Section title="Export">
-          <button
-            className="btn"
-            onClick={() =>
-              boardRef.current &&
-              downloadPNG(boardRef.current, `${fileBase}.png`)
-            }
-          >
-            Export PNG
-          </button>
-          <button
-            className="btn"
-            onClick={() =>
-              boardRef.current &&
-              downloadSVG(boardRef.current, `${fileBase}.svg`)
-            }
-          >
-            Export SVG
-          </button>
-          <button
-            className="btn"
-            onClick={() => boardRef.current && printFretboard(boardRef.current)}
-          >
-            Print
-          </button>
-        </Section>
+        {/* 5) Export */}
+        <ExportControls
+          boardRef={boardRef}
+          fileBase={fileBase}
+          downloadPNG={downloadPNG}
+          downloadSVG={downloadSVG}
+          printFretboard={printFretboard}
+        />
       </div>
 
       <div className="stage">

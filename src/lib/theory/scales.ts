@@ -46,8 +46,16 @@ export const SCALES_12: ScaleDef[] = [
   // Pentatonics & blues
   { label: "Major Pentatonic", systemId: "12-TET", pcs: [0, 2, 4, 7, 9] },
   { label: "Minor Pentatonic", systemId: "12-TET", pcs: [0, 3, 5, 7, 10] },
-  { label: "Blues Minor (Hexatonic)", systemId: "12-TET", pcs: [0, 3, 5, 6, 7, 10] },
-  { label: "Blues Major (Hexatonic)", systemId: "12-TET", pcs: [0, 2, 3, 4, 7, 9] },
+  {
+    label: "Blues Minor (Hexatonic)",
+    systemId: "12-TET",
+    pcs: [0, 3, 5, 6, 7, 10],
+  },
+  {
+    label: "Blues Major (Hexatonic)",
+    systemId: "12-TET",
+    pcs: [0, 2, 3, 4, 7, 9],
+  },
 
   // Symmetric scales
   {
