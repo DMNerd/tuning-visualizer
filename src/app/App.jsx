@@ -224,6 +224,13 @@ export default function App() {
     [root, scale, accidental, strings],
   );
 
+  const drawFrets = useMemo(() => {
+    const base = frets;
+    const n = system.divisions || 12; // works for 12, 19, 24, 31, etc.
+    const factor = n / 12;
+    return Math.max(1, Math.round(base * factor));
+  }, [frets, system.divisions]);
+
   // theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -386,7 +393,7 @@ export default function App() {
           <Fretboard
             ref={boardRef}
             strings={strings}
-            frets={frets}
+            frets={drawFrets} // ← scaled for N-TET
             tuning={tuning}
             rootIx={rootIx}
             intervals={intervals}

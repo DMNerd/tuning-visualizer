@@ -103,9 +103,35 @@ const Fretboard = forwardRef(function Fretboard(
     return ix >= 0 ? ix + 1 : null;
   };
 
-  // Inlays
-  const inlaySingles = [3, 5, 7, 9, 15, 17, 19, 21].filter((f) => f <= frets);
-  const inlayDoubles = [12, 24].filter((f) => f <= frets);
+  // --- Inlays (12-TET references mapped to N-TET wires) ---
+  const N = system.divisions;
+
+  // how many 12-TET semitone steps fit in the current wire count?
+  const maxSemi = Math.floor((frets * 12) / N);
+
+  // 12-TET semitone positions for classic inlays
+  const singleBases = [3, 5, 7, 9, 15, 17, 19, 21]; // every octave
+  const singleSemis = [];
+  for (let k = 0; k <= Math.ceil(maxSemi / 12); k++) {
+    for (const b of singleBases) {
+      const s = b + 12 * k;
+      if (s <= maxSemi) singleSemis.push(s);
+    }
+  }
+
+  const doubleSemis = [];
+  for (let s = 12; s <= maxSemi; s += 12) doubleSemis.push(s);
+
+  // map 12-TET semitone → actual N-TET wire index
+  const semiToWire = (semi) => Math.round((semi * N) / 12);
+  const uniq = (arr) => Array.from(new Set(arr));
+
+  const inlaySingles = uniq(singleSemis.map(semiToWire)).filter(
+    (f) => f >= 1 && f <= frets,
+  );
+  const inlayDoubles = uniq(doubleSemis.map(semiToWire)).filter(
+    (f) => f >= 1 && f <= frets,
+  );
 
   if (!Array.isArray(intervals) || intervals.length === 0) {
     return (
@@ -187,7 +213,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* center inlays */}
+        {/* center inlays (single) */}
         {inlaySingles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -203,6 +229,8 @@ const Fretboard = forwardRef(function Fretboard(
             />
           );
         })}
+
+        {/* double inlays at octaves */}
         {inlayDoubles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -291,19 +319,38 @@ const Fretboard = forwardRef(function Fretboard(
       })}
 
       {/* fret numbers */}
+      {/* fret numbers (12-TET aware with micro steps) */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
-          const isStandard = (f * 12) % system.divisions === 0;
+          const N = system.divisions; // e.g., 12, 24, 19, 31...
+          const rem = (f * 12) % N;
+          const semitone = Math.floor((f * 12) / N);
+
+          let labelNum;
+          if (rem === 0) {
+            labelNum = String(semitone);
+          } else if (N % 12 === 0) {
+            const perSemi = N / 12;
+            const sub = f % perSemi;
+            const letters = "abcdefghijklmnopqrstuvwxyz";
+            const suffix = letters[sub - 1] ?? `.${sub}`;
+            labelNum = `${semitone}${suffix}`;
+          } else {
+            labelNum = `${semitone}+${rem}/${N}`;
+          }
+
+          const isStandard = rem === 0;
+
           return (
             <text
               key={`num-${f}`}
               className={`fretNum ${isStandard ? "" : "microNum"}`}
-              x={displayX(betweenFretsX(f))}
+              x={displayX(wireX(f))} // place on the actual fret wire
               y={height - 8}
               textAnchor="middle"
               pointerEvents="none"
             >
-              {f}
+              {labelNum}
             </text>
           );
         })}
