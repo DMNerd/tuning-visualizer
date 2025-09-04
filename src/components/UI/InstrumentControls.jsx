@@ -1,9 +1,14 @@
 import Section from "@/components/UI/Section";
 
+function clamp(n, min, max) {
+  const v = Number.isFinite(n) ? n : min;
+  return Math.max(min, Math.min(max, v));
+}
+
 export default function InstrumentControls({
   strings,
   frets,
-  setFrets,
+  setFrets, // pass setFretsUI from App to mark 'touched'
   sysNames,
   tuning,
   setTuning,
@@ -30,9 +35,13 @@ export default function InstrumentControls({
               min="4"
               max="8"
               value={strings}
-              onChange={(e) => handleStringsChange(parseInt(e.target.value))}
+              onChange={(e) => {
+                const val = clamp(parseInt(e.target.value, 10), 4, 8);
+                handleStringsChange(val);
+              }}
             />
           </div>
+
           <div className="field">
             <span>Frets</span>
             <input
@@ -42,7 +51,10 @@ export default function InstrumentControls({
               min="12"
               max="30"
               value={frets}
-              onChange={(e) => setFrets(parseInt(e.target.value))}
+              onChange={(e) => {
+                const val = clamp(parseInt(e.target.value, 10), 12, 30);
+                setFrets(val); // this is setFretsUI from App, marks fretsTouched
+              }}
             />
           </div>
         </div>
@@ -64,7 +76,9 @@ export default function InstrumentControls({
                   }}
                 >
                   {sysNames.map((n) => (
-                    <option key={n}>{n}</option>
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
                   ))}
                 </select>
               </div>

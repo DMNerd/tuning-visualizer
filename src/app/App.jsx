@@ -33,6 +33,13 @@ export default function App() {
   // strings / frets
   const [strings, setStrings] = useState(6);
   const [frets, setFrets] = useState(22);
+  const [fretsTouched, setFretsTouched] = useState(false);
+
+  // wrapped setter to mark user interaction
+  const setFretsUI = (val) => {
+    setFrets(val);
+    setFretsTouched(true);
+  };
 
   // scale / root / accidental
   const [scale, setScale] = useState("Major (Ionian)");
@@ -250,6 +257,29 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemId]);
 
+  // --- Keep drawn fret count visually consistent across any N-TET ---
+  const prevDivRef = useRef(system.divisions);
+
+  useEffect(() => {
+    const prevN = prevDivRef.current;
+    const nextN = system.divisions;
+
+    if (prevN !== nextN) {
+      if (!fretsTouched) {
+        // Preserve drawn wires: nextSelected ≈ frets * (prevN / nextN)
+        const nextSelected = Math.max(
+          12,
+          Math.min(30, Math.round(frets * (prevN / nextN))),
+        );
+        if (nextSelected !== frets) {
+          // Use the raw setter so this doesn't mark as "touched"
+          setFrets(nextSelected);
+        }
+      }
+      prevDivRef.current = nextN;
+    }
+  }, [system.divisions, frets, fretsTouched]);
+
   const arraysEqual = (a, b) =>
     Array.isArray(a) &&
     Array.isArray(b) &&
@@ -359,7 +389,7 @@ export default function App() {
           strings={strings}
           setStrings={setStrings}
           frets={frets}
-          setFrets={setFrets}
+          setFrets={setFretsUI}
           sysNames={sysNames}
           tuning={tuning}
           setTuning={setTuning}

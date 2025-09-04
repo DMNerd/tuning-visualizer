@@ -1,6 +1,6 @@
 /* =========================
-   Theme tokens
-   ========================= */
+  Theme tokens
+========================= */
 :root {
   /* colors */
   --fg: #1b1f23;
@@ -18,14 +18,18 @@
   --note-micro: #6fa8dc;
 
   /* layout rhythm */
-  --gap: 12px;                                  /* base spacing */
-  --gutter: clamp(12px, 3vw, 24px);             /* page side gutters */
-  --max-stage: clamp(1100px, 96vw, 1400px);     /* wider fretboard */
-  --card-radius: 12px;                           /* matches fretboard */
+  --gap: 12px;
+  --gutter: clamp(12px, 3vw, 24px);
+  --max-stage: clamp(1100px, 96vw, 1400px);
+  --card-radius: 12px;
 
   /* masonry */
   --card-gap: clamp(8px, 1.6vw, 12px);
   --col-width: clamp(260px, 24vw, 360px);
+
+  /* motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --speed: 220ms;
 }
 
 :root[data-theme="dark"] {
@@ -45,17 +49,44 @@
 }
 
 /* =========================
-   Global base
-   ========================= */
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; }
+  Global base
+========================= */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
   line-height: 1.35;
   font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 70%, var(--fg));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* =========================
@@ -80,119 +111,230 @@ body {
       gap: 10px;
       padding: 6px 10px;
 
-      a svg { width: 18px !important; height: 18px !important; }
+      a svg {
+        width: 18px !important;
+        height: 18px !important;
+      }
     }
 
-    .app-title { margin: 0; font-size: 1rem; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .toggles { display: flex; align-items: center; gap: 10px; }
+    .app-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toggles {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
     .gh-link {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 26px; height: 26px; border-radius: 6px; color: var(--muted); text-decoration: none;
-      &:hover { color: var(--fg); background: var(--line); }
-      svg { width: 18px; height: 18px; flex: 0 0 18px; }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      transition:
+        background var(--speed) var(--ease),
+        color var(--speed) var(--ease);
+      &:hover {
+        color: var(--fg);
+        background: var(--line);
+      }
+      svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+      }
     }
 
-    .switch { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+    .switch {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
   }
 
   /* ---- Stage (fretboard) ---- */
   .page-main {
-    /* Consistent vertical rhythm */
     margin-top: var(--gap);
     margin-bottom: var(--gap);
 
-    /* Wider than controls, centered with side gutters */
     max-width: var(--max-stage);
     width: 100%;
     padding: 0 var(--gutter);
     margin-left: auto;
     margin-right: auto;
 
-    .stage { width: 100%; }
-    .stage-inner { padding: var(--gap); }
+    .stage {
+      width: 100%;
+    }
+    .stage-inner {
+      padding: var(--gap);
+    }
 
     .stage-toolbar {
-      position: sticky; top: 0;
-      display: flex; justify-content: flex-end; gap: 8px; padding: 8px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.06), transparent);
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.06),
+        rgba(0, 0, 0, 0)
+      );
+      backdrop-filter: blur(2px);
       z-index: 3;
+    }
+    :root[data-theme="dark"] & .stage-toolbar {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0)
+      );
     }
 
     .fretboard-wrap {
       width: 100%;
-      display: grid; place-items: center;
+      display: grid;
+      place-items: center;
       overflow: auto;
+      -webkit-overflow-scrolling: touch;
       border: 1px solid var(--line);
       border-radius: var(--card-radius);
       background: var(--panel);
       padding: 8px;
 
-      svg { width: 100%; height: 100%; display: block; }
-      &.lefty svg { transform: scaleX(-1); }
+      svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      &.lefty svg {
+        transform: none;
+      } /* geometry-only flip handled by classes */
     }
   }
 
   /* =========================
-     Controls: same visual width as fretboard,
-     rounded box with same outline, masonry inside
-     ========================= */
+    Controls: same visual width as fretboard,
+    rounded box with same outline, masonry inside
+  ========================= */
   .page-controls {
     flex: 0 0 auto;
 
-    /* Make container match the *inner* width of the stage (inside gutters) */
     max-width: calc(var(--max-stage) - (var(--gutter) * 2));
     width: 100%;
-    margin: 0 auto var(--gap); /* same bottom gap as top */
-    padding: var(--gap);       /* equal top & bottom padding */
+    margin: 0 auto var(--gap);
+    padding: var(--gap);
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: var(--card-radius);
 
-    /* Masonry via multi-columns (cards can have variable heights) */
     column-width: var(--col-width);
     column-gap: var(--card-gap);
 
     > .panel-sec,
     > section.panel-sec {
-      display: block;               /* required for columns */
-      break-inside: avoid;          /* keep card intact in a column */
+      display: block;
+      break-inside: avoid;
       margin: 0 0 var(--card-gap);
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 10px;
       background: var(--panel);
+      overflow: clip;
 
       .sec-header {
-        display: flex; justify-content: space-between; align-items: center;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
         padding: 8px 10px;
-        border: 0; background: transparent; color: var(--fg);
-        font-weight: 600; cursor: pointer;
-
-        .chev { color: var(--muted); }
+        border: 0;
+        background: transparent;
+        color: var(--fg);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background var(--speed) var(--ease);
+        .chev {
+          color: var(--muted);
+          transition: transform var(--speed) var(--ease);
+        }
+        &:hover {
+          background: color-mix(in oklab, var(--fg) 6%, transparent);
+        }
       }
+
       .sec-body {
-        display: grid; gap: 8px;
+        display: grid;
+        grid-template-rows: 1fr;
+        transition:
+          grid-template-rows var(--speed) var(--ease),
+          padding var(--speed) var(--ease),
+          opacity var(--speed) var(--ease);
         padding: 8px 10px;
         min-height: 0;
+        opacity: 1;
+      }
+      &[data-collapsed="true"] .sec-body,
+      &.is-collapsed .sec-body {
+        grid-template-rows: 0fr;
+        padding-block: 0;
+        opacity: 0.98;
+      }
+      .sec-body > .sec-body-inner {
+        overflow: hidden;
+      }
+
+      &[data-collapsed="true"] .sec-header .chev,
+      &.is-collapsed .sec-header .chev {
+        transform: rotate(-90deg);
       }
     }
   }
 }
 
 /* =========================
-   Section / control atoms
-   ========================= */
-.panel h1 { font-size: 15px; margin: 0; }
+  Section / control atoms
+========================= */
+.panel h1 {
+  font-size: 15px;
+  margin: 0;
+}
 
-.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.tuning-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.tuning-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
 
 .field {
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 12px;
-  > span { color: var(--muted); }
+  > span {
+    color: var(--muted);
+  }
 }
 
 select,
@@ -209,7 +351,9 @@ input[type="range"] {
 .check {
   font-size: 12px;
   color: var(--muted);
-  display: flex; gap: 8px; align-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .btn {
@@ -220,39 +364,94 @@ input[type="range"] {
   background: transparent;
   color: var(--fg);
   cursor: pointer;
-  &:hover { background: color-mix(in oklab, var(--fg) 7%, transparent); }
+  transition:
+    background var(--speed) var(--ease),
+    opacity var(--speed) var(--ease);
+  &:hover {
+    background: color-mix(in oklab, var(--fg) 7%, transparent);
+  }
 }
-.btn.solid { background: var(--fg); color: var(--panel); border-color: var(--fg); &:hover { opacity: .92; } }
+.btn.solid {
+  background: var(--fg);
+  color: var(--panel);
+  border-color: var(--fg);
+  &:hover {
+    opacity: 0.92;
+  }
+}
 
 /* Instrument helpers */
 .instrument {
-  display: grid; gap: 10px; min-width: 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
 
-  .row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
-
-  .strings-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 10px; min-width: 0;
+  .row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
   }
 
-  input, select { width: 100%; min-width: 0; box-sizing: border-box; }
-  .btn { width: 100%; white-space: normal; line-height: 1.2; }
+  .strings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    min-width: 0;
+  }
+
+  input,
+  select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .btn {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.2;
+  }
 }
 
 /* Ensure shrink behavior in flex/grid parents */
-.section, .panel, .sidebar { min-width: 0; }
+.section,
+.panel,
+.sidebar {
+  min-width: 0;
+}
 
 /* =========================
-   Fretboard visuals
-   ========================= */
-svg { display: block; width: 100%; height: auto; }
+  Fretboard visuals
+========================= */
+svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
-.stringLine { stroke: #8b929a; stroke-width: 1.5; }
+/* Lefty: flip geometry only; labels can opt out with .no-mirror */
+.fretboard-lefty-geom {
+  transform: scaleX(-1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.no-mirror {
+  transform: scaleX(-1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.stringLine {
+  stroke: #8b929a;
+  stroke-width: 1.5;
+}
 
 .fretLine {
   stroke: var(--fret);
   stroke-width: 1.4;
-  &.strong { stroke-width: 1.7; }
+  &.strong {
+    stroke-width: 1.7;
+  }
   &.micro {
     stroke-width: 1.1;
     stroke-dasharray: 3 7;
@@ -260,45 +459,142 @@ svg { display: block; width: 100%; height: auto; }
   }
 }
 
-.fretNum { font-size: 11.5px; fill: var(--muted); }
-.fretNum.microNum { opacity: 0.55; }
+.fretNum {
+  font-size: 11.5px;
+  fill: var(--muted);
+}
+.fretNum.microNum {
+  opacity: 0.55;
+}
 
-.inlay { fill: #cfd5dd; }
-.inlay.big { r: 6.5; }
-.inlay.small { fill: var(--line); stroke: var(--fg); stroke-width: 0.6; opacity: 0.9; }
-:root[data-theme="dark"] .inlay { fill: #3b4149; }
+.inlay {
+  fill: #cfd5dd;
+}
+.inlay.big {
+  r: 6.5;
+}
+.inlay.small {
+  fill: var(--line);
+  stroke: var(--fg);
+  stroke-width: 0.6;
+  opacity: 0.9;
+}
+:root[data-theme="dark"] .inlay {
+  fill: #3b4149;
+}
 
 /* Nut */
-.nut { fill: var(--nut); stroke: #000; stroke-width: 2.3; }
+.nut {
+  fill: var(--nut);
+  stroke: #000;
+  stroke-width: 2.3;
+}
 
 /* Note labels */
-.noteText { font-size: 10.5px; font-weight: 700; pointer-events: none; fill: #111; }
-.noteText.big { font-size: 11.5px; }
-:root[data-theme="dark"] .noteText { fill: #0b0b0b; }
+.noteText {
+  font-size: 10.5px;
+  font-weight: 700;
+  pointer-events: none;
+  fill: #111;
+}
+.noteText.big {
+  font-size: 11.5px;
+}
+:root[data-theme="dark"] .noteText {
+  fill: #0b0b0b;
+}
 
 /* =========================
    Responsive tweaks
    ========================= */
 @media (max-width: 1200px) {
-  :root { --col-width: clamp(240px, 30vw, 340px); }
+  :root {
+    --col-width: clamp(240px, 30vw, 340px);
+  }
 }
+
 @media (max-width: 900px) {
-  .grid2 { grid-template-columns: 1fr; }
-  .tuning-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .page .page-controls { --col-width: clamp(220px, 44vw, 320px); }
+  body {
+    font-size: 15px;
+  }
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+  .tuning-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .page .page-controls {
+    --col-width: clamp(220px, 44vw, 320px);
+  }
 }
+
+@media (max-width: 760px) {
+  .page .page-controls {
+    column-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  select,
+  input[type="number"],
+  input[type="range"],
+  .btn {
+    min-height: 40px;
+    font-size: 16px;
+  } /* prevents iOS zoom on focus */
+}
+
 @media (max-width: 480px) {
-  .tuning-grid { grid-template-columns: 1fr; }
+  .tuning-grid {
+    grid-template-columns: 1fr;
+  }
+  .noteText {
+    font-size: 11px;
+  }
+  .noteText.big {
+    font-size: 12px;
+  }
+  .fretNum {
+    font-size: 11px;
+  }
+  :root {
+    --gutter: 10px;
+  }
 }
 
 /* =========================
-   Print
-   ========================= */
-@media print {
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .page { min-height: auto; }
-  .page .page-header, .page .page-controls { display: none !important; }
-  .page .page-main { padding: 0; max-width: none; margin: 0; }
+  Scrollbars (nice-to-have)
+========================= */
+.fretboard-wrap::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.fretboard-wrap::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--fg) 15%, transparent);
+  border-radius: 10px;
+}
+.fretboard-wrap::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-
+/* =========================
+  Print
+========================= */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    min-height: auto;
+  }
+  .page .page-header,
+  .page .page-controls {
+    display: none !important;
+  }
+  .page .page-main {
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
+}
