@@ -27,6 +27,7 @@ import ChordBuilder from "@/components/UI/ChordBuilder";
 
 // hooks
 import { useTheme } from "@/hooks/useTheme";
+import { useScaleOptions } from "@/hooks/useScaleOptions";
 
 export default function App() {
   // choose your startup system here
@@ -45,7 +46,6 @@ export default function App() {
   };
 
   // scale / root / accidental
-  const [scale, setScale] = useState("Major (Ionian)");
   const [root, setRoot] = useState("C");
   const [accidental, setAccidental] = useState("sharp"); // "sharp" | "flat"
 
@@ -189,22 +189,11 @@ export default function App() {
     [showChord, chordRootIx, chordType, system.divisions],
   );
 
-  // scales for system
-  const scaleOptions = useMemo(
-    () => ALL_SCALES.filter((s) => s.systemId === system.id),
-    [system.id],
-  );
-
-  // keep selected scale valid when changing system (12 <-> 24, etc.)
-  useEffect(() => {
-    const has = scaleOptions.find((s) => s.label === scale);
-    if (!has && scaleOptions.length) setScale(scaleOptions[0].label);
-  }, [system.id, scale, scaleOptions]);
-
-  const intervals = useMemo(() => {
-    const def = scaleOptions.find((s) => s.label === scale);
-    return def?.pcs ?? (scaleOptions[0]?.pcs || []);
-  }, [scale, scaleOptions]);
+  const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
+    system,
+    ALL_SCALES,
+    initial: "Major (Ionian)",
+  });
 
   const fileBase = useMemo(
     () => slug(root, scale, accidental, `${strings}str`),
