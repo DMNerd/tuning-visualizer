@@ -371,6 +371,13 @@ html.is-fs {
   }
 }
 
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* matches spacing in InstrumentControls .defaults-row */
+  margin-top: 8px;
+}
+
 @media (max-width: 560px) {
   .icon-btn .label {
     display: none;
@@ -688,6 +695,13 @@ svg {
   }
   .fretNum {
     font-size: 11px;
+  }
+  .btn-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .btn-row .btn {
+    flex: 1;
   }
   :root {
     --gutter: 10px;

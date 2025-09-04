@@ -10,6 +10,9 @@ export default function DisplayControls({
   setShowFretNums,
   dotSize,
   setDotSize,
+  // open-note scope
+  openOnlyInScale,
+  setOpenOnlyInScale,
   // accidentals
   accidental,
   setAccidental,
@@ -57,6 +60,7 @@ export default function DisplayControls({
           >
             <option value="names">Note names</option>
             <option value="degrees">Degrees</option>
+            <option value="fret">Fret number</option>
             <option value="off">Off</option>
           </select>
         </div>
@@ -72,6 +76,35 @@ export default function DisplayControls({
           />{" "}
           Show open notes
         </label>
+
+        {/* Open-note scope (only active when showOpen is on) */}
+        <div className="field" aria-disabled={!showOpen}>
+          <span>Open notes</span>
+          <div role="group" aria-label="Open note scope" className="radio-row">
+            <label className="check" htmlFor="open-all">
+              <input
+                id="open-all"
+                name="open-scope"
+                type="radio"
+                checked={!openOnlyInScale}
+                onChange={() => setOpenOnlyInScale(false)}
+                disabled={!showOpen}
+              />
+              All strings
+            </label>
+            <label className="check" htmlFor="open-scale">
+              <input
+                id="open-scale"
+                name="open-scope"
+                type="radio"
+                checked={openOnlyInScale}
+                onChange={() => setOpenOnlyInScale(true)}
+                disabled={!showOpen}
+              />
+              In current scale
+            </label>
+          </div>
+        </div>
 
         <label className="check" htmlFor="showFretNums">
           <input

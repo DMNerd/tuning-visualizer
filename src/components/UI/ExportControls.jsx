@@ -35,34 +35,36 @@ export default function ExportControls({
         </label>
       </div>
 
-      <button
-        className="btn"
-        onClick={() =>
-          boardRef.current &&
-          downloadPNG(boardRef.current, `${fileBase}.png`, 3, 16, header)
-        }
-      >
-        Export PNG
-      </button>
+      <div className="btn-row">
+        <button
+          className="btn"
+          onClick={() =>
+            boardRef.current &&
+            downloadPNG(boardRef.current, `${fileBase}.png`, 3, 16, header)
+          }
+        >
+          Export PNG
+        </button>
 
-      <button
-        className="btn"
-        onClick={() =>
-          boardRef.current &&
-          downloadSVG(boardRef.current, `${fileBase}.svg`, header, 16)
-        }
-      >
-        Export SVG
-      </button>
+        <button
+          className="btn"
+          onClick={() =>
+            boardRef.current &&
+            downloadSVG(boardRef.current, `${fileBase}.svg`, header, 16)
+          }
+        >
+          Export SVG
+        </button>
 
-      <button
-        className="btn"
-        onClick={() =>
-          boardRef.current && printFretboard(boardRef.current, header, 16)
-        }
-      >
-        Print
-      </button>
+        <button
+          className="btn"
+          onClick={() =>
+            boardRef.current && printFretboard(boardRef.current, header, 16)
+          }
+        >
+          Print
+        </button>
+      </div>
     </Section>
   );
 }

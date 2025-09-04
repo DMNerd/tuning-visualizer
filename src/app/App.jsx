@@ -68,6 +68,7 @@ export default function App() {
   const [dotSize, setDotSize] = useState(14);
   const [lefty, setLefty] = useState(false);
   const [theme, setTheme] = useTheme();
+  const [openOnlyInScale, setOpenOnlyInScale] = useState(false);
 
   // Refs
   const boardRef = useRef(null);
@@ -232,6 +233,7 @@ export default function App() {
               system={system}
               chordPCs={chordPCs}
               chordRootPc={chordRootIx}
+              openOnlyInScale={openOnlyInScale}
             />
           </div>
         </div>
@@ -298,6 +300,8 @@ export default function App() {
           setDotSize={setDotSize}
           accidental={accidental}
           setAccidental={setAccidental}
+          openOnlyInScale={openOnlyInScale}
+          setOpenOnlyInScale={setOpenOnlyInScale}
         />
 
         <ExportControls

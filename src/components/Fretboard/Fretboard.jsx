@@ -25,6 +25,7 @@ const Fretboard = forwardRef(function Fretboard(
     system, // { divisions, nameForPc(pc, accidental?) }
     chordPCs = null, // Set<number> | null
     chordRootPc = null, // number | null
+    openOnlyInScale = false, // <<< NEW: open-string filter toggle
   },
   ref,
 ) {
@@ -191,9 +192,16 @@ const Fretboard = forwardRef(function Fretboard(
           const openPc = pcForName(openName);
           return Array.from({ length: frets + 1 }).map((_, f) => {
             const pc = (openPc + f) % system.divisions;
-            if (!scaleSet.has(pc)) {
-              if (!(showOpen && f === 0)) return null;
-            }
+
+            // visibility logic (supports openOnlyInScale)
+            const inScale = scaleSet.has(pc);
+            const isOpen = f === 0;
+            const visible = isOpen
+              ? showOpen && (!openOnlyInScale || inScale)
+              : inScale;
+
+            if (!visible) return null;
+
             const cx = noteCenterX(f);
             const cy = yForString(s);
 
@@ -207,26 +215,22 @@ const Fretboard = forwardRef(function Fretboard(
             const rBase = (isRoot ? 1.1 : 1) * dotSize;
             const r = inChord ? rBase * 1.05 : rBase;
 
-            const visible = f > 0 || (f === 0 && showOpen);
-
             return (
-              visible && (
-                <circle
-                  key={`noteCirc-${s}-${f}`}
-                  cx={cx}
-                  cy={cy}
-                  r={r}
-                  fill={
-                    isRoot
-                      ? "var(--root)"
-                      : isMicro
-                        ? "var(--note-micro)"
-                        : "var(--note)"
-                  }
-                  stroke={inChord ? "var(--fg)" : "none"}
-                  strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
-                />
-              )
+              <circle
+                key={`noteCirc-${s}-${f}`}
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={
+                  isRoot
+                    ? "var(--root)"
+                    : isMicro
+                      ? "var(--note-micro)"
+                      : "var(--note)"
+                }
+                stroke={inChord ? "var(--fg)" : "none"}
+                strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
+              />
             );
           });
         })}
@@ -237,9 +241,16 @@ const Fretboard = forwardRef(function Fretboard(
         const openPc = pcForName(openName);
         return Array.from({ length: frets + 1 }).map((_, f) => {
           const pc = (openPc + f) % system.divisions;
-          if (!scaleSet.has(pc)) {
-            if (!(showOpen && f === 0)) return null;
-          }
+
+          // visibility logic mirrored for labels
+          const inScale = scaleSet.has(pc);
+          const isOpen = f === 0;
+          const visible = isOpen
+            ? showOpen && (!openOnlyInScale || inScale)
+            : inScale;
+
+          if (!visible) return null;
+
           const cx = noteCenterX(f);
           const cy = yForString(s);
 
@@ -249,7 +260,11 @@ const Fretboard = forwardRef(function Fretboard(
               ? ""
               : show === "degrees"
                 ? (degreeForPc(pc) ?? "")
-                : nameForPc(pc);
+                : show === "names"
+                  ? nameForPc(pc)
+                  : show === "fret"
+                    ? String(f) 
+                    : "";
 
           if (label === "") return null;
 
