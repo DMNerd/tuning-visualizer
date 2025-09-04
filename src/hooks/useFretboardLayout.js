@@ -1,84 +1,84 @@
-// src/components/Fretboard/useFretboardLayout.js
 import { useMemo } from "react";
-import { buildFrets } from "@/components/Fretboard/geometry";
 
 /**
- * Encapsulates all fretboard geometry & layout math.
- * Returns stable helpers and metrics derived from (frets, dotSize, system, strings).
+ * Geometry/layout for the fretboard SVG.
+ *
+ * - Visual spacing consistent across systems (linear per-fret width).
+ * - Fret width adapts smoothly to total fret count (fewer frets => wider).
+ * - Layout is independent of dot size (no zoom), except:
+ *   open-note X uses dotSize to sit nicely *behind the nut*.
  */
-export function useFretboardLayout({ frets, dotSize, system, strings }) {
-  const nutW = 16;
-  const stringGap = 56;
-  const padRight = 12;
+export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
+  const NUT_W = 16;
 
-  // Fret-number offsets react to dot size
-  const FRETNUM_TOP_GAP = Math.max(18, dotSize * 0.9 + 6);
-  const FRETNUM_BOTTOM_GAP = Math.max(28, dotSize * 1.1 + 8);
-
-  // Paddings large enough to accommodate the numbers
-  const padTop = Math.max(28, FRETNUM_TOP_GAP + 12);
-  const padBottom = Math.max(36, FRETNUM_BOTTOM_GAP + 12);
-
-  // Open-note margin reacts to dot size so labels don’t overlap the nut
-  const openNoteMargin = dotSize * 3;
-  const padLeft = 24 + openNoteMargin;
-
-  // Wire positions (x) for the current temperament
-  const fullScaleLen = useMemo(() => 56 * frets, [frets]);
-  const fretXs = useMemo(
-    () => buildFrets(fullScaleLen, frets, system),
-    [fullScaleLen, frets, system],
+  // Horizontal scaling
+  const BASE_FRET_W = 54;
+  const MIN_FRET_W = 42;
+  const MAX_FRET_W = 64;
+  const scale = 18 / Math.max(frets, 18);
+  const FRET_W = Math.round(
+    Math.min(MAX_FRET_W, Math.max(MIN_FRET_W, BASE_FRET_W * scale)),
   );
 
-  // Extra space beyond the last wire so the board doesn’t look chopped
-  const lastWire = fretXs[fretXs.length - 1] ?? 0;
-  const prevWire = fretXs[fretXs.length - 2] ?? lastWire - fullScaleLen * 0.03;
-  const lastGap = Math.max(8, lastWire - prevWire);
-  const drawScaleLen = lastWire + lastGap * 1.1;
+  const STRING_GAP = 56;
 
-  const width = padLeft + nutW + drawScaleLen + padRight;
-  const height = padTop + padBottom + stringGap * (strings - 1);
-  const boardEndX = padLeft + nutW + drawScaleLen;
+  const FRETNUM_TOP_GAP = 22;
+  const FRETNUM_BOTTOM_GAP = 30;
 
-  // Helpers
-  const wireX = (f) => padLeft + nutW + (f === 0 ? 0 : fretXs[f - 1]);
+  // Open-note clearance
+  const OPEN_OFFSET = Math.max(10, dotSize * 1.2);
+  const OPEN_MARGIN = Math.ceil(NUT_W / 2 + OPEN_OFFSET + dotSize + 6);
 
-  const betweenFretsX = (f) => {
-    if (f === 0) return padLeft + nutW / 2;
-    const prev = f === 1 ? 0 : fretXs[f - 2];
-    const curr = fretXs[f - 1];
-    return padLeft + nutW + (prev + curr) / 2;
+  const PAD = {
+    left: Math.max(26, OPEN_MARGIN),
+    right: 26,
+    top: 16 + FRETNUM_TOP_GAP,
+    bottom: 16 + FRETNUM_BOTTOM_GAP,
   };
 
-  const noteCenterX = (f) => {
-    if (f === 0) return padLeft - dotSize * 1.5;
-    const prev = f === 1 ? 0 : fretXs[f - 2];
-    const curr = fretXs[f - 1];
-    return padLeft + nutW + (prev + curr) / 2;
-  };
+  return useMemo(() => {
+    const boardW = frets * FRET_W;
+    const boardH = (strings - 1) * STRING_GAP;
 
-  const yForString = (s) => padTop + s * stringGap;
+    const width = PAD.left + NUT_W + boardW + PAD.right;
+    const height = PAD.top + boardH + PAD.bottom;
 
-  return {
-    // metrics
-    width,
-    height,
-    nutW,
-    padTop,
-    padBottom,
-    padLeft,
-    boardEndX,
-    fretXs,
-    drawScaleLen,
+    const fretXs = Array.from({ length: frets }, (_, f) => (f + 1) * FRET_W);
 
-    // numbers positioning
-    FRETNUM_TOP_GAP,
-    FRETNUM_BOTTOM_GAP,
+    const boardStartX = PAD.left + NUT_W;
+    const boardEndX = boardStartX + boardW;
 
-    // helpers
-    wireX,
-    betweenFretsX,
-    noteCenterX,
-    yForString,
-  };
+    const wireX = (f) =>
+      f === 0 ? PAD.left : boardStartX + fretXs[f - 1];
+
+    const betweenFretsX = (f) => {
+      if (f === 0) return PAD.left + NUT_W / 2; // inside the nut
+      const prev = f === 1 ? 0 : fretXs[f - 2];
+      const curr = fretXs[f - 1];
+      return boardStartX + (prev + curr) / 2;
+    };
+
+    const noteCenterX = (f) =>
+      f === 0 ? PAD.left - (NUT_W / 2 + OPEN_OFFSET) : betweenFretsX(f);
+
+    const yForString = (s) => PAD.top + s * STRING_GAP;
+
+    return {
+      width,
+      height,
+      nutW: NUT_W,
+      padTop: PAD.top,
+      padBottom: PAD.bottom,
+      padLeft: PAD.left,
+      padRight: PAD.right,
+      boardEndX,
+      fretXs,
+      wireX,
+      betweenFretsX,
+      noteCenterX,
+      yForString,
+      FRETNUM_TOP_GAP,
+      FRETNUM_BOTTOM_GAP,
+    };
+  }, [frets, strings, dotSize, FRET_W, STRING_GAP, PAD]);
 }

@@ -1,4 +1,3 @@
-// src/components/Fretboard/usePitchMapping.js
 import { useMemo } from "react";
 
 /**
