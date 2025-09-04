@@ -116,6 +116,11 @@ export const SCALES_24: ScaleDef[] = [
     pcs: [0, 3, 6, 10, 14, 16, 21],
   },
   {
+    label: "24TET Neva (¾-sharp LT, KG style)",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 18, 21],
+  },
+  {
     label: "24TET Neutral Heptatonic",
     systemId: "24-TET",
     pcs: [0, 4, 7, 12, 16, 19, 22],

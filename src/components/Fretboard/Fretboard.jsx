@@ -263,7 +263,7 @@ const Fretboard = forwardRef(function Fretboard(
                 : show === "names"
                   ? nameForPc(pc)
                   : show === "fret"
-                    ? String(f) 
+                    ? String(f)
                     : "";
 
           if (label === "") return null;
