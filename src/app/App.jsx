@@ -159,11 +159,6 @@ export default function App() {
     setSelectedPreset("Factory default");
   }, [systemId, strings]);
 
-  const applySelectedPreset = () => {
-    const arr = presetMap[selectedPreset];
-    if (Array.isArray(arr) && arr.length) setTuning(arr);
-  };
-
   // names for active system (spelled with current accidental preference)
   const sysNames = useMemo(
     () =>
@@ -333,7 +328,7 @@ export default function App() {
           setShowChord={setShowChord}
         />
 
-        {/* 3) Instrument */}
+                {/* 3) Instrument */}
         <InstrumentControls
           strings={strings}
           setStrings={setStrings}
@@ -345,14 +340,18 @@ export default function App() {
           handleStringsChange={handleStringsChange}
           presetNames={presetNames}
           selectedPreset={selectedPreset}
-          setSelectedPreset={setSelectedPreset}
-          applySelectedPreset={applySelectedPreset}
+          setSelectedPreset={(name) => {
+            setSelectedPreset(name);
+            const arr = presetMap[name];
+            if (Array.isArray(arr) && arr.length) setTuning(arr);
+          }}
           savedExists={savedExists}
           handleSaveDefault={handleSaveDefault}
           handleLoadSavedDefault={handleLoadSavedDefault}
           handleResetFactoryDefault={handleResetFactoryDefault}
           systemId={systemId}
         />
+
 
         {/* 4) Display (includes Accidentals) */}
         <DisplayControls

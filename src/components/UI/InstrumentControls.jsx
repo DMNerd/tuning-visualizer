@@ -11,7 +11,6 @@ export default function InstrumentControls({
   presetNames,
   selectedPreset,
   setSelectedPreset,
-  applySelectedPreset,
   savedExists,
   handleSaveDefault,
   handleLoadSavedDefault,
@@ -75,30 +74,18 @@ export default function InstrumentControls({
 
         <div className="field" style={{ marginTop: 8 }}>
           <span>Preset</span>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
+          <select
+            id="preset"
+            name="preset"
+            value={selectedPreset}
+            onChange={(e) => setSelectedPreset(e.target.value)}
           >
-            <select
-              id="preset"
-              name="preset"
-              value={selectedPreset}
-              onChange={(e) => setSelectedPreset(e.target.value)}
-            >
-              {presetNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <button className="btn" onClick={applySelectedPreset}>
-              Apply preset
-            </button>
-          </div>
+            {presetNames.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div
