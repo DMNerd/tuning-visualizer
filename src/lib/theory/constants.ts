@@ -39,8 +39,8 @@ export type PresetTunings = Readonly<
  */
 export const DEFAULT_TUNINGS: DefaultTunings = {
   "12-TET": {
-    // Violin / Mandolin family (high → low)
-    4: ["E", "A", "D", "G"],
+    // Bass (high → low)
+    4: ["G", "D", "A", "E"],
 
     // Bass (high → low)
     5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
@@ -52,8 +52,7 @@ export const DEFAULT_TUNINGS: DefaultTunings = {
   },
 
   "24-TET": {
-    // Same concert-pitch names (even PCs in 24-TET)
-    4: ["E", "A", "D", "G"],
+    4: ["G", "D", "A", "E"],
 
     // Bass (high → low)
     5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
