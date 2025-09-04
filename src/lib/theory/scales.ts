@@ -94,6 +94,48 @@ export const SCALES_12: ScaleDef[] = [
 
 // 24-TET variants (quarter-tone steps)
 export const SCALES_24: ScaleDef[] = [
+  // Quarter-tone-native flavors / maqam-influenced
+  {
+    label: "24TET Hijaz-ish",
+    systemId: "24-TET",
+    pcs: [0, 3, 10, 12, 16, 18, 22],
+  },
+  {
+    label: "24TET Uşşak (Uşşâk)",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 17, 20],
+  },
+  {
+    label: "24TET Hüseyni",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 18, 20],
+  },
+  {
+    label: "24TET Uşak Maṣri (Hijaz on 5th)",
+    systemId: "24-TET",
+    pcs: [0, 3, 6, 10, 14, 16, 21],
+  },
+  {
+    label: "24TET Neutral Heptatonic",
+    systemId: "24-TET",
+    pcs: [0, 4, 7, 12, 16, 19, 22],
+  },
+  {
+    label: "24TET Major w/ Neutral 3rd",
+    systemId: "24-TET",
+    pcs: [0, 4, 7, 10, 14, 18, 22],
+  },
+  {
+    label: "24TET Minor w/ Neutral 6th",
+    systemId: "24-TET",
+    pcs: [0, 4, 6, 10, 14, 17, 20],
+  },
+  {
+    label: "24TET Neutral Pentatonic",
+    systemId: "24-TET",
+    pcs: [0, 4, 9, 14, 19],
+  },
+
   // Doubled versions of common 12-TET scales (multiply by 2)
   {
     label: "24TET Major (Ionian)",
@@ -194,58 +236,12 @@ export const SCALES_24: ScaleDef[] = [
     systemId: "24-TET",
     pcs: [0, 4, 6, 10, 12, 16, 18, 22],
   },
+
+  // Full chromatic
   {
     label: "24TET Chromatic (24)",
     systemId: "24-TET",
     pcs: Array.from({ length: 24 }, (_, i) => i),
-  },
-
-  // Quarter-tone-native flavors
-  // Neutral steps (~150c) used for “neutral 3rd/6th” colorations
-  {
-    label: "24TET Neutral Heptatonic",
-    systemId: "24-TET",
-    pcs: [0, 4, 7, 12, 16, 19, 22],
-  },
-  {
-    label: "24TET Major w/ Neutral 3rd",
-    systemId: "24-TET",
-    pcs: [0, 4, 7, 10, 14, 18, 22],
-  },
-  {
-    label: "24TET Minor w/ Neutral 6th",
-    systemId: "24-TET",
-    pcs: [0, 4, 6, 10, 14, 17, 20],
-  },
-
-  // “Hijaz-ish” color (aug 2 + min 3 in lower tetrachord)
-  {
-    label: "24TET Hijaz-ish",
-    systemId: "24-TET",
-    pcs: [0, 3, 10, 12, 16, 18, 22],
-  },
-  {
-    label: "24TET Uşşak (Uşşâk)",
-    systemId: "24-TET",
-
-    pcs: [0, 3, 6, 10, 14, 17, 20],
-  },
-  {
-    label: "24TET Hüseyni",
-    systemId: "24-TET",
-    pcs: [0, 3, 6, 10, 14, 18, 20],
-  },
-  {
-    label: "24TET Uşak Maṣri (Hijaz on 5th)",
-    systemId: "24-TET",
-    pcs: [0, 3, 6, 10, 14, 16, 21],
-  },
-
-  // Neutral pentatonic (roughly equidistant-ish without semitones)
-  {
-    label: "24TET Neutral Pentatonic",
-    systemId: "24-TET",
-    pcs: [0, 4, 9, 14, 19],
   },
 ];
 

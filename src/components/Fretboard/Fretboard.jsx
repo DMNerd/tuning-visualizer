@@ -26,8 +26,14 @@ const Fretboard = forwardRef(function Fretboard(
   const nutW = 16;
   const stringGap = 56;
   const padRight = 12;
-  const padTop = 28;
-  const padBottom = 36; // extra room for numbers
+
+  // Number offsets react to dotSize
+  const FRETNUM_TOP_GAP = Math.max(18, dotSize * 0.9 + 6); // micro numbers above the board
+  const FRETNUM_BOTTOM_GAP = Math.max(26, dotSize * 1.1 + 8); // standard numbers below the board
+
+  // Ensure paddings are large enough to accommodate the numbers
+  const padTop = Math.max(28, FRETNUM_TOP_GAP + 12);
+  const padBottom = Math.max(36, FRETNUM_BOTTOM_GAP + 12);
 
   const openNoteMargin = dotSize * 3;
   const padLeft = 24 + openNoteMargin;
@@ -55,9 +61,9 @@ const Fretboard = forwardRef(function Fretboard(
 
   const wireX = (f) => padLeft + nutW + (f === 0 ? 0 : fretXs[f - 1]);
 
-  // Center between frets (labels / fret numbers)
+  // Center between frets (used for labels and now fret numbers)
   const betweenFretsX = (f) => {
-    if (f === 0) return padLeft + nutW / 2; // "0" on the nut area
+    if (f === 0) return padLeft + nutW / 2;
     const prev = f === 1 ? 0 : fretXs[f - 2];
     const curr = fretXs[f - 1];
     return padLeft + nutW + (prev + curr) / 2;
@@ -74,7 +80,7 @@ const Fretboard = forwardRef(function Fretboard(
   const yForString = (s) => padTop + s * stringGap;
   const displayX = (x) => (lefty ? width - x : x);
 
-  // Build name→pc map for BOTH accidentals
+  // Build name→pc map for both accidentals
   const nameToPc = useMemo(() => {
     const map = new Map();
     for (let pc = 0; pc < system.divisions; pc++) {
@@ -105,12 +111,9 @@ const Fretboard = forwardRef(function Fretboard(
 
   // --- Inlays (12-TET references mapped to N-TET wires) ---
   const N = system.divisions;
-
-  // how many 12-TET semitone steps fit in the current wire count?
   const maxSemi = Math.floor((frets * 12) / N);
 
-  // 12-TET semitone positions for classic inlays
-  const singleBases = [3, 5, 7, 9, 15, 17, 19, 21]; // every octave
+  const singleBases = [3, 5, 7, 9, 15, 17, 19, 21];
   const singleSemis = [];
   for (let k = 0; k <= Math.ceil(maxSemi / 12); k++) {
     for (const b of singleBases) {
@@ -122,7 +125,6 @@ const Fretboard = forwardRef(function Fretboard(
   const doubleSemis = [];
   for (let s = 12; s <= maxSemi; s += 12) doubleSemis.push(s);
 
-  // map 12-TET semitone → actual N-TET wire index
   const semiToWire = (semi) => Math.round((semi * N) / 12);
   const uniq = (arr) => Array.from(new Set(arr));
 
@@ -260,6 +262,8 @@ const Fretboard = forwardRef(function Fretboard(
 
             const inChord = chordPCs ? chordPCs.has(pc) : false;
             const isChordRoot = inChord && chordRootPc === pc;
+            const isStandard = (f * 12) % system.divisions === 0;
+            const isMicro = !isStandard;
 
             const rBase = (isRoot ? 1.1 : 1) * dotSize;
             const r = inChord ? rBase * 1.05 : rBase;
@@ -273,7 +277,13 @@ const Fretboard = forwardRef(function Fretboard(
                   cx={cx}
                   cy={cy}
                   r={r}
-                  fill={isRoot ? "var(--root)" : "var(--accent)"}
+                  fill={
+                    isRoot
+                      ? "var(--root)"
+                      : isMicro
+                        ? "var(--note-micro)"
+                        : "var(--note)"
+                  }
                   stroke={inChord ? "var(--fg)" : "none"}
                   strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
                 />
@@ -318,11 +328,10 @@ const Fretboard = forwardRef(function Fretboard(
         });
       })}
 
-      {/* fret numbers */}
-      {/* fret numbers (12-TET aware with micro steps) */}
+      {/* fret numbers (centered between frets) */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
-          const N = system.divisions; // e.g., 12, 24, 19, 31...
+          const N = system.divisions;
           const rem = (f * 12) % N;
           const semitone = Math.floor((f * 12) / N);
 
@@ -341,12 +350,26 @@ const Fretboard = forwardRef(function Fretboard(
 
           const isStandard = rem === 0;
 
-          return (
+          const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
+          const topY = padTop - FRETNUM_TOP_GAP;
+
+          return isStandard ? (
             <text
               key={`num-${f}`}
-              className={`fretNum ${isStandard ? "" : "microNum"}`}
-              x={displayX(wireX(f))} // place on the actual fret wire
-              y={height - 8}
+              className="fretNum"
+              x={displayX(betweenFretsX(f))}
+              y={bottomY}
+              textAnchor="middle"
+              pointerEvents="none"
+            >
+              {labelNum}
+            </text>
+          ) : (
+            <text
+              key={`num-${f}`}
+              className="fretNum microNum"
+              x={displayX(betweenFretsX(f))}
+              y={topY}
               textAnchor="middle"
               pointerEvents="none"
             >

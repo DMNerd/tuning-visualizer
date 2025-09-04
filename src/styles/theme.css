@@ -351,10 +351,14 @@ svg {
 
 :root {
   --nut: #fffbe6;
+  --note: var(--accent);
+  --note-micro: #6fa8dc;
 }
 
 :root[data-theme="dark"] {
   --nut: #dcdcdc;
+  --note: var(--accent);
+  --note-micro: #89c2ff;
 }
 
 /* Responsive */
