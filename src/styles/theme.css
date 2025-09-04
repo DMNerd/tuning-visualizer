@@ -75,7 +75,7 @@ body {
     sans-serif;
   line-height: 1.35;
   font-size: 14px;
-  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 :focus-visible {
@@ -189,7 +189,6 @@ body {
       display: grid;
       place-items: center;
       overflow: auto;
-      -webkit-overflow-scrolling: touch;
       border: 1px solid var(--line);
       border-radius: var(--card-radius);
       background: var(--panel);
@@ -587,7 +586,7 @@ svg {
   &.micro {
     stroke-width: 1.1;
     stroke-dasharray: 3 7;
-    opacity: 0.7;
+  opacity: 0.7;
   }
 }
 
@@ -728,7 +727,6 @@ svg {
 ========================= */
 @media print {
   * {
-    -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 

@@ -39,5 +39,11 @@
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
   },
+  "browserslist": [
+    ">0.5%",
+    "last 2 versions",
+    "not dead",
+    "Safari >= 15"
+  ],
   "packageManager": "pnpm@10.12.3+sha512.467df2c586056165580ad6dfb54ceaad94c5a30f80893ebdec5a44c5aa73c205ae4a5bb9d5ed6bb84ea7c249ece786642bbb49d06a307df218d03da41c317417"
 }
