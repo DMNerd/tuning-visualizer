@@ -1,4 +1,8 @@
+/* =========================
+   Theme tokens
+   ========================= */
 :root {
+  /* colors */
   --fg: #1b1f23;
   --muted: #6b7280;
   --line: #d8dbe0;
@@ -9,459 +13,292 @@
   --board: #f2f3f6;
   --panel: #ffffff;
 
-  &[data-theme="dark"] {
-    --fg: #e5e7eb;
-    --muted: #9ca3af;
-    --line: #3a3f46;
-    --bg: #101214;
-    --panel: #15171a;
-    --board: #1a1d21;
-    --fret: #2a2f35;
-    --accent: #ffc24b;
-    --root: #ff7a3d;
-  }
+  --nut: #fffbe6;
+  --note: var(--accent);
+  --note-micro: #6fa8dc;
+
+  /* layout rhythm */
+  --gap: 12px;                                  /* base spacing */
+  --gutter: clamp(12px, 3vw, 24px);             /* page side gutters */
+  --max-stage: clamp(1100px, 96vw, 1400px);     /* wider fretboard */
+  --card-radius: 12px;                           /* matches fretboard */
+
+  /* masonry */
+  --card-gap: clamp(8px, 1.6vw, 12px);
+  --col-width: clamp(260px, 24vw, 360px);
 }
 
-/* Layout */
-.layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  height: 100vh;
-  gap: 0;
+:root[data-theme="dark"] {
+  --fg: #e5e7eb;
+  --muted: #9ca3af;
+  --line: #3a3f46;
+  --bg: #101214;
+  --panel: #15171a;
+  --board: #1a1d21;
+  --fret: #2a2f35;
+  --accent: #ffc24b;
+  --root: #ff7a3d;
+
+  --nut: #dcdcdc;
+  --note: var(--accent);
+  --note-micro: #89c2ff;
+}
+
+/* =========================
+   Global base
+   ========================= */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.35;
+  font-size: 14px;
+}
+
+/* =========================
+   Page layout
+   ========================= */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: var(--bg);
   color: var(--fg);
 
-  &-full {
-    grid-template-columns: 0 1fr;
+  .page-header {
+    flex: 0 0 auto;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+
+      a svg { width: 18px !important; height: 18px !important; }
+    }
+
+    .app-title { margin: 0; font-size: 1rem; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .toggles { display: flex; align-items: center; gap: 10px; }
+
+    .gh-link {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 6px; color: var(--muted); text-decoration: none;
+      &:hover { color: var(--fg); background: var(--line); }
+      svg { width: 18px; height: 18px; flex: 0 0 18px; }
+    }
+
+    .switch { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
   }
-}
 
-.panel {
-  background: var(--panel);
-  border-right: 1px solid var(--line);
-  padding: 14px 14px 24px;
-  overflow: auto;
+  /* ---- Stage (fretboard) ---- */
+  .page-main {
+    /* Consistent vertical rhythm */
+    margin-top: var(--gap);
+    margin-bottom: var(--gap);
 
-  h1 {
-    font-size: 16px;
-    margin: 0;
+    /* Wider than controls, centered with side gutters */
+    max-width: var(--max-stage);
+    width: 100%;
+    padding: 0 var(--gutter);
+    margin-left: auto;
+    margin-right: auto;
+
+    .stage { width: 100%; }
+    .stage-inner { padding: var(--gap); }
+
+    .stage-toolbar {
+      position: sticky; top: 0;
+      display: flex; justify-content: flex-end; gap: 8px; padding: 8px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.06), transparent);
+      z-index: 3;
+    }
+
+    .fretboard-wrap {
+      width: 100%;
+      display: grid; place-items: center;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--card-radius);
+      background: var(--panel);
+      padding: 8px;
+
+      svg { width: 100%; height: 100%; display: block; }
+      &.lefty svg { transform: scaleX(-1); }
+    }
   }
-}
 
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
+  /* =========================
+     Controls: same visual width as fretboard,
+     rounded box with same outline, masonry inside
+     ========================= */
+  .page-controls {
+    flex: 0 0 auto;
 
-  a {
-    svg {
-      width: 20px !important;
-      height: 20px !important;
+    /* Make container match the *inner* width of the stage (inside gutters) */
+    max-width: calc(var(--max-stage) - (var(--gutter) * 2));
+    width: 100%;
+    margin: 0 auto var(--gap); /* same bottom gap as top */
+    padding: var(--gap);       /* equal top & bottom padding */
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--card-radius);
+
+    /* Masonry via multi-columns (cards can have variable heights) */
+    column-width: var(--col-width);
+    column-gap: var(--card-gap);
+
+    > .panel-sec,
+    > section.panel-sec {
+      display: block;               /* required for columns */
+      break-inside: avoid;          /* keep card intact in a column */
+      margin: 0 0 var(--card-gap);
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+
+      .sec-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 10px;
+        border: 0; background: transparent; color: var(--fg);
+        font-weight: 600; cursor: pointer;
+
+        .chev { color: var(--muted); }
+      }
+      .sec-body {
+        display: grid; gap: 8px;
+        padding: 8px 10px;
+        min-height: 0;
+      }
     }
   }
 }
 
-.app-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-}
+/* =========================
+   Section / control atoms
+   ========================= */
+.panel h1 { font-size: 15px; margin: 0; }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.toggles {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.gh-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  color: var(--muted);
-  text-decoration: none;
-
-  &:hover {
-    color: var(--fg);
-    background: var(--line);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-    flex: 0 0 20px;
-  }
-}
-
-.switch {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.panel-sec {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: var(--panel);
-}
-
-.sec-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  border: 0;
-  background: transparent;
-  color: var(--fg);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sec-body {
-  padding: 10px 12px;
-  display: grid;
-  gap: 10px;
-}
-
-.chev {
-  color: var(--muted);
-}
-
-.grid2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.tuning-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tuning-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: flex; flex-direction: column; gap: 4px;
   font-size: 12px;
-
-  > span {
-    color: var(--muted);
-  }
+  > span { color: var(--muted); }
 }
 
 select,
 input[type="number"],
 input[type="range"] {
-  padding: 8px;
+  padding: 6px 8px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--fg);
+  min-height: 32px;
 }
 
 .check {
   font-size: 12px;
   color: var(--muted);
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  display: flex; gap: 8px; align-items: center;
 }
 
 .btn {
-  padding: 9px 12px;
+  width: 100%;
+  padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--fg);
   cursor: pointer;
-
-  &:hover {
-    background: rgba(127, 127, 127, 0.08);
-  }
-
-  &.solid {
-    background: var(--fg);
-    color: var(--panel);
-    border-color: var(--fg);
-
-    &:hover {
-      opacity: 0.9;
-    }
-  }
+  &:hover { background: color-mix(in oklab, var(--fg) 7%, transparent); }
 }
+.btn.solid { background: var(--fg); color: var(--panel); border-color: var(--fg); &:hover { opacity: .92; } }
 
-.stage {
-  position: relative;
-  overflow: auto;
-
-  &-inner {
-    padding: 18px;
-  }
-
-  /* Floating toolbar (fullscreen) */
-  &-toolbar {
-    position: sticky;
-    top: 0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 10px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent);
-    z-index: 3;
-  }
-}
-
-/* Fretboard visuals */
-.fretboard-wrap {
-  flex: 1; /* let it expand */
-  display: flex; /* svg can flex inside */
-  align-items: stretch;
-  justify-content: stretch;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--panel);
-  padding: 10px;
-
-  svg {
-    flex: 1;
-    width: 100%;
-    height: 100%; /* fill parent vertically */
-    display: block;
-  }
-
-  &.lefty {
-    svg {
-      transform: scaleX(-1);
-    }
-  }
-}
-
-.fretboard svg,
-.lefty {
-  display: block;
-  width: 100%;
-  height: auto; /* CSS ok; attribute must be omitted */
-}
-
-/* — microtonal fret visualization — */
-.fretLine {
-  &.micro {
-    stroke: var(--fret);
-    stroke-width: 1.2;
-    stroke-dasharray: 3 7;
-    opacity: 0.7;
-  }
-
-  /* octave wires already have .strong; ensure they pop */
-  &.strong {
-    stroke-width: 2;
-  }
-}
-
-/* micro fret numbers are dimmer */
-.fretNum {
-  font-size: 12px;
-  fill: var(--muted);
-
-  &.microNum {
-    opacity: 0.55;
-  }
-}
-
-/* Instrument panel layout */
+/* Instrument helpers */
 .instrument {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
+  display: grid; gap: 10px; min-width: 0;
 
-  /* “Strings / Frets” row */
-  .row-2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    min-width: 0;
-  }
+  .row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
 
-  /* String selectors: auto-wrap into as many columns as fit */
   .strings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 12px;
-    min-width: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px; min-width: 0;
   }
 
-  /* Make controls shrink properly inside grids */
-  input,
-  select {
-    width: 100%;
-    min-width: 0; /* critical to prevent overflow in grid/flex */
-    box-sizing: border-box;
-  }
-
-  /* Let long button labels wrap instead of pushing container wider */
-  .btn {
-    width: 100%;
-    white-space: normal;
-    line-height: 1.2;
-  }
+  input, select { width: 100%; min-width: 0; box-sizing: border-box; }
+  .btn { width: 100%; white-space: normal; line-height: 1.2; }
 }
 
-/* If your Section/Panel uses flex, ensure children can shrink */
-.section,
-.panel,
-.sidebar {
-  min-width: 0;
-}
+/* Ensure shrink behavior in flex/grid parents */
+.section, .panel, .sidebar { min-width: 0; }
 
-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+/* =========================
+   Fretboard visuals
+   ========================= */
+svg { display: block; width: 100%; height: auto; }
 
-.noteText {
-  font-size: 11px;
-  font-weight: 700;
-  pointer-events: none;
-  fill: #111;
-
-  &.big {
-    font-size: 12px;
-  }
-}
-
-/* keep order: dark theme override uses parent selector to preserve specificity */
-:root[data-theme="dark"] .noteText {
-  fill: #0b0b0b;
-}
-
-/* keep this early .nut (source kept intact) */
-.nut {
-  fill: #111;
-}
+.stringLine { stroke: #8b929a; stroke-width: 1.5; }
 
 .fretLine {
   stroke: var(--fret);
-  stroke-width: 1.5;
-
-  &.strong {
-    stroke-width: 1.8;
+  stroke-width: 1.4;
+  &.strong { stroke-width: 1.7; }
+  &.micro {
+    stroke-width: 1.1;
+    stroke-dasharray: 3 7;
+    opacity: 0.7;
   }
 }
 
-.stringLine {
-  stroke: #8b929a;
-  stroke-width: 1.6;
+.fretNum { font-size: 11.5px; fill: var(--muted); }
+.fretNum.microNum { opacity: 0.55; }
+
+.inlay { fill: #cfd5dd; }
+.inlay.big { r: 6.5; }
+.inlay.small { fill: var(--line); stroke: var(--fg); stroke-width: 0.6; opacity: 0.9; }
+:root[data-theme="dark"] .inlay { fill: #3b4149; }
+
+/* Nut */
+.nut { fill: var(--nut); stroke: #000; stroke-width: 2.3; }
+
+/* Note labels */
+.noteText { font-size: 10.5px; font-weight: 700; pointer-events: none; fill: #111; }
+.noteText.big { font-size: 11.5px; }
+:root[data-theme="dark"] .noteText { fill: #0b0b0b; }
+
+/* =========================
+   Responsive tweaks
+   ========================= */
+@media (max-width: 1200px) {
+  :root { --col-width: clamp(240px, 30vw, 340px); }
 }
-
-.inlay {
-  fill: #cfd5dd;
-
-  &.big {
-    r: 7;
-  }
-
-  &.small {
-    fill: var(--line);
-    stroke: var(--fg);
-    stroke-width: 0.6;
-    opacity: 0.9;
-  }
-}
-
-/* dark override (preserve original selector for specificity) */
-:root[data-theme="dark"] .inlay {
-  fill: #3b4149;
-}
-
-/* later .nut definition (order preserved) */
-.nut {
-  fill: var(--nut);
-  stroke: #000;
-  stroke-width: 2.5;
-}
-
-:root {
-  --nut: #fffbe6;
-  --note: var(--accent);
-  --note-micro: #6fa8dc;
-
-  &[data-theme="dark"] {
-    --nut: #dcdcdc;
-    --note: var(--accent);
-    --note-micro: #89c2ff;
-  }
-}
-
-/* Responsive */
-@media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: 260px 1fr;
-  }
-}
-
 @media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .panel {
-    border-right: none;
-    border-bottom: 1px solid var(--line);
-  }
+  .grid2 { grid-template-columns: 1fr; }
+  .tuning-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page .page-controls { --col-width: clamp(220px, 44vw, 320px); }
+}
+@media (max-width: 480px) {
+  .tuning-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 700px) {
-  .grid2 {
-    grid-template-columns: 1fr;
-  }
-
-  .tuning-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .panel {
-    padding: 10px;
-  }
-
-  .stage-inner {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 420px) {
-  .tuning-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
+/* =========================
+   Print
+   ========================= */
 @media print {
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .panel {
-    display: none !important;
-  }
-
-  .layout {
-    grid-template-columns: 1fr !important;
-  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { min-height: auto; }
+  .page .page-header, .page .page-controls { display: none !important; }
+  .page .page-main { padding: 0; max-width: none; margin: 0; }
 }
+
+

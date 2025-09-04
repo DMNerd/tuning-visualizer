@@ -292,23 +292,50 @@ export default function App() {
   const savedExists = hasSavedDefault();
 
   return (
-    <div className="layout">
-      <div className="panel">
+    <div className="page">
+      {/* Top-of-page header (not overlaying the stage) */}
+      <header className="page-header">
         <PanelHeader
           theme={theme}
           setTheme={setTheme}
           lefty={lefty}
           setLefty={setLefty}
         />
+      </header>
 
-        {/* 1) Tuning */}
+      {/* Fretboard stage */}
+      <main className="page-main">
+        <div className="stage">
+          <div className="fretboard-wrap">
+            <Fretboard
+              ref={boardRef}
+              strings={strings}
+              frets={drawFrets}
+              tuning={tuning}
+              rootIx={rootIx}
+              intervals={intervals}
+              accidental={accidental}
+              show={show}
+              showOpen={showOpen}
+              showFretNums={showFretNums}
+              dotSize={dotSize}
+              lefty={lefty}
+              system={system}
+              chordPCs={chordPCs}
+              chordRootPc={chordRootIx}
+            />
+          </div>
+        </div>
+      </main>
+
+      {/* Controls block just under the fretboard */}
+      <footer className="page-controls">
         <TuningSystemSelector
           systemId={systemId}
           setSystemId={setSystemId}
           systems={TUNINGS}
         />
 
-        {/* 2) Scale */}
         <ScaleControls
           root={root}
           setRoot={setRoot}
@@ -328,7 +355,6 @@ export default function App() {
           setShowChord={setShowChord}
         />
 
-                {/* 3) Instrument */}
         <InstrumentControls
           strings={strings}
           setStrings={setStrings}
@@ -352,10 +378,7 @@ export default function App() {
           systemId={systemId}
         />
 
-
-        {/* 4) Display (includes Accidentals) */}
         <DisplayControls
-          /* labels & visibility */
           show={show}
           setShow={setShow}
           showOpen={showOpen}
@@ -364,12 +387,10 @@ export default function App() {
           setShowFretNums={setShowFretNums}
           dotSize={dotSize}
           setDotSize={setDotSize}
-          /* accidentals */
           accidental={accidental}
           setAccidental={setAccidental}
         />
 
-        {/* 5) Export */}
         <ExportControls
           boardRef={boardRef}
           fileBase={slug(fileBase)}
@@ -377,37 +398,15 @@ export default function App() {
           downloadSVG={downloadSVG}
           printFretboard={printFretboard}
           buildHeader={() => ({
-            system: systemId, // e.g., "12-TET" | "24-TET"
-            tuning: tuning, // e.g., ["E","B","G","D","A","E"] (high→low)
-            scale: scale, // e.g., "Major (Ionian)"
-            chordEnabled: showChord, // boolean
-            chordRoot: chordRoot, // e.g., "C"
-            chordType: chordType, // e.g., "maj7"
+            system: systemId,
+            tuning: tuning,
+            scale: scale,
+            chordEnabled: showChord,
+            chordRoot: chordRoot,
+            chordType: chordType,
           })}
         />
-      </div>
-
-      <div className="stage">
-        <div className="fretboard-wrap">
-          <Fretboard
-            ref={boardRef}
-            strings={strings}
-            frets={drawFrets} // ← scaled for N-TET
-            tuning={tuning}
-            rootIx={rootIx}
-            intervals={intervals}
-            accidental={accidental}
-            show={show}
-            showOpen={showOpen}
-            showFretNums={showFretNums}
-            dotSize={dotSize}
-            lefty={lefty}
-            system={system}
-            chordPCs={chordPCs}
-            chordRootPc={chordRootIx}
-          />
-        </div>
-      </div>
+      </footer>
     </div>
   );
 }
