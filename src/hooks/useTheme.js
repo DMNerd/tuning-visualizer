@@ -12,7 +12,9 @@ export function useTheme(key = "fb.theme") {
       if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
         return "dark";
       }
-    } catch {}
+    } catch {
+      // ignore storage errors
+    }
     return "light";
   };
 
@@ -22,7 +24,9 @@ export function useTheme(key = "fb.theme") {
     document.documentElement.setAttribute("data-theme", theme);
     try {
       localStorage.setItem(key, theme);
-    } catch {}
+    } catch {
+      // ignore storage errors
+    }
   }, [theme, key]);
 
   return [theme, setTheme];

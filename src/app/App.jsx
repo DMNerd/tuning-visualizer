@@ -113,7 +113,10 @@ export default function App() {
 
   // Root/chord indices
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
-  const chordRootIx = useMemo(() => pcFromName(chordRoot), [chordRoot, pcFromName]);
+  const chordRootIx = useMemo(
+    () => pcFromName(chordRoot),
+    [chordRoot, pcFromName],
+  );
 
   const chordPCs = useMemo(
     () =>
