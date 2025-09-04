@@ -48,8 +48,7 @@ export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
     const boardStartX = PAD.left + NUT_W;
     const boardEndX = boardStartX + boardW;
 
-    const wireX = (f) =>
-      f === 0 ? PAD.left : boardStartX + fretXs[f - 1];
+    const wireX = (f) => (f === 0 ? PAD.left : boardStartX + fretXs[f - 1]);
 
     const betweenFretsX = (f) => {
       if (f === 0) return PAD.left + NUT_W / 2; // inside the nut

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import Fretboard from "@/components/Fretboard/Fretboard";
+import { FiMaximize, FiMinimize } from "react-icons/fi";
 
 // exporters
 import {
@@ -8,6 +8,9 @@ import {
   printFretboard,
   slug,
 } from "@/lib/export/exporters";
+
+// fretboard
+import Fretboard from "@/components/Fretboard/Fretboard";
 
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -31,6 +34,7 @@ import { useDrawFrets } from "@/hooks/useDrawFrets";
 import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useStringsChange } from "@/hooks/useStringsChange";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 export default function App() {
   // ----- System selection -----
@@ -65,7 +69,15 @@ export default function App() {
   const [lefty, setLefty] = useState(false);
   const [theme, setTheme] = useTheme();
 
+  // Refs
   const boardRef = useRef(null);
+  const stageRef = useRef(null);
+
+  // ----- Fullscreen controls for the stage -----
+  const { isActive: isFs, toggle: toggleFs } = useFullscreen(stageRef, {
+    hotkey: true,
+    docClass: "is-fs",
+  });
 
   // ----- Tuning (defaults + presets) via hook -----
   const {
@@ -183,8 +195,27 @@ export default function App() {
 
       {/* Fretboard stage */}
       <main className="page-main">
-        <div className="stage">
-          <div className="fretboard-wrap">
+        <div className="stage fb-stage" ref={stageRef}>
+          <div className="fretboard-wrap" onDoubleClick={toggleFs}>
+            {/* overlay toolbar anchored to the board */}
+            <div className="stage-toolbar">
+              <button
+                type="button"
+                className={`icon-btn fs-btn${isFs ? " active" : ""}`}
+                aria-label={
+                  isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
+                }
+                onClick={toggleFs}
+                title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"} // optional tooltip
+              >
+                {isFs ? (
+                  <FiMinimize size={16} aria-hidden={true} />
+                ) : (
+                  <FiMaximize size={16} aria-hidden={true} />
+                )}
+              </button>
+            </div>
+
             <Fretboard
               ref={boardRef}
               strings={strings}

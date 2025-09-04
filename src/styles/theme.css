@@ -54,6 +54,7 @@
 * {
   box-sizing: border-box;
 }
+
 html,
 body,
 #root {
@@ -112,9 +113,11 @@ body {
       gap: 10px;
       padding: 6px 10px;
 
-      a svg {
-        width: 18px !important;
-        height: 18px !important;
+      a {
+        svg {
+          width: 18px !important;
+          height: 18px !important;
+        }
       }
     }
 
@@ -123,11 +126,8 @@ body {
       font-size: 1rem;
       font-weight: 700;
     }
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+
+    .header-right,
     .toggles {
       display: flex;
       align-items: center;
@@ -146,10 +146,12 @@ body {
       transition:
         background var(--speed) var(--ease),
         color var(--speed) var(--ease);
+
       &:hover {
         color: var(--fg);
         background: var(--line);
       }
+
       svg {
         width: 18px;
         height: 18px;
@@ -168,14 +170,11 @@ body {
 
   /* ---- Stage (fretboard) ---- */
   .page-main {
-    margin-top: var(--gap);
-    margin-bottom: var(--gap);
-
+    margin-block: var(--gap);
     max-width: var(--max-stage);
     width: 100%;
-    padding: 0 var(--gutter);
-    margin-left: auto;
-    margin-right: auto;
+    padding-inline: var(--gutter);
+    margin-inline: auto;
 
     .stage {
       width: 100%;
@@ -184,30 +183,8 @@ body {
       padding: var(--gap);
     }
 
-    .stage-toolbar {
-      position: sticky;
-      top: 0;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 8px;
-      background: linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.06),
-        rgba(0, 0, 0, 0)
-      );
-      backdrop-filter: blur(2px);
-      z-index: 3;
-    }
-    :root[data-theme="dark"] & .stage-toolbar {
-      background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.05),
-        rgba(255, 255, 255, 0)
-      );
-    }
-
     .fretboard-wrap {
+      position: relative; /* anchor overlay */
       width: 100%;
       display: grid;
       place-items: center;
@@ -218,14 +195,37 @@ body {
       background: var(--panel);
       padding: 8px;
 
+      /* extra breathing room to avoid chip overlap */
+      padding-block-start: 14px;
+      padding-inline-end: 14px;
+
       svg {
         width: 100%;
         height: 100%;
         display: block;
       }
+
       &.lefty svg {
         transform: none;
       } /* geometry-only flip handled by classes */
+    }
+
+    /* Tiny overlay toolbar in top-right of the board */
+    .stage-toolbar {
+      position: absolute;
+      inset: 6px 6px auto auto; /* closer to corner; board adds padding */
+      display: inline-flex;
+      gap: 0;
+      padding: 0;
+      background: none !important;
+      box-shadow: none;
+      width: auto;
+      height: auto;
+
+      &::before,
+      &::after {
+        content: none !important;
+      }
     }
   }
 
@@ -234,7 +234,6 @@ body {
   ========================= */
   .page-controls {
     flex: 0 0 auto;
-
     max-width: calc(var(--max-stage) - (var(--gutter) * 2));
     width: 100%;
     margin: 0 auto var(--gap);
@@ -270,10 +269,12 @@ body {
         font-weight: 600;
         cursor: pointer;
         transition: background var(--speed) var(--ease);
+
         .chev {
           color: var(--muted);
           transition: transform var(--speed) var(--ease);
         }
+
         &:hover {
           background: color-mix(in oklab, var(--fg) 6%, transparent);
         }
@@ -289,22 +290,90 @@ body {
         padding: 8px 10px;
         min-height: 0;
         opacity: 1;
-      }
-      &[data-collapsed="true"] .sec-body,
-      &.is-collapsed .sec-body {
-        grid-template-rows: 0fr;
-        padding-block: 0;
-        opacity: 0.98;
-      }
-      .sec-body > .sec-body-inner {
-        overflow: hidden;
+
+        > .sec-body-inner {
+          overflow: hidden;
+        }
       }
 
-      &[data-collapsed="true"] .sec-header .chev,
-      &.is-collapsed .sec-header .chev {
-        transform: rotate(-90deg);
+      &[data-collapsed="true"],
+      &.is-collapsed {
+        .sec-body {
+          grid-template-rows: 0fr;
+          padding-block: 0;
+          opacity: 0.98;
+        }
+
+        .sec-header .chev {
+          transform: rotate(-90deg);
+        }
       }
     }
+  }
+}
+
+/* ===== Fullscreen integration ===== */
+.fb-stage {
+  border-radius: var(--card-radius);
+  overflow: clip; /* fall back to hidden if needed */
+
+  &:fullscreen {
+    .stage-toolbar {
+      inset: 10px 12px auto auto;
+    }
+  }
+}
+
+/* Prevent background scroll bleed while in fullscreen */
+html.is-fs {
+  overflow: hidden;
+}
+
+/* ===== Icon button that matches the app ===== */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--fg) 6%, transparent);
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background var(--speed) var(--ease),
+    transform var(--speed) var(--ease),
+    opacity var(--speed) var(--ease);
+
+  &:hover {
+    background: color-mix(in oklab, var(--fg) 10%, transparent);
+    transform: translateY(-0.5px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    fill: currentColor;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  &.fs-btn.active {
+    background: color-mix(in oklab, var(--fg) 16%, transparent);
+  }
+}
+
+@media (max-width: 560px) {
+  .icon-btn .label {
+    display: none;
   }
 }
 
@@ -321,6 +390,7 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
+
 .tuning-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -337,7 +407,6 @@ body {
     color: var(--muted);
   }
 
-  /* helper/warning text under inputs */
   small {
     font-size: 11.5px;
     line-height: 1.2;
@@ -356,47 +425,46 @@ input[type="text"] {
   color: var(--fg);
   min-height: 32px;
   min-width: 0;
-}
 
-/* visual warning for invalid values (paired with aria-invalid="true") */
-input[aria-invalid="true"] {
-  border-color: var(--root);
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--root) 18%, transparent);
+  &[aria-invalid="true"] {
+    border-color: var(--root);
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--root) 18%, transparent);
+  }
 }
 
 /* Display controls layout */
 .display-controls {
   display: grid;
-  gap: 14px; /* more consistent vertical spacing */
-}
+  gap: 14px;
 
-.display-controls .field {
-  margin-bottom: 2px; /* tighten field-to-field spacing slightly */
-}
+  .field {
+    margin-bottom: 2px;
+  }
 
-.display-controls .radio-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+  .radio-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
 
-.display-controls .check {
-  margin-top: 4px;
+  .check {
+    margin-top: 4px;
+  }
 }
 
 /* Chord Builder spacing */
 .chord-controls {
   display: grid;
-  gap: 14px; /* vertical rhythm */
-}
+  gap: 14px;
 
-.chord-controls .grid2 {
-  gap: 10px; /* spacing between Root/Type fields */
-}
+  .grid2 {
+    gap: 10px;
+  }
 
-.chord-controls .field .check {
-  margin-top: 2px; /* small breathing room above the checkbox row */
+  .field .check {
+    margin-top: 2px;
+  }
 }
 
 .check {
@@ -418,16 +486,19 @@ input[aria-invalid="true"] {
   transition:
     background var(--speed) var(--ease),
     opacity var(--speed) var(--ease);
+
   &:hover {
     background: color-mix(in oklab, var(--fg) 7%, transparent);
   }
-}
-.btn.solid {
-  background: var(--fg);
-  color: var(--panel);
-  border-color: var(--fg);
-  &:hover {
-    opacity: 0.92;
+
+  &.solid {
+    background: var(--fg);
+    color: var(--panel);
+    border-color: var(--fg);
+
+    &:hover {
+      opacity: 0.92;
+    }
   }
 }
 
@@ -457,6 +528,7 @@ input[aria-invalid="true"] {
     min-width: 0;
     box-sizing: border-box;
   }
+
   .btn {
     width: 100%;
     white-space: normal;
@@ -500,9 +572,11 @@ svg {
 .fretLine {
   stroke: var(--fret);
   stroke-width: 1.4;
+
   &.strong {
     stroke-width: 1.7;
   }
+
   &.micro {
     stroke-width: 1.1;
     stroke-dasharray: 3 7;
@@ -513,23 +587,27 @@ svg {
 .fretNum {
   font-size: 11.5px;
   fill: var(--muted);
-}
-.fretNum.microNum {
-  opacity: 0.55;
+
+  &.microNum {
+    opacity: 0.55;
+  }
 }
 
 .inlay {
   fill: #cfd5dd;
+
+  &.big {
+    r: 6.5;
+  }
+
+  &.small {
+    fill: var(--line);
+    stroke: var(--fg);
+    stroke-width: 0.6;
+    opacity: 0.9;
+  }
 }
-.inlay.big {
-  r: 6.5;
-}
-.inlay.small {
-  fill: var(--line);
-  stroke: var(--fg);
-  stroke-width: 0.6;
-  opacity: 0.9;
-}
+
 :root[data-theme="dark"] .inlay {
   fill: #3b4149;
 }
@@ -547,10 +625,12 @@ svg {
   font-weight: 700;
   pointer-events: none;
   fill: #111;
+
+  &.big {
+    font-size: 11.5px;
+  }
 }
-.noteText.big {
-  font-size: 11.5px;
-}
+
 :root[data-theme="dark"] .noteText {
   fill: #0b0b0b;
 }
@@ -592,8 +672,8 @@ svg {
   input[type="text"],
   .btn {
     min-height: 40px;
-    font-size: 16px;
-  } /* prevents iOS zoom on focus */
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
 }
 
 @media (max-width: 480px) {
@@ -637,16 +717,19 @@ svg {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
   .page {
     min-height: auto;
-  }
-  .page .page-header,
-  .page .page-controls {
-    display: none !important;
-  }
-  .page .page-main {
-    padding: 0;
-    max-width: none;
-    margin: 0;
+
+    .page-header,
+    .page-controls {
+      display: none !important;
+    }
+
+    .page-main {
+      padding: 0;
+      max-width: none;
+      margin: 0;
+    }
   }
 }
