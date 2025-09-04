@@ -28,6 +28,7 @@ import ChordBuilder from "@/components/UI/ChordBuilder";
 // hooks
 import { useTheme } from "@/hooks/useTheme";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
+import { useDrawFrets } from "@/hooks/useDrawFrets";
 
 export default function App() {
   // choose your startup system here
@@ -200,12 +201,12 @@ export default function App() {
     [root, scale, accidental, strings],
   );
 
-  const drawFrets = useMemo(() => {
-    const base = frets;
-    const n = system.divisions || 12; // works for 12, 19, 24, 31, etc.
-    const factor = n / 12;
-    return Math.max(1, Math.round(base * factor));
-  }, [frets, system.divisions]);
+  const drawFrets = useDrawFrets({
+    baseFrets: frets,
+    divisions: system.divisions,
+    fretsTouched,
+    setFretsRaw: setFrets, // raw setter (not setFretsUI)
+  });
 
   // When accidental preference changes, keep same PCs but respell root & tuning
   useEffect(() => {
@@ -220,29 +221,6 @@ export default function App() {
     setTuning(getDefaultTuning(systemId, strings));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemId]);
-
-  // --- Keep drawn fret count visually consistent across any N-TET ---
-  const prevDivRef = useRef(system.divisions);
-
-  useEffect(() => {
-    const prevN = prevDivRef.current;
-    const nextN = system.divisions;
-
-    if (prevN !== nextN) {
-      if (!fretsTouched) {
-        // Preserve drawn wires: nextSelected ≈ frets * (prevN / nextN)
-        const nextSelected = Math.max(
-          12,
-          Math.min(30, Math.round(frets * (prevN / nextN))),
-        );
-        if (nextSelected !== frets) {
-          // Use the raw setter so this doesn't mark as "touched"
-          setFrets(nextSelected);
-        }
-      }
-      prevDivRef.current = nextN;
-    }
-  }, [system.divisions, frets, fretsTouched]);
 
   const arraysEqual = (a, b) =>
     Array.isArray(a) &&
