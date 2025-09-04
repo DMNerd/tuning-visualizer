@@ -16,7 +16,6 @@ import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/constants";
 import { buildChordPCsFromPc } from "@/lib/theory/chords";
 
 // existing UI atoms
-import Section from "@/components/UI/Section";
 import PanelHeader from "@/components/UI/PanelHeader";
 import TuningSystemSelector from "@/components/UI/TuningSystemSelector";
 import ScaleControls from "@/components/UI/ScaleControls";
@@ -29,13 +28,14 @@ import ChordBuilder from "@/components/UI/ChordBuilder";
 import { useTheme } from "@/hooks/useTheme";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
 import { useDrawFrets } from "@/hooks/useDrawFrets";
+import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 
 export default function App() {
-  // choose your startup system here
+  // ----- System selection -----
   const [systemId, setSystemId] = useState("12-TET");
   const system = TUNINGS[systemId];
 
-  // strings / frets
+  // ----- Strings / Frets -----
   const [strings, setStrings] = useState(6);
   const [frets, setFrets] = useState(22);
   const [fretsTouched, setFretsTouched] = useState(false);
@@ -46,7 +46,7 @@ export default function App() {
     setFretsTouched(true);
   };
 
-  // scale / root / accidental
+  // ----- Root & accidental -----
   const [root, setRoot] = useState("C");
   const [accidental, setAccidental] = useState("sharp"); // "sharp" | "flat"
 
@@ -55,104 +55,41 @@ export default function App() {
   const [chordType, setChordType] = useState("maj");
   const [showChord, setShowChord] = useState(false);
 
-  // display options
+  // ----- Display options -----
   const [show, setShow] = useState("names");
   const [showOpen, setShowOpen] = useState(true);
   const [showFretNums, setShowFretNums] = useState(true);
   const [dotSize, setDotSize] = useState(14);
-
   const [lefty, setLefty] = useState(false);
   const [theme, setTheme] = useTheme();
 
   const boardRef = useRef(null);
 
-  // ---------- User default tuning persistence (localStorage) ----------
-  const lsKey = useMemo(
-    () => `fb.defaultTuning.${systemId}.${strings}`,
-    [systemId, strings],
-  );
+  // ----- Tuning (defaults + presets) via hook -----
+  const {
+    tuning,
+    setTuning,
+    presetMap,
+    presetNames,
+    saveDefault,
+    loadSavedDefault,
+    resetFactoryDefault,
+    savedExists,
+    defaultForCount,
+  } = useDefaultTuning({
+    systemId,
+    strings,
+    DEFAULT_TUNINGS,
+    PRESET_TUNINGS,
+  });
 
-  const readSavedDefault = () => {
-    try {
-      const raw = localStorage.getItem(lsKey);
-      if (!raw) return null;
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const saveCurrentAsDefault = (val) => {
-    try {
-      localStorage.setItem(lsKey, JSON.stringify(val));
-    } catch {
-      // ignore storage errors
-    }
-  };
-
-  const clearSavedDefault = () => {
-    try {
-      localStorage.removeItem(lsKey);
-    } catch {
-      // ignore
-    }
-  };
-
-  const hasSavedDefault = () => readSavedDefault() !== null;
-
-  // ---------- Default resolution (user default → built-in → fallback) ----------
-  const getDefaultTuning = (sysId, count) => {
-    // 1) user-saved default (for sys+count)
-    const key = `fb.defaultTuning.${sysId}.${count}`;
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) return arr;
-      }
-    } catch {
-      // ignore
-    }
-
-    // 2) built-in per-system default
-    const sysDefaults = DEFAULT_TUNINGS?.[sysId] || {};
-    if (sysDefaults[count]) return sysDefaults[count];
-
-    // 3) built-in 12-TET fallback
-    const twelve = DEFAULT_TUNINGS?.["12-TET"] || {};
-    if (twelve[count]) return twelve[count];
-
-    // 4) ultra-safe fallback (standard 6-string spelling)
-    return ["E", "B", "G", "D", "A", "E"];
-  };
-
-  // tuning state, initialized per system + string count (using user default if present)
-  const [tuning, setTuning] = useState(() =>
-    getDefaultTuning(systemId, strings),
-  );
-
-  // ---------- Presets (named, per system + string count) ----------
-  const presetMap = useMemo(() => {
-    const bySys = PRESET_TUNINGS?.[systemId];
-    const byCount = bySys?.[strings];
-    // Always offer at least a factory default
-    const factory = getDefaultTuning(systemId, strings);
-    if (byCount && Object.keys(byCount).length) {
-      return { "Factory default": factory, ...byCount };
-    }
-    return { "Factory default": factory };
-  }, [systemId, strings]);
-
-  const presetNames = useMemo(() => Object.keys(presetMap), [presetMap]);
-
+  // Preset selection UI state
   const [selectedPreset, setSelectedPreset] = useState("Factory default");
   useEffect(() => {
-    // reset selection when system/strings change so UI reflects context
     setSelectedPreset("Factory default");
   }, [systemId, strings]);
 
-  // names for active system (spelled with current accidental preference)
+  // ----- System note names (spelled by accidental) -----
   const sysNames = useMemo(
     () =>
       Array.from({ length: system.divisions }, (_, pc) =>
@@ -174,13 +111,9 @@ export default function App() {
     };
   }, [system]);
 
-  // root index from current root label
+  // Root/chord indices
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
-
-  const chordRootIx = useMemo(
-    () => pcFromName(chordRoot),
-    [chordRoot, pcFromName],
-  );
+  const chordRootIx = useMemo(() => pcFromName(chordRoot), [chordRoot, pcFromName]);
 
   const chordPCs = useMemo(
     () =>
@@ -190,17 +123,14 @@ export default function App() {
     [showChord, chordRootIx, chordType, system.divisions],
   );
 
+  // ----- Scales for system via hook -----
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
     initial: "Major (Ionian)",
   });
 
-  const fileBase = useMemo(
-    () => slug(root, scale, accidental, `${strings}str`),
-    [root, scale, accidental, strings],
-  );
-
+  // ----- Draw-fret normalization across systems via hook -----
   const drawFrets = useDrawFrets({
     baseFrets: frets,
     divisions: system.divisions,
@@ -208,20 +138,38 @@ export default function App() {
     setFretsRaw: setFrets, // raw setter (not setFretsUI)
   });
 
-  // When accidental preference changes, keep same PCs but respell root & tuning
+  // ----- Export filename base -----
+  const fileBase = useMemo(
+    () => slug(root, scale, accidental, `${strings}str`),
+    [root, scale, accidental, strings],
+  );
+
+  // ----- Accidental respelling (guarded) -----
   useEffect(() => {
     const toName = (pc) => system.nameForPc(pc, accidental);
-    setRoot((prev) => toName(pcFromName(prev)));
-    setTuning((prev) => prev.map((n) => toName(pcFromName(n))));
-    setChordRoot((prev) => toName(pcFromName(prev)));
-  }, [accidental, system, pcFromName]);
 
-  // When temperament or string count change, adopt default (user → built-in)
-  useEffect(() => {
-    setTuning(getDefaultTuning(systemId, strings));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [systemId]);
+    // root
+    setRoot((prev) => {
+      const next = toName(pcFromName(prev));
+      return next !== prev ? next : prev;
+    });
 
+    // tuning
+    setTuning((prev) => {
+      const next = prev.map((n) => toName(pcFromName(n)));
+      const same =
+        prev.length === next.length && prev.every((v, i) => v === next[i]);
+      return same ? prev : next;
+    });
+
+    // chord root
+    setChordRoot((prev) => {
+      const next = toName(pcFromName(prev));
+      return next !== prev ? next : prev;
+    });
+  }, [accidental, system, pcFromName, setTuning]);
+
+  // ----- Strings count change handler (preserve intent) -----
   const arraysEqual = (a, b) =>
     Array.isArray(a) &&
     Array.isArray(b) &&
@@ -231,37 +179,20 @@ export default function App() {
   function handleStringsChange(nextCount) {
     setStrings(nextCount);
     setTuning((prev) => {
-      if (!Array.isArray(prev)) return getDefaultTuning(systemId, nextCount);
+      if (!Array.isArray(prev)) return defaultForCount(nextCount);
 
-      const prevFactory = getDefaultTuning(systemId, prev.length);
+      const prevFactory = defaultForCount(prev.length);
       const wasFactory = arraysEqual(prev, prevFactory);
 
-      if (wasFactory) return getDefaultTuning(systemId, nextCount);
+      if (wasFactory) return defaultForCount(nextCount);
 
       if (nextCount <= prev.length) {
         return prev.slice(0, nextCount);
       }
-      const targetDefault = getDefaultTuning(systemId, nextCount);
+      const targetDefault = defaultForCount(nextCount);
       return [...prev, ...targetDefault.slice(prev.length)];
     });
   }
-
-  // ---------- UI actions for defaults ----------
-  const handleSaveDefault = () => {
-    saveCurrentAsDefault(tuning);
-  };
-
-  const handleLoadSavedDefault = () => {
-    const saved = readSavedDefault();
-    if (saved) setTuning(saved);
-  };
-
-  const handleResetFactoryDefault = () => {
-    clearSavedDefault();
-    setTuning(getDefaultTuning(systemId, strings));
-  };
-
-  const savedExists = hasSavedDefault();
 
   return (
     <div className="page">
@@ -344,9 +275,9 @@ export default function App() {
             if (Array.isArray(arr) && arr.length) setTuning(arr);
           }}
           savedExists={savedExists}
-          handleSaveDefault={handleSaveDefault}
-          handleLoadSavedDefault={handleLoadSavedDefault}
-          handleResetFactoryDefault={handleResetFactoryDefault}
+          handleSaveDefault={saveDefault}
+          handleLoadSavedDefault={loadSavedDefault}
+          handleResetFactoryDefault={resetFactoryDefault}
           systemId={systemId}
         />
 
