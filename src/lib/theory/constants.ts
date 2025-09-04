@@ -1,6 +1,43 @@
-// Default tunings per temperament & string count.
-// These are the "factory" defaults the app uses when no user default is saved.
-export const DEFAULT_TUNINGS = {
+// constants.ts
+
+// ---------------- Types ----------------
+
+/** Supported tuning systems in the app. */
+export type SystemId = "12-TET" | "24-TET";
+
+/** Supported string counts. */
+export type StringCount = 4 | 5 | 6 | 7 | 8;
+
+/**
+ * We keep note tokens flexible to allow microtonal markers like "A↑" / "B↓",
+ * enharmonics ("Eb", "F#"), and re-entrant ukulele, etc.
+ */
+export type NoteToken = string;
+
+/** A tuning is an array of note tokens, ordered high → low to match the app’s convention. */
+export type TuningArray = readonly NoteToken[];
+
+/** Default/factory tunings map. */
+export type DefaultTunings = Readonly<
+  Record<SystemId, Readonly<Record<StringCount, TuningArray>>>
+>;
+
+/** Named presets per system & string count. */
+export type PresetTunings = Readonly<
+  Record<
+    SystemId,
+    Readonly<Record<StringCount, Readonly<Record<string, TuningArray>>>>
+  >
+>;
+
+// ---------------- Data ----------------
+
+/**
+ * Default tunings per temperament & string count.
+ * These are the "factory" defaults the app uses when no user default is saved.
+ * Arrays are ordered high → low.
+ */
+export const DEFAULT_TUNINGS: DefaultTunings = {
   "12-TET": {
     // Violin / Mandolin family (high → low)
     4: ["E", "A", "D", "G"],
@@ -25,14 +62,14 @@ export const DEFAULT_TUNINGS = {
     7: ["E", "B", "G", "D", "A", "E", "B"],
     8: ["E", "B", "G", "D", "A", "E", "B", "F#"],
   },
-};
+} as const satisfies DefaultTunings;
 
 /**
  * Named (built-in) presets per temperament & string count.
  * Keys are human-friendly names shown in the UI.
  * Arrays are ordered high → low to match the app’s convention.
  */
-export const PRESET_TUNINGS = {
+export const PRESET_TUNINGS: PresetTunings = {
   "12-TET": {
     // 4-string: common double-courses & short-scale instruments
     4: {
@@ -166,4 +203,4 @@ export const PRESET_TUNINGS = {
       "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E", "B", "F#"],
     },
   },
-};
+} as const satisfies PresetTunings;

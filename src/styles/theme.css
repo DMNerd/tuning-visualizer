@@ -8,17 +8,18 @@
   --fret: #c9cdd3;
   --board: #f2f3f6;
   --panel: #ffffff;
-}
-:root[data-theme="dark"] {
-  --fg: #e5e7eb;
-  --muted: #9ca3af;
-  --line: #3a3f46;
-  --bg: #101214;
-  --panel: #15171a;
-  --board: #1a1d21;
-  --fret: #2a2f35;
-  --accent: #ffc24b;
-  --root: #ff7a3d;
+
+  &[data-theme="dark"] {
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --line: #3a3f46;
+    --bg: #101214;
+    --panel: #15171a;
+    --board: #1a1d21;
+    --fret: #2a2f35;
+    --accent: #ffc24b;
+    --root: #ff7a3d;
+  }
 }
 
 /* Layout */
@@ -29,46 +30,57 @@
   gap: 0;
   background: var(--bg);
   color: var(--fg);
+
+  &-full {
+    grid-template-columns: 0 1fr;
+  }
 }
-.layout-full {
-  grid-template-columns: 0 1fr;
-}
+
 .panel {
   background: var(--panel);
   border-right: 1px solid var(--line);
   padding: 14px 14px 24px;
   overflow: auto;
+
+  h1 {
+    font-size: 16px;
+    margin: 0;
+  }
 }
+
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
+
+  a {
+    svg {
+      width: 20px !important;
+      height: 20px !important;
+    }
+  }
 }
-.panel-header a svg {
-  width: 20px !important;
-  height: 20px !important;
-}
+
 .app-title {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
 }
+
 .header-right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.panel h1 {
-  font-size: 16px;
-  margin: 0;
-}
+
 .toggles {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .gh-link {
   display: inline-flex;
   align-items: center;
@@ -78,16 +90,19 @@
   border-radius: 6px;
   color: var(--muted);
   text-decoration: none;
+
+  &:hover {
+    color: var(--fg);
+    background: var(--line);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+  }
 }
-.gh-link:hover {
-  color: var(--fg);
-  background: var(--line);
-}
-.gh-link svg {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-}
+
 .switch {
   display: flex;
   gap: 6px;
@@ -95,12 +110,14 @@
   font-size: 12px;
   color: var(--muted);
 }
+
 .panel-sec {
   border: 1px solid var(--line);
   border-radius: 12px;
   margin-bottom: 12px;
   background: var(--panel);
 }
+
 .sec-header {
   width: 100%;
   display: flex;
@@ -113,33 +130,40 @@
   font-weight: 600;
   cursor: pointer;
 }
+
 .sec-body {
   padding: 10px 12px;
   display: grid;
   gap: 10px;
 }
+
 .chev {
   color: var(--muted);
 }
+
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+
 .tuning-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
+
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
+
+  > span {
+    color: var(--muted);
+  }
 }
-.field > span {
-  color: var(--muted);
-}
+
 select,
 input[type="number"],
 input[type="range"] {
@@ -149,6 +173,7 @@ input[type="range"] {
   background: transparent;
   color: var(--fg);
 }
+
 .check {
   font-size: 12px;
   color: var(--muted);
@@ -156,6 +181,7 @@ input[type="range"] {
   gap: 8px;
   align-items: center;
 }
+
 .btn {
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -163,37 +189,41 @@ input[type="range"] {
   background: transparent;
   color: var(--fg);
   cursor: pointer;
-}
-.btn:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-.btn.solid {
-  background: var(--fg);
-  color: var(--panel);
-  border-color: var(--fg);
-}
-.btn.solid:hover {
-  opacity: 0.9;
+
+  &:hover {
+    background: rgba(127, 127, 127, 0.08);
+  }
+
+  &.solid {
+    background: var(--fg);
+    color: var(--panel);
+    border-color: var(--fg);
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
 }
 
 .stage {
   position: relative;
   overflow: auto;
-}
-.stage-inner {
-  padding: 18px;
-}
 
-/* Floating toolbar (fullscreen) */
-.stage-toolbar {
-  position: sticky;
-  top: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 10px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent);
-  z-index: 3;
+  &-inner {
+    padding: 18px;
+  }
+
+  /* Floating toolbar (fullscreen) */
+  &-toolbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent);
+    z-index: 3;
+  }
 }
 
 /* Fretboard visuals */
@@ -207,17 +237,19 @@ input[type="range"] {
   border-radius: 14px;
   background: var(--panel);
   padding: 10px;
-}
 
-.fretboard-wrap svg {
-  flex: 1;
-  width: 100%;
-  height: 100%; /* fill parent vertically */
-  display: block;
-}
+  svg {
+    flex: 1;
+    width: 100%;
+    height: 100%; /* fill parent vertically */
+    display: block;
+  }
 
-.fretboard-wrap.lefty svg {
-  transform: scaleX(-1);
+  &.lefty {
+    svg {
+      transform: scaleX(-1);
+    }
+  }
 }
 
 .fretboard svg,
@@ -228,21 +260,28 @@ input[type="range"] {
 }
 
 /* — microtonal fret visualization — */
-.fretLine.micro {
-  stroke: var(--fret);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 7;
-  opacity: 0.7;
-}
+.fretLine {
+  &.micro {
+    stroke: var(--fret);
+    stroke-width: 1.2;
+    stroke-dasharray: 3 7;
+    opacity: 0.7;
+  }
 
-/* octave wires already have .strong; ensure they pop */
-.fretLine.strong {
-  stroke-width: 2;
+  /* octave wires already have .strong; ensure they pop */
+  &.strong {
+    stroke-width: 2;
+  }
 }
 
 /* micro fret numbers are dimmer */
-.fretNum.microNum {
-  opacity: 0.55;
+.fretNum {
+  font-size: 12px;
+  fill: var(--muted);
+
+  &.microNum {
+    opacity: 0.55;
+  }
 }
 
 /* Instrument panel layout */
@@ -250,37 +289,37 @@ input[type="range"] {
   display: grid;
   gap: 12px;
   min-width: 0;
-}
 
-/* “Strings / Frets” row */
-.instrument .row-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  min-width: 0;
-}
+  /* “Strings / Frets” row */
+  .row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    min-width: 0;
+  }
 
-/* String selectors: auto-wrap into as many columns as fit */
-.instrument .strings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 12px;
-  min-width: 0;
-}
+  /* String selectors: auto-wrap into as many columns as fit */
+  .strings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    min-width: 0;
+  }
 
-/* Make controls shrink properly inside grids */
-.instrument input,
-.instrument select {
-  width: 100%;
-  min-width: 0; /* critical to prevent overflow in grid/flex */
-  box-sizing: border-box;
-}
+  /* Make controls shrink properly inside grids */
+  input,
+  select {
+    width: 100%;
+    min-width: 0; /* critical to prevent overflow in grid/flex */
+    box-sizing: border-box;
+  }
 
-/* Let long button labels wrap instead of pushing container wider */
-.instrument .btn {
-  width: 100%;
-  white-space: normal;
-  line-height: 1.2;
+  /* Let long button labels wrap instead of pushing container wider */
+  .btn {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.2;
+  }
 }
 
 /* If your Section/Panel uses flex, ensure children can shrink */
@@ -301,48 +340,57 @@ svg {
   font-weight: 700;
   pointer-events: none;
   fill: #111;
+
+  &.big {
+    font-size: 12px;
+  }
 }
-.noteText.big {
-  font-size: 12px;
-}
+
+/* keep order: dark theme override uses parent selector to preserve specificity */
 :root[data-theme="dark"] .noteText {
   fill: #0b0b0b;
 }
 
+/* keep this early .nut (source kept intact) */
 .nut {
   fill: #111;
 }
+
 .fretLine {
   stroke: var(--fret);
   stroke-width: 1.5;
+
+  &.strong {
+    stroke-width: 1.8;
+  }
 }
-.fretLine.strong {
-  stroke-width: 1.8;
-}
+
 .stringLine {
   stroke: #8b929a;
   stroke-width: 1.6;
 }
+
 .inlay {
   fill: #cfd5dd;
+
+  &.big {
+    r: 7;
+  }
+
+  &.small {
+    fill: var(--line);
+    stroke: var(--fg);
+    stroke-width: 0.6;
+    opacity: 0.9;
+  }
 }
+
+/* dark override (preserve original selector for specificity) */
 :root[data-theme="dark"] .inlay {
   fill: #3b4149;
 }
-.inlay.big {
-  r: 7;
-}
-.inlay.small {
-  fill: var(--line);
-  stroke: var(--fg);
-  stroke-width: 0.6;
-  opacity: 0.9;
-}
-.fretNum {
-  font-size: 12px;
-  fill: var(--muted);
-}
 
+/* later .nut definition (order preserved) */
 .nut {
   fill: var(--nut);
   stroke: #000;
@@ -353,12 +401,12 @@ svg {
   --nut: #fffbe6;
   --note: var(--accent);
   --note-micro: #6fa8dc;
-}
 
-:root[data-theme="dark"] {
-  --nut: #dcdcdc;
-  --note: var(--accent);
-  --note-micro: #89c2ff;
+  &[data-theme="dark"] {
+    --nut: #dcdcdc;
+    --note: var(--accent);
+    --note-micro: #89c2ff;
+  }
 }
 
 /* Responsive */
@@ -367,29 +415,36 @@ svg {
     grid-template-columns: 260px 1fr;
   }
 }
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
   }
+
   .panel {
     border-right: none;
     border-bottom: 1px solid var(--line);
   }
 }
+
 @media (max-width: 700px) {
   .grid2 {
     grid-template-columns: 1fr;
   }
+
   .tuning-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .panel {
     padding: 10px;
   }
+
   .stage-inner {
     padding: 12px;
   }
 }
+
 @media (max-width: 420px) {
   .tuning-grid {
     grid-template-columns: 1fr;
@@ -401,9 +456,11 @@ svg {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
   .panel {
     display: none !important;
   }
+
   .layout {
     grid-template-columns: 1fr !important;
   }
