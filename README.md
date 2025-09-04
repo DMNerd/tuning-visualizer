@@ -9,6 +9,8 @@ Built with React
 
 [Try it here](https://tune.nrds.cz/)
 
+![TuningViz](https://i.imgur.com/xYctFhk.png "The app")
+
 ---
 
 ## Features
