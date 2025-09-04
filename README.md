@@ -13,24 +13,39 @@ Built with React
 
 ## Features
 
-- Scales
-  - Standard 12-TET scales (Major, Minor, Harmonic Minor, etc.)
-  - 24-TET microtonal scales
+* **Tuning Systems**
 
-- Tunings
-  - Standard 6-string, 7-string, and 8-string guitar tunings
-  - Violin family tunings (GDAE)
-  - Experimental tunings (e.g. King Gizzard C#–F#–C#–F#–B–E)
-  - Custom tuning presets
+  * Standard **12-TET** library (Major, Natural/Harmonic Minor, etc.)
+  * **24-TET** microtonal scales with distinct coloring for microtonal notes
 
-- Export & Print
-  - Export fretboard as PNG or SVG
-  - Print directly from the browser
+* **Scales & Chords**
 
-- Customization
-  - Show note names, intervals, or degrees
-  - Light and dark mode
-  - Choose root note and accidentals (sharps/flats)
+  * Scale picker filtered by tuning system
+  * **Chord Builder**: highlight chord tones on top of the selected scale
+  * Select any **root** note; choose **sharps/flats**
+
+* **Tunings**
+
+  * Presets for **6/7/8-string guitar**, **violin family (G–D–A–E)**, and **experimental** sets (e.g., King Gizzard C#–F#–C#–F#–B–E)
+  * Custom tuning presets
+
+* **Display**
+
+  * Multiple label modes: **note names**, **degrees/intervals**, or **fret numbers**
+  * Toggle **open strings** and **fret numbers**
+  * Classic **inlay markers**
+  * **Light/Dark** theme with preference saved
+
+* **Layout & Controls**
+
+  * Consistent, responsive fretboard geometry across any fret/string count
+  * Validated numeric inputs for frets (friendly warnings on out-of-range values)
+  * **Fullscreen** viewing mode
+
+* **Export & Print**
+
+  * Export fretboard as **PNG** or **SVG**
+  * **Print** directly from the browser
 
 ---
 
