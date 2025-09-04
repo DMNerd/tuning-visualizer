@@ -59,6 +59,7 @@ body,
 #root {
   height: 100%;
 }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -91,7 +92,7 @@ body {
 
 /* =========================
    Page layout
-   ========================= */
+========================= */
 .page {
   display: flex;
   flex-direction: column;
@@ -229,8 +230,7 @@ body {
   }
 
   /* =========================
-    Controls: same visual width as fretboard,
-    rounded box with same outline, masonry inside
+    Controls container
   ========================= */
   .page-controls {
     flex: 0 0 auto;
@@ -332,20 +332,71 @@ body {
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
+
   > span {
+    color: var(--muted);
+  }
+
+  /* helper/warning text under inputs */
+  small {
+    font-size: 11.5px;
+    line-height: 1.2;
     color: var(--muted);
   }
 }
 
 select,
 input[type="number"],
-input[type="range"] {
+input[type="range"],
+input[type="text"] {
   padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: transparent;
   color: var(--fg);
   min-height: 32px;
+  min-width: 0;
+}
+
+/* visual warning for invalid values (paired with aria-invalid="true") */
+input[aria-invalid="true"] {
+  border-color: var(--root);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--root) 18%, transparent);
+}
+
+/* Display controls layout */
+.display-controls {
+  display: grid;
+  gap: 14px; /* more consistent vertical spacing */
+}
+
+.display-controls .field {
+  margin-bottom: 2px; /* tighten field-to-field spacing slightly */
+}
+
+.display-controls .radio-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.display-controls .check {
+  margin-top: 4px;
+}
+
+/* Chord Builder spacing */
+.chord-controls {
+  display: grid;
+  gap: 14px; /* vertical rhythm */
+}
+
+.chord-controls .grid2 {
+  gap: 10px; /* spacing between Root/Type fields */
+}
+
+.chord-controls .field .check {
+  margin-top: 2px; /* small breathing room above the checkbox row */
 }
 
 .check {
@@ -506,7 +557,7 @@ svg {
 
 /* =========================
    Responsive tweaks
-   ========================= */
+========================= */
 @media (max-width: 1200px) {
   :root {
     --col-width: clamp(240px, 30vw, 340px);
@@ -538,6 +589,7 @@ svg {
   select,
   input[type="number"],
   input[type="range"],
+  input[type="text"],
   .btn {
     min-height: 40px;
     font-size: 16px;

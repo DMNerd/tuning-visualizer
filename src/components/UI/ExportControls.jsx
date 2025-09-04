@@ -24,14 +24,14 @@ export default function ExportControls({
   return (
     <Section title="Export">
       <div className="field" style={{ marginBottom: 12 }}>
-        <label htmlFor="include-header" className="checkbox">
+        <label htmlFor="include-header" className="check">
           <input
             id="include-header"
             type="checkbox"
             checked={includeHeader}
             onChange={(e) => setIncludeHeader(e.target.checked)}
           />
-          <span style={{ marginLeft: 8 }}>Include info header</span>
+          <span>Include info header</span>
         </label>
       </div>
 

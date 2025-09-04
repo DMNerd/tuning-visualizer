@@ -7,6 +7,7 @@ import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
 
 import { makeDisplayX } from "@/utils/displayX";
+import { buildFretLabel } from "@/utils/fretLabels";
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -270,23 +271,8 @@ const Fretboard = forwardRef(function Fretboard(
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const N = system.divisions;
-          const rem = (f * 12) % N;
-          const semitone = Math.floor((f * 12) / N);
-
-          let labelNum;
-          if (rem === 0) {
-            labelNum = String(semitone);
-          } else if (N % 12 === 0) {
-            const perSemi = N / 12;
-            const sub = f % perSemi;
-            const letters = "abcdefghijklmnopqrstuvwxyz";
-            const suffix = letters[sub - 1] ?? `.${sub}`;
-            labelNum = `${semitone}${suffix}`;
-          } else {
-            labelNum = `${semitone}+${rem}/${N}`;
-          }
-
-          const isStandard = rem === 0;
+          const isStandard = (f * 12) % N === 0;
+          const labelNum = buildFretLabel(f, N);
 
           const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
           const topY = padTop - FRETNUM_TOP_GAP;

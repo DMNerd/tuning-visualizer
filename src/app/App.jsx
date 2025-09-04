@@ -163,12 +163,6 @@ export default function App() {
   }, [accidental, system, pcFromName, setTuning]);
 
   // ----- Strings count change handler (preserve intent) -----
-  const arraysEqual = (a, b) =>
-    Array.isArray(a) &&
-    Array.isArray(b) &&
-    a.length === b.length &&
-    a.every((v, i) => v === b[i]);
-
   const handleStringsChange = useStringsChange({
     setStrings,
     setTuning,

@@ -1,9 +1,15 @@
+import { useEffect, useState } from "react";
 import Section from "@/components/UI/Section";
 
 function clamp(n, min, max) {
   const v = Number.isFinite(n) ? n : min;
   return Math.max(min, Math.min(max, v));
 }
+
+const STR_MIN = 4;
+const STR_MAX = 8;
+const FRETS_MIN = 12;
+const FRETS_MAX = 30;
 
 export default function InstrumentControls({
   strings,
@@ -22,40 +28,142 @@ export default function InstrumentControls({
   handleResetFactoryDefault,
   systemId,
 }) {
+  // Local text states so users can type freely
+  const [stringsText, setStringsText] = useState(String(strings));
+  const [fretsText, setFretsText] = useState(String(frets));
+
+  // Error messages (shown under inputs)
+  const [stringsErr, setStringsErr] = useState("");
+  const [fretsErr, setFretsErr] = useState("");
+
+  // Keep local text in sync if parent changes (e.g., preset, system switch)
+  useEffect(() => setStringsText(String(strings)), [strings]);
+  useEffect(() => setFretsText(String(frets)), [frets]);
+
+  // ---- Commit helpers ----
+  function commitStrings() {
+    const raw = parseInt(stringsText, 10);
+    if (!Number.isFinite(raw)) {
+      setStringsErr(`Please enter a number between ${STR_MIN} and ${STR_MAX}.`);
+      return false;
+    }
+    const val = clamp(raw, STR_MIN, STR_MAX);
+    if (val !== raw) {
+      setStringsErr(
+        `Allowed range is ${STR_MIN}–${STR_MAX}. Adjusted to ${val}.`,
+      );
+    } else {
+      setStringsErr("");
+    }
+    handleStringsChange(val);
+    setStringsText(String(val));
+    return true;
+  }
+
+  function commitFrets() {
+    const raw = parseInt(fretsText, 10);
+    if (!Number.isFinite(raw)) {
+      setFretsErr(
+        `Please enter a number between ${FRETS_MIN} and ${FRETS_MAX}.`,
+      );
+      return false;
+    }
+    const val = clamp(raw, FRETS_MIN, FRETS_MAX);
+    if (val !== raw) {
+      setFretsErr(
+        `Allowed range is ${FRETS_MIN}–${FRETS_MAX}. Adjusted to ${val}.`,
+      );
+    } else {
+      setFretsErr("");
+    }
+    setFrets(val); // marks fretsTouched in App
+    setFretsText(String(val));
+    return true;
+  }
+
+  // ---- Handlers ----
+  const onStringsBlur = () => {
+    if (!commitStrings()) {
+      // reset to last good value
+      setStringsText(String(strings));
+    }
+  };
+  const onFretsBlur = () => {
+    if (!commitFrets()) {
+      setFretsText(String(frets));
+    }
+  };
+
+  const onStringsKeyDown = (e) => {
+    if (e.key === "Enter") commitStrings();
+    if (e.key === "Escape") {
+      setStringsText(String(strings));
+      setStringsErr("");
+      e.currentTarget.blur();
+    }
+  };
+  const onFretsKeyDown = (e) => {
+    if (e.key === "Enter") commitFrets();
+    if (e.key === "Escape") {
+      setFretsText(String(frets));
+      setFretsErr("");
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <Section title="Instrument">
       <div className="instrument">
         <div className="row-2">
+          {/* Strings */}
           <div className="field">
             <span>Strings</span>
             <input
               id="strings"
               name="strings"
-              type="number"
-              min="4"
-              max="8"
-              value={strings}
-              onChange={(e) => {
-                const val = clamp(parseInt(e.target.value, 10), 4, 8);
-                handleStringsChange(val);
-              }}
+              // use text + numeric keypad to allow free typing
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={stringsText}
+              onChange={(e) => setStringsText(e.target.value)}
+              onBlur={onStringsBlur}
+              onKeyDown={onStringsKeyDown}
+              aria-invalid={Boolean(stringsErr)}
+              aria-describedby="strings-help"
+              placeholder={`${STR_MIN}–${STR_MAX}`}
             />
+            <small
+              id="strings-help"
+              style={{ color: stringsErr ? "var(--root)" : "var(--muted)" }}
+            >
+              {stringsErr || `Allowed range: ${STR_MIN}–${STR_MAX}`}
+            </small>
           </div>
 
+          {/* Frets */}
           <div className="field">
             <span>Frets</span>
             <input
               id="frets"
               name="frets"
-              type="number"
-              min="12"
-              max="30"
-              value={frets}
-              onChange={(e) => {
-                const val = clamp(parseInt(e.target.value, 10), 12, 30);
-                setFrets(val); // this is setFretsUI from App, marks fretsTouched
-              }}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={fretsText}
+              onChange={(e) => setFretsText(e.target.value)}
+              onBlur={onFretsBlur}
+              onKeyDown={onFretsKeyDown}
+              aria-invalid={Boolean(fretsErr)}
+              aria-describedby="frets-help"
+              placeholder={`${FRETS_MIN}–${FRETS_MAX}`}
             />
+            <small
+              id="frets-help"
+              style={{ color: fretsErr ? "var(--root)" : "var(--muted)" }}
+            >
+              {fretsErr || `Allowed range: ${FRETS_MIN}–${FRETS_MAX}`}
+            </small>
           </div>
         </div>
 
