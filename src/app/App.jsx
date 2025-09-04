@@ -25,6 +25,9 @@ import InstrumentControls from "@/components/UI/InstrumentControls";
 import ExportControls from "@/components/UI/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
 
+// hooks
+import { useTheme } from "@/hooks/useTheme";
+
 export default function App() {
   // choose your startup system here
   const [systemId, setSystemId] = useState("12-TET");
@@ -58,25 +61,7 @@ export default function App() {
   const [dotSize, setDotSize] = useState(14);
 
   const [lefty, setLefty] = useState(false);
-  const THEME_KEY = "fb.theme";
-
-  const getInitialTheme = () => {
-    try {
-      const saved = localStorage.getItem(THEME_KEY);
-      if (saved === "dark" || saved === "light") return saved;
-      if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        return "dark";
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return "light";
-  };
-
-  const [theme, setTheme] = useState(getInitialTheme);
+  const [theme, setTheme] = useTheme();
 
   const boardRef = useRef(null);
 
@@ -232,16 +217,6 @@ export default function App() {
     const factor = n / 12;
     return Math.max(1, Math.round(base * factor));
   }, [frets, system.divisions]);
-
-  // theme
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {
-      // ignore storage errors
-    }
-  }, [theme]);
 
   // When accidental preference changes, keep same PCs but respell root & tuning
   useEffect(() => {
