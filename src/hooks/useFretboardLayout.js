@@ -9,34 +9,34 @@ import { useMemo } from "react";
  *   open-note X uses dotSize to sit nicely *behind the nut*.
  */
 export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
-  const NUT_W = 16;
-
-  // Horizontal scaling
-  const BASE_FRET_W = 54;
-  const MIN_FRET_W = 42;
-  const MAX_FRET_W = 64;
-  const scale = 18 / Math.max(frets, 18);
-  const FRET_W = Math.round(
-    Math.min(MAX_FRET_W, Math.max(MIN_FRET_W, BASE_FRET_W * scale)),
-  );
-
-  const STRING_GAP = 56;
-
-  const FRETNUM_TOP_GAP = 22;
-  const FRETNUM_BOTTOM_GAP = 30;
-
-  // Open-note clearance
-  const OPEN_OFFSET = Math.max(10, dotSize * 1.2);
-  const OPEN_MARGIN = Math.ceil(NUT_W / 2 + OPEN_OFFSET + dotSize + 6);
-
-  const PAD = {
-    left: Math.max(26, OPEN_MARGIN),
-    right: 26,
-    top: 16 + FRETNUM_TOP_GAP,
-    bottom: 16 + FRETNUM_BOTTOM_GAP,
-  };
-
   return useMemo(() => {
+    const NUT_W = 16;
+
+    // Horizontal scaling
+    const BASE_FRET_W = 54;
+    const MIN_FRET_W = 42;
+    const MAX_FRET_W = 64;
+    const scale = 18 / Math.max(frets, 18);
+    const FRET_W = Math.round(
+      Math.min(MAX_FRET_W, Math.max(MIN_FRET_W, BASE_FRET_W * scale)),
+    );
+
+    const STRING_GAP = 56;
+
+    const FRETNUM_TOP_GAP = 22;
+    const FRETNUM_BOTTOM_GAP = 30;
+
+    // Open-note clearance (depends on dotSize)
+    const OPEN_OFFSET = Math.max(10, dotSize * 1.2);
+    const OPEN_MARGIN = Math.ceil(NUT_W / 2 + OPEN_OFFSET + dotSize + 6);
+
+    const PAD = {
+      left: Math.max(26, OPEN_MARGIN),
+      right: 26,
+      top: 16 + FRETNUM_TOP_GAP,
+      bottom: 16 + FRETNUM_BOTTOM_GAP,
+    };
+
     const boardW = frets * FRET_W;
     const boardH = (strings - 1) * STRING_GAP;
 
@@ -79,5 +79,5 @@ export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
       FRETNUM_TOP_GAP,
       FRETNUM_BOTTOM_GAP,
     };
-  }, [frets, strings, dotSize, FRET_W, STRING_GAP, PAD]);
+  }, [frets, strings, dotSize]);
 }

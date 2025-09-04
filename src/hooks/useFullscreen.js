@@ -12,11 +12,11 @@ export function useFullscreen(
   const [isActive, setIsActive] = useState(false);
   const lastRequestRef = useRef(null);
 
-  const isFs = () =>
-    !!document.fullscreenElement &&
-    (targetRef?.current
-      ? document.fullscreenElement === targetRef.current
-      : true);
+  const isFs = useCallback(() => {
+    const el = document.fullscreenElement;
+    if (!el) return false;
+    return targetRef?.current ? el === targetRef.current : true;
+  }, [targetRef]);
 
   const onChange = useCallback(() => {
     const active = isFs();
@@ -24,11 +24,11 @@ export function useFullscreen(
     const root = document.documentElement;
     if (active) root.classList.add(docClass);
     else root.classList.remove(docClass);
-  }, [targetRef, docClass]);
+  }, [isFs, docClass]);
 
   const enter = useCallback(async () => {
     if (!targetRef?.current) return;
-    if (document.fullscreenElement) return; // already in FS
+    if (document.fullscreenElement) return;
     try {
       lastRequestRef.current = targetRef.current;
       await targetRef.current.requestFullscreen({ navigationUI: "hide" });
@@ -49,12 +49,15 @@ export function useFullscreen(
   const toggle = useCallback(() => {
     if (isFs()) exit();
     else enter();
-  }, [enter, exit]);
+  }, [enter, exit, isFs]);
 
   useEffect(() => {
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, [onChange]);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.documentElement.classList.remove(docClass);
+    };
+  }, [onChange, docClass]);
 
   useEffect(() => {
     if (!hotkey) return;
