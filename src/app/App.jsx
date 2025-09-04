@@ -29,6 +29,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
 import { useDrawFrets } from "@/hooks/useDrawFrets";
 import { useDefaultTuning } from "@/hooks/useDefaultTuning";
+import { usePitchMapping } from "@/hooks/usePitchMapping";
+import { useStringsChange } from "@/hooks/useStringsChange";
 
 export default function App() {
   // ----- System selection -----
@@ -90,26 +92,14 @@ export default function App() {
   }, [systemId, strings]);
 
   // ----- System note names (spelled by accidental) -----
-  const sysNames = useMemo(
-    () =>
-      Array.from({ length: system.divisions }, (_, pc) =>
-        system.nameForPc(pc, accidental),
-      ),
-    [system, accidental],
+  const { pcForName: pcFromName, nameForPc } = usePitchMapping(
+    system,
+    accidental,
   );
-
-  // map any valid spelling (sharp or flat) to a pitch class
-  const pcFromName = useMemo(() => {
-    const map = new Map();
-    for (let pc = 0; pc < system.divisions; pc++) {
-      map.set(system.nameForPc(pc, "sharp"), pc);
-      map.set(system.nameForPc(pc, "flat"), pc);
-    }
-    return (name) => {
-      const v = map.get(name);
-      return typeof v === "number" ? v : 0;
-    };
-  }, [system]);
+  const sysNames = useMemo(
+    () => Array.from({ length: system.divisions }, (_, pc) => nameForPc(pc)),
+    [system.divisions, nameForPc],
+  );
 
   // Root/chord indices
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
@@ -179,23 +169,11 @@ export default function App() {
     a.length === b.length &&
     a.every((v, i) => v === b[i]);
 
-  function handleStringsChange(nextCount) {
-    setStrings(nextCount);
-    setTuning((prev) => {
-      if (!Array.isArray(prev)) return defaultForCount(nextCount);
-
-      const prevFactory = defaultForCount(prev.length);
-      const wasFactory = arraysEqual(prev, prevFactory);
-
-      if (wasFactory) return defaultForCount(nextCount);
-
-      if (nextCount <= prev.length) {
-        return prev.slice(0, nextCount);
-      }
-      const targetDefault = defaultForCount(nextCount);
-      return [...prev, ...targetDefault.slice(prev.length)];
-    });
-  }
+  const handleStringsChange = useStringsChange({
+    setStrings,
+    setTuning,
+    defaultForCount,
+  });
 
   return (
     <div className="page">

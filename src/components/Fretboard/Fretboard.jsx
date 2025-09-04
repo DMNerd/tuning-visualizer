@@ -1,5 +1,12 @@
-import React, { forwardRef, useMemo, useLayoutEffect, useRef } from "react";
-import { buildFrets } from "@/components/Fretboard/geometry";
+// src/components/Fretboard/Fretboard.jsx
+import React, { forwardRef, useLayoutEffect, useRef } from "react";
+
+import { useFretboardLayout } from "@/hooks/useFretboardLayout";
+import { usePitchMapping } from "@/hooks/usePitchMapping";
+import { useScaleAndChord } from "@/hooks/useScaleAndChord";
+import { useInlays } from "@/hooks/useInlays";
+
+import { makeDisplayX } from "@/utils/displayX";
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -22,35 +29,23 @@ const Fretboard = forwardRef(function Fretboard(
 ) {
   const svgRef = useRef(null);
 
-  // --- Layout (virtual drawing size) ---
-  const nutW = 16;
-  const stringGap = 56;
-  const padRight = 12;
-
-  // Number offsets react to dotSize
-  const FRETNUM_TOP_GAP = Math.max(18, dotSize * 0.9 + 6); // micro numbers above the board
-  const FRETNUM_BOTTOM_GAP = Math.max(26, dotSize * 1.1 + 8); // standard numbers below the board
-
-  // Ensure paddings are large enough to accommodate the numbers
-  const padTop = Math.max(28, FRETNUM_TOP_GAP + 12);
-  const padBottom = Math.max(36, FRETNUM_BOTTOM_GAP + 12);
-
-  const openNoteMargin = dotSize * 3;
-  const padLeft = 24 + openNoteMargin;
-
-  const fullScaleLen = useMemo(() => 56 * frets, [frets]);
-  const fretXs = useMemo(
-    () => buildFrets(fullScaleLen, frets, system),
-    [fullScaleLen, frets, system],
-  );
-
-  const lastWire = fretXs[fretXs.length - 1] ?? 0;
-  const prevWire = fretXs[fretXs.length - 2] ?? lastWire - fullScaleLen * 0.03;
-  const lastGap = Math.max(8, lastWire - prevWire);
-  const drawScaleLen = lastWire + lastGap * 1.1;
-
-  const width = padLeft + nutW + drawScaleLen + padRight;
-  const height = padTop + padBottom + stringGap * (strings - 1);
+  // --- Layout via hook ---
+  const {
+    width,
+    height,
+    nutW,
+    padTop,
+    padBottom,
+    padLeft,
+    boardEndX,
+    fretXs,
+    FRETNUM_TOP_GAP,
+    FRETNUM_BOTTOM_GAP,
+    wireX,
+    betweenFretsX,
+    noteCenterX,
+    yForString,
+  } = useFretboardLayout({ frets, dotSize, system, strings });
 
   useLayoutEffect(() => {
     if (!svgRef.current) return;
@@ -59,81 +54,24 @@ const Fretboard = forwardRef(function Fretboard(
     else if (ref) ref.current = svgRef.current;
   }, [ref, width, height]);
 
-  const wireX = (f) => padLeft + nutW + (f === 0 ? 0 : fretXs[f - 1]);
+  const displayX = makeDisplayX(lefty, width);
 
-  // Center between frets (used for labels and now fret numbers)
-  const betweenFretsX = (f) => {
-    if (f === 0) return padLeft + nutW / 2;
-    const prev = f === 1 ? 0 : fretXs[f - 2];
-    const curr = fretXs[f - 1];
-    return padLeft + nutW + (prev + curr) / 2;
-  };
-
-  const noteCenterX = (f) => {
-    if (f === 0) return padLeft - dotSize * 1.5;
-    const prev = f === 1 ? 0 : fretXs[f - 2];
-    const curr = fretXs[f - 1];
-    return padLeft + nutW + (prev + curr) / 2;
-  };
-
-  const boardEndX = padLeft + nutW + drawScaleLen;
-  const yForString = (s) => padTop + s * stringGap;
-  const displayX = (x) => (lefty ? width - x : x);
-
-  // Build name→pc map for both accidentals
-  const nameToPc = useMemo(() => {
-    const map = new Map();
-    for (let pc = 0; pc < system.divisions; pc++) {
-      map.set(system.nameForPc(pc, "sharp"), pc);
-      map.set(system.nameForPc(pc, "flat"), pc);
-    }
-    return map;
-  }, [system]);
-
-  const pcForName = (name) => {
-    const pc = nameToPc.get(name);
-    return typeof pc === "number" ? pc : 0;
-  };
-
-  const nameForPc = (pc) => system.nameForPc(pc, accidental);
+  const { pcForName, nameForPc } = usePitchMapping(system, accidental);
 
   // Scale membership
-  const scaleSet = useMemo(
-    () => new Set(intervals.map((v) => (v + rootIx) % system.divisions)),
-    [intervals, rootIx, system.divisions],
-  );
-
-  const degreeForPc = (pc) => {
-    const rel = (pc - rootIx + system.divisions) % system.divisions;
-    const ix = intervals.indexOf(rel);
-    return ix >= 0 ? ix + 1 : null;
-  };
+  const { scaleSet, degreeForPc } = useScaleAndChord({
+    system,
+    rootIx,
+    intervals,
+    chordPCs,
+    chordRootPc,
+  });
 
   // --- Inlays (12-TET references mapped to N-TET wires) ---
-  const N = system.divisions;
-  const maxSemi = Math.floor((frets * 12) / N);
-
-  const singleBases = [3, 5, 7, 9, 15, 17, 19, 21];
-  const singleSemis = [];
-  for (let k = 0; k <= Math.ceil(maxSemi / 12); k++) {
-    for (const b of singleBases) {
-      const s = b + 12 * k;
-      if (s <= maxSemi) singleSemis.push(s);
-    }
-  }
-
-  const doubleSemis = [];
-  for (let s = 12; s <= maxSemi; s += 12) doubleSemis.push(s);
-
-  const semiToWire = (semi) => Math.round((semi * N) / 12);
-  const uniq = (arr) => Array.from(new Set(arr));
-
-  const inlaySingles = uniq(singleSemis.map(semiToWire)).filter(
-    (f) => f >= 1 && f <= frets,
-  );
-  const inlayDoubles = uniq(doubleSemis.map(semiToWire)).filter(
-    (f) => f >= 1 && f <= frets,
-  );
+  const { inlaySingles, inlayDoubles } = useInlays({
+    frets,
+    divisions: system.divisions,
+  });
 
   if (!Array.isArray(intervals) || intervals.length === 0) {
     return (
