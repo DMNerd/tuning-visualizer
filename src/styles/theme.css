@@ -10,6 +10,10 @@
   --accent: #ffb400;
   --root: #ff6a00;
   --fret: #c9cdd3;
+  --fret-micro: color-mix(in oklab, var(--fret) 85%, var(--fg) 15%);
+  --fret-w: 1.6px;
+  --fret-w-strong: 2px;
+  --fret-w-micro: 1.3px;
   --board: #f2f3f6;
   --panel: #ffffff;
 
@@ -39,7 +43,8 @@
   --bg: #101214;
   --panel: #15171a;
   --board: #1a1d21;
-  --fret: #2a2f35;
+  --fret: #5b626a;
+  --fret-micro: #7c8a97;
   --accent: #ffc24b;
   --root: #ff7a3d;
 
@@ -101,40 +106,38 @@ body {
   background: var(--bg);
   color: var(--fg);
 
-  .page-header {
+  & .page-header {
     flex: 0 0 auto;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
 
-    .panel-header {
+    & .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
       padding: 6px 10px;
 
-      a {
-        svg {
-          width: 18px !important;
-          height: 18px !important;
-        }
+      & a svg {
+        width: 18px !important;
+        height: 18px !important;
       }
     }
 
-    .app-title {
+    & .app-title {
       margin: 0;
       font-size: 1rem;
       font-weight: 700;
     }
 
-    .header-right,
-    .toggles {
+    & .header-right,
+    & .toggles {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .gh-link {
+    & .gh-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -152,14 +155,14 @@ body {
         background: var(--line);
       }
 
-      svg {
+      & svg {
         width: 18px;
         height: 18px;
         flex: 0 0 18px;
       }
     }
 
-    .switch {
+    & .switch {
       display: flex;
       gap: 6px;
       align-items: center;
@@ -169,22 +172,22 @@ body {
   }
 
   /* ---- Stage (fretboard) ---- */
-  .page-main {
+  & .page-main {
     margin-block: var(--gap);
     max-width: var(--max-stage);
     width: 100%;
     padding-inline: var(--gutter);
     margin-inline: auto;
 
-    .stage {
+    & .stage {
       width: 100%;
     }
-    .stage-inner {
+    & .stage-inner {
       padding: var(--gap);
     }
 
-    .fretboard-wrap {
-      position: relative; /* anchor overlay */
+    & .fretboard-wrap {
+      position: relative;
       width: 100%;
       display: grid;
       place-items: center;
@@ -193,26 +196,23 @@ body {
       border-radius: var(--card-radius);
       background: var(--panel);
       padding: 8px;
-
-      /* extra breathing room to avoid chip overlap */
       padding-block-start: 14px;
       padding-inline-end: 14px;
 
-      svg {
+      & svg {
         width: 100%;
         height: 100%;
         display: block;
       }
 
-      &.lefty svg {
+      &.lefty & svg {
         transform: none;
-      } /* geometry-only flip handled by classes */
+      }
     }
 
-    /* Tiny overlay toolbar in top-right of the board */
-    .stage-toolbar {
+    & .stage-toolbar {
       position: absolute;
-      inset: 6px 6px auto auto; /* closer to corner; board adds padding */
+      inset: 6px 6px auto auto;
       display: inline-flex;
       gap: 0;
       padding: 0;
@@ -231,7 +231,7 @@ body {
   /* =========================
     Controls container
   ========================= */
-  .page-controls {
+  & .page-controls {
     flex: 0 0 auto;
     max-width: calc(var(--max-stage) - (var(--gutter) * 2));
     width: 100%;
@@ -244,8 +244,8 @@ body {
     column-width: var(--col-width);
     column-gap: var(--card-gap);
 
-    > .panel-sec,
-    > section.panel-sec {
+    & > .panel-sec,
+    & > section.panel-sec {
       display: block;
       break-inside: avoid;
       margin: 0 0 var(--card-gap);
@@ -255,7 +255,7 @@ body {
       background: var(--panel);
       overflow: clip;
 
-      .sec-header {
+      & .sec-header {
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -269,7 +269,7 @@ body {
         cursor: pointer;
         transition: background var(--speed) var(--ease);
 
-        .chev {
+        & .chev {
           color: var(--muted);
           transition: transform var(--speed) var(--ease);
         }
@@ -279,7 +279,7 @@ body {
         }
       }
 
-      .sec-body {
+      & .sec-body {
         display: grid;
         grid-template-rows: 1fr;
         transition:
@@ -290,20 +290,20 @@ body {
         min-height: 0;
         opacity: 1;
 
-        > .sec-body-inner {
+        & > .sec-body-inner {
           overflow: hidden;
         }
       }
 
       &[data-collapsed="true"],
       &.is-collapsed {
-        .sec-body {
+        & .sec-body {
           grid-template-rows: 0fr;
           padding-block: 0;
           opacity: 0.98;
         }
 
-        .sec-header .chev {
+        & .sec-header & .chev {
           transform: rotate(-90deg);
         }
       }
@@ -314,21 +314,20 @@ body {
 /* ===== Fullscreen integration ===== */
 .fb-stage {
   border-radius: var(--card-radius);
-  overflow: clip; /* fall back to hidden if needed */
+  overflow: clip;
 
   &:fullscreen {
-    .stage-toolbar {
+    & .stage-toolbar {
       inset: 10px 12px auto auto;
     }
   }
 }
 
-/* Prevent background scroll bleed while in fullscreen */
 html.is-fs {
   overflow: hidden;
 }
 
-/* ===== Icon button that matches the app ===== */
+/* ===== Icon button ===== */
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -354,14 +353,14 @@ html.is-fs {
     transform: translateY(0);
   }
 
-  svg {
+  & svg {
     width: 18px;
     height: 18px;
     flex: 0 0 18px;
     fill: currentColor;
   }
 
-  .label {
+  & .label {
     font-size: 12px;
   }
 
@@ -373,7 +372,7 @@ html.is-fs {
 .btn-row {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* matches spacing in InstrumentControls .defaults-row */
+  gap: 8px;
   margin-top: 8px;
 }
 
@@ -384,7 +383,7 @@ html.is-fs {
 }
 
 /* =========================
-  Section / control atoms
+  Section / controls
 ========================= */
 .panel h1 {
   font-size: 15px;
@@ -409,11 +408,11 @@ html.is-fs {
   gap: 4px;
   font-size: 12px;
 
-  > span {
+  & > span {
     color: var(--muted);
   }
 
-  small {
+  & small {
     font-size: 11.5px;
     line-height: 1.2;
     color: var(--muted);
@@ -439,36 +438,34 @@ input[type="text"] {
   }
 }
 
-/* Display controls layout */
 .display-controls {
   display: grid;
   gap: 14px;
 
-  .field {
+  & .field {
     margin-bottom: 2px;
   }
 
-  .radio-row {
+  & .radio-row {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
   }
 
-  .check {
+  & .check {
     margin-top: 4px;
   }
 }
 
-/* Chord Builder spacing */
 .chord-controls {
   display: grid;
   gap: 14px;
 
-  .grid2 {
+  & .grid2 {
     gap: 10px;
   }
 
-  .field .check {
+  & .field .check {
     margin-top: 2px;
   }
 }
@@ -508,41 +505,39 @@ input[type="text"] {
   }
 }
 
-/* Instrument helpers */
 .instrument {
   display: grid;
   gap: 10px;
   min-width: 0;
 
-  .row-2 {
+  & .row-2 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     min-width: 0;
   }
 
-  .strings-grid {
+  & .strings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 10px;
     min-width: 0;
   }
 
-  input,
-  select {
+  & input,
+  & select {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
   }
 
-  .btn {
+  & .btn {
     width: 100%;
     white-space: normal;
     line-height: 1.2;
   }
 }
 
-/* Ensure shrink behavior in flex/grid parents */
 .section,
 .panel,
 .sidebar {
@@ -558,7 +553,6 @@ svg {
   height: auto;
 }
 
-/* Lefty: flip geometry only; labels can opt out with .no-mirror */
 .fretboard-lefty-geom {
   transform: scaleX(-1);
   transform-box: fill-box;
@@ -577,16 +571,19 @@ svg {
 
 .fretLine {
   stroke: var(--fret);
-  stroke-width: 1.4;
+  stroke-width: var(--fret-w);
+  stroke-linecap: square;
 
   &.strong {
-    stroke-width: 1.7;
+    stroke-width: var(--fret-w-strong);
   }
 
   &.micro {
-    stroke-width: 1.1;
-    stroke-dasharray: 3 7;
-  opacity: 0.7;
+    stroke: var(--fret-micro);
+    stroke-width: var(--fret-w-micro);
+    stroke-dasharray: 3 14;
+    stroke-dashoffset: -2.8px;
+    opacity: 0.7;
   }
 }
 
@@ -618,14 +615,12 @@ svg {
   fill: #3b4149;
 }
 
-/* Nut */
 .nut {
   fill: var(--nut);
   stroke: #000;
   stroke-width: 2.3;
 }
 
-/* Note labels */
 .noteText {
   font-size: 10.5px;
   font-weight: 700;
@@ -637,7 +632,7 @@ svg {
   }
 }
 
-:root[data-theme="dark"] .noteText {
+:root[data-theme="dark"] & .noteText {
   fill: #0b0b0b;
 }
 
@@ -678,7 +673,7 @@ svg {
   input[type="text"],
   .btn {
     min-height: 40px;
-    font-size: 16px; /* prevents iOS zoom on focus */
+    font-size: 16px;
   }
 }
 
@@ -708,7 +703,7 @@ svg {
 }
 
 /* =========================
-  Scrollbars (nice-to-have)
+  Scrollbars
 ========================= */
 .fretboard-wrap::-webkit-scrollbar {
   height: 10px;
@@ -733,12 +728,12 @@ svg {
   .page {
     min-height: auto;
 
-    .page-header,
-    .page-controls {
+    & .page-header,
+    & .page-controls {
       display: none !important;
     }
 
-    .page-main {
+    & .page-main {
       padding: 0;
       max-width: none;
       margin: 0;
