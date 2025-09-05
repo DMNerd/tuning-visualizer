@@ -1,4 +1,5 @@
 import React from "react";
+import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 
 export default function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = React.useState(defaultOpen);
@@ -10,7 +11,9 @@ export default function Section({ title, children, defaultOpen = true }) {
         aria-expanded={open}
       >
         <span>{title}</span>
-        <span className="chev">{open ? "▾" : "▸"}</span>
+        <span className="chev" aria-hidden>
+          {open ? <FiChevronDown /> : <FiChevronRight />}
+        </span>
       </button>
       {open && <div className="sec-body">{children}</div>}
     </section>
