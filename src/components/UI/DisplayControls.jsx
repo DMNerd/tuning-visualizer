@@ -65,6 +65,7 @@ export default function DisplayControls({
             >
               <option value="names">Note names</option>
               <option value="degrees">Degrees</option>
+              <option value="intervals">Intervals</option>
               <option value="fret">Fret number</option>
               <option value="off">Off</option>
             </select>

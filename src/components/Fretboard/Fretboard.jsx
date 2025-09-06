@@ -18,7 +18,7 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp", // 'sharp' | 'flat'
-    show = "names", // 'names' | 'degrees' | 'fret' | 'off'
+    show = "names", 
     showOpen = true,
     showFretNums = true,
     dotSize = 14,
@@ -91,6 +91,22 @@ const Fretboard = forwardRef(function Fretboard(
       </svg>
     );
   }
+
+  // --- Interval formatter for labels ---
+  const intervalOf = (pc) => {
+    const N = system.divisions;
+    const d = (pc - rootIx + N) % N; // steps up from root
+    if (N === 12) {
+      // 12-TET musical interval names
+      const NAMES = [
+        "P1", "m2", "M2", "m3", "M3", "P4",
+        "TT", "P5", "m6", "M6", "m7", "M7",
+      ];
+      return NAMES[d];
+    }
+    // Generic N-TET: show step count
+    return String(d);
+  };
 
   // ---------- Render ----------
   return (
@@ -273,11 +289,13 @@ const Fretboard = forwardRef(function Fretboard(
               ? ""
               : show === "degrees"
                 ? (degreeForPc(pc) ?? "")
-                : show === "names"
-                  ? nameForPc(pc)
-                  : show === "fret"
-                    ? String(f)
-                    : "";
+              : show === "intervals"
+                ? intervalOf(pc)
+              : show === "names"
+                ? nameForPc(pc)
+              : show === "fret"
+                ? String(f)
+                : "";
 
           if (label === "") return null;
 
