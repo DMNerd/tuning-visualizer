@@ -78,6 +78,15 @@ const Fretboard = forwardRef(function Fretboard(
     divisions: system.divisions,
   });
 
+  const { labelFor } = useLabels({
+    mode: show,
+    system,
+    rootIx,
+    degreeForPc,
+    nameForPc,
+    accidental,
+  });
+
   if (!Array.isArray(intervals) || intervals.length === 0) {
     return (
       <svg
@@ -92,16 +101,6 @@ const Fretboard = forwardRef(function Fretboard(
       </svg>
     );
   }
-
-  // Centralized label builder
-  const { labelFor } = useLabels({
-    mode: show,
-    system,
-    rootIx,
-    degreeForPc,
-    nameForPc,
-    accidental,
-  });
 
   // ---------- Render ----------
   return (

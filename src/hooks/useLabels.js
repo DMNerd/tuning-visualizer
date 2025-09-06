@@ -1,14 +1,25 @@
 export const LABEL_OPTIONS = [
-  { value: "names",     label: "Note names" },
-  { value: "degrees",   label: "Degrees" },
+  { value: "names", label: "Note names" },
+  { value: "degrees", label: "Degrees" },
   { value: "intervals", label: "Intervals (12-TET relative)" },
-  { value: "fret",      label: "Fret number" },
-  { value: "off",       label: "Off" },
+  { value: "fret", label: "Fret number" },
+  { value: "off", label: "Off" },
 ];
 
 // 12-TET interval names by semitone distance up from root
 const INTERVAL_12 = [
-  "P1","m2","M2","m3","M3","P4","TT","P5","m6","M6","m7","M7",
+  "P1",
+  "m2",
+  "M2",
+  "m3",
+  "M3",
+  "P4",
+  "TT",
+  "P5",
+  "m6",
+  "M6",
+  "m7",
+  "M7",
 ];
 
 function roundToInt(x) {
@@ -18,9 +29,9 @@ function roundToInt(x) {
 
 /**
  * Context-anchored formatter for arbitrary N-TET.
- * - sharp mode: anchor to LOWER semitone 
+ * - sharp mode: anchor to LOWER semitone
  *   -> upward microsteps display as "+"
- * - flat mode:  anchor to UPPER semitone 
+ * - flat mode:  anchor to UPPER semitone
  *   -> downward microsteps display as "−"
  *
  * Examples in 24-TET (N=24):
@@ -34,11 +45,11 @@ function formatIntervalGenericN(d, N, accidental) {
   const baseSemis =
     accidental === "flat" ? Math.ceil(exactSemis) : Math.floor(exactSemis);
 
-  const name = INTERVAL_12[(baseSemis % 12 + 12) % 12];
+  const name = INTERVAL_12[((baseSemis % 12) + 12) % 12];
 
   // Convert the anchored semitone back to N-steps and compare
   const baseSteps = (baseSemis * N) / 12; // may be non-integer in exotic N, ok
-  const offsetSteps = d - baseSteps;      // + above anchor, - below anchor
+  const offsetSteps = d - baseSteps; // + above anchor, - below anchor
   const offset = roundToInt(offsetSteps);
 
   if (offset === 0) return name;

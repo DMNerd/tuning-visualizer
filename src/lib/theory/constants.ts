@@ -33,37 +33,6 @@ export type PresetTunings = Readonly<
 // ---------------- Data ----------------
 
 /**
- * Default tunings per temperament & string count.
- * These are the "factory" defaults the app uses when no user default is saved.
- * Arrays are ordered high → low.
- */
-export const DEFAULT_TUNINGS: DefaultTunings = {
-  "12-TET": {
-    // Bass (high → low)
-    4: ["G", "D", "A", "E"],
-
-    // Bass (high → low)
-    5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
-
-    // Guitar family (high → low)
-    6: ["E", "B", "G", "D", "A", "E"],
-    7: ["E", "B", "G", "D", "A", "E", "B"],
-    8: ["E", "B", "G", "D", "A", "E", "B", "F#"],
-  },
-
-  "24-TET": {
-    4: ["G", "D", "A", "E"],
-
-    // Bass (high → low)
-    5: ["G", "D", "A", "E", "B"], // Standard 5 (BEADG)
-
-    6: ["E", "B", "G", "D", "A", "E"],
-    7: ["E", "B", "G", "D", "A", "E", "B"],
-    8: ["E", "B", "G", "D", "A", "E", "B", "F#"],
-  },
-} as const satisfies DefaultTunings;
-
-/**
  * Named (built-in) presets per temperament & string count.
  * Keys are human-friendly names shown in the UI.
  * Arrays are ordered high → low to match the app’s convention.
@@ -203,3 +172,61 @@ export const PRESET_TUNINGS: PresetTunings = {
     },
   },
 } as const satisfies PresetTunings;
+
+// ---------------- Choose which preset is the factory default ----------------
+
+/** Name of the preset to use as the default per system & string count. */
+const DEFAULT_PRESET_NAME: Readonly<
+  Record<SystemId, Readonly<Record<StringCount, string>>>
+> = {
+  "12-TET": {
+    4: "Bass 4 Standard (EADG)",
+    5: "Bass 5 Standard (BEADG)",
+    6: "Standard (EADGBE)",
+    7: "Standard 7 (BEADGBE)",
+    8: "Standard 8 (F#BEADGBE)",
+  },
+  "24-TET": {
+    4: "Bass 4 Standard (EADG)",
+    5: "Bass 5 Standard (BEADG)",
+    6: "Standard (EADGBE)",
+    7: "Standard 7 (BEADGBE)",
+    8: "Standard 8 (F#BEADGBE)",
+  },
+} as const;
+
+/** Build DEFAULT_TUNINGS by selecting from PRESET_TUNINGS. */
+function makeDefaultsFromPresets(
+  presets: PresetTunings,
+  picks: typeof DEFAULT_PRESET_NAME,
+): DefaultTunings {
+  const out: Partial<
+    Record<SystemId, Partial<Record<StringCount, TuningArray>>>
+  > = {};
+
+  (Object.keys(picks) as SystemId[]).forEach((system) => {
+    out[system] = {};
+    (Object.keys(picks[system]) as unknown as StringCount[]).forEach((n) => {
+      const presetName = picks[system][n];
+      const group = presets[system][n];
+      const chosen = group[presetName];
+
+      if (!chosen) {
+        throw new Error(
+          `Default preset "${presetName}" not found for ${system} ${n}-string.`,
+        );
+      }
+      out[system]![n] = chosen;
+    });
+  });
+
+  return out as DefaultTunings;
+}
+
+export const DEFAULT_TUNINGS: DefaultTunings = makeDefaultsFromPresets(
+  PRESET_TUNINGS,
+  DEFAULT_PRESET_NAME,
+);
+
+export const getDefaultTuning = (system: SystemId, strings: StringCount) =>
+  DEFAULT_TUNINGS[system][strings];

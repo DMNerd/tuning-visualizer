@@ -1,111 +1,105 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+// hooks/useDefaultTuning.js
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /**
- * Handles:
- * - resolving defaults (user-saved → per-system → 12-TET → safe fallback)
- * - tuning state (per systemId + string count)
- * - preset maps & names (per systemId + string count)
- * - save/load/reset default (localStorage)
+ * Props:
+ * - systemId: "12-TET" | "24-TET"
+ * - strings: 4|5|6|7|8
+ * - DEFAULT_TUNINGS: derived from presets (factory defaults)
+ * - PRESET_TUNINGS: full catalog of named presets
+ *
+ * Returns:
+ * - tuning, setTuning
+ * - presetMap: { "Factory default": [...], "Saved default"?: [...], ...all named presets }
+ * - presetNames
+ * - savedExists, saveDefault(), loadSavedDefault(), resetFactoryDefault()
+ * - defaultForCount(count)
  */
+
+const STORAGE_KEY = "tv.user-default-tuning";
+
+function keyOf(systemId, strings) {
+  return `${systemId}:${strings}`;
+}
+
+function readStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStore(obj) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch {
+    // ignore (private mode, quota, etc.)
+  }
+}
+
 export function useDefaultTuning({
   systemId,
   strings,
   DEFAULT_TUNINGS,
   PRESET_TUNINGS,
 }) {
-  const lsKey = useMemo(
-    () => `fb.defaultTuning.${systemId}.${strings}`,
-    [systemId, strings],
-  );
+  // Factory default for current (system, strings)
+  const factory = DEFAULT_TUNINGS[systemId][strings];
 
-  const getDefault = useCallback(
-    (sysId, count) => {
-      // 1) user-saved default (for sys+count)
-      try {
-        const raw = localStorage.getItem(`fb.defaultTuning.${sysId}.${count}`);
-        if (raw) {
-          const arr = JSON.parse(raw);
-          if (Array.isArray(arr)) return arr;
-        }
-      } catch {
-        /* ignore storage errors */
-      }
+  // Live tuning state
+  const [tuning, setTuning] = useState(factory);
 
-      // 2) built-in per-system default
-      const sysDefaults = (DEFAULT_TUNINGS && DEFAULT_TUNINGS[sysId]) || {};
-      if (sysDefaults[count]) return sysDefaults[count];
+  // Any saved user default?
+  const store = useMemo(() => readStore(), []);
+  const storeKey = keyOf(systemId, strings);
+  const saved = store[storeKey];
+  const savedExists = !!saved && Array.isArray(saved) && saved.length > 0;
 
-      // 3) built-in 12-TET fallback
-      const twelve = (DEFAULT_TUNINGS && DEFAULT_TUNINGS["12-TET"]) || {};
-      if (twelve[count]) return twelve[count];
+  // When system or strings change, reset the live tuning to factory
+  useEffect(() => {
+    setTuning(factory);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemId, strings, factory.join("|")]);
 
-      // 4) ultra-safe fallback
-      return ["E", "B", "G", "D", "A", "E"];
-    },
-    [DEFAULT_TUNINGS],
-  );
-
-  const [tuning, setTuning] = useState(() => getDefault(systemId, strings));
-
-  // Presets (always include a “Factory default” option).
+  // Build preset map:
+  // - Always include "Factory default"
+  // - Include "Saved default" if present
+  // - Include all named presets for this (system, strings)
   const presetMap = useMemo(() => {
-    const bySys = PRESET_TUNINGS && PRESET_TUNINGS[systemId];
-    const byCount = bySys && bySys[strings];
-    const factory = getDefault(systemId, strings);
-    return byCount && Object.keys(byCount).length
-      ? { "Factory default": factory, ...byCount }
-      : { "Factory default": factory };
-  }, [systemId, strings, PRESET_TUNINGS, getDefault]);
+    const m = { "Factory default": factory };
+
+    if (savedExists) m["Saved default"] = saved;
+
+    const catalog = PRESET_TUNINGS?.[systemId]?.[strings] || {};
+    for (const [name, arr] of Object.entries(catalog)) {
+      // Avoid accidental overwrite (different name space anyway)
+      if (!m[name]) m[name] = arr;
+    }
+    return m;
+  }, [factory, savedExists, saved, systemId, strings, PRESET_TUNINGS]);
 
   const presetNames = useMemo(() => Object.keys(presetMap), [presetMap]);
 
-  // Storage helpers
-  const saveDefault = () => {
-    try {
-      localStorage.setItem(lsKey, JSON.stringify(tuning));
-    } catch {
-      /* ignore storage errors */
-    }
-  };
+  // Saved default actions
+  const saveDefault = useCallback(() => {
+    const next = { ...readStore(), [storeKey]: tuning };
+    writeStore(next);
+  }, [storeKey, tuning]);
 
-  const loadSavedDefault = () => {
-    try {
-      const raw = localStorage.getItem(lsKey);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) setTuning(arr);
-      }
-    } catch {
-      /* ignore storage errors */
-    }
-  };
+  const loadSavedDefault = useCallback(() => {
+    if (savedExists && saved) setTuning(saved);
+  }, [savedExists, saved]);
 
-  const resetFactoryDefault = () => {
-    try {
-      localStorage.removeItem(lsKey);
-    } catch {
-      /* ignore storage errors */
-    }
-    setTuning(getDefault(systemId, strings));
-  };
+  const resetFactoryDefault = useCallback(() => {
+    setTuning(factory);
+  }, [factory]);
 
-  const savedExists = useMemo(() => {
-    try {
-      return localStorage.getItem(lsKey) !== null;
-    } catch {
-      return false;
-    }
-  }, [lsKey]);
-
-  // When temperament OR string count changes, adopt default (user → built-in).
-  useEffect(() => {
-    setTuning(getDefault(systemId, strings));
-  }, [systemId, strings, getDefault]);
-
-  // Expose a helper to get the default for a different string count (used by handleStringsChange).
+  // For strings-change logic
   const defaultForCount = useCallback(
-    (count) => getDefault(systemId, count),
-    [getDefault, systemId],
+    (count) => DEFAULT_TUNINGS[systemId][count],
+    [DEFAULT_TUNINGS, systemId],
   );
 
   return {
@@ -113,10 +107,12 @@ export function useDefaultTuning({
     setTuning,
     presetMap,
     presetNames,
+    savedExists,
     saveDefault,
     loadSavedDefault,
     resetFactoryDefault,
-    savedExists,
     defaultForCount,
   };
 }
+
+export default useDefaultTuning;
