@@ -34,6 +34,7 @@ This app will be free and open source forever and is completely self hostable
 - **Tunings**
   - Presets for **6/7/8-string guitar**, **violin family (G–D–A–E)**, and **experimental** sets (e.g., King Gizzard C#–F#–C#–F#–B–E)
   - Custom tuning presets
+  - Per string tuning
 
 - **Display**
   - Multiple label modes: **note names**, **degrees/intervals**, **fret numbers (relative to 12-TET)**, or **fret numbers**
@@ -51,6 +52,10 @@ This app will be free and open source forever and is completely self hostable
 - **Export & Print**
   - Export fretboard as **PNG** or **SVG** with any setting you desire
   - **Print** directly from the browser
+
+Example of exported scales (microtonal, colored degrees)
+
+![Scales](https://i.imgur.com/qE3y8SS.png "Microtonal scale example")
 
 ---
 
