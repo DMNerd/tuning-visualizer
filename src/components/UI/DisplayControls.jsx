@@ -21,6 +21,9 @@ export default function DisplayControls({
   // degree coloring
   colorByDegree,
   setColorByDegree,
+  // NEW: handedness
+  lefty,
+  setLefty,
 }) {
   return (
     <Section title="Display">
@@ -161,6 +164,18 @@ export default function DisplayControls({
               onChange={(e) => setDotSize(parseInt(e.target.value, 10))}
             />
           </div>
+
+          {/* NEW: Left-handed layout */}
+          <label className="check" htmlFor="lefty">
+            <input
+              id="lefty"
+              name="lefty"
+              type="checkbox"
+              checked={lefty}
+              onChange={(e) => setLefty(e.target.checked)}
+            />{" "}
+            Left-handed layout
+          </label>
         </div>
       </div>
     </Section>

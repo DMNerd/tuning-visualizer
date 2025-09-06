@@ -182,8 +182,6 @@ export default function App() {
         <PanelHeader
           theme={theme}
           setTheme={setTheme}
-          lefty={lefty}
-          setLefty={setLefty}
         />
       </header>
 
@@ -298,6 +296,8 @@ export default function App() {
           setOpenOnlyInScale={setOpenOnlyInScale}
           colorByDegree={colorByDegree}
           setColorByDegree={setColorByDegree}
+           lefty={lefty}
+  setLefty={setLefty}
         />
 
         <ExportControls

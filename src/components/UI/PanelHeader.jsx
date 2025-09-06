@@ -1,33 +1,60 @@
+import React from "react";
 import { FaGithub } from "react-icons/fa";
+import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
 
-export default function PanelHeader({ theme, setTheme, lefty, setLefty }) {
+/**
+ * Keeps original layout + title ("TunningViz") and GitHub link.
+ * Replaces the Dark Mode checkbox with a segmented Auto/Light/Dark control.
+ * Lefty toggle was moved to Display section, so it's not rendered here anymore.
+ */
+export default function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
+  const setAuto = () => setTheme("auto");
+  const setLight = () => setTheme("light");
+  const setDark  = () => setTheme("dark");
+
+  const isAuto  = theme === "auto";
+  const isLight = theme === "light";
+  const isDark  = theme === "dark";
+
   return (
     <div className="panel-header">
       <h1 className="app-title">TunningViz</h1>
 
       <div className="header-right">
         <div className="toggles">
-          <label className="switch" htmlFor="darkMode">
-            <input
-              id="darkMode"
-              name="darkMode"
-              type="checkbox"
-              checked={theme === "dark"}
-              onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
-            />
-            <span>Dark Mode</span>
-          </label>
-
-          <label className="switch" htmlFor="lefty">
-            <input
-              id="lefty"
-              name="lefty"
-              type="checkbox"
-              checked={lefty}
-              onChange={(e) => setLefty(e.target.checked)}
-            />
-            <span>Lefty</span>
-          </label>
+          {/* Theme segmented control (Auto / Light / Dark) */}
+          <div className="theme-segment" role="group" aria-label="Theme mode">
+            <button
+              type="button"
+              className={`seg-btn ${isAuto ? "active" : ""}`}
+              aria-pressed={isAuto}
+              onClick={setAuto}
+              title="Auto theme (follow system)"
+            >
+              <FiMonitor aria-hidden="true" />
+              <span className="seg-label">Auto</span>
+            </button>
+            <button
+              type="button"
+              className={`seg-btn ${isLight ? "active" : ""}`}
+              aria-pressed={isLight}
+              onClick={setLight}
+              title="Light theme"
+            >
+              <FiSun aria-hidden="true" />
+              <span className="seg-label">Light</span>
+            </button>
+            <button
+              type="button"
+              className={`seg-btn ${isDark ? "active" : ""}`}
+              aria-pressed={isDark}
+              onClick={setDark}
+              title="Dark theme"
+            >
+              <FiMoon aria-hidden="true" />
+              <span className="seg-label">Dark</span>
+            </button>
+          </div>
         </div>
 
         <a

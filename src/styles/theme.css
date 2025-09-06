@@ -38,6 +38,7 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --fg: #e5e7eb;
   --muted: #9ca3af;
   --line: #3a3f46;
@@ -637,6 +638,53 @@ svg {
   fill: #0b0b0b;
 }
 
+.theme-segment {
+  display: inline-flex;
+  background: color-mix(in oklab, var(--panel) 70%, var(--fg) 5%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+
+  & .seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background var(--speed) var(--ease),
+      color var(--speed) var(--ease);
+
+    & svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &.active {
+      color: var(--fg);
+      background: color-mix(in oklab, var(--accent) 16%, var(--panel) 84%);
+    }
+
+    &:not(.active):hover {
+      background: color-mix(in oklab, var(--panel) 60%, var(--fg) 6%);
+    }
+  }
+}
+
+/* label text hides on very small screens */
+.seg-label {
+  display: none;
+
+  @media (min-width: 480px) {
+    display: inline;
+  }
+}
+
 /* =========================
    Responsive tweaks
 ========================= */
@@ -739,5 +787,11 @@ svg {
       max-width: none;
       margin: 0;
     }
+  }
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .fs-btn {
+    display: none !important;
   }
 }
