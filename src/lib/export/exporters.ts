@@ -11,6 +11,9 @@ export type ExportHeader = {
 
 type Box = { x: number; y: number; width: number; height: number };
 
+const RE_SPACES = /\s+/g;
+const RE_NON_ALNUM_DASH = /[^a-z0-9-]/gi;
+
 export function slug(
   ...parts: Array<string | number | null | undefined>
 ): string {
@@ -18,8 +21,8 @@ export function slug(
     .filter(Boolean)
     .map(String)
     .join("_")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/gi, "")
+    .replace(RE_SPACES, "-")
+    .replace(RE_NON_ALNUM_DASH, "")
     .toLowerCase();
 }
 
@@ -186,28 +189,34 @@ export async function downloadSVG(
   a.click();
 }
 
-export async function printFretboard(svgNode: SVGSVGElement | null, header?: ExportHeader | null, pad = 16) {
+export async function printFretboard(
+  svgNode: SVGSVGElement | null,
+  header?: ExportHeader | null,
+  pad = 16,
+): Promise<void> {
   if (!svgNode) return;
 
   const { svg: composed } = createSvgWithHeader(svgNode, header, pad);
-  const dataUri = await svgAsDataUri(composed, { backgroundColor: getBg() } as any);
+  const dataUri = await svgAsDataUri(composed, {
+    backgroundColor: "#ffffff",
+  } as any);
 
   const html = `<!doctype html>
-  <html>
-  <head>
-  <meta charset="utf-8" />
-  <title>Print Fretboard</title>
-  <style>
-    html,body{margin:0;padding:0;background:${getBg()};}
-    img{display:block;max-width:100%;height:auto;margin:0 auto;}
-    @page { size: auto; margin: 12mm; }
-  </style>
-  </head>
-  <body>
-    <img src="${dataUri}" alt="Fretboard export"/>
-    <script>window.onload = () => setTimeout(() => window.print(), 50);</script>
-  </body>
-  </html>`;
+<html>
+<head>
+<meta charset="utf-8" />
+<title>&#8203;</title>
+<style>
+  @page { size: auto; margin: 0; }
+  html,body { margin:0; padding:0; background:#ffffff; }
+  img { display:block; max-width:100%; height:auto; margin:0 auto; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+</style>
+</head>
+<body>
+  <img id="fb" src="${dataUri}" alt="Fretboard"/>
+</body>
+</html>`;
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
@@ -217,22 +226,34 @@ export async function printFretboard(svgNode: SVGSVGElement | null, header?: Exp
   iframe.style.height = "0";
   iframe.style.border = "0";
   (iframe as HTMLIFrameElement & { srcdoc?: string }).srcdoc = html;
-
   document.body.appendChild(iframe);
 
-  const cleanup = () => {
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 500);
-  };
+  const cleanup = () => setTimeout(() => iframe.remove(), 300);
 
   iframe.onload = () => {
-    try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-    } finally {
+    const doc = iframe.contentDocument;
+    const win = iframe.contentWindow;
+    if (!doc || !win) {
       cleanup();
+      return;
+    }
+
+    const img = doc.getElementById("fb") as HTMLImageElement | null;
+
+    const doPrint = () => {
+      try {
+        win.focus();
+        win.print();
+      } finally {
+        cleanup();
+      }
+    };
+
+    if (img && !img.complete) {
+      img.onload = () => doPrint();
+      img.onerror = () => cleanup();
+    } else {
+      doPrint();
     }
   };
 }
-
