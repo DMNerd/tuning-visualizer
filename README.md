@@ -1,7 +1,13 @@
-# Tuning Visualizer
+# Tuning Visualizer aka TunningViz
 
 An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.  
 Built with React
+
+Why? Because my friend is a big [King Gizzard & the Lizard WizardKing Gizzard & the Lizard Wizard](https://kinggizzardandthelizardwizard.com/) fan and finding any resources on microtonal music is a pain...
+
+Images of guitar scales are inconsistent or paid and finding ones you like is a equaly as painfull
+
+This app will be free and open source forever and is completely self hostable
 
 ---
 
@@ -18,6 +24,7 @@ Built with React
 - **Tuning Systems**
   - Standard **12-TET** library (Major, Natural/Harmonic Minor, etc.)
   - **24-TET** microtonal scales with distinct coloring for microtonal notes
+  - Theoretical support for any TET/EDO system
 
 - **Scales & Chords**
   - Scale picker filtered by tuning system
@@ -34,6 +41,7 @@ Built with React
   - Toggle **open strings** and **fret numbers**
   - Classic **inlay markers**
   - **Light/Dark** theme with preference saved
+  - Option to mirror the fretboard for lefties
 
 - **Layout & Controls**
   - Consistent, responsive fretboard geometry across any fret/string count
@@ -41,7 +49,7 @@ Built with React
   - **Fullscreen** viewing mode
 
 - **Export & Print**
-  - Export fretboard as **PNG** or **SVG**
+  - Export fretboard as **PNG** or **SVG** with any setting you desire
   - **Print** directly from the browser
 
 ---
