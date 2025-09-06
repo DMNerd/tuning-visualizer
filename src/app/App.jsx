@@ -35,6 +35,7 @@ import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
 
 export default function App() {
   // ----- System selection -----
@@ -53,7 +54,6 @@ export default function App() {
 
   // ----- Root & accidental -----
   const [root, setRoot] = useState("C");
-  const [accidental, setAccidental] = useState("sharp");
 
   // ----- Chords -----
   const [chordRoot, setChordRoot] = useState("C");
@@ -61,15 +61,33 @@ export default function App() {
   const [showChord, setShowChord] = useState(false);
   const [hideNonChord, setHideNonChord] = useState(false); // NEW
 
-  // ----- Display options -----
-  const [show, setShow] = useState("names");
-  const [showOpen, setShowOpen] = useState(true);
-  const [showFretNums, setShowFretNums] = useState(true);
-  const [dotSize, setDotSize] = useState(14);
-  const [lefty, setLefty] = useState(false);
-  const [theme, setTheme] = useTheme();
-  const [openOnlyInScale, setOpenOnlyInScale] = useState(false);
-  const [colorByDegree, setColorByDegree] = useState(false);
+  // ----- Display options (persistent) -----
+  const [displayPrefs, setDisplayPrefs] = useDisplayPrefs({
+    show: "names",
+    showOpen: true,
+    showFretNums: true,
+    dotSize: 14,
+    lefty: false,
+    openOnlyInScale: false,
+    colorByDegree: false,
+    accidental: "sharp",
+  });
+
+  const {
+    show,
+    showOpen,
+    showFretNums,
+    dotSize,
+    lefty,
+    openOnlyInScale,
+    colorByDegree,
+    accidental,
+  } = displayPrefs;
+
+  const updatePref = (key) => (val) =>
+    setDisplayPrefs((prev) => ({ ...prev, [key]: val }));
+
+  const [theme, setTheme] = useTheme(); // keep theme separate
 
   // Refs
   const boardRef = useRef(null);
@@ -179,10 +197,7 @@ export default function App() {
   return (
     <div className="page">
       <header className="page-header">
-        <PanelHeader
-          theme={theme}
-          setTheme={setTheme}
-        />
+        <PanelHeader theme={theme} setTheme={setTheme} />
       </header>
 
       <main className="page-main">
@@ -283,21 +298,21 @@ export default function App() {
 
         <DisplayControls
           show={show}
-          setShow={setShow}
+          setShow={updatePref("show")}
           showOpen={showOpen}
-          setShowOpen={setShowOpen}
+          setShowOpen={updatePref("showOpen")}
           showFretNums={showFretNums}
-          setShowFretNums={setShowFretNums}
+          setShowFretNums={updatePref("showFretNums")}
           dotSize={dotSize}
-          setDotSize={setDotSize}
+          setDotSize={updatePref("dotSize")}
           accidental={accidental}
-          setAccidental={setAccidental}
+          setAccidental={updatePref("accidental")}
           openOnlyInScale={openOnlyInScale}
-          setOpenOnlyInScale={setOpenOnlyInScale}
+          setOpenOnlyInScale={updatePref("openOnlyInScale")}
           colorByDegree={colorByDegree}
-          setColorByDegree={setColorByDegree}
-           lefty={lefty}
-  setLefty={setLefty}
+          setColorByDegree={updatePref("colorByDegree")}
+          lefty={lefty}
+          setLefty={updatePref("lefty")}
         />
 
         <ExportControls

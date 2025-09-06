@@ -7,14 +7,17 @@ import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
  * Replaces the Dark Mode checkbox with a segmented Auto/Light/Dark control.
  * Lefty toggle was moved to Display section, so it's not rendered here anymore.
  */
-export default function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
+export default function PanelHeader({
+  theme,
+  setTheme /* lefty, setLefty (unused) */,
+}) {
   const setAuto = () => setTheme("auto");
   const setLight = () => setTheme("light");
-  const setDark  = () => setTheme("dark");
+  const setDark = () => setTheme("dark");
 
-  const isAuto  = theme === "auto";
+  const isAuto = theme === "auto";
   const isLight = theme === "light";
-  const isDark  = theme === "dark";
+  const isDark = theme === "dark";
 
   return (
     <div className="panel-header">
