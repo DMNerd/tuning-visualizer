@@ -7,10 +7,7 @@ set shell := ["bash", "-cu"]
 # Docker tasks
 # ---------------------------
 
-docker-build:
-    docker build -t tuning-visualizer .
-
-docker-up: docker-build
+docker-up: 
     docker compose down
     docker compose up -d
 
@@ -18,9 +15,6 @@ docker-up: docker-build
 # Podman tasks
 # ---------------------------
 
-podman-build:
-    podman build -t tuning-visualizer .
-
-podman-up: podman-build
+podman-up: 
     podman compose down
     podman compose up -d
