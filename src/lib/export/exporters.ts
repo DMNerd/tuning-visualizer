@@ -1,23 +1,37 @@
-// exporters.js
 import { saveSvgAsPng, svgAsDataUri } from "save-svg-as-png";
 
-export function slug(...parts) {
+export type ExportHeader = {
+  system?: string;
+  tuning?: string | string[];
+  scale?: string;
+  chordEnabled?: boolean;
+  chordRoot?: string;
+  chordType?: string;
+};
+
+type Box = { x: number; y: number; width: number; height: number };
+
+export function slug(
+  ...parts: Array<string | number | null | undefined>
+): string {
   return parts
     .filter(Boolean)
+    .map(String)
     .join("_")
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/gi, "")
     .toLowerCase();
 }
 
-function getBox(svg) {
-  const vb = svg.viewBox && svg.viewBox.baseVal;
+function getBox(svg: SVGSVGElement): Box {
+  const vb = svg.viewBox?.baseVal;
   return vb
     ? { x: vb.x, y: vb.y, width: vb.width, height: vb.height }
-    : svg.getBBox();
+    : // getBBox exists on SVGSVGElement via SVGGraphicsElement
+      svg.getBBox();
 }
 
-function composeInfoLines(header) {
+function composeInfoLines(header?: ExportHeader | null): string[] {
   if (!header) return [];
   const { system, tuning, scale, chordEnabled, chordRoot, chordType } = header;
 
@@ -36,10 +50,10 @@ function composeInfoLines(header) {
       ? `Chord overlay: ${chordRoot} ${chordType}`
       : null;
 
-  return [line1, line2].filter(Boolean);
+  return [line1, line2].filter(Boolean) as string[];
 }
 
-function getBg() {
+function getBg(): string {
   return (
     getComputedStyle(document.documentElement)
       .getPropertyValue("--bg")
@@ -47,13 +61,25 @@ function getBg() {
   );
 }
 
+type ComposedSvg = {
+  svg: SVGSVGElement;
+  box: Box;
+  addedTop: number;
+};
+
 /**
  * Create a new SVG that draws the info header above the original svgNode.
- * Returns { svg, box } where svg is the composed SVG element.
+ * Returns { svg, box, addedTop } where svg is the composed SVG element.
  */
-function createSvgWithHeader(svgNode, header, pad = 16) {
+function createSvgWithHeader(
+  svgNode: SVGSVGElement,
+  header?: ExportHeader | null,
+  pad: number = 16,
+): ComposedSvg {
   const lines = composeInfoLines(header);
-  if (!lines.length) return { svg: svgNode, box: getBox(svgNode), addedTop: 0 };
+  if (!lines.length) {
+    return { svg: svgNode, box: getBox(svgNode), addedTop: 0 };
+  }
 
   const NS = "http://www.w3.org/2000/svg";
   const origBox = getBox(svgNode);
@@ -62,14 +88,14 @@ function createSvgWithHeader(svgNode, header, pad = 16) {
   const headerHeight = lines.length * lineHeight + topPadding;
 
   // Container SVG sized by original viewBox/bbox + header
-  const composed = document.createElementNS(NS, "svg");
+  const composed = document.createElementNS(NS, "svg") as SVGSVGElement;
   composed.setAttribute("xmlns", NS);
   const width = Math.ceil(origBox.width + pad * 2);
   const height = Math.ceil(origBox.height + pad * 2 + headerHeight);
 
   composed.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  composed.setAttribute("width", width);
-  composed.setAttribute("height", height);
+  composed.setAttribute("width", String(width));
+  composed.setAttribute("height", String(height));
 
   // Background
   const bgRect = document.createElementNS(NS, "rect");
@@ -83,6 +109,7 @@ function createSvgWithHeader(svgNode, header, pad = 16) {
   // Header group
   const gHeader = document.createElementNS(NS, "g");
   gHeader.setAttribute("transform", `translate(0, ${pad})`);
+
   const textColor =
     getComputedStyle(document.documentElement)
       .getPropertyValue("--fg")
@@ -116,17 +143,17 @@ function createSvgWithHeader(svgNode, header, pad = 16) {
   });
   composed.appendChild(gWrap);
 
-  const box = { x: 0, y: 0, width, height };
+  const box: Box = { x: 0, y: 0, width, height };
   return { svg: composed, box, addedTop: headerHeight };
 }
 
 export async function downloadPNG(
-  svgNode,
-  filename = "fretboard.png",
-  scale = 3,
-  pad = 16,
-  header = null,
-) {
+  svgNode: SVGSVGElement | null,
+  filename: string = "fretboard.png",
+  scale: number = 3,
+  pad: number = 16,
+  header?: ExportHeader | null,
+): Promise<void> {
   if (!svgNode) return;
   const { svg: composed, box } = createSvgWithHeader(svgNode, header, pad);
 
@@ -137,21 +164,21 @@ export async function downloadPNG(
     width: Math.ceil(box.width),
     height: Math.ceil(box.height),
     backgroundColor: getBg(),
-  });
+  } as any);
 }
 
 export async function downloadSVG(
-  svgNode,
-  filename = "fretboard.svg",
-  header = null,
-  pad = 16,
-) {
+  svgNode: SVGSVGElement | null,
+  filename: string = "fretboard.svg",
+  header?: ExportHeader | null,
+  pad: number = 16,
+): Promise<void> {
   if (!svgNode) return;
 
   const { svg: composed } = createSvgWithHeader(svgNode, header, pad);
   const dataUri = await svgAsDataUri(composed, {
     backgroundColor: getBg(),
-  });
+  } as any);
 
   const a = document.createElement("a");
   a.href = dataUri;
@@ -159,34 +186,53 @@ export async function downloadSVG(
   a.click();
 }
 
-export async function printFretboard(svgNode, header = null, pad = 16) {
+export async function printFretboard(svgNode: SVGSVGElement | null, header?: ExportHeader | null, pad = 16) {
   if (!svgNode) return;
 
   const { svg: composed } = createSvgWithHeader(svgNode, header, pad);
-  const dataUri = await svgAsDataUri(composed, {
-    backgroundColor: getBg(),
-  });
+  const dataUri = await svgAsDataUri(composed, { backgroundColor: getBg() } as any);
 
   const html = `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Print Fretboard</title>
-<style>
-  html,body{margin:0;padding:0;background:${getBg()};}
-  img{display:block;max-width:100%;height:auto;margin:0 auto;}
-  @page { size: auto; margin: 12mm; }
-</style>
-</head>
-<body>
-  <img src="${dataUri}" alt="Fretboard export"/>
-  <script>window.onload = () => setTimeout(() => window.print(), 50);</script>
-</body>
-</html>`;
+  <html>
+  <head>
+  <meta charset="utf-8" />
+  <title>Print Fretboard</title>
+  <style>
+    html,body{margin:0;padding:0;background:${getBg()};}
+    img{display:block;max-width:100%;height:auto;margin:0 auto;}
+    @page { size: auto; margin: 12mm; }
+  </style>
+  </head>
+  <body>
+    <img src="${dataUri}" alt="Fretboard export"/>
+    <script>window.onload = () => setTimeout(() => window.print(), 50);</script>
+  </body>
+  </html>`;
 
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  (iframe as HTMLIFrameElement & { srcdoc?: string }).srcdoc = html;
+
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 500);
+  };
+
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } finally {
+      cleanup();
+    }
+  };
 }
+
