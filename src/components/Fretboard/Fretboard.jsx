@@ -278,7 +278,12 @@ const Fretboard = forwardRef(function Fretboard(
           const cy = yForString(s);
 
           const isRoot = pc === rootIx;
-          const label = labelFor(pc, f);
+
+          // Use the same scheme as the fret-number rail when in "fret" mode
+          const raw = labelFor(pc, f);
+          const label =
+            show === "fret" ? buildFretLabel(f, system.divisions) : raw;
+
           if (label === "") return null;
 
           return (
@@ -298,12 +303,11 @@ const Fretboard = forwardRef(function Fretboard(
       {/* fret numbers (centered between frets) */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
-          const N = system.divisions;
-          const isStandard = (f * 12) % N === 0;
-          const labelNum = buildFretLabel(f, N);
-
+          const labelNum = buildFretLabel(f, system.divisions);
           const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
           const topY = padTop - FRETNUM_TOP_GAP;
+
+          const isStandard = (f * 12) % system.divisions === 0;
 
           return isStandard ? (
             <text
@@ -312,7 +316,6 @@ const Fretboard = forwardRef(function Fretboard(
               x={displayX(betweenFretsX(f))}
               y={bottomY}
               textAnchor="middle"
-              pointerEvents="none"
             >
               {labelNum}
             </text>
@@ -323,7 +326,6 @@ const Fretboard = forwardRef(function Fretboard(
               x={displayX(betweenFretsX(f))}
               y={topY}
               textAnchor="middle"
-              pointerEvents="none"
             >
               {labelNum}
             </text>
