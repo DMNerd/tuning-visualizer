@@ -5,6 +5,7 @@ import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
+import { getDegreeColor } from "@/utils/degreeColors";
 
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel } from "@/utils/fretLabels";
@@ -17,7 +18,7 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp", // 'sharp' | 'flat'
-    show = "names", // 'names' | 'degrees' | 'off'
+    show = "names", // 'names' | 'degrees' | 'fret' | 'off'
     showOpen = true,
     showFretNums = true,
     dotSize = 14,
@@ -25,7 +26,8 @@ const Fretboard = forwardRef(function Fretboard(
     system, // { divisions, nameForPc(pc, accidental?) }
     chordPCs = null, // Set<number> | null
     chordRootPc = null, // number | null
-    openOnlyInScale = false, // <<< NEW: open-string filter toggle
+    openOnlyInScale = false, // open-string filter toggle
+    colorByDegree = false,
   },
   ref,
 ) {
@@ -215,19 +217,30 @@ const Fretboard = forwardRef(function Fretboard(
             const rBase = (isRoot ? 1.1 : 1) * dotSize;
             const r = inChord ? rBase * 1.05 : rBase;
 
+            // --- Fill color decision (degree-first when enabled) ---
+            let fill;
+            if (colorByDegree) {
+              const deg = degreeForPc(pc);
+              if (deg != null) {
+                fill = getDegreeColor(deg, intervals.length);
+              } else {
+                fill = isMicro ? "var(--note-micro)" : "var(--note)";
+              }
+            } else {
+              fill = isRoot
+                ? "var(--root)"
+                : isMicro
+                  ? "var(--note-micro)"
+                  : "var(--note)";
+            }
+
             return (
               <circle
                 key={`noteCirc-${s}-${f}`}
                 cx={cx}
                 cy={cy}
                 r={r}
-                fill={
-                  isRoot
-                    ? "var(--root)"
-                    : isMicro
-                      ? "var(--note-micro)"
-                      : "var(--note)"
-                }
+                fill={fill}
                 stroke={inChord ? "var(--fg)" : "none"}
                 strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
               />

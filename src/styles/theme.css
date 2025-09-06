@@ -16,6 +16,7 @@
   --fret-w-micro: 1.3px;
   --board: #f2f3f6;
   --panel: #ffffff;
+  --degree-boost: 12%;
 
   --nut: #fffbe6;
   --note: var(--accent);

@@ -69,6 +69,7 @@ export default function App() {
   const [lefty, setLefty] = useState(false);
   const [theme, setTheme] = useTheme();
   const [openOnlyInScale, setOpenOnlyInScale] = useState(false);
+  const [colorByDegree, setColorByDegree] = useState(false);
 
   // Refs
   const boardRef = useRef(null);
@@ -234,6 +235,7 @@ export default function App() {
               chordPCs={chordPCs}
               chordRootPc={chordRootIx}
               openOnlyInScale={openOnlyInScale}
+              colorByDegree={colorByDegree}
             />
           </div>
         </div>
@@ -302,6 +304,8 @@ export default function App() {
           setAccidental={setAccidental}
           openOnlyInScale={openOnlyInScale}
           setOpenOnlyInScale={setOpenOnlyInScale}
+          colorByDegree={colorByDegree}
+          setColorByDegree={setColorByDegree}
         />
 
         <ExportControls
