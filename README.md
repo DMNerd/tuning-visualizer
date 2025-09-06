@@ -102,7 +102,7 @@ Open: http://localhost:8080
 ---
 
 ### Option B — Production image with Dockerfile 
-This approach builds a compact, self-contained image that serves the static bundle with Nginx.
+This approach builds a compact, self-contained image that serves the static bundle with sWS.
 
 Dockerfile is part of the repo
 
