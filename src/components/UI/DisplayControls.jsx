@@ -1,4 +1,6 @@
+// src/components/UI/DisplayControls.jsx
 import Section from "@/components/UI/Section";
+import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
 export default function DisplayControls({
   // labels & visibility
@@ -23,7 +25,7 @@ export default function DisplayControls({
   return (
     <Section title="Display">
       <div className="display-controls">
-        {/* ───────── Notation (visually same as original) ───────── */}
+        {/* ───────── Notation ───────── */}
         <div className="group" role="region" aria-label="Notation">
           {/* Accidentals */}
           <div className="field">
@@ -54,7 +56,7 @@ export default function DisplayControls({
             </div>
           </div>
 
-          {/* Labels */}
+          {/* Labels (from single source of truth) */}
           <div className="field">
             <span>Labels</span>
             <select
@@ -63,11 +65,11 @@ export default function DisplayControls({
               value={show}
               onChange={(e) => setShow(e.target.value)}
             >
-              <option value="names">Note names</option>
-              <option value="degrees">Degrees</option>
-              <option value="intervals">Intervals</option>
-              <option value="fret">Fret number</option>
-              <option value="off">Off</option>
+              {LABEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -84,7 +86,7 @@ export default function DisplayControls({
           </label>
         </div>
 
-        {/* ───────── Open strings (same visual as before) ───────── */}
+        {/* ───────── Open strings ───────── */}
         <div
           className="group"
           role="region"
@@ -93,11 +95,7 @@ export default function DisplayControls({
         >
           <div className="field">
             <span>Open notes</span>
-            <div
-              role="group"
-              aria-label="Open note scope"
-              className="radio-row"
-            >
+            <div role="group" aria-label="Open note scope" className="radio-row">
               <label className="check" htmlFor="showOpen">
                 <input
                   id="showOpen"
@@ -134,7 +132,7 @@ export default function DisplayControls({
           </div>
         </div>
 
-        {/* ───────── Markers & sizing (same visual as before) ───────── */}
+        {/* ───────── Markers & sizing ───────── */}
         <div className="group" role="region" aria-label="Markers and sizing">
           <label className="check" htmlFor="showFretNums">
             <input

@@ -5,6 +5,7 @@ import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
+import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 
 import { makeDisplayX } from "@/utils/displayX";
@@ -18,22 +19,22 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp", // 'sharp' | 'flat'
-    show = "names", 
+    show = "names", // 'names' | 'degrees' | 'intervals' | 'fret' | 'off'
     showOpen = true,
     showFretNums = true,
     dotSize = 14,
     lefty = false,
-    system, // { divisions, nameForPc(pc, accidental?) }
+    system, // { id, divisions, nameForPc(pc, accidental?) }
     chordPCs = null, // Set<number> | null
     chordRootPc = null, // number | null
-    openOnlyInScale = false, // open-string filter toggle
+    openOnlyInScale = false,
     colorByDegree = false,
   },
   ref,
 ) {
   const svgRef = useRef(null);
 
-  // --- Layout via hook ---
+  // --- Layout via hook (note: current hook does not take `system`) ---
   const {
     width,
     height,
@@ -49,7 +50,7 @@ const Fretboard = forwardRef(function Fretboard(
     betweenFretsX,
     noteCenterX,
     yForString,
-  } = useFretboardLayout({ frets, dotSize, system, strings });
+  } = useFretboardLayout({ frets, strings, dotSize });
 
   useLayoutEffect(() => {
     if (!svgRef.current) return;
@@ -62,7 +63,7 @@ const Fretboard = forwardRef(function Fretboard(
 
   const { pcForName, nameForPc } = usePitchMapping(system, accidental);
 
-  // Scale membership
+  // Scale membership + degree lookup
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,
     rootIx,
@@ -71,7 +72,7 @@ const Fretboard = forwardRef(function Fretboard(
     chordRootPc,
   });
 
-  // --- Inlays (12-TET references mapped to N-TET wires) ---
+  // Inlays (map 12-TET references to N-TET wires)
   const { inlaySingles, inlayDoubles } = useInlays({
     frets,
     divisions: system.divisions,
@@ -92,21 +93,15 @@ const Fretboard = forwardRef(function Fretboard(
     );
   }
 
-  // --- Interval formatter for labels ---
-  const intervalOf = (pc) => {
-    const N = system.divisions;
-    const d = (pc - rootIx + N) % N; // steps up from root
-    if (N === 12) {
-      // 12-TET musical interval names
-      const NAMES = [
-        "P1", "m2", "M2", "m3", "M3", "P4",
-        "TT", "P5", "m6", "M6", "m7", "M7",
-      ];
-      return NAMES[d];
-    }
-    // Generic N-TET: show step count
-    return String(d);
-  };
+  // Centralized label builder
+  const { labelFor } = useLabels({
+    mode: show,
+    system,
+    rootIx,
+    degreeForPc,
+    nameForPc,
+    accidental,
+  });
 
   // ---------- Render ----------
   return (
@@ -233,7 +228,7 @@ const Fretboard = forwardRef(function Fretboard(
             const rBase = (isRoot ? 1.1 : 1) * dotSize;
             const r = inChord ? rBase * 1.05 : rBase;
 
-            // --- Fill color decision (degree-first when enabled) ---
+            // Fill color (degree-first when enabled)
             let fill;
             if (colorByDegree) {
               const deg = degreeForPc(pc);
@@ -284,19 +279,7 @@ const Fretboard = forwardRef(function Fretboard(
           const cy = yForString(s);
 
           const isRoot = pc === rootIx;
-          const label =
-            show === "off"
-              ? ""
-              : show === "degrees"
-                ? (degreeForPc(pc) ?? "")
-              : show === "intervals"
-                ? intervalOf(pc)
-              : show === "names"
-                ? nameForPc(pc)
-              : show === "fret"
-                ? String(f)
-                : "";
-
+          const label = labelFor(pc, f);
           if (label === "") return null;
 
           return (
