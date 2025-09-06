@@ -1,9 +1,7 @@
 services:
   web:
     container_name: tuning-visualizer
-    build:
-      context: .
-    image: tuning-visualizer:latest
+    image: ghcr.io/dmnerd/tuning-visualizer:latest
     ports:
-      - "8080:8080" # host:container (rootless-safe)
+      - "8080:8080"
     restart: unless-stopped
