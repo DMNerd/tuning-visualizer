@@ -24,17 +24,17 @@ const Fretboard = forwardRef(function Fretboard(
     showFretNums = true,
     dotSize = 14,
     lefty = false,
-    system, // { id, divisions, nameForPc(pc, accidental?) }
+    system, // { divisions, nameForPc(pc, accidental?) }
     chordPCs = null, // Set<number> | null
     chordRootPc = null, // number | null
     openOnlyInScale = false,
     colorByDegree = false,
+    hideNonChord = false,
   },
   ref,
 ) {
   const svgRef = useRef(null);
 
-  // --- Layout via hook (note: current hook does not take `system`) ---
   const {
     width,
     height,
@@ -63,7 +63,7 @@ const Fretboard = forwardRef(function Fretboard(
 
   const { pcForName, nameForPc } = usePitchMapping(system, accidental);
 
-  // Scale membership + degree lookup
+  // scale membership + degree lookup (chord context also passed)
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,
     rootIx,
@@ -72,7 +72,6 @@ const Fretboard = forwardRef(function Fretboard(
     chordRootPc,
   });
 
-  // Inlays (map 12-TET references to N-TET wires)
   const { inlaySingles, inlayDoubles } = useInlays({
     frets,
     divisions: system.divisions,
@@ -204,13 +203,24 @@ const Fretboard = forwardRef(function Fretboard(
           const openPc = pcForName(openName);
           return Array.from({ length: frets + 1 }).map((_, f) => {
             const pc = (openPc + f) % system.divisions;
-
-            // visibility logic (supports openOnlyInScale)
-            const inScale = scaleSet.has(pc);
             const isOpen = f === 0;
-            const visible = isOpen
-              ? showOpen && (!openOnlyInScale || inScale)
-              : inScale;
+
+            const inScale = scaleSet.has(pc);
+            const inChord = chordPCs ? chordPCs.has(pc) : false;
+
+            // Visibility rules
+            let visible;
+            if (hideNonChord && chordPCs) {
+              // IGNORE scale & openOnlyInScale: show chord tones everywhere
+              const baselineVisible = isOpen ? showOpen : true;
+              visible = baselineVisible && inChord;
+            } else {
+              // regular scale-driven visibility
+              const baselineVisible = isOpen
+                ? showOpen && (!openOnlyInScale || inScale)
+                : inScale;
+              visible = baselineVisible;
+            }
 
             if (!visible) return null;
 
@@ -218,8 +228,6 @@ const Fretboard = forwardRef(function Fretboard(
             const cy = yForString(s);
 
             const isRoot = pc === rootIx;
-
-            const inChord = chordPCs ? chordPCs.has(pc) : false;
             const isChordRoot = inChord && chordRootPc === pc;
             const isStandard = (f * 12) % system.divisions === 0;
             const isMicro = !isStandard;
@@ -264,22 +272,28 @@ const Fretboard = forwardRef(function Fretboard(
         const openPc = pcForName(openName);
         return Array.from({ length: frets + 1 }).map((_, f) => {
           const pc = (openPc + f) % system.divisions;
-
-          // visibility logic mirrored for labels
-          const inScale = scaleSet.has(pc);
           const isOpen = f === 0;
-          const visible = isOpen
-            ? showOpen && (!openOnlyInScale || inScale)
-            : inScale;
+
+          const inScale = scaleSet.has(pc);
+          const inChord = chordPCs ? chordPCs.has(pc) : false;
+
+          let visible;
+          if (hideNonChord && chordPCs) {
+            const baselineVisible = isOpen ? showOpen : true;
+            visible = baselineVisible && inChord;
+          } else {
+            const baselineVisible = isOpen
+              ? showOpen && (!openOnlyInScale || inScale)
+              : inScale;
+            visible = baselineVisible;
+          }
 
           if (!visible) return null;
 
           const cx = noteCenterX(f);
           const cy = yForString(s);
-
           const isRoot = pc === rootIx;
 
-          // Use the same scheme as the fret-number rail when in "fret" mode
           const raw = labelFor(pc, f);
           const label =
             show === "fret" ? buildFretLabel(f, system.divisions) : raw;
@@ -300,7 +314,7 @@ const Fretboard = forwardRef(function Fretboard(
         });
       })}
 
-      {/* fret numbers (centered between frets) */}
+      {/* fret numbers */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const labelNum = buildFretLabel(f, system.divisions);

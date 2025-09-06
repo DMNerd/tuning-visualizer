@@ -85,6 +85,7 @@ You can run **Tuning Visualizer** fully containerized without installing Node or
 > The app is a static React site after `pnpm build`. We serve the `/dist` folder with a tiny HTTP server [sWS](https://github.com/static-web-server/static-web-server).
 
 ### Option A — `docker compose` / `podman compose` (no Dockerfile)
+
 Docker compose is part of the repo. GHCR builds are multiarch (amd64 and arch)
 
 Run with either tool:
@@ -101,12 +102,14 @@ Open: http://localhost:8080
 
 ---
 
-### Option B — Production image with Dockerfile 
+### Option B — Production image with Dockerfile
+
 This approach builds a compact, self-contained image that serves the static bundle with sWS.
 
 Dockerfile is part of the repo
 
 **1) Build the image:**
+
 ```bash
 # Docker
 docker build -t tuning-visualizer:latest .
@@ -115,6 +118,7 @@ podman build -t tuning-visualizer:latest .
 ```
 
 **2) Run the container:**
+
 ```bash
 # Docker
 docker run --rm -p 8080:80 tuning-visualizer:latest

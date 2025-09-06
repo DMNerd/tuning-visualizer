@@ -9,6 +9,10 @@ export default function ChordBuilder({
   onTypeChange,
   showChord,
   setShowChord,
+
+  // NEW
+  hideNonChord,
+  setHideNonChord,
 }) {
   return (
     <Section title="Chord Builder">
@@ -57,6 +61,23 @@ export default function ChordBuilder({
               onChange={(e) => setShowChord(e.target.checked)}
             />
             Show chord on fretboard
+          </label>
+        </div>
+
+        <div className="field">
+          <label
+            className={`check${!showChord ? " disabled" : ""}`}
+            htmlFor="hideNonChord"
+          >
+            <input
+              id="hideNonChord"
+              name="hideNonChord"
+              type="checkbox"
+              checked={hideNonChord}
+              onChange={(e) => setHideNonChord(e.target.checked)}
+              disabled={!showChord}
+            />
+            Hide non-chord tones
           </label>
         </div>
       </div>

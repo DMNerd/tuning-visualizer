@@ -46,7 +46,6 @@ export default function App() {
   const [frets, setFrets] = useState(22);
   const [fretsTouched, setFretsTouched] = useState(false);
 
-  // wrapped setter to mark user interaction
   const setFretsUI = (val) => {
     setFrets(val);
     setFretsTouched(true);
@@ -54,12 +53,13 @@ export default function App() {
 
   // ----- Root & accidental -----
   const [root, setRoot] = useState("C");
-  const [accidental, setAccidental] = useState("sharp"); // "sharp" | "flat"
+  const [accidental, setAccidental] = useState("sharp");
 
   // ----- Chords -----
   const [chordRoot, setChordRoot] = useState("C");
   const [chordType, setChordType] = useState("maj");
   const [showChord, setShowChord] = useState(false);
+  const [hideNonChord, setHideNonChord] = useState(false); // NEW
 
   // ----- Display options -----
   const [show, setShow] = useState("names");
@@ -75,13 +75,12 @@ export default function App() {
   const boardRef = useRef(null);
   const stageRef = useRef(null);
 
-  // ----- Fullscreen controls for the stage -----
   const { isActive: isFs, toggle: toggleFs } = useFullscreen(stageRef, {
     hotkey: true,
     docClass: "is-fs",
   });
 
-  // ----- Tuning (defaults + presets) via hook -----
+  // ----- Tuning (defaults + presets) -----
   const {
     tuning,
     setTuning,
@@ -99,13 +98,12 @@ export default function App() {
     PRESET_TUNINGS,
   });
 
-  // Preset selection UI state
   const [selectedPreset, setSelectedPreset] = useState("Factory default");
   useEffect(() => {
     setSelectedPreset("Factory default");
   }, [systemId, strings]);
 
-  // ----- System note names (spelled by accidental) -----
+  // ----- System note names -----
   const { pcForName: pcFromName, nameForPc } = usePitchMapping(
     system,
     accidental,
@@ -115,7 +113,6 @@ export default function App() {
     [system.divisions, nameForPc],
   );
 
-  // Root/chord indices
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
   const chordRootIx = useMemo(
     () => pcFromName(chordRoot),
@@ -130,19 +127,19 @@ export default function App() {
     [showChord, chordRootIx, chordType, system.divisions],
   );
 
-  // ----- Scales for system via hook -----
+  // ----- Scales -----
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
     initial: "Major (Ionian)",
   });
 
-  // ----- Draw-fret normalization across systems via hook -----
+  // ----- Draw-frets normalization -----
   const drawFrets = useDrawFrets({
     baseFrets: frets,
     divisions: system.divisions,
     fretsTouched,
-    setFretsRaw: setFrets, // raw setter (not setFretsUI)
+    setFretsRaw: setFrets,
   });
 
   // ----- Export filename base -----
@@ -155,13 +152,11 @@ export default function App() {
   useEffect(() => {
     const toName = (pc) => system.nameForPc(pc, accidental);
 
-    // root
     setRoot((prev) => {
       const next = toName(pcFromName(prev));
       return next !== prev ? next : prev;
     });
 
-    // tuning
     setTuning((prev) => {
       const next = prev.map((n) => toName(pcFromName(n)));
       const same =
@@ -169,14 +164,12 @@ export default function App() {
       return same ? prev : next;
     });
 
-    // chord root
     setChordRoot((prev) => {
       const next = toName(pcFromName(prev));
       return next !== prev ? next : prev;
     });
   }, [accidental, system, pcFromName, setTuning]);
 
-  // ----- Strings count change handler (preserve intent) -----
   const handleStringsChange = useStringsChange({
     setStrings,
     setTuning,
@@ -185,7 +178,6 @@ export default function App() {
 
   return (
     <div className="page">
-      {/* Top-of-page header (not overlaying the stage) */}
       <header className="page-header">
         <PanelHeader
           theme={theme}
@@ -195,11 +187,9 @@ export default function App() {
         />
       </header>
 
-      {/* Fretboard stage */}
       <main className="page-main">
         <div className="stage fb-stage" ref={stageRef}>
           <div className="fretboard-wrap" onDoubleClick={toggleFs}>
-            {/* overlay toolbar anchored to the board */}
             <div className="stage-toolbar">
               <button
                 type="button"
@@ -208,7 +198,7 @@ export default function App() {
                   isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
                 }
                 onClick={toggleFs}
-                title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"} // optional tooltip
+                title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
               >
                 {isFs ? (
                   <FiMinimize size={16} aria-hidden={true} />
@@ -236,12 +226,12 @@ export default function App() {
               chordRootPc={chordRootIx}
               openOnlyInScale={openOnlyInScale}
               colorByDegree={colorByDegree}
+              hideNonChord={hideNonChord} // NEW
             />
           </div>
         </div>
       </main>
 
-      {/* Controls block just under the fretboard */}
       <footer className="page-controls">
         <TuningSystemSelector
           systemId={systemId}
@@ -266,6 +256,8 @@ export default function App() {
           onTypeChange={setChordType}
           showChord={showChord}
           setShowChord={setShowChord}
+          hideNonChord={hideNonChord} // NEW
+          setHideNonChord={setHideNonChord} // NEW
         />
 
         <InstrumentControls
