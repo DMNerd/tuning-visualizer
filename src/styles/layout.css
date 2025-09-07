@@ -1,106 +1,3 @@
-/* =========================
-  Theme tokens
-========================= */
-:root {
-  /* colors */
-  --fg: #1b1f23;
-  --muted: #6b7280;
-  --line: #d8dbe0;
-  --bg: #f7f8fa;
-  --accent: #ffb400;
-  --root: #ff6a00;
-  --fret: #c9cdd3;
-  --fret-micro: color-mix(in oklab, var(--fret) 85%, var(--fg) 15%);
-  --fret-w: 1.6px;
-  --fret-w-strong: 2px;
-  --fret-w-micro: 1.3px;
-  --board: #f2f3f6;
-  --panel: #ffffff;
-  --degree-boost: 12%;
-
-  --nut: #fffbe6;
-  --note: var(--accent);
-  --note-micro: #6fa8dc;
-
-  /* layout rhythm */
-  --gap: 12px;
-  --gutter: clamp(12px, 3vw, 24px);
-  --max-stage: clamp(1100px, 96vw, 1400px);
-  --card-radius: 12px;
-
-  /* masonry */
-  --card-gap: clamp(8px, 1.6vw, 12px);
-  --col-width: clamp(260px, 24vw, 360px);
-
-  /* motion */
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --speed: 220ms;
-
-  --card-bg: color-mix(in oklab, var(--panel) 95%, var(--fg) 5%);
-  --card-border: color-mix(in oklab, var(--line) 92%, var(--fg) 8%);
-  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --fg: #e5e7eb;
-  --muted: #9ca3af;
-  --line: #3a3f46;
-  --bg: #101214;
-  --panel: #15171a;
-  --board: #1a1d21;
-  --fret: #5b626a;
-  --fret-micro: #7c8a97;
-  --accent: #ffc24b;
-  --root: #ff7a3d;
-
-  --nut: #dcdcdc;
-  --note: var(--accent);
-  --note-micro: #89c2ff;
-
-  --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
-  --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
-  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
-}
-
-/* =========================
-  Global base
-========================= */
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Arial,
-    sans-serif;
-  line-height: 1.35;
-  font-size: 14px;
-  text-size-adjust: 100%;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
-/* =========================
    Page layout
 ========================= */
 .page {
@@ -119,12 +16,12 @@ body {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 6px 10px;
+      gap: var(--space-sm);
+      padding: var(--space-xs) var(--space-sm);
 
       & a svg {
-        width: 18px !important;
-        height: 18px !important;
+        width: 1.125rem !important;
+        height: 1.125rem !important;
       }
     }
 
@@ -138,16 +35,16 @@ body {
     & .toggles {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-sm);
     }
 
     & .gh-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      width: 1.625rem;
+      height: 1.625rem;
+      border-radius: var(--space-xs);
       color: var(--muted);
       text-decoration: none;
       transition:
@@ -155,17 +52,17 @@ body {
         color var(--speed) var(--ease);
 
       & svg {
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
+        width: 1.125rem;
+        height: 1.125rem;
+        flex: 0 0 1.125rem;
       }
     }
 
     & .switch {
       display: flex;
-      gap: 6px;
+      gap: var(--space-xs);
       align-items: center;
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--muted);
     }
   }
@@ -209,7 +106,7 @@ body {
 
     & .stage-toolbar {
       position: absolute;
-      inset: 6px 6px auto auto;
+      inset: var(--space-xs) var(--space-xs) auto auto;
       display: inline-flex;
       gap: 0;
       padding: 0;
@@ -358,7 +255,7 @@ html.is-fs {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in oklab, var(--fg) 6%, transparent);
@@ -371,14 +268,14 @@ html.is-fs {
     opacity var(--speed) var(--ease);
 
   & svg {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 1.125rem;
     fill: currentColor;
   }
 
   & .label {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   &.fs-btn.active {
@@ -413,7 +310,7 @@ html.is-fs {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
 
   & > span {
     color: var(--muted);
@@ -469,7 +366,7 @@ input[type="text"] {
   gap: 14px;
 
   & .grid2 {
-    gap: 10px;
+    gap: var(--space-sm);
   }
 
   & .field .check {
@@ -478,7 +375,7 @@ input[type="text"] {
 }
 
 .check {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   display: flex;
   gap: 8px;
@@ -500,20 +397,20 @@ input[type="text"] {
 
 .instrument {
   display: grid;
-  gap: 10px;
+  gap: var(--space-sm);
   min-width: 0;
 
   & .row-2 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--space-sm);
     min-width: 0;
   }
 
   & .strings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 10px;
+    gap: var(--space-sm);
     min-width: 0;
   }
 
@@ -626,9 +523,9 @@ svg {
   & .seg-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    font-size: 12px;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
     color: var(--muted);
     background: transparent;
     border: 0;
@@ -639,8 +536,8 @@ svg {
       color var(--speed) var(--ease);
 
     & svg {
-      width: 16px;
-      height: 16px;
+      width: var(--icon-size);
+      height: var(--icon-size);
     }
 
     &.active {
@@ -670,7 +567,7 @@ svg {
 
 @media (max-width: 900px) {
   body {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   .grid2 {
     grid-template-columns: 1fr;
@@ -683,20 +580,20 @@ svg {
   input[type="range"],
   input[type="text"],
   .btn {
-    min-height: 40px;
-    font-size: 16px;
+    min-height: 2.5rem;
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .noteText {
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
   .noteText.big {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .fretNum {
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
   .btn-row {
     flex-direction: row;
