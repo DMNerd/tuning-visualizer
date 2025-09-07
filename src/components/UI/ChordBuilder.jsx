@@ -9,8 +9,6 @@ export default function ChordBuilder({
   onTypeChange,
   showChord,
   setShowChord,
-
-  // NEW
   hideNonChord,
   setHideNonChord,
 }) {

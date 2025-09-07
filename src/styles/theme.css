@@ -35,6 +35,10 @@
   /* motion */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --speed: 220ms;
+
+  --card-bg: color-mix(in oklab, var(--panel) 95%, var(--fg) 5%);
+  --card-border: color-mix(in oklab, var(--line) 92%, var(--fg) 8%);
+  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 :root[data-theme="dark"] {
@@ -53,6 +57,10 @@
   --nut: #dcdcdc;
   --note: var(--accent);
   --note-micro: #89c2ff;
+
+  --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
+  --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
+  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 /* =========================
@@ -83,12 +91,6 @@ body {
   line-height: 1.35;
   font-size: 14px;
   text-size-adjust: 100%;
-}
-
-:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--accent) 70%, var(--fg));
-  outline-offset: 2px;
-  border-radius: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -152,11 +154,6 @@ body {
         background var(--speed) var(--ease),
         color var(--speed) var(--ease);
 
-      &:hover {
-        color: var(--fg);
-        background: var(--line);
-      }
-
       & svg {
         width: 18px;
         height: 18px;
@@ -183,9 +180,7 @@ body {
 
     & .stage {
       width: 100%;
-    }
-    & .stage-inner {
-      padding: var(--gap);
+      margin-bottom: var(--gap);
     }
 
     & .fretboard-wrap {
@@ -233,82 +228,117 @@ body {
   /* =========================
     Controls container
   ========================= */
-  & .page-controls {
-    flex: 0 0 auto;
-    max-width: calc(var(--max-stage) - (var(--gutter) * 2));
-    width: 100%;
-    margin: 0 auto var(--gap);
-    padding: var(--gap);
-    background: var(--panel);
+  /* Shared frame so fretboard + controls look identical */
+  .panel-frame {
     border: 1px solid var(--line);
     border-radius: var(--card-radius);
+    background: var(--panel);
+    padding: 8px; /* baseline; containers can override */
+  }
 
-    column-width: var(--col-width);
-    column-gap: var(--card-gap);
+  /* Controls container: grid layout (replaces masonry) */
+  .page .page-controls {
+    /* width is inherited from .page-main's max-width; keep element full width */
+    width: 100%;
+    margin: var(--gap) 0 0 0; /* sits directly under the stage */
+    padding: var(--gap); /* overrides .panel-frame padding */
+    margin-top: var(--gap);
 
-    & > .panel-sec,
-    & > section.panel-sec {
-      display: block;
-      break-inside: avoid;
-      margin: 0 0 var(--card-gap);
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--panel);
-      overflow: clip;
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(clamp(260px, 28vw, 360px), 1fr)
+    );
+    gap: var(--card-gap);
+    align-content: start; /* prevents tall rows stretching */
+  }
 
-      & .sec-header {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 10px;
-        border: 0;
-        background: transparent;
-        color: var(--fg);
-        font-weight: 600;
-        cursor: pointer;
-        transition: background var(--speed) var(--ease);
+  /* Standard card sizes for consistent rows */
+  :root {
+    --card-h-sm: clamp(180px, 28vh, 240px);
+    --card-h-md: clamp(220px, 34vh, 300px);
+    --card-h-lg: clamp(280px, 42vh, 380px);
+  }
 
-        & .chev {
-          color: var(--muted);
-          transition: transform var(--speed) var(--ease);
-        }
+  /* Card base + internal scroll */
+  .page .page-controls > .panel-sec,
+  .page .page-controls > section.panel-sec {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    margin: 0; /* grid handles spacing */
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+    overflow: hidden; /* clean inner scrollbars */
+    min-height: var(--card-h-md); /* default height */
+  }
 
-        &:hover {
-          background: color-mix(in oklab, var(--fg) 6%, transparent);
-        }
-      }
+  /* Card size modifiers */
+  .panel-sec[data-size="sm"] {
+    min-height: var(--card-h-sm);
+  }
+  .panel-sec[data-size="md"] {
+    min-height: var(--card-h-md);
+  }
+  .panel-sec[data-size="lg"] {
+    min-height: var(--card-h-lg);
+  }
 
-      & .sec-body {
-        display: grid;
-        grid-template-rows: 1fr;
-        transition:
-          grid-template-rows var(--speed) var(--ease),
-          padding var(--speed) var(--ease),
-          opacity var(--speed) var(--ease);
-        padding: 8px 10px;
-        min-height: 0;
-        opacity: 1;
+  /* Fixed header + scrolling body */
+  .panel-sec .sec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    border: 0;
+  }
+  /* Body becomes a grid so we can animate collapse via row size */
+  .panel-sec .sec-body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition:
+      grid-template-rows var(--speed) var(--ease),
+      padding var(--speed) var(--ease),
+      opacity var(--speed) var(--ease);
+    padding: 8px 10px;
+    min-height: 0;
+    opacity: 1;
+    overflow: hidden; /* hide content when collapsed; inner handles scrolling */
+  }
 
-        & > .sec-body-inner {
-          overflow: hidden;
-        }
-      }
+  /* Inner actually scrolls; keeps page scroll short */
+  .panel-sec .sec-body > .sec-body-inner {
+    min-height: 0;
+    overflow: auto;
+  }
 
-      &[data-collapsed="true"],
-      &.is-collapsed {
-        & .sec-body {
-          grid-template-rows: 0fr;
-          padding-block: 0;
-          opacity: 0.98;
-        }
+  /* Collapsed state */
+  .panel-sec[data-collapsed="true"] .sec-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-block: 0;
+    overflow: hidden;
+  }
 
-        & .sec-header & .chev {
-          transform: rotate(-90deg);
-        }
-      }
+  /* When collapsed, don't enforce the size preset min-height */
+  .panel-sec[data-collapsed="true"] {
+    min-height: 0 !important;
+  }
+
+  /* Rotate caret when collapsed */
+  .panel-sec[data-collapsed="true"] .sec-header .chev {
+    transform: rotate(-90deg);
+  }
+
+  /* Optional: compact mode reduces all cards one step */
+
+  /* Single column on narrow screens */
+  @media (max-width: 760px) {
+    .page .page-controls {
+      grid-template-columns: 1fr;
     }
   }
 }
@@ -317,12 +347,6 @@ body {
 .fb-stage {
   border-radius: var(--card-radius);
   overflow: clip;
-
-  &:fullscreen {
-    & .stage-toolbar {
-      inset: 10px 12px auto auto;
-    }
-  }
 }
 
 html.is-fs {
@@ -345,15 +369,6 @@ html.is-fs {
     background var(--speed) var(--ease),
     transform var(--speed) var(--ease),
     opacity var(--speed) var(--ease);
-
-  &:hover {
-    background: color-mix(in oklab, var(--fg) 10%, transparent);
-    transform: translateY(-0.5px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
 
   & svg {
     width: 18px;
@@ -387,20 +402,10 @@ html.is-fs {
 /* =========================
   Section / controls
 ========================= */
-.panel h1 {
-  font-size: 15px;
-  margin: 0;
-}
 
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tuning-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -491,20 +496,6 @@ input[type="text"] {
   transition:
     background var(--speed) var(--ease),
     opacity var(--speed) var(--ease);
-
-  &:hover {
-    background: color-mix(in oklab, var(--fg) 7%, transparent);
-  }
-
-  &.solid {
-    background: var(--fg);
-    color: var(--panel);
-    border-color: var(--fg);
-
-    &:hover {
-      opacity: 0.92;
-    }
-  }
 }
 
 .instrument {
@@ -540,9 +531,7 @@ input[type="text"] {
   }
 }
 
-.section,
-.panel,
-.sidebar {
+.section {
   min-width: 0;
 }
 
@@ -553,17 +542,6 @@ svg {
   display: block;
   width: 100%;
   height: auto;
-}
-
-.fretboard-lefty-geom {
-  transform: scaleX(-1);
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.no-mirror {
-  transform: scaleX(-1);
-  transform-box: fill-box;
-  transform-origin: center;
 }
 
 .stringLine {
@@ -669,10 +647,6 @@ svg {
       color: var(--fg);
       background: color-mix(in oklab, var(--accent) 16%, var(--panel) 84%);
     }
-
-    &:not(.active):hover {
-      background: color-mix(in oklab, var(--panel) 60%, var(--fg) 6%);
-    }
   }
 }
 
@@ -701,18 +675,6 @@ svg {
   .grid2 {
     grid-template-columns: 1fr;
   }
-  .tuning-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .page .page-controls {
-    --col-width: clamp(220px, 44vw, 320px);
-  }
-}
-
-@media (max-width: 760px) {
-  .page .page-controls {
-    column-width: 100%;
-  }
 }
 
 @media (max-width: 600px) {
@@ -727,9 +689,6 @@ svg {
 }
 
 @media (max-width: 480px) {
-  .tuning-grid {
-    grid-template-columns: 1fr;
-  }
   .noteText {
     font-size: 11px;
   }

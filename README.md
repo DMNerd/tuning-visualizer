@@ -3,7 +3,7 @@
 An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.  
 Built with React
 
-Why? Because my friend is a big [King Gizzard & the Lizard WizardKing Gizzard & the Lizard Wizard](https://kinggizzardandthelizardwizard.com/) fan and finding any resources on microtonal music is a pain...
+Why? Because my friend is a big [King Gizzard & the Lizard Wizard](https://kinggizzardandthelizardwizard.com/) fan and finding any resources on microtonal music is a pain...
 
 Images of guitar scales are inconsistent or paid and finding ones you like is a equaly as painfull
 
@@ -15,7 +15,7 @@ This app will be free and open source forever and is completely self hostable
 
 [Try it here](https://tune.nrds.cz/)
 
-![TuningViz](https://i.imgur.com/xYctFhk.png "The app")
+![TuningViz](https://i.imgur.com/rzjoute.png "The app")
 
 ---
 

@@ -202,7 +202,7 @@ export default function App() {
 
       <main className="page-main">
         <div className="stage fb-stage" ref={stageRef}>
-          <div className="fretboard-wrap" onDoubleClick={toggleFs}>
+          <div className="fretboard-wrap panel-frame" onDoubleClick={toggleFs}>
             <div className="stage-toolbar">
               <button
                 type="button"
@@ -214,9 +214,9 @@ export default function App() {
                 title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
               >
                 {isFs ? (
-                  <FiMinimize size={16} aria-hidden={true} />
+                  <FiMinimize size={16} aria-hidden />
                 ) : (
-                  <FiMaximize size={16} aria-hidden={true} />
+                  <FiMaximize size={16} aria-hidden />
                 )}
               </button>
             </div>
@@ -239,98 +239,105 @@ export default function App() {
               chordRootPc={chordRootIx}
               openOnlyInScale={openOnlyInScale}
               colorByDegree={colorByDegree}
-              hideNonChord={hideNonChord} // NEW
+              hideNonChord={hideNonChord}
             />
           </div>
         </div>
+
+        {/* Controls now live inside the same max-width container */}
+        <footer className="page-controls panel-frame">
+          <TuningSystemSelector
+            size="sm"
+            systemId={systemId}
+            setSystemId={setSystemId}
+            systems={TUNINGS}
+          />
+
+          <ScaleControls
+            size="sm"
+            root={root}
+            setRoot={setRoot}
+            scale={scale}
+            setScale={setScale}
+            sysNames={sysNames}
+            scaleOptions={scaleOptions}
+          />
+
+          <ChordBuilder
+            size="md"
+            root={chordRoot}
+            onRootChange={setChordRoot}
+            sysNames={sysNames}
+            type={chordType}
+            onTypeChange={setChordType}
+            showChord={showChord}
+            setShowChord={setShowChord}
+            hideNonChord={hideNonChord}
+            setHideNonChord={setHideNonChord}
+          />
+
+          <InstrumentControls
+            size="lg"
+            strings={strings}
+            setStrings={setStrings}
+            frets={frets}
+            setFrets={setFretsUI}
+            sysNames={sysNames}
+            tuning={tuning}
+            setTuning={setTuning}
+            handleStringsChange={handleStringsChange}
+            presetNames={presetNames}
+            selectedPreset={selectedPreset}
+            setSelectedPreset={(name) => {
+              setSelectedPreset(name);
+              const arr = presetMap[name];
+              if (Array.isArray(arr) && arr.length) setTuning(arr);
+            }}
+            savedExists={savedExists}
+            handleSaveDefault={saveDefault}
+            handleLoadSavedDefault={loadSavedDefault}
+            handleResetFactoryDefault={resetFactoryDefault}
+            systemId={systemId}
+          />
+
+          <DisplayControls
+            size="md"
+            show={show}
+            setShow={updatePref("show")}
+            showOpen={showOpen}
+            setShowOpen={updatePref("showOpen")}
+            showFretNums={showFretNums}
+            setShowFretNums={updatePref("showFretNums")}
+            dotSize={dotSize}
+            setDotSize={updatePref("dotSize")}
+            accidental={accidental}
+            setAccidental={updatePref("accidental")}
+            openOnlyInScale={openOnlyInScale}
+            setOpenOnlyInScale={updatePref("openOnlyInScale")}
+            colorByDegree={colorByDegree}
+            setColorByDegree={updatePref("colorByDegree")}
+            lefty={lefty}
+            setLefty={updatePref("lefty")}
+          />
+
+          <ExportControls
+            size="sm"
+            boardRef={boardRef}
+            fileBase={slug(fileBase)}
+            downloadPNG={downloadPNG}
+            downloadSVG={downloadSVG}
+            printFretboard={printFretboard}
+            buildHeader={() => ({
+              system: systemId,
+              tuning: tuning,
+              scale: scale,
+              chordEnabled: showChord,
+              chordRoot: chordRoot,
+              chordType: chordType,
+            })}
+          />
+        </footer>
       </main>
-
-      <footer className="page-controls">
-        <TuningSystemSelector
-          systemId={systemId}
-          setSystemId={setSystemId}
-          systems={TUNINGS}
-        />
-
-        <ScaleControls
-          root={root}
-          setRoot={setRoot}
-          scale={scale}
-          setScale={setScale}
-          sysNames={sysNames}
-          scaleOptions={scaleOptions}
-        />
-
-        <ChordBuilder
-          root={chordRoot}
-          onRootChange={setChordRoot}
-          sysNames={sysNames}
-          type={chordType}
-          onTypeChange={setChordType}
-          showChord={showChord}
-          setShowChord={setShowChord}
-          hideNonChord={hideNonChord} // NEW
-          setHideNonChord={setHideNonChord} // NEW
-        />
-
-        <InstrumentControls
-          strings={strings}
-          setStrings={setStrings}
-          frets={frets}
-          setFrets={setFretsUI}
-          sysNames={sysNames}
-          tuning={tuning}
-          setTuning={setTuning}
-          handleStringsChange={handleStringsChange}
-          presetNames={presetNames}
-          selectedPreset={selectedPreset}
-          setSelectedPreset={(name) => {
-            setSelectedPreset(name);
-            const arr = presetMap[name];
-            if (Array.isArray(arr) && arr.length) setTuning(arr);
-          }}
-          savedExists={savedExists}
-          handleSaveDefault={saveDefault}
-          handleLoadSavedDefault={loadSavedDefault}
-          handleResetFactoryDefault={resetFactoryDefault}
-          systemId={systemId}
-        />
-
-        <DisplayControls
-          show={show}
-          setShow={updatePref("show")}
-          showOpen={showOpen}
-          setShowOpen={updatePref("showOpen")}
-          showFretNums={showFretNums}
-          setShowFretNums={updatePref("showFretNums")}
-          dotSize={dotSize}
-          setDotSize={updatePref("dotSize")}
-          accidental={accidental}
-          setAccidental={updatePref("accidental")}
-          openOnlyInScale={openOnlyInScale}
-          setOpenOnlyInScale={updatePref("openOnlyInScale")}
-          colorByDegree={colorByDegree}
-          setColorByDegree={updatePref("colorByDegree")}
-          lefty={lefty}
-          setLefty={updatePref("lefty")}
-        />
-
-        <ExportControls
-          boardRef={boardRef}
-          fileBase={slug(fileBase)}
-          downloadPNG={downloadPNG}
-          downloadSVG={downloadSVG}
-          printFretboard={printFretboard}
-          buildHeader={() => ({
-            system: systemId,
-            tuning: tuning,
-            scale: scale,
-            chordEnabled: showChord,
-            chordRoot: chordRoot,
-            chordType: chordType,
-          })}
-        />
-      </footer>
     </div>
   );
 }
