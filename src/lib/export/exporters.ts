@@ -202,21 +202,21 @@ export async function printFretboard(
   } as any);
 
   const html = `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>&#8203;</title>
-<style>
-  @page { size: auto; margin: 0; }
-  html,body { margin:0; padding:0; background:#ffffff; }
-  img { display:block; max-width:100%; height:auto; margin:0 auto; }
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-</style>
-</head>
-<body>
-  <img id="fb" src="${dataUri}" alt="Fretboard"/>
-</body>
-</html>`;
+  <html>
+  <head>
+  <meta charset="utf-8" />
+  <title>&#8203;</title>
+  <style>
+    @page { size: auto; margin: 0; }
+    html,body { margin:0; padding:0; background:#ffffff; }
+    img { display:block; max-width:100%; height:auto; margin:0 auto; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  </style>
+  </head>
+  <body>
+    <img id="fb" src="${dataUri}" alt="Fretboard"/>
+  </body>
+  </html>`;
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";

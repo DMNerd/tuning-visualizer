@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --loader ts-node/esm --test"
+    "test": "tsx --test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -37,7 +37,7 @@
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^13.0.2",
     "prettier": "^3.6.2",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^7.1.4",
     "vite-plugin-html-minifier-terser": "^3.8.0"
