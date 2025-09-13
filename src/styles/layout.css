@@ -70,7 +70,7 @@
 
   /* ---- Stage (fretboard) ---- */
   & .page-main {
-    margin-block: var(--gap);
+    margin-top: var(--gap);
     max-width: var(--max-stage);
     width: 100%;
     padding-inline: var(--gutter);
@@ -78,12 +78,13 @@
 
     & .stage {
       width: 100%;
-      margin-bottom: var(--gap);
     }
 
     & .fretboard-wrap {
       position: relative;
+      margin-inline: 0;
       width: 100%;
+
       display: grid;
       place-items: center;
       overflow: auto;
@@ -134,21 +135,21 @@
     padding: 8px; /* baseline; containers can override */
   }
 
-  /* Controls container: grid layout (replaces masonry) */
-  .page .page-controls {
-    /* width is inherited from .page-main's max-width; keep element full width */
-    width: 100%;
-    margin: var(--gap) 0 0 0; /* sits directly under the stage */
-    padding: var(--gap); /* overrides .panel-frame padding */
+  & .page-controls {
+    width: calc(100% - var(--gutter) * 2);
+    max-width: calc(var(--max-stage) - var(--gutter) * 2);
+    margin-inline: auto;
     margin-top: var(--gap);
-
+    border: 1px solid var(--line);
+    border-radius: var(--card-radius);
+    background: var(--panel);
     display: grid;
     grid-template-columns: repeat(
       auto-fit,
       minmax(clamp(260px, 28vw, 360px), 1fr)
     );
     gap: var(--card-gap);
-    align-content: start; /* prevents tall rows stretching */
+    align-content: start;
   }
 
   /* Standard card sizes for consistent rows */
@@ -587,6 +588,12 @@ svg {
     font-size: 0.9375rem;
   }
   .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  & .page-controls {
     grid-template-columns: 1fr;
   }
 }
