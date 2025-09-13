@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { makeDisplayX } from "./displayX.js";
+import { makeDisplayX } from "@/utils/displayX.js";
 
 test("makeDisplayX mirrors coordinate when left-handed", () => {
   const width = 100;

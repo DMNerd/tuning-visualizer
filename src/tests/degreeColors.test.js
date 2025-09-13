@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildDegreePalette, getDegreeColor } from "./degreeColors.js";
+import { buildDegreePalette, getDegreeColor } from "@/utils/degreeColors";
 
 test("buildDegreePalette assigns root and evenly spaced hues", () => {
   const palette = buildDegreePalette(3, {

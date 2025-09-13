@@ -9,7 +9,7 @@ import {
   stepToPc,
   centsFromNearest,
   nameFallback,
-} from "./tuning.ts";
+} from "@/lib/theory/tuning";
 
 function makeSystem(divisions) {
   return {
