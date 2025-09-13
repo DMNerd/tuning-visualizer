@@ -15,7 +15,7 @@ This app will be free and open source forever and is completely self hostable
 
 [Try it here](https://tune.nrds.cz/)
 
-![TuningViz](https://i.imgur.com/rzjoute.png "The app")
+![TuningViz](https://i.imgur.com/HOlzRt7.png "The app")
 
 ---
 
@@ -52,6 +52,7 @@ This app will be free and open source forever and is completely self hostable
 - **Export & Print**
   - Export fretboard as **PNG** or **SVG** with any setting you desire
   - **Print** directly from the browser
+  - [TuningIO](https://github.com/DMNerd/tuning-visualizer/blob/main/docs/custom-tunings.md) **Export** and edit your presets as JSON
 
 Example of exported scales (microtonal, colored degrees)
 
