@@ -144,11 +144,24 @@ export function useTuningIO({
   );
 
   const onImportTunings = useCallback(
-    (packsRaw) => {
+    (packsRaw, filenames = []) => {
       if (!Array.isArray(packsRaw) || packsRaw.length === 0) return;
 
-      const packs = packsRaw.map((p) => parseTuningPack(p));
+      // Parse + apply filename as display name (if provided)
+      const packs = packsRaw.map((p, i) => {
+        const parsed = parseTuningPack(p);
 
+        // If a filename is provided, use its basename (strip extension) as the UI name.
+        const fname = typeof filenames[i] === "string" ? filenames[i] : null;
+        if (fname) {
+          const base = fname.replace(/\.[^/.]+$/, ""); // remove final .ext
+          parsed.name = base;
+        }
+
+        return parsed;
+      });
+
+      // Merge into customTunings (dedupe by name+edo)
       setCustomTunings((prev) => {
         const key = (p) => `${p.name}::${p.system?.edo ?? "?"}`;
         const map = new Map(prev.map((p) => [key(p), p]));
@@ -156,12 +169,15 @@ export function useTuningIO({
         return Array.from(map.values());
       });
 
+      // Apply the last imported pack to the UI
       const last = packs[packs.length - 1];
       if (!last) return;
 
+      // Switch system by EDO if we can find a known system id
       const targetSystem = findSystemIdByEdo(last.system?.edo) ?? systemId;
       setSystemId(targetSystem);
 
+      // Apply tuning notes
       const nextTuning = Array.isArray(last.tuning?.strings)
         ? last.tuning.strings.map((s) =>
             typeof s?.note === "string" ? s.note : "C",
@@ -169,6 +185,7 @@ export function useTuningIO({
         : tuning;
       setTuning(nextTuning);
 
+      // Build/merge per-string meta (from strings + meta.stringMeta)
       const fromStrings = Array.isArray(last.tuning?.strings)
         ? last.tuning.strings
             .map((s, idx) => {
@@ -211,9 +228,11 @@ export function useTuningIO({
         setStringMeta(null);
       }
 
+      // Optional extras from pack meta
       if (typeof last.meta?.strings === "number") setStrings(last.meta.strings);
       if (typeof last.meta?.frets === "number") setFrets(last.meta.frets);
 
+      // Select the imported preset by the (possibly filename-based) name
       setSelectedPreset(last.name || "Imported");
     },
     [
