@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { normalizeStringMeta } from "@/lib/meta/meta";
 
 /**
  * Geometry/layout for the fretboard SVG.
@@ -7,8 +8,17 @@ import { useMemo } from "react";
  * - Fret width adapts smoothly to total fret count (fewer frets => wider).
  * - Layout is independent of dot size (no zoom), except:
  *   open-note X uses dotSize to sit nicely *behind the nut*.
+ *
+ * Per-string metadata:
+ * - stringMeta: [{ index, startFret?, greyBefore? }]
+ *   When provided, helpers (stringStartX, noteX) respect per-string start frets.
  */
-export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
+export function useFretboardLayout({
+  frets,
+  strings,
+  dotSize = 14,
+  stringMeta = null,
+}) {
   return useMemo(() => {
     const NUT_W = 16;
 
@@ -57,10 +67,27 @@ export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
       return boardStartX + (prev + curr) / 2;
     };
 
-    const noteCenterX = (f) =>
-      f === 0 ? PAD.left - (NUT_W / 2 + OPEN_OFFSET) : betweenFretsX(f);
-
     const yForString = (s) => PAD.top + s * STRING_GAP;
+
+    // ---- Per-string metadata helpers ----
+    const meta = normalizeStringMeta(stringMeta);
+    const metaByIndex = new Map(meta.map((m) => [m.index, m]));
+    const startFretFor = (s) => metaByIndex.get(s)?.startFret ?? 0;
+
+    const stringStartX = (s) => {
+      const sf = startFretFor(s);
+      return sf > 0 ? wireX(sf) : PAD.left;
+    };
+
+    // Open X for a given string: either at that string's first playable fret midpoint,
+    // or behind the nut using the open-note offset geometry.
+    const openXForString = (s) => {
+      const sf = startFretFor(s);
+      return sf > 0 ? betweenFretsX(sf) : PAD.left - (NUT_W / 2 + OPEN_OFFSET);
+    };
+
+    // General note X for (fret f, string s)
+    const noteX = (f, s) => (f === 0 ? openXForString(s) : betweenFretsX(f));
 
     return {
       width,
@@ -74,10 +101,15 @@ export function useFretboardLayout({ frets, strings, dotSize = 14 }) {
       fretXs,
       wireX,
       betweenFretsX,
-      noteCenterX,
       yForString,
       FRETNUM_TOP_GAP,
       FRETNUM_BOTTOM_GAP,
+
+      // Per-string aware helpers
+      startFretFor, // (s) -> first playable fret for string s
+      stringStartX, // (s) -> x where the string's active line should begin
+      openXForString, // (s) -> X for the "open" marker on that string
+      noteX, // (f, s) -> X center for a note on fret f, string s
     };
-  }, [frets, strings, dotSize]);
+  }, [frets, strings, dotSize, stringMeta]);
 }

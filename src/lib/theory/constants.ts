@@ -60,6 +60,7 @@ export const PRESET_TUNINGS: PresetTunings = {
       "Bass 5 High C (EADGC)": ["C", "G", "D", "A", "E"],
       "Bass 5 Drop A (AEADG)": ["G", "D", "A", "E", "A"],
       "Bass 5 Low F# (F#BEAD)": ["D", "A", "E", "B", "F#"],
+      "Banjo — 5-string (g D G B D)": ["D", "B", "G", "D", "G"],
     },
 
     // 6-string guitar
@@ -222,6 +223,25 @@ function makeDefaultsFromPresets(
 
   return out as DefaultTunings;
 }
+
+export const PRESET_TUNING_META: Record<
+  string,
+  Record<
+    number,
+    Record<
+      string,
+      { index: number; startFret?: number; greyBefore?: boolean }[]
+    >
+  >
+> = {
+  "12-TET": {
+    5: {
+      "Banjo — 5-string (g D G B D)": [
+        { index: 4, startFret: 5, greyBefore: true },
+      ],
+    },
+  },
+};
 
 export const DEFAULT_TUNINGS: DefaultTunings = makeDefaultsFromPresets(
   PRESET_TUNINGS,

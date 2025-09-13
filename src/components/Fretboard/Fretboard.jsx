@@ -30,11 +30,14 @@ const Fretboard = forwardRef(function Fretboard(
     openOnlyInScale = false,
     colorByDegree = false,
     hideNonChord = false,
+    // NEW: per-string metadata (e.g., banjo short 5th)
+    stringMeta = null,
   },
   ref,
 ) {
   const svgRef = useRef(null);
 
+  // --- Layout (per-string aware) ---
   const {
     width,
     height,
@@ -48,9 +51,14 @@ const Fretboard = forwardRef(function Fretboard(
     FRETNUM_BOTTOM_GAP,
     wireX,
     betweenFretsX,
-    noteCenterX,
     yForString,
-  } = useFretboardLayout({ frets, strings, dotSize });
+
+    // Per-string helpers
+    startFretFor, // (s) -> first playable global fret for string s
+    stringStartX, // (s) -> x where the string’s active line should begin
+    openXForString, // (s) -> X for that string’s “open” marker
+    noteX, // (f, s) -> X center for a note at global fret f on string s
+  } = useFretboardLayout({ frets, strings, dotSize, stringMeta });
 
   useLayoutEffect(() => {
     if (!svgRef.current) return;
@@ -63,7 +71,6 @@ const Fretboard = forwardRef(function Fretboard(
 
   const { pcForName, nameForPc } = usePitchMapping(system, accidental);
 
-  // scale membership + degree lookup (chord context also passed)
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,
     rootIx,
@@ -101,6 +108,9 @@ const Fretboard = forwardRef(function Fretboard(
     );
   }
 
+  const getMetaFor = (s) =>
+    Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
+
   // ---------- Render ----------
   return (
     <svg
@@ -129,17 +139,34 @@ const Fretboard = forwardRef(function Fretboard(
           rx="2"
         />
 
-        {/* strings */}
-        {Array.from({ length: strings }).map((_, s) => (
-          <line
-            key={`string-${s}`}
-            x1={padLeft}
-            y1={yForString(s)}
-            x2={boardEndX}
-            y2={yForString(s)}
-            className="stringLine"
-          />
-        ))}
+        {/* strings: optional grey pre-start stub + active segment */}
+        {Array.from({ length: strings }).map((_, s) => {
+          const y = yForString(s);
+          const startX = stringStartX(s); // either PAD.left or wireX(startFret)
+          const meta = getMetaFor(s);
+          const hasGreyStub = !!meta?.greyBefore && startFretFor(s) > 0;
+
+          return (
+            <g key={`string-${s}`}>
+              {hasGreyStub && (
+                <line
+                  x1={padLeft}
+                  y1={y}
+                  x2={startX}
+                  y2={y}
+                  className="stringLine greyBefore"
+                />
+              )}
+              <line
+                x1={startX}
+                y1={y}
+                x2={boardEndX}
+                y2={y}
+                className="stringLine"
+              />
+            </g>
+          );
+        })}
 
         {/* frets */}
         {Array.from({ length: frets + 1 }).map((_, f) => {
@@ -201,41 +228,47 @@ const Fretboard = forwardRef(function Fretboard(
         {/* note circles */}
         {tuning.map((openName, s) => {
           const openPc = pcForName(openName);
+          const sf = startFretFor(s); // first playable global fret index
           return Array.from({ length: frets + 1 }).map((_, f) => {
-            const pc = (openPc + f) % system.divisions;
             const isOpen = f === 0;
+
+            // Playability on short strings:
+            // - open (f=0) always visible (drawn at start-fret X by noteX)
+            // - if sf>0, globals 1..sf are NOT playable (skip)
+            const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
+            if (!isPlayable) return null;
+
+            // Local step along the playable part of the string
+            //   open = 0, first fretted after start = 1, ...
+            const step = isOpen ? 0 : sf === 0 ? f : f - sf;
+            const pc = (openPc + step) % system.divisions;
 
             const inScale = scaleSet.has(pc);
             const inChord = chordPCs ? chordPCs.has(pc) : false;
 
-            // Visibility rules
+            // Visibility rules (chord mode can override)
             let visible;
             if (hideNonChord && chordPCs) {
-              // IGNORE scale & openOnlyInScale: show chord tones everywhere
               const baselineVisible = isOpen ? showOpen : true;
               visible = baselineVisible && inChord;
             } else {
-              // regular scale-driven visibility
               const baselineVisible = isOpen
                 ? showOpen && (!openOnlyInScale || inScale)
                 : inScale;
               visible = baselineVisible;
             }
-
             if (!visible) return null;
 
-            const cx = noteCenterX(f);
+            const cx = noteX(f, s); // open maps to start-fret midpoint
             const cy = yForString(s);
 
             const isRoot = pc === rootIx;
-            const isChordRoot = inChord && chordRootPc === pc;
             const isStandard = (f * 12) % system.divisions === 0;
             const isMicro = !isStandard;
 
             const rBase = (isRoot ? 1.1 : 1) * dotSize;
             const r = inChord ? rBase * 1.05 : rBase;
 
-            // Fill color (degree-first when enabled)
             let fill;
             if (colorByDegree) {
               const deg = degreeForPc(pc);
@@ -251,6 +284,8 @@ const Fretboard = forwardRef(function Fretboard(
                   ? "var(--note-micro)"
                   : "var(--note)";
             }
+
+            const isChordRoot = inChord && chordRootPc === pc;
 
             return (
               <circle
@@ -270,9 +305,14 @@ const Fretboard = forwardRef(function Fretboard(
       {/* note labels */}
       {tuning.map((openName, s) => {
         const openPc = pcForName(openName);
+        const sf = startFretFor(s);
         return Array.from({ length: frets + 1 }).map((_, f) => {
-          const pc = (openPc + f) % system.divisions;
           const isOpen = f === 0;
+          const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
+          if (!isPlayable) return null;
+
+          const step = isOpen ? 0 : sf === 0 ? f : f - sf;
+          const pc = (openPc + step) % system.divisions;
 
           const inScale = scaleSet.has(pc);
           const inChord = chordPCs ? chordPCs.has(pc) : false;
@@ -287,16 +327,20 @@ const Fretboard = forwardRef(function Fretboard(
               : inScale;
             visible = baselineVisible;
           }
-
           if (!visible) return null;
 
-          const cx = noteCenterX(f);
+          const cx = noteX(f, s);
           const cy = yForString(s);
           const isRoot = pc === rootIx;
 
+          // Keep existing label behavior, but when "fret" mode is active,
+          // show the *global* fret under the dot. Open uses the start fret number.
+          const globalFretForLabel = isOpen ? sf : f;
           const raw = labelFor(pc, f);
           const label =
-            show === "fret" ? buildFretLabel(f, system.divisions) : raw;
+            show === "fret"
+              ? buildFretLabel(globalFretForLabel, system.divisions)
+              : raw;
 
           if (label === "") return null;
 

@@ -445,6 +445,22 @@ svg {
 .stringLine {
   stroke: #8b929a;
   stroke-width: 1.5;
+
+  &.greyBefore {
+    stroke: var(--muted);
+    stroke-dasharray: 4 4;
+    opacity: 0.6;
+  }
+
+  &.highlight {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+
+  &.muted {
+    stroke: var(--line);
+    opacity: 0.3;
+  }
 }
 
 .fretLine {
