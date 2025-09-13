@@ -41,6 +41,7 @@ import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
+import { useTuningIO } from "@/hooks/useTuningIO";
 
 export default function App() {
   // ----- System selection -----
@@ -204,15 +205,102 @@ export default function App() {
     defaultForCount,
   });
 
+  // ----- Preset selection (now supports customs) -----
   const setPreset = (name) => {
     setSelectedPreset(name);
 
-    const arr = presetMap[name];
+    const arr = mergedPresetMap[name];
     if (Array.isArray(arr) && arr.length) setTuning(arr);
 
-    const meta = presetMetaMap?.[name] ?? null;
+    const meta = mergedPresetMetaMap?.[name] ?? null;
     setStringMeta(meta);
   };
+
+  // ----- Tuning I/O (import/export) -----
+  const {
+    getCurrentTuningPack,
+    getAllCustomTunings,
+    onImportTunings,
+    customTunings,
+  } = useTuningIO({
+    systemId,
+    system,
+    strings,
+    frets,
+    tuning,
+    stringMeta,
+    setSystemId,
+    setStrings,
+    setFrets,
+    setTuning,
+    setStringMeta,
+    setSelectedPreset,
+    TUNINGS,
+  });
+
+  // ---- Merge factory presets with custom imported tunings ----
+  // Build tuning arrays (note names) from custom packs.
+  const customPresetMap = useMemo(() => {
+    if (!Array.isArray(customTunings) || !customTunings.length) return {};
+    const obj = {};
+    for (const p of customTunings) {
+      const arr = Array.isArray(p?.tuning?.strings)
+        ? p.tuning.strings.map((s) =>
+            typeof s?.note === "string" ? s.note : "C",
+          )
+        : null;
+      if (arr && arr.length) obj[p.name] = arr;
+    }
+    return obj;
+  }, [customTunings]);
+
+  // Build per-string meta from custom packs.
+  const customPresetMetaMap = useMemo(() => {
+    if (!Array.isArray(customTunings) || !customTunings.length) return {};
+    const obj = {};
+    for (const p of customTunings) {
+      const fromStrings = Array.isArray(p?.tuning?.strings)
+        ? p.tuning.strings
+            .map((s, idx) => {
+              const m = {};
+              if (typeof s?.startFret === "number") m.startFret = s.startFret;
+              if (typeof s?.greyBefore === "boolean")
+                m.greyBefore = s.greyBefore;
+              return Object.keys(m).length ? { index: idx, ...m } : null;
+            })
+            .filter(Boolean)
+        : [];
+      const fromMeta = Array.isArray(p?.meta?.stringMeta)
+        ? p.meta.stringMeta.filter((m) => m && typeof m.index === "number")
+        : [];
+      // merge by index (per-string fields win)
+      const byIx = new Map(fromStrings.map((m) => [m.index, m]));
+      for (const m of fromMeta) {
+        const prev = byIx.get(m.index) || { index: m.index };
+        byIx.set(m.index, { ...m, ...prev });
+      }
+      const merged = Array.from(byIx.values());
+      if (merged.length) obj[p.name] = merged;
+    }
+    return obj;
+  }, [customTunings]);
+
+  // Merge maps (factory first, then customs)
+  const mergedPresetMap = useMemo(
+    () => ({ ...presetMap, ...customPresetMap }),
+    [presetMap, customPresetMap],
+  );
+  const mergedPresetMetaMap = useMemo(
+    () => ({ ...presetMetaMap, ...customPresetMetaMap }),
+    [presetMetaMap, customPresetMetaMap],
+  );
+
+  // Merge names (avoid duplicate labels)
+  const mergedPresetNames = useMemo(() => {
+    const customNames = Object.keys(customPresetMap);
+    const dedupCustom = customNames.filter((n) => !presetNames.includes(n));
+    return [...presetNames, ...dedupCustom];
+  }, [presetNames, customPresetMap]);
 
   return (
     <div className="page">
@@ -303,9 +391,9 @@ export default function App() {
           tuning={tuning}
           setTuning={setTuning}
           handleStringsChange={handleStringsChange}
-          presetNames={presetNames}
+          presetNames={mergedPresetNames}
           selectedPreset={selectedPreset}
-          setSelectedPreset={setPreset} // ← uses meta-aware selection
+          setSelectedPreset={setPreset}
           savedExists={savedExists}
           handleSaveDefault={saveDefault}
           handleLoadSavedDefault={loadSavedDefault}
@@ -346,6 +434,9 @@ export default function App() {
             chordRoot: chordRoot,
             chordType: chordType,
           })}
+          getCurrentTuningPack={getCurrentTuningPack}
+          getAllCustomTunings={getAllCustomTunings}
+          onImportTunings={onImportTunings}
         />
       </footer>
     </div>

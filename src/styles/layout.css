@@ -132,7 +132,7 @@
     border: 1px solid var(--line);
     border-radius: var(--card-radius);
     background: var(--panel);
-    padding: 8px; /* baseline; containers can override */
+    padding: 8px;
   }
 
   & .page-controls {
