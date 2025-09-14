@@ -3,82 +3,69 @@ export type TuningString = {
   note?: string;
   midi?: number;
   startFret?: number;
+  greyBefore?: boolean;
+};
+
+export type StringMeta = {
+  index: number;
+  startFret?: number;
+  greyBefore?: boolean;
 };
 
 export type TuningPack = {
   version: 2;
   name: string;
-  system: { edo: number; accidentals?: "sharp" | "flat" | "auto" };
+  system: { edo: number }; // accidentals removed
   tuning: { strings: TuningString[] };
-  meta?: Record<string, unknown>;
+  meta?: { stringMeta?: StringMeta[]; [k: string]: unknown };
 };
 
-export function makeTuningPack(input: {
-  name: string;
-  edo: number;
-  accidentals?: "sharp" | "flat" | "auto";
-  strings: TuningString[];
-  meta?: Record<string, unknown>;
+export function buildTuningPack(params: {
+  systemDivisions: number; // e.g. 24 for 24-TET
+  systemId: string; // e.g. "24-TET"
+  stringsCount: number; // UI strings count
+  tuning: string[]; // note names exactly as shown in UI
+  stringMeta?: StringMeta[]; // optional per-string metadata
+  name?: string; // optional override
 }): TuningPack {
-  return {
-    version: 2,
-    name: input.name,
-    system: { edo: input.edo, accidentals: input.accidentals ?? "auto" },
-    tuning: { strings: input.strings },
-    meta: input.meta ?? {},
-  };
-}
+  const { systemDivisions, systemId, stringsCount, tuning, stringMeta, name } =
+    params;
 
-export function parseTuningPack(json: unknown): TuningPack {
-  if (!json || typeof json !== "object") {
-    throw new Error("Invalid file: not an object.");
-  }
-  const o = json as Record<string, any>;
-
-  // v2 only
-  if (o.version !== 2) {
-    throw new Error("Unsupported tuning file version; expected version: 2.");
-  }
-  if (typeof o.name !== "string" || !o.name.trim()) {
-    throw new Error("Missing or invalid 'name'.");
-  }
-  if (!o.system || typeof o.system.edo !== "number" || o.system.edo <= 0) {
-    throw new Error("Missing or invalid 'system.edo'.");
-  }
-  if (
-    !o.tuning ||
-    !Array.isArray(o.tuning.strings) ||
-    o.tuning.strings.length < 1
-  ) {
-    throw new Error("Missing or empty 'tuning.strings'.");
-  }
-
-  const strings: TuningString[] = o.tuning.strings.map((s: any, i: number) => {
-    const out: TuningString = {};
-    if (s && typeof s === "object") {
-      if (typeof s.label === "string") out.label = s.label;
-      if (typeof s.note === "string") out.note = s.note;
-      if (typeof s.midi === "number") out.midi = s.midi;
-      if (typeof s.startFret === "number") out.startFret = s.startFret;
-    }
-    if (out.midi == null && !out.note) {
-      throw new Error(`String #${i + 1} must include 'midi' or 'note'.`);
-    }
-    return out;
+  const strings: TuningString[] = (tuning ?? []).map((n, i) => {
+    const m = stringMeta?.find((x) => x.index === i);
+    return {
+      note: n,
+      ...(typeof m?.startFret === "number" ? { startFret: m.startFret } : {}),
+      ...(typeof m?.greyBefore === "boolean"
+        ? { greyBefore: m.greyBefore }
+        : {}),
+    };
   });
 
-  const accidentals =
-    o.system.accidentals === "sharp" ||
-    o.system.accidentals === "flat" ||
-    o.system.accidentals === "auto"
-      ? o.system.accidentals
-      : "auto";
-
-  return {
+  const pack: TuningPack = {
     version: 2,
-    name: o.name,
-    system: { edo: o.system.edo, accidentals },
+    name: name ?? `${systemId} ${stringsCount}-string`,
+    system: { edo: systemDivisions },
     tuning: { strings },
-    meta: typeof o.meta === "object" && o.meta ? o.meta : {},
   };
+
+  if (stringMeta && stringMeta.length) {
+    pack.meta = { stringMeta };
+  }
+
+  return pack;
+}
+
+export function downloadTuningPack(pack: TuningPack, filename?: string) {
+  const blob = new Blob([JSON.stringify(pack, null, 2)], {
+    type: "application/json",
+  });
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = `${filename || pack.name}.tuning.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
 }

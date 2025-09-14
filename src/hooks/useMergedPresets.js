@@ -7,11 +7,20 @@ export function useMergedPresets({
   customTunings,
   setTuning,
   setStringMeta,
+  currentEdo, // number, e.g. system.divisions
 }) {
+  // Only show custom packs compatible with the current EDO
+  const compatibleCustoms = useMemo(() => {
+    if (!Array.isArray(customTunings)) return [];
+    const edoNum = Number(currentEdo);
+    return customTunings.filter((p) => Number(p?.system?.edo) === edoNum);
+  }, [customTunings, currentEdo]);
+
+  // Build map of tuning arrays from compatible customs
   const customPresetMap = useMemo(() => {
-    if (!Array.isArray(customTunings) || !customTunings.length) return {};
+    if (!compatibleCustoms.length) return {};
     const obj = {};
-    for (const p of customTunings) {
+    for (const p of compatibleCustoms) {
       const arr = Array.isArray(p?.tuning?.strings)
         ? p.tuning.strings.map((s) =>
             typeof s?.note === "string" ? s.note : "C",
@@ -20,13 +29,13 @@ export function useMergedPresets({
       if (arr && arr.length) obj[p.name] = arr;
     }
     return obj;
-  }, [customTunings]);
+  }, [compatibleCustoms]);
 
-  // Build per-string meta from custom packs
+  // Build per-string meta from compatible customs
   const customPresetMetaMap = useMemo(() => {
-    if (!Array.isArray(customTunings) || !customTunings.length) return {};
+    if (!compatibleCustoms.length) return {};
     const obj = {};
-    for (const p of customTunings) {
+    for (const p of compatibleCustoms) {
       const fromStrings = Array.isArray(p?.tuning?.strings)
         ? p.tuning.strings
             .map((s, idx) => {
@@ -41,7 +50,6 @@ export function useMergedPresets({
       const fromMeta = Array.isArray(p?.meta?.stringMeta)
         ? p.meta.stringMeta.filter((m) => m && typeof m.index === "number")
         : [];
-      // merge by index (string-level fields take precedence over meta)
       const byIx = new Map(fromStrings.map((m) => [m.index, m]));
       for (const m of fromMeta) {
         const prev = byIx.get(m.index) || { index: m.index };
@@ -51,9 +59,9 @@ export function useMergedPresets({
       if (merged.length) obj[p.name] = merged;
     }
     return obj;
-  }, [customTunings]);
+  }, [compatibleCustoms]);
 
-  // Merge maps (factory first, then customs)
+  // Merge factory + customs
   const mergedPresetMap = useMemo(
     () => ({ ...presetMap, ...customPresetMap }),
     [presetMap, customPresetMap],
@@ -64,7 +72,7 @@ export function useMergedPresets({
     [presetMetaMap, customPresetMetaMap],
   );
 
-  // Names (avoid duplicate labels)
+  // Names (avoid duplicates)
   const mergedPresetNames = useMemo(() => {
     const customNames = Object.keys(customPresetMap);
     const dedupCustom = customNames.filter((n) => !presetNames.includes(n));

@@ -41,8 +41,7 @@ import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
-
-// NEW: merged presets hook (factory + customs; stable reset)
+import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
 
 export default function App() {
@@ -202,26 +201,35 @@ export default function App() {
     defaultForCount,
   });
 
-  // ----- Merge presets + manage selection (fixes dropdown reset bug) -----
+  // ----- Tuning IO (persist imported tunings + exporter fns) -----
   const {
-    mergedPresetNames,
-    selectedPreset,
-    setPreset, // call to apply preset + meta and update dropdown
-    resetSelection, // stable; used only on system/strings change
-  } = useMergedPresets({
-    presetMap,
-    presetMetaMap,
-    presetNames,
-    customTunings: [], // pass [] if you don't have custom imports wired here
-    setTuning,
-    setStringMeta,
+    customTunings,
+    getCurrentTuningPack,
+    getAllCustomTunings,
+    onImportTunings,
+  } = useTuningIO({
+    systemId,
+    strings,
+    TUNINGS,
   });
 
-  // When system or string count changes, clear stringMeta and reset label
+  // ----- Merge presets + manage selection (filter customs by current EDO) -----
+  const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
+    useMergedPresets({
+      presetMap,
+      presetMetaMap,
+      presetNames,
+      customTunings,
+      setTuning,
+      setStringMeta,
+      currentEdo: system.divisions,
+    });
+
+  // Reset meta and preset label when system or string count changes
   useEffect(() => {
     setStringMeta(null);
-    resetSelection(); // ← stable; prevents dropdown snapping issues
-  }, [systemId, strings]); // (intentionally no resetSelection in deps)
+    resetSelection();
+  }, [systemId, strings, resetSelection]);
 
   return (
     <div className="page">
@@ -314,7 +322,7 @@ export default function App() {
           handleStringsChange={handleStringsChange}
           presetNames={mergedPresetNames}
           selectedPreset={selectedPreset}
-          setSelectedPreset={setPreset} // ← uses meta-aware selection (from hook)
+          setSelectedPreset={setPreset}
           savedExists={savedExists}
           handleSaveDefault={saveDefault}
           handleLoadSavedDefault={loadSavedDefault}
@@ -355,6 +363,9 @@ export default function App() {
             chordRoot: chordRoot,
             chordType: chordType,
           })}
+          getCurrentTuningPack={() => getCurrentTuningPack(tuning, stringMeta)}
+          getAllCustomTunings={getAllCustomTunings}
+          onImportTunings={onImportTunings}
         />
       </footer>
     </div>
