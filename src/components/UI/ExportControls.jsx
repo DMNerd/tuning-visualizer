@@ -44,7 +44,7 @@ export default function ExportControls({
   const exportCurrentTuning = () => {
     if (typeof getCurrentTuningPack !== "function") {
       toast.error(
-        "Export not wired: getCurrentTuningPack is missing. Pass it from useTuningIO / tuningIO."
+        "Export not wired: getCurrentTuningPack is missing. Pass it from useTuningIO / tuningIO.",
       );
       return;
     }
@@ -52,7 +52,7 @@ export default function ExportControls({
       const pack = getCurrentTuningPack();
       const safe = (pack.name || fileBase || "tuning").replace(
         /[^a-z0-9\-_]+/gi,
-        "_"
+        "_",
       );
       downloadJSON(pack, `${safe}.tuning.json`);
       toast.success(`Exported "${pack.name || safe}" tuning.`);
@@ -64,7 +64,7 @@ export default function ExportControls({
   const exportAllCustom = () => {
     if (typeof getAllCustomTunings !== "function") {
       toast.error(
-        "Export not wired: getAllCustomTunings is missing. Pass it from useTuningIO."
+        "Export not wired: getAllCustomTunings is missing. Pass it from useTuningIO.",
       );
       return;
     }
@@ -76,7 +76,7 @@ export default function ExportControls({
       }
       downloadJSON(
         { version: 1, type: "tuning-bundle", items: packs },
-        `tunings.bundle.json`
+        `tunings.bundle.json`,
       );
       toast.success(`Exported ${packs.length} custom tuning(s).`);
     } catch (e) {
@@ -91,7 +91,7 @@ export default function ExportControls({
     if (!file) return;
     if (typeof onImportTunings !== "function") {
       toast.error(
-        "Import not wired: onImportTunings is missing. Pass it from useTuningIO."
+        "Import not wired: onImportTunings is missing. Pass it from useTuningIO.",
       );
       return;
     }

@@ -2,7 +2,7 @@
 import React, { forwardRef, useLayoutEffect, useRef } from "react";
 
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
-import { usePitchMapping } from "@/hooks/usePitchMapping";
+import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
 import { useLabels } from "@/hooks/useLabels";
@@ -65,7 +65,10 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  const { pcForName, nameForPc } = usePitchMapping(system, accidental);
+  // const { pcForName, nameForPc } = usePitchMapping(system, accidental);
+  const { pcFromName } = useSystemNoteNames(system, accidental);
+  const pcForName = pcFromName;
+  const nameForPc = (pc) => system.nameForPc(pc, accidental);
 
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,

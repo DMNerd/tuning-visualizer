@@ -1,7 +1,14 @@
 // App.jsx
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { FiMaximize, FiMinimize } from "react-icons/fi";
-import { Toaster } from "react-hot-toast";
+import {
+  FiMaximize,
+  FiMinimize,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiInfo,
+  FiLoader,
+} from "react-icons/fi";
+import { Toaster, ToastBar } from "react-hot-toast";
 
 // exporters
 import {
@@ -357,20 +364,43 @@ export default function App() {
             fontSize: "0.8125rem",
             borderRadius: "10px",
           },
-          success: {
-            iconTheme: {
-              primary: "var(--accent)",
-              secondary: "var(--panel)",
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: "var(--root)",
-              secondary: "var(--panel)",
-            },
-          },
         }}
-      />
+      >
+        {(t) => {
+          const icon =
+            t.type === "success" ? (
+              <FiCheckCircle size={18} color="var(--accent)" />
+            ) : t.type === "error" ? (
+              <FiAlertTriangle size={18} color="var(--root)" />
+            ) : t.type === "loading" ? (
+              <FiLoader size={18} className="spin" />
+            ) : (
+              <FiInfo size={18} color="var(--fg)" />
+            );
+
+          return (
+            <ToastBar toast={t}>
+              {({ message, action }) => (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {icon}
+                  </span>
+                  <div>{message}</div>
+                  {action}
+                </div>
+              )}
+            </ToastBar>
+          );
+        }}
+      </Toaster>
     </div>
   );
 }
