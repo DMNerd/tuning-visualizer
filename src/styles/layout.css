@@ -10,6 +10,7 @@
 
   & .page-header {
     flex: 0 0 auto;
+    margin-bottom: var(--gap);
     background: var(--panel);
     border-bottom: 1px solid var(--line);
 
@@ -70,7 +71,7 @@
 
   /* ---- Stage (fretboard) ---- */
   & .page-main {
-    margin-top: var(--gap);
+    margin-block: var(--gap);
     max-width: var(--max-stage);
     width: 100%;
     padding-inline: var(--gutter);
@@ -139,7 +140,7 @@
     width: calc(100% - var(--gutter) * 2);
     max-width: calc(var(--max-stage) - var(--gutter) * 2);
     margin-inline: auto;
-    margin-top: var(--gap);
+    margin-block: var(--gap);
     border: 1px solid var(--line);
     border-radius: var(--card-radius);
     background: var(--panel);
@@ -620,11 +621,10 @@ svg {
     font-size: 0.6875rem;
   }
   .btn-row {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
   }
   .btn-row .btn {
-    flex: 1;
+    flex: unset;
   }
   :root {
     --gutter: 10px;

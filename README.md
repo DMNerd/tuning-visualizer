@@ -17,6 +17,9 @@ This app will be free and open source forever and is completely self hostable
 
 ![TuningViz](https://i.imgur.com/HOlzRt7.png "The app")
 
+![TuningViz Mobile](https://i.imgur.com/6b9Cy8E.png "The app - on mobile")
+(works on mobile - landscape recommended)
+
 ---
 
 ## Features
