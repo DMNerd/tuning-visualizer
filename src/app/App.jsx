@@ -1,6 +1,7 @@
 // App.jsx
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FiMaximize, FiMinimize } from "react-icons/fi";
+import { Toaster } from "react-hot-toast";
 
 // exporters
 import {
@@ -21,7 +22,6 @@ import {
   PRESET_TUNINGS,
   PRESET_TUNING_META,
 } from "@/lib/theory/constants";
-import { buildChordPCsFromPc } from "@/lib/theory/chords";
 
 // existing UI atoms
 import PanelHeader from "@/components/UI/PanelHeader";
@@ -37,36 +37,28 @@ import { useTheme } from "@/hooks/useTheme";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
 import { useDrawFrets } from "@/hooks/useDrawFrets";
 import { useDefaultTuning } from "@/hooks/useDefaultTuning";
-import { usePitchMapping } from "@/hooks/usePitchMapping";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
 import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
+import { useFretsTouched } from "@/hooks/useFretsTouched";
+import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
+import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
+import { useChordLogic } from "@/hooks/useChordLogic";
+import { useFileBase } from "@/hooks/useFileBase";
 
 export default function App() {
   // ----- System selection -----
   const [systemId, setSystemId] = useState("12-TET");
   const system = TUNINGS[systemId];
 
-  // ----- Strings / Frets -----
+  // ----- Strings / Frets (via hook) -----
+  const { frets, setFrets, fretsTouched, setFretsUI } = useFretsTouched(22);
   const [strings, setStrings] = useState(6);
-  const [frets, setFrets] = useState(22);
-  const [fretsTouched, setFretsTouched] = useState(false);
-
-  const setFretsUI = (val) => {
-    setFrets(val);
-    setFretsTouched(true);
-  };
 
   // ----- Root & accidental -----
   const [root, setRoot] = useState("C");
-
-  // ----- Chords -----
-  const [chordRoot, setChordRoot] = useState("C");
-  const [chordType, setChordType] = useState("maj");
-  const [showChord, setShowChord] = useState(false);
-  const [hideNonChord, setHideNonChord] = useState(false);
 
   // ----- Display options (persistent) -----
   const [displayPrefs, setDisplayPrefs] = useDisplayPrefs({
@@ -128,29 +120,25 @@ export default function App() {
   // Per-string metadata (e.g., short banjo string)
   const [stringMeta, setStringMeta] = useState(null);
 
-  // ----- System note names -----
-  const { pcForName: pcFromName, nameForPc } = usePitchMapping(
-    system,
-    accidental,
-  );
-  const sysNames = useMemo(
-    () => Array.from({ length: system.divisions }, (_, pc) => nameForPc(pc)),
-    [system.divisions, nameForPc],
-  );
+  // ----- System note names (via hook) -----
+  const { pcFromName, sysNames } = useSystemNoteNames(system, accidental);
 
+  // Root index for fretboard
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
-  const chordRootIx = useMemo(
-    () => pcFromName(chordRoot),
-    [chordRoot, pcFromName],
-  );
 
-  const chordPCs = useMemo(
-    () =>
-      showChord
-        ? buildChordPCsFromPc(chordRootIx, chordType, system.divisions)
-        : null,
-    [showChord, chordRootIx, chordType, system.divisions],
-  );
+  // ----- Chords (via hook) -----
+  const {
+    chordRoot,
+    setChordRoot,
+    chordType,
+    setChordType,
+    showChord,
+    setShowChord,
+    hideNonChord,
+    setHideNonChord,
+    chordRootIx,
+    chordPCs,
+  } = useChordLogic(system, pcFromName);
 
   // ----- Scales -----
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
@@ -167,33 +155,18 @@ export default function App() {
     setFretsRaw: setFrets,
   });
 
-  // ----- Export filename base -----
-  const fileBase = useMemo(
-    () => slug(root, scale, accidental, `${strings}str`),
-    [root, scale, accidental, strings],
-  );
+  // ----- Export filename base (via hook) -----
+  const fileBase = useFileBase({ root, scale, accidental, strings });
 
-  // ----- Accidental respelling (guarded) -----
-  useEffect(() => {
-    const toName = (pc) => system.nameForPc(pc, accidental);
-
-    setRoot((prev) => {
-      const next = toName(pcFromName(prev));
-      return next !== prev ? next : prev;
-    });
-
-    setTuning((prev) => {
-      const next = prev.map((n) => toName(pcFromName(n)));
-      const same =
-        prev.length === next.length && prev.every((v, i) => v === next[i]);
-      return same ? prev : next;
-    });
-
-    setChordRoot((prev) => {
-      const next = toName(pcFromName(prev));
-      return next !== prev ? next : prev;
-    });
-  }, [accidental, system, pcFromName, setTuning]);
+  // ----- Accidental respelling (via hook) -----
+  useAccidentalRespell({
+    system,
+    accidental,
+    pcFromName,
+    setRoot,
+    setTuning,
+    setChordRoot,
+  });
 
   const handleStringsChange = useStringsChange({
     setStrings,
@@ -368,6 +341,36 @@ export default function App() {
           onImportTunings={onImportTunings}
         />
       </footer>
+
+      {/* Toasts: styled with your CSS variables for perfect cohesion */}
+      <Toaster
+        position="top-right"
+        gutter={8}
+        toastOptions={{
+          duration: 2800,
+          style: {
+            background: "var(--card-bg)",
+            color: "var(--fg)",
+            border: "1px solid var(--card-border)",
+            boxShadow: "var(--card-shadow)",
+            padding: "8px 10px",
+            fontSize: "0.8125rem",
+            borderRadius: "10px",
+          },
+          success: {
+            iconTheme: {
+              primary: "var(--accent)",
+              secondary: "var(--panel)",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "var(--root)",
+              secondary: "var(--panel)",
+            },
+          },
+        }}
+      />
     </div>
   );
 }

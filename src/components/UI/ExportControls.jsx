@@ -1,6 +1,7 @@
 // src/components/UI/ExportControls.jsx
 import { useState, useMemo, useRef } from "react";
 import Section from "@/components/UI/Section";
+import { toast } from "react-hot-toast";
 
 export default function ExportControls({
   boardRef,
@@ -42,8 +43,8 @@ export default function ExportControls({
 
   const exportCurrentTuning = () => {
     if (typeof getCurrentTuningPack !== "function") {
-      alert(
-        "Export not wired: getCurrentTuningPack is missing. Pass it from useTuningIO / tuningIO.",
+      toast.error(
+        "Export not wired: getCurrentTuningPack is missing. Pass it from useTuningIO / tuningIO."
       );
       return;
     }
@@ -51,33 +52,35 @@ export default function ExportControls({
       const pack = getCurrentTuningPack();
       const safe = (pack.name || fileBase || "tuning").replace(
         /[^a-z0-9\-_]+/gi,
-        "_",
+        "_"
       );
       downloadJSON(pack, `${safe}.tuning.json`);
+      toast.success(`Exported "${pack.name || safe}" tuning.`);
     } catch (e) {
-      alert(`Export failed: ${e?.message || e}`);
+      toast.error(`Export failed: ${e?.message || e}`);
     }
   };
 
   const exportAllCustom = () => {
     if (typeof getAllCustomTunings !== "function") {
-      alert(
-        "Export not wired: getAllCustomTunings is missing. Pass it from useTuningIO.",
+      toast.error(
+        "Export not wired: getAllCustomTunings is missing. Pass it from useTuningIO."
       );
       return;
     }
     try {
       const packs = getAllCustomTunings() || [];
       if (!packs.length) {
-        alert("No custom tunings to export.");
+        toast("No custom tunings to export.", { icon: "ℹ️" });
         return;
       }
       downloadJSON(
         { version: 1, type: "tuning-bundle", items: packs },
-        `tunings.bundle.json`,
+        `tunings.bundle.json`
       );
+      toast.success(`Exported ${packs.length} custom tuning(s).`);
     } catch (e) {
-      alert(`Export failed: ${e?.message || e}`);
+      toast.error(`Export failed: ${e?.message || e}`);
     }
   };
 
@@ -87,8 +90,8 @@ export default function ExportControls({
     const file = e.target.files?.[0];
     if (!file) return;
     if (typeof onImportTunings !== "function") {
-      alert(
-        "Import not wired: onImportTunings is missing. Pass it from useTuningIO.",
+      toast.error(
+        "Import not wired: onImportTunings is missing. Pass it from useTuningIO."
       );
       return;
     }
@@ -108,10 +111,10 @@ export default function ExportControls({
 
       onImportTunings(packsArray, [file.name]);
       e.target.value = "";
-      alert(`Imported ${packsArray.length} tuning(s).`);
+      toast.success(`Imported ${packsArray.length} tuning(s).`);
     } catch (err) {
       console.error(err);
-      alert(`Import failed: ${err?.message || err}`);
+      toast.error(`Import failed: ${err?.message || err}`);
     }
   };
 
