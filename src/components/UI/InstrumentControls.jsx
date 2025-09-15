@@ -41,12 +41,15 @@ export default function InstrumentControls({
   useEffect(() => setFretsText(String(frets)), [frets]);
 
   // ---- Commit helpers ----
-  function commitStrings() {
-    const raw = parseInt(stringsText, 10);
+  function commitStrings(rawOverride) {
+    const raw =
+      typeof rawOverride === "number" ? rawOverride : parseInt(stringsText, 10);
+
     if (!Number.isFinite(raw)) {
       setStringsErr(`Please enter a number between ${STR_MIN} and ${STR_MAX}.`);
       return false;
     }
+
     const val = clamp(raw, STR_MIN, STR_MAX);
     if (val !== raw) {
       setStringsErr(
@@ -60,14 +63,17 @@ export default function InstrumentControls({
     return true;
   }
 
-  function commitFrets() {
-    const raw = parseInt(fretsText, 10);
+  function commitFrets(rawOverride) {
+    const raw =
+      typeof rawOverride === "number" ? rawOverride : parseInt(fretsText, 10);
+
     if (!Number.isFinite(raw)) {
       setFretsErr(
         `Please enter a number between ${FRETS_MIN} and ${FRETS_MAX}.`,
       );
       return false;
     }
+
     const val = clamp(raw, FRETS_MIN, FRETS_MAX);
     if (val !== raw) {
       setFretsErr(
@@ -84,7 +90,6 @@ export default function InstrumentControls({
   // ---- Handlers ----
   const onStringsBlur = () => {
     if (!commitStrings()) {
-      // reset to last good value
       setStringsText(String(strings));
     }
   };
@@ -102,6 +107,7 @@ export default function InstrumentControls({
       e.currentTarget.blur();
     }
   };
+
   const onFretsKeyDown = (e) => {
     if (e.key === "Enter") commitFrets();
     if (e.key === "Escape") {
@@ -117,14 +123,14 @@ export default function InstrumentControls({
         <div className="row-2">
           {/* Strings */}
           <div className="field">
-            <span>Strings</span>
+            <label htmlFor="strings">Strings</label>
             <input
               id="strings"
               name="strings"
-              // use text + numeric keypad to allow free typing
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              type="number"
+              min={STR_MIN}
+              max={STR_MAX}
+              step={1}
               value={stringsText}
               onChange={(e) => setStringsText(e.target.value)}
               onBlur={onStringsBlur}
@@ -143,13 +149,14 @@ export default function InstrumentControls({
 
           {/* Frets */}
           <div className="field">
-            <span>Frets</span>
+            <label htmlFor="frets">Frets</label>
             <input
               id="frets"
               name="frets"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              type="number"
+              min={FRETS_MIN}
+              max={FRETS_MAX}
+              step={1}
               value={fretsText}
               onChange={(e) => setFretsText(e.target.value)}
               onBlur={onFretsBlur}
@@ -172,7 +179,7 @@ export default function InstrumentControls({
             const stringNum = strings - i;
             return (
               <div key={i} className="field">
-                <span>String {stringNum}</span>
+                <label htmlFor={`string-${stringNum}`}>String {stringNum}</label>
                 <select
                   id={`string-${stringNum}`}
                   name={`string-${stringNum}`}
@@ -195,7 +202,7 @@ export default function InstrumentControls({
         </div>
 
         <div className="field" style={{ marginTop: 8 }}>
-          <span>Preset</span>
+          <label htmlFor="preset">Preset</label>
           <select
             id="preset"
             name="preset"
