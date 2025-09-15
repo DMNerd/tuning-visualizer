@@ -22,9 +22,6 @@ importers:
       react-icons:
         specifier: ^5.5.0
         version: 5.5.0(react@19.1.1)
-      save-svg-as-png:
-        specifier: ^1.4.17
-        version: 1.4.17
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.2)
@@ -2894,12 +2891,6 @@ packages:
     engines: { node: ">=14.0.0" }
     hasBin: true
 
-  save-svg-as-png@1.4.17:
-    resolution:
-      {
-        integrity: sha512-7QDaqJsVhdFPwviCxkgHiGm9omeaMBe1VKbHySWU6oFB2LtnGCcYS13eVoslUgq6VZC6Tjq/HddBd1K6p2PGpA==,
-      }
-
   scheduler@0.26.0:
     resolution:
       {
@@ -5161,8 +5152,6 @@ snapshots:
     optionalDependencies:
       "@parcel/watcher": 2.5.1
     optional: true
-
-  save-svg-as-png@1.4.17: {}
 
   scheduler@0.26.0: {}
 

@@ -1,5 +1,3 @@
-import { saveSvgAsPng, svgAsDataUri } from "save-svg-as-png";
-
 export type ExportHeader = {
   system?: string;
   tuning?: string | string[];
@@ -28,232 +26,303 @@ export function slug(
 
 function getBox(svg: SVGSVGElement): Box {
   const vb = svg.viewBox?.baseVal;
-  return vb
-    ? { x: vb.x, y: vb.y, width: vb.width, height: vb.height }
-    : // getBBox exists on SVGSVGElement via SVGGraphicsElement
-      svg.getBBox();
+  if (vb) return { x: vb.x, y: vb.y, width: vb.width, height: vb.height };
+  const b = (svg as unknown as SVGGraphicsElement).getBBox();
+  return { x: b.x, y: b.y, width: b.width, height: b.height };
 }
 
-function composeInfoLines(header?: ExportHeader | null): string[] {
-  if (!header) return [];
-  const { system, tuning, scale, chordEnabled, chordRoot, chordType } = header;
+function cloneSvg(
+  svg: SVGSVGElement,
+  opts?: { forceTheme?: "light" | "dark" },
+): SVGSVGElement {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
 
-  const line1 = [
-    system ? `System: ${system}` : null,
-    tuning
-      ? `Tuning: ${Array.isArray(tuning) ? tuning.join(" ") : tuning}`
-      : null,
-    scale ? `Scale: ${scale}` : null,
-  ]
-    .filter(Boolean)
-    .join(" • ");
+  const { width, height } = getBox(svg);
+  clone.setAttribute("width", String(width));
+  clone.setAttribute("height", String(height));
 
-  const line2 =
-    chordEnabled && chordRoot && chordType
-      ? `Chord overlay: ${chordRoot} ${chordType}`
-      : null;
+  const html = document.documentElement;
+  const prevTheme = html.getAttribute("data-theme");
+  const mustToggle = opts?.forceTheme && prevTheme !== opts.forceTheme;
 
-  return [line1, line2].filter(Boolean) as string[];
-}
-
-function getBg(): string {
-  return (
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--bg")
-      ?.trim() || "#ffffff"
-  );
-}
-
-type ComposedSvg = {
-  svg: SVGSVGElement;
-  box: Box;
-  addedTop: number;
-};
-
-/**
- * Create a new SVG that draws the info header above the original svgNode.
- * Returns { svg, box, addedTop } where svg is the composed SVG element.
- */
-function createSvgWithHeader(
-  svgNode: SVGSVGElement,
-  header?: ExportHeader | null,
-  pad: number = 16,
-): ComposedSvg {
-  const lines = composeInfoLines(header);
-  if (!lines.length) {
-    return { svg: svgNode, box: getBox(svgNode), addedTop: 0 };
+  try {
+    if (mustToggle) html.setAttribute("data-theme", opts!.forceTheme!);
+    inlineComputedStyles(svg, clone);
+  } finally {
+    if (mustToggle) {
+      if (prevTheme) html.setAttribute("data-theme", prevTheme);
+      else html.removeAttribute("data-theme");
+    }
   }
 
-  const NS = "http://www.w3.org/2000/svg";
-  const origBox = getBox(svgNode);
-  const lineHeight = 18;
-  const topPadding = 12;
-  const headerHeight = lines.length * lineHeight + topPadding;
-
-  // Container SVG sized by original viewBox/bbox + header
-  const composed = document.createElementNS(NS, "svg") as SVGSVGElement;
-  composed.setAttribute("xmlns", NS);
-  const width = Math.ceil(origBox.width + pad * 2);
-  const height = Math.ceil(origBox.height + pad * 2 + headerHeight);
-
-  composed.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  composed.setAttribute("width", String(width));
-  composed.setAttribute("height", String(height));
-
-  // Background
-  const bgRect = document.createElementNS(NS, "rect");
-  bgRect.setAttribute("x", "0");
-  bgRect.setAttribute("y", "0");
-  bgRect.setAttribute("width", String(width));
-  bgRect.setAttribute("height", String(height));
-  bgRect.setAttribute("fill", getBg());
-  composed.appendChild(bgRect);
-
-  // Header group
-  const gHeader = document.createElementNS(NS, "g");
-  gHeader.setAttribute("transform", `translate(0, ${pad})`);
-
-  const textColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--fg")
-      ?.trim() || "#111";
-  const fontFamily =
-    getComputedStyle(document.body).getPropertyValue("font-family") ||
-    "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-
-  lines.forEach((ln, i) => {
-    const t = document.createElementNS(NS, "text");
-    t.textContent = ln;
-    // center horizontally
-    t.setAttribute("x", String(width / 2));
-    t.setAttribute("y", String((i + 1) * lineHeight - 4));
-    t.setAttribute("font-size", "14");
-    t.setAttribute("font-weight", "600");
-    t.setAttribute("font-family", fontFamily);
-    t.setAttribute("fill", textColor);
-    t.setAttribute("text-anchor", "middle");
-    gHeader.appendChild(t);
-  });
-  composed.appendChild(gHeader);
-
-  // Copy ONLY children of original into a group (avoid nested <svg>)
-  const gWrap = document.createElementNS(NS, "g");
-  const shiftX = pad - origBox.x;
-  const shiftY = pad + headerHeight - origBox.y;
-  gWrap.setAttribute("transform", `translate(${shiftX}, ${shiftY})`);
-  Array.from(svgNode.childNodes).forEach((n) => {
-    gWrap.appendChild(n.cloneNode(true));
-  });
-  composed.appendChild(gWrap);
-
-  const box: Box = { x: 0, y: 0, width, height };
-  return { svg: composed, box, addedTop: headerHeight };
+  return clone;
 }
 
-export async function downloadPNG(
-  svgNode: SVGSVGElement | null,
-  filename: string = "fretboard.png",
-  scale: number = 3,
-  pad: number = 16,
-  header?: ExportHeader | null,
-): Promise<void> {
-  if (!svgNode) return;
-  const { svg: composed, box } = createSvgWithHeader(svgNode, header, pad);
+function inlineComputedStyles(src: Element, dest: Element) {
+  const maybeWin = src.ownerDocument?.defaultView as
+    | (Window & typeof globalThis)
+    | null;
+  if (!maybeWin) return;
+  const W = maybeWin;
 
-  await saveSvgAsPng(composed, filename, {
-    scale,
-    left: box.x,
-    top: box.y,
-    width: Math.ceil(box.width),
-    height: Math.ceil(box.height),
-    backgroundColor: getBg(),
-  } as any);
+  const walker = document.createTreeWalker(src, NodeFilter.SHOW_ELEMENT);
+  const destWalker = document.createTreeWalker(dest, NodeFilter.SHOW_ELEMENT);
+
+  applyStyle(src as HTMLElement, dest as HTMLElement, W);
+
+  while (true) {
+    const s = walker.nextNode() as HTMLElement | null;
+    const d = destWalker.nextNode() as HTMLElement | null;
+    if (!s || !d) break;
+    applyStyle(s, d, W);
+  }
+
+  function applyStyle(
+    from: HTMLElement,
+    to: HTMLElement,
+    win: Window & typeof globalThis,
+  ) {
+    const cs = win.getComputedStyle(from);
+    const props = [
+      // general text/paint
+      "opacity",
+      "font",
+      "font-family",
+      "font-size",
+      "font-weight",
+      "color",
+      "fill",
+
+      // strokes (include dash props so micro-frets look right)
+      "stroke",
+      "stroke-width",
+      "stroke-linejoin",
+      "stroke-linecap",
+      "stroke-miterlimit",
+      "stroke-opacity",
+      "stroke-dasharray",
+      "stroke-dashoffset",
+
+      // rendering hints
+      "paint-order",
+      "text-rendering",
+      "shape-rendering",
+    ] as const;
+
+    const style: Record<string, string> = {};
+    for (const p of props) {
+      const v = cs.getPropertyValue(p);
+      if (v) style[p] = v;
+    }
+
+    const styleStr = Object.entries(style)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(";");
+
+    if (styleStr) {
+      const prev = to.getAttribute("style");
+      to.setAttribute("style", `${prev ? prev + ";" : ""}${styleStr}`);
+    }
+  }
+}
+
+function withPaddingAndHeader(
+  svg: SVGSVGElement,
+  padding = 16,
+  header: ExportHeader | null = null,
+): SVGSVGElement {
+  const source = cloneSvg(svg, { forceTheme: "light" });
+
+  const { width, height, x, y } = getBox(source);
+
+  const HEADER_TEXT = header ? formatHeaderSingleLine(header) : null;
+  const HEADER_FONT_SIZE = 32;
+  const HEADER_GAP = HEADER_TEXT ? 12 : 0;
+
+  const CARD_RADIUS = 22;
+  const CARD_BORDER = "#e6e6e6";
+
+  const INNER = padding;
+  const OUTER = 24;
+
+  const cardW = width + INNER * 2;
+  const cardH = height + INNER * 2;
+
+  const totalW = cardW + OUTER * 2;
+  const headerBlock = HEADER_TEXT ? HEADER_FONT_SIZE + HEADER_GAP : 0;
+  const totalH = headerBlock + cardH + OUTER * 2;
+
+  const outer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  outer.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  outer.setAttribute("width", String(totalW));
+  outer.setAttribute("height", String(totalH));
+  outer.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
+
+  const bg = document.createElementNS(outer.namespaceURI, "rect");
+  bg.setAttribute("x", "0");
+  bg.setAttribute("y", "0");
+  bg.setAttribute("width", String(totalW));
+  bg.setAttribute("height", String(totalH));
+  bg.setAttribute("fill", "#0b0b0b");
+  outer.appendChild(bg);
+
+  if (HEADER_TEXT) {
+    const t = document.createElementNS(outer.namespaceURI, "text");
+    t.textContent = HEADER_TEXT;
+    t.setAttribute("x", String(totalW / 2));
+    t.setAttribute("y", String(OUTER + HEADER_FONT_SIZE));
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute(
+      "font-family",
+      "system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif",
+    );
+    t.setAttribute("font-size", String(HEADER_FONT_SIZE));
+    t.setAttribute("font-weight", "800");
+    t.setAttribute("fill", "#ffffff");
+    outer.appendChild(t);
+  }
+
+  const cardX = OUTER;
+  const cardY = OUTER + headerBlock;
+
+  const card = document.createElementNS(outer.namespaceURI, "rect");
+  card.setAttribute("x", String(cardX));
+  card.setAttribute("y", String(cardY));
+  card.setAttribute("width", String(cardW));
+  card.setAttribute("height", String(cardH));
+  card.setAttribute("rx", String(CARD_RADIUS));
+  card.setAttribute("ry", String(CARD_RADIUS));
+  card.setAttribute("fill", "#ffffff");
+  card.setAttribute("stroke", CARD_BORDER);
+  card.setAttribute("stroke-width", "1");
+  outer.appendChild(card);
+
+  const g = document.createElementNS(outer.namespaceURI, "g");
+  g.setAttribute(
+    "transform",
+    `translate(${cardX + INNER - x}, ${cardY + INNER - y})`,
+  );
+  g.appendChild(source);
+  outer.appendChild(g);
+
+  return outer;
+}
+
+function formatHeaderSingleLine(h: ExportHeader): string {
+  const bits: string[] = [];
+  if (h.system) bits.push(`System: ${h.system}`);
+  if (h.tuning)
+    bits.push(
+      `Tuning: ${Array.isArray(h.tuning) ? h.tuning.join(" ") : h.tuning}`,
+    );
+  if (h.scale) bits.push(`Scale: ${h.scale}`);
+  if (h.chordEnabled && (h.chordRoot || h.chordType)) {
+    bits.push(`Chord: ${[h.chordRoot, h.chordType].filter(Boolean).join(" ")}`);
+  }
+  return bits.join(" • ");
 }
 
 export async function downloadSVG(
-  svgNode: SVGSVGElement | null,
-  filename: string = "fretboard.svg",
-  header?: ExportHeader | null,
-  pad: number = 16,
-): Promise<void> {
-  if (!svgNode) return;
+  svgEl: SVGSVGElement,
+  filename = "fretboard.svg",
+  header: ExportHeader | null = null,
+  padding = 16,
+) {
+  const svg = withPaddingAndHeader(svgEl, padding, header);
+  const xml = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, filename);
+  URL.revokeObjectURL(url);
+}
 
-  const { svg: composed } = createSvgWithHeader(svgNode, header, pad);
-  const dataUri = await svgAsDataUri(composed, {
-    backgroundColor: getBg(),
-  } as any);
+export async function downloadPNG(
+  svgEl: SVGSVGElement,
+  filename = "fretboard.png",
+  scale = 3,
+  padding = 16,
+  header: ExportHeader | null = null,
+) {
+  const svg = withPaddingAndHeader(svgEl, padding, header);
+  const xml = new XMLSerializer().serializeToString(svg);
+  const svgUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
 
-  const a = document.createElement("a");
-  a.href = dataUri;
-  a.download = filename;
-  a.click();
+  const img = await loadImage(svgUrl);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(img.naturalWidth * scale);
+  canvas.height = Math.ceil(img.naturalHeight * scale);
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D context not available.");
+
+  ctx.imageSmoothingQuality = "high";
+  ctx.imageSmoothingEnabled = true;
+
+  ctx.fillStyle =
+    getComputedStyle(document.documentElement).getPropertyValue("--panel") ||
+    "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const blob = await canvasToBlob(canvas, "image/png");
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, filename);
+  URL.revokeObjectURL(url);
 }
 
 export async function printFretboard(
-  svgNode: SVGSVGElement | null,
-  header?: ExportHeader | null,
-  pad = 16,
-): Promise<void> {
-  if (!svgNode) return;
+  svgEl: SVGSVGElement,
+  header: ExportHeader | null = null,
+  padding = 16,
+) {
+  const svg = withPaddingAndHeader(svgEl, padding, header);
+  const xml = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
 
-  const { svg: composed } = createSvgWithHeader(svgNode, header, pad);
-  const dataUri = await svgAsDataUri(composed, {
-    backgroundColor: "#ffffff",
-  } as any);
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.open();
+  w.document.write(`
+    <!doctype html>
+    <html>
+      <head><meta charset="utf-8"><title>Print Fretboard</title></head>
+      <body style="margin:0; padding:0; background:#fff;">
+        <img src="${url}" style="max-width:100%; display:block; margin:0 auto;" onload="window.focus(); window.print();"/>
+      </body>
+    </html>
+  `);
+  w.document.close();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 
-  const html = `<!doctype html>
-  <html>
-  <head>
-  <meta charset="utf-8" />
-  <title>&#8203;</title>
-  <style>
-    @page { size: auto; margin: 0; }
-    html,body { margin:0; padding:0; background:#ffffff; }
-    img { display:block; max-width:100%; height:auto; margin:0 auto; }
-    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  </style>
-  </head>
-  <body>
-    <img id="fb" src="${dataUri}" alt="Fretboard"/>
-  </body>
-  </html>`;
+function triggerDownload(href: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  (iframe as HTMLIFrameElement & { srcdoc?: string }).srcdoc = html;
-  document.body.appendChild(iframe);
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
-  const cleanup = () => setTimeout(() => iframe.remove(), 300);
-
-  iframe.onload = () => {
-    const doc = iframe.contentDocument;
-    const win = iframe.contentWindow;
-    if (!doc || !win) {
-      cleanup();
-      return;
-    }
-
-    const img = doc.getElementById("fb") as HTMLImageElement | null;
-
-    const doPrint = () => {
-      try {
-        win.focus();
-        win.print();
-      } finally {
-        cleanup();
-      }
-    };
-
-    if (img && !img.complete) {
-      img.onload = () => doPrint();
-      img.onerror = () => cleanup();
-    } else {
-      doPrint();
-    }
-  };
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality?: number,
+): Promise<Blob> {
+  return new Promise((resolve) =>
+    canvas.toBlob((b) => resolve(b!), type, quality),
+  );
 }
