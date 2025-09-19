@@ -345,6 +345,14 @@ input[type="text"] {
   }
 }
 
+/* Force dark dropdown popup on Windows Chromium */
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] select option,
+:root[data-theme="dark"] select optgroup {
+  background-color: var(--panel) !important;
+  color: var(--fg) !important;
+}
+
 .display-controls {
   display: grid;
   gap: 14px;
