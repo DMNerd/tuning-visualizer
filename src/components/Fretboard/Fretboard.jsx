@@ -9,7 +9,7 @@ import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 
 import { makeDisplayX } from "@/utils/displayX";
-import { buildFretLabel } from "@/utils/fretLabels";
+import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -19,6 +19,7 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp",
+    microLabelStyle = MICRO_LABEL_STYLES.Letters, // NEW: how micro-fret labels are drawn
     show = "names", // 'names' | 'degrees' | 'intervals' | 'fret' | 'off'
     showOpen = true,
     showFretNums = true,
@@ -110,6 +111,9 @@ const Fretboard = forwardRef(function Fretboard(
   const getMetaFor = (s) =>
     Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
 
+  // Options object reused for *all* micro-fret labels (fret numbers and "fret" mode)
+  const microLabelOpts = { microStyle: microLabelStyle, accidental };
+
   return (
     <svg
       ref={svgRef}
@@ -117,6 +121,7 @@ const Fretboard = forwardRef(function Fretboard(
       preserveAspectRatio="xMidYMid meet"
       style={{ display: "block" }}
     >
+      {/* Geometry (mirrored as one group for left-handed) */}
       <g transform={lefty ? `scale(-1,1) translate(-${width},0)` : undefined}>
         <rect
           x="0"
@@ -169,7 +174,7 @@ const Fretboard = forwardRef(function Fretboard(
         {/* frets */}
         {Array.from({ length: frets + 1 }).map((_, f) => {
           const isOctave = f % system.divisions === 0;
-          const isStandard = (f * 12) % system.divisions === 0;
+          const isStandard = (f * 12) % system.divisions === 0; // hits 12-TET boundary
           const isMicro = !isStandard;
 
           return (
@@ -295,7 +300,7 @@ const Fretboard = forwardRef(function Fretboard(
         })}
       </g>
 
-      {/* note labels */}
+      {/* note labels (kept out of the mirrored group; use displayX for lefty) */}
       {tuning.map((openName, s) => {
         const openPc = pcForName(openName);
         const sf = startFretFor(s);
@@ -331,7 +336,11 @@ const Fretboard = forwardRef(function Fretboard(
           const raw = labelFor(pc, f);
           const label =
             show === "fret"
-              ? buildFretLabel(globalFretForLabel, system.divisions)
+              ? buildFretLabel(
+                  globalFretForLabel,
+                  system.divisions,
+                  microLabelOpts,
+                )
               : raw;
 
           if (label === "") return null;
@@ -353,7 +362,7 @@ const Fretboard = forwardRef(function Fretboard(
       {/* fret numbers */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
-          const labelNum = buildFretLabel(f, system.divisions);
+          const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
           const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
           const topY = padTop - FRETNUM_TOP_GAP;
 

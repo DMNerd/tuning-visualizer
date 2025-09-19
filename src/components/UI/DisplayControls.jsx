@@ -1,6 +1,7 @@
 // src/components/UI/DisplayControls.jsx
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
+import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 
 export default function DisplayControls({
   // labels & visibility
@@ -18,6 +19,9 @@ export default function DisplayControls({
   // accidentals
   accidental,
   setAccidental,
+  // micro-fret labels
+  microLabelStyle,
+  setMicroLabelStyle,
   // degree coloring
   colorByDegree,
   setColorByDegree,
@@ -57,6 +61,27 @@ export default function DisplayControls({
                 Flats (C, Db, D…)
               </label>
             </div>
+          </div>
+
+          {/* Micro-fret labels */}
+          <div className="field">
+            <span>Micro-fret labels</span>
+            <select
+              id="microLabelStyle"
+              name="microLabelStyle"
+              value={microLabelStyle}
+              onChange={(e) => setMicroLabelStyle(e.target.value)}
+            >
+              <option value={MICRO_LABEL_STYLES.Letters}>
+                Letters (a, aa…)
+              </option>
+              <option value={MICRO_LABEL_STYLES.Accidentals}>
+                Accidentals (s / b)
+              </option>
+              <option value={MICRO_LABEL_STYLES.Fractions}>
+                Fractions (n+rem/N)
+              </option>
+            </select>
           </div>
 
           {/* Labels (from single source of truth) */}

@@ -77,6 +77,7 @@ export default function App() {
     openOnlyInScale: false,
     colorByDegree: false,
     accidental: "sharp",
+    microLabelStyle: "letters",
   });
 
   const {
@@ -88,6 +89,7 @@ export default function App() {
     openOnlyInScale,
     colorByDegree,
     accidental,
+    microLabelStyle,
   } = displayPrefs;
 
   const updatePref = (key) => (val) =>
@@ -246,6 +248,7 @@ export default function App() {
               rootIx={rootIx}
               intervals={intervals}
               accidental={accidental}
+              microLabelStyle={microLabelStyle}
               show={show}
               showOpen={showOpen}
               showFretNums={showFretNums}
@@ -321,6 +324,8 @@ export default function App() {
           setDotSize={updatePref("dotSize")}
           accidental={accidental}
           setAccidental={updatePref("accidental")}
+          microLabelStyle={microLabelStyle}
+          setMicroLabelStyle={updatePref("microLabelStyle")}
           openOnlyInScale={openOnlyInScale}
           setOpenOnlyInScale={updatePref("openOnlyInScale")}
           colorByDegree={colorByDegree}

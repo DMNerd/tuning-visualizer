@@ -179,7 +179,9 @@ export default function InstrumentControls({
             const stringNum = strings - i;
             return (
               <div key={i} className="field">
-                <label htmlFor={`string-${stringNum}`}>String {stringNum}</label>
+                <label htmlFor={`string-${stringNum}`}>
+                  String {stringNum}
+                </label>
                 <select
                   id={`string-${stringNum}`}
                   name={`string-${stringNum}`}
