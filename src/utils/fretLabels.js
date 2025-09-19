@@ -1,123 +1,142 @@
 // src/utils/fretLabels.js
 
-/**
- * Micro-fret label styles:
- *  - Letters:      0a, 0aa, 1a … (repeating "a" for micro-steps)
- *  - Accidentals:  0s / 1b (and multiples like 0ss, 1bb) — only for 12×k systems
- *  - Fractions:    0+rem/N (always available, exact)
- */
 export const MICRO_LABEL_STYLES = {
   Letters: "letters",
-  Accidentals: "accidental",
-  Fractions: "fraction",
+  Accidentals: "accidentals",
+  Fractions: "fractions",
 };
 
-/**
- * Build a human-friendly label for a fret index `f` on an N-division temperament.
- *
- * @param {number} f - Fret index (0-based) in the current N-TET grid.
- * @param {number} divisions - N of N-TET (e.g., 12, 24, 19, 31, 36…).
- * @param {Object} [options]
- * @param {'letters'|'accidental'|'fraction'} [options.microStyle='letters']
- * @param {'sharp'|'flat'} [options.accidental] - Only used when microStyle='accidental'.
- *
- * Behavior:
- *  • Exact 12-TET hits (integer semitone) → plain integer "0, 1, 2…".
- *  • Letters:
- *      - For N = 12×k → `${semi}${"a".repeat(sub)}` where sub=1..(k-1)
- *      - For N ≠ 12×k (NTET) → rounded cumulative per-semitone boundaries,
- *        and use repeated "a" for the micro index inside that semitone.
- *  • Accidentals (only meaningful for 12×k):
- *      - Sharps: `${semi}${"s".repeat(sub)}`
- *      - Flats:  `${semi+1}${"b".repeat(perSemi - sub)}`
- *      - For NTET it falls back to Fractions.
- *  • Fractions: `${semi}+${rem}/${divisions}` always works and is exact.
- */
-export function buildFretLabel(
-  f,
-  divisions,
-  options = { microStyle: MICRO_LABEL_STYLES.Letters, accidental: undefined },
-) {
-  const microStyle = options?.microStyle ?? MICRO_LABEL_STYLES.Letters;
-  const accidental = options?.accidental;
+const FRAC_SLASH = "⁄"; // Unicode fraction slash (⁄)
 
-  // Map f into the 12-TET frame to know which 12-semitone band we're in.
-  // scaled = f * 12; semi = floor(scaled / N); rem = scaled % N
-  const scaled = f * 12;
-  const rem = scaled % divisions;
-  const semi = Math.floor(scaled / divisions);
+// Common Unicode vulgar fractions for compact display
+const VULGAR = {
+  "1/2": "½",
+  "1/3": "⅓",
+  "2/3": "⅔",
+  "1/4": "¼",
+  "3/4": "¾",
+  "1/5": "⅕",
+  "2/5": "⅖",
+  "3/5": "⅗",
+  "4/5": "⅘",
+  "1/6": "⅙",
+  "5/6": "⅚",
+  "1/8": "⅛",
+  "3/8": "⅜",
+  "5/8": "⅝",
+  "7/8": "⅞",
+  "1/10": "⅒",
+};
 
-  // Exact 12-TET semitone hit → integer label.
-  if (rem === 0) return String(semi);
-
-  // Fractions mode: always available, exact, short-circuits others.
-  if (microStyle === MICRO_LABEL_STYLES.Fractions) {
-    return `${semi}+${rem}/${divisions}`;
-  }
-
-  const isMultipleOf12 = divisions % 12 === 0;
-
-  if (isMultipleOf12) {
-    // We are between two 12-TET semitones; there are perSemi microsteps
-    // inside the current semitone. The local index `sub` is 1..perSemi-1.
-    const perSemi = divisions / 12;
-    const sub = f % perSemi; // local micro index within the semitone
-
-    if (
-      microStyle === MICRO_LABEL_STYLES.Accidentals &&
-      (accidental === "sharp" || accidental === "flat")
-    ) {
-      // Sharps: count up from lower integer (semi) → 0s, 0ss, …
-      // Flats:  count down from the upper integer (semi+1) → 1bbb … 1b
-      if (accidental === "sharp") {
-        return `${semi}${"s".repeat(sub)}`;
-      } else {
-        const stepsDown = perSemi - sub;
-        return `${semi + 1}${"b".repeat(stepsDown)}`;
-      }
-    }
-
-    // Letters style for 12×k: repeat "a" for the micro index.
-    return `${semi}${"a".repeat(sub)}`;
-  }
-
-  // NTET path (divisions not a multiple of 12)
-  if (microStyle === MICRO_LABEL_STYLES.Accidentals) {
-    // Accidentals aren't well-defined off the 12×k grid → show exact fraction.
-    return `${semi}+${rem}/${divisions}`;
-  }
-
-  // Letters for NTET:
-  // Use rounded cumulative boundaries to decide how many frets lie within each 12-TET semitone.
-  // For a given 12-TET semitone 'semi', the start and end N-TET indices are:
-  //   start = round(semi   * N / 12)
-  //   end   = round((semi+1)* N / 12)
-  // Then sub = f - start is the local index inside that semitone.
-  const start = Math.round((semi * divisions) / 12);
-  const end = Math.round(((semi + 1) * divisions) / 12);
-  const sub = f - start; // 0..(end - start - 1)
-
-  // If (sub <= 0), we're effectively on or before the integer boundary,
-  // but we already handled exact integers above; still, guard defensively.
-  if (sub <= 0) return String(semi);
-
-  return `${semi}${"a".repeat(sub)}`;
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a || 1;
 }
 
-/**
- * (Optional) Convenience: build a small window of labels for preview/testing.
- * Not used by the app runtime; handy in unit tests or storybooks.
- *
- * @param {number} startFret
- * @param {number} count
- * @param {number} divisions
- * @param {Object} options - same as buildFretLabel
- * @returns {string[]} labels
- */
-export function sampleLabels(startFret, count, divisions, options) {
-  const out = [];
-  for (let i = 0; i < count; i++) {
-    out.push(buildFretLabel(startFret + i, divisions, options));
+function simplify(n, d) {
+  if (n === 0) return [0, 1];
+  const g = gcd(n, d);
+  return [Math.floor(n / g), Math.floor(d / g)];
+}
+
+function formatFractionLabel(baseSemi, num, den) {
+  if (num === 0) return String(baseSemi);
+  if (num === den) return String(baseSemi + 1);
+
+  // reduce and try to use a single glyph if available
+  const [n, d] = simplify(num, den);
+  const key = `${n}/${d}`;
+  const glyph = VULGAR[key];
+  if (glyph) return `${baseSemi}${glyph}`; // e.g., 6½
+
+  // fallback: compact ascii using Unicode fraction slash (no extra spaces)
+  return `${baseSemi}+${n}${FRAC_SLASH}${d}`; // e.g., 6+5⁄12
+}
+
+function perSemitoneInfo(fret, divisions) {
+  // position expressed in 12-TET semitone units
+  const pos12 = (fret * 12) / divisions;
+  const baseSemi = Math.floor(pos12);
+  const micro = pos12 - baseSemi; // 0..1
+  const num = Math.round(micro * divisions); // numerator relative to divisions
+  const den = divisions; // denominator stays as system divisions
+  return { baseSemi, num, den };
+}
+
+function labelLetters(fret, divisions) {
+  // If divisions is a multiple of 12 → k micro-steps per 12-TET semitone
+  if (divisions % 12 === 0) {
+    const k = divisions / 12;
+    const baseSemi = Math.floor(fret / k);
+    const sub = fret % k; // 0..k-1
+    if (sub === 0) return String(baseSemi);
+    return `${baseSemi}${"a".repeat(sub)}`; // a, aa, aaa...
   }
-  return out;
+
+  // Non-12-multiple: bucket by *rounded boundaries* round(n*div/12)
+  // This matches UI tick placement and makes boundary frets integers.
+  const boundaries = new Array(13)
+    .fill(0)
+    .map((_, n) => Math.round((n * divisions) / 12));
+  // Find semitone n such that B[n] <= fret < B[n+1]
+  let n = 0;
+  while (n < 12 && !(boundaries[n] <= fret && fret < boundaries[n + 1])) n++;
+
+  // Exact boundary → integer label
+  if (fret === boundaries[n]) return String(n);
+  // Inside the bucket → single micro mark from lower integer
+  return `${n}a`;
+}
+
+function labelAccidentals(fret, divisions, accidental = "sharp") {
+  // Only well-defined when divisions is a multiple of 12.
+  if (divisions % 12 === 0) {
+    const k = divisions / 12;
+    const baseSemi = Math.floor(fret / k);
+    const sub = fret % k;
+    if (sub === 0) return String(baseSemi);
+    if (accidental === "flat") {
+      // count down from the upper integer: 1b, 1bb, etc.
+      return `${baseSemi + 1}${"b".repeat(k - sub)}`;
+    }
+    // sharps from the lower integer: 0s, 0ss, etc.
+    return `${baseSemi}${"s".repeat(sub)}`;
+  }
+
+  // Fallback to fractional formatting for NTET
+  const { baseSemi, num, den } = perSemitoneInfo(fret, divisions);
+  return formatFractionLabel(baseSemi, num, den);
+}
+
+function labelFractions(fret, divisions) {
+  const { baseSemi, num, den } = perSemitoneInfo(fret, divisions);
+  return formatFractionLabel(baseSemi, num, den);
+}
+
+export function buildFretLabel(fret, divisions, opts = {}) {
+  const style = opts.microStyle ?? MICRO_LABEL_STYLES.Letters;
+  if (!Number.isFinite(fret) || !Number.isFinite(divisions) || divisions <= 0)
+    return "";
+
+  // 12‑TET trivial case
+  if (divisions === 12) return String(fret);
+
+  switch (style) {
+    case MICRO_LABEL_STYLES.Fractions:
+      return labelFractions(fret, divisions);
+    case MICRO_LABEL_STYLES.Accidentals:
+      return labelAccidentals(fret, divisions, opts.accidental);
+    case MICRO_LABEL_STYLES.Letters:
+    default:
+      return labelLetters(fret, divisions);
+  }
+}
+
+// Helper for tests and previews
+export function sampleLabels(start, count, divisions, opts = {}) {
+  return Array.from({ length: count }, (_, i) =>
+    buildFretLabel(start + i, divisions, opts),
+  );
 }
