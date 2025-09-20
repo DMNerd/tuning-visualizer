@@ -63,6 +63,23 @@ export default function DisplayControls({
             </div>
           </div>
 
+          {/* Labels (from single source of truth) */}
+          <div className="field">
+            <span>Labels</span>
+            <select
+              id="labels"
+              name="labels"
+              value={show}
+              onChange={(e) => setShow(e.target.value)}
+            >
+              {LABEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Micro-fret labels */}
           <div className="field">
             <span>Micro-fret labels</span>
@@ -81,23 +98,6 @@ export default function DisplayControls({
               <option value={MICRO_LABEL_STYLES.Fractions}>
                 Fractions (n+rem/N)
               </option>
-            </select>
-          </div>
-
-          {/* Labels (from single source of truth) */}
-          <div className="field">
-            <span>Labels</span>
-            <select
-              id="labels"
-              name="labels"
-              value={show}
-              onChange={(e) => setShow(e.target.value)}
-            >
-              {LABEL_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
             </select>
           </div>
 
