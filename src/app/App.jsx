@@ -213,15 +213,13 @@ export default function App() {
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
-  // Prefer saved default over factory default when system or string count changes
   useEffect(() => {
     if (savedExists) {
-      loadSavedDefault(); // uses user-saved default for (systemId, strings)
+      setPreset("Saved default");
     } else {
-      resetFactoryDefault(); // fallback if no saved default
+      setPreset("Factory default");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [systemId, strings, savedExists]);
+  }, [systemId, strings, savedExists, setPreset]);
 
   return (
     <div className="page">
