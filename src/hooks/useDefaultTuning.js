@@ -35,8 +35,8 @@ export function useDefaultTuning({
 
   // Memoize factory so callbacks/memos using it have stable deps
   const factory = useMemo(
-    () => (DEFAULT_TUNINGS?.[systemId]?.[strings] ?? []),
-    [DEFAULT_TUNINGS, systemId, strings]
+    () => DEFAULT_TUNINGS?.[systemId]?.[strings] ?? [],
+    [DEFAULT_TUNINGS, systemId, strings],
   );
 
   // Version to force re-reads of localStorage after writes

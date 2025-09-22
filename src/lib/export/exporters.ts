@@ -282,20 +282,48 @@ export async function printFretboard(
   const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
 
-  const w = window.open("", "_blank");
-  if (!w) return;
-  w.document.open();
-  w.document.write(`
-    <!doctype html>
-    <html>
-      <head><meta charset="utf-8"><title>Print Fretboard</title></head>
-      <body style="margin:0; padding:0; background:#fff;">
-        <img src="${url}" style="max-width:100%; display:block; margin:0 auto;" onload="window.focus(); window.print();"/>
-      </body>
-    </html>
-  `);
-  w.document.close();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  iframe.onload = () => {
+    const doc = iframe.contentDocument!;
+    doc.body.style.margin = "0";
+    doc.body.style.padding = "0";
+    doc.body.style.background = "#fff";
+
+    const img = doc.createElement("img");
+    img.src = url;
+    img.style.maxWidth = "100%";
+    img.style.display = "block";
+    img.style.margin = "0 auto";
+
+    img.onload = () => {
+      iframe.contentWindow?.focus();
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          document.body.removeChild(iframe);
+        }, 10000);
+      }, 0);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(iframe);
+    };
+
+    doc.body.appendChild(img);
+  };
+
+  iframe.srcdoc =
+    "<!doctype html><html><head><meta charset='utf-8'></head><body></body></html>";
 }
 
 function triggerDownload(href: string, filename: string) {
