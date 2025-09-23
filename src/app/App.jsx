@@ -8,7 +8,7 @@ import {
   FiInfo,
   FiLoader,
 } from "react-icons/fi";
-import { Toaster, ToastBar } from "react-hot-toast";
+import { Toaster, ToastBar, toast } from "react-hot-toast";
 
 // exporters
 import {
@@ -54,6 +54,8 @@ import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
 import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
 import { useChordLogic } from "@/hooks/useChordLogic";
 import { useFileBase } from "@/hooks/useFileBase";
+import { useHotkeys } from "@/hooks/useHotkeys";
+import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
 export default function App() {
   // ----- System selection -----
@@ -212,6 +214,71 @@ export default function App() {
     setStringMeta(null);
     resetSelection();
   }, [systemId, strings, resetSelection]);
+
+  const labelValues = useMemo(() => LABEL_OPTIONS.map((o) => o.value), []);
+
+  useHotkeys({
+    toggleFs,
+    setDisplayPrefs,
+    setFrets: setFretsUI,
+    handleStringsChange,
+    setShowChord,
+    setHideNonChord,
+    strings,
+    frets,
+    labelValues,
+    onShowCheatsheet: () => {
+      toast(
+        () => (
+          <div className="hotkeys-toast">
+            <b>Hotkeys</b>
+            <ul>
+              <li>
+                <kbd>f</kbd> fullscreen
+              </li>
+              <li>
+                <kbd>?</kbd> show this help
+              </li>
+              <li>
+                <kbd>l</kbd> cycle labels
+              </li>
+              <li>
+                <kbd>o</kbd> toggle open notes
+              </li>
+              <li>
+                <kbd>n</kbd> toggle fret numbers
+              </li>
+              <li>
+                <kbd>d</kbd> color by degree
+              </li>
+              <li>
+                <kbd>a</kbd> sharps ↔ flats
+              </li>
+              <li>
+                <kbd>g</kbd> left-handed layout
+              </li>
+              <li>
+                <kbd>c</kbd> chord overlay
+              </li>
+              <li>
+                <kbd>h</kbd> hide non-chord tones
+              </li>
+              <li>
+                <kbd>[ / ]</kbd> strings − / ＋
+              </li>
+              <li>
+                <kbd>- / =</kbd> frets − / ＋
+              </li>
+              <li>
+                <kbd>, / .</kbd> dot size − / ＋
+              </li>
+            </ul>
+          </div>
+        ),
+        { id: "hotkeys-help" },
+      );
+    },
+  });
 
   useEffect(() => {
     if (savedExists) {
