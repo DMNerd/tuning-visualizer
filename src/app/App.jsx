@@ -21,6 +21,9 @@ import {
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
 
+// hotkeys
+import HotkeysHelpToast from "@/components/UI/HotkeysCheatsheet";
+
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
@@ -228,55 +231,10 @@ export default function App() {
     frets,
     labelValues,
     onShowCheatsheet: () => {
-      toast(
-        () => (
-          <div className="hotkeys-toast">
-            <b>Hotkeys</b>
-            <ul>
-              <li>
-                <kbd>f</kbd> fullscreen
-              </li>
-              <li>
-                <kbd>?</kbd> show this help
-              </li>
-              <li>
-                <kbd>l</kbd> cycle labels
-              </li>
-              <li>
-                <kbd>o</kbd> toggle open notes
-              </li>
-              <li>
-                <kbd>n</kbd> toggle fret numbers
-              </li>
-              <li>
-                <kbd>d</kbd> color by degree
-              </li>
-              <li>
-                <kbd>a</kbd> sharps ↔ flats
-              </li>
-              <li>
-                <kbd>g</kbd> left-handed layout
-              </li>
-              <li>
-                <kbd>c</kbd> chord overlay
-              </li>
-              <li>
-                <kbd>h</kbd> hide non-chord tones
-              </li>
-              <li>
-                <kbd>[ / ]</kbd> strings − / ＋
-              </li>
-              <li>
-                <kbd>- / =</kbd> frets − / ＋
-              </li>
-              <li>
-                <kbd>, / .</kbd> dot size − / ＋
-              </li>
-            </ul>
-          </div>
-        ),
-        { id: "hotkeys-help" },
-      );
+      toast(() => <HotkeysHelpToast />, {
+        id: "hotkeys-help",
+        duration: 6000,
+      });
     },
   });
 

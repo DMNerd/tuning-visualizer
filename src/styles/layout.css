@@ -574,6 +574,50 @@ svg {
   }
 }
 
+/* hotkeys toast styling */
+.hotkeys-toast {
+  line-height: 1.4;
+
+  .hotkeys-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .hotkeys-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 12px;
+      align-items: center;
+      margin: 4px 0;
+    }
+
+    .keys {
+      display: inline-flex;
+      gap: 6px;
+
+      kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: color-mix(in oklab, var(--fg) 10%, transparent);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+    }
+
+    .desc {
+      opacity: 0.9;
+    }
+  }
+}
+
 /* label text hides on very small screens */
 .seg-label {
   display: none;

@@ -51,6 +51,7 @@ This app will be free and open source forever and is completely self hostable
   - Consistent, responsive fretboard geometry across any fret/string count
   - Validated numeric inputs for frets (friendly warnings on out-of-range values)
   - **Fullscreen** viewing mode
+  - **Hotkeys** with cheatsheet (press ?)
 
 - **Export & Print**
   - Export fretboard as **PNG** or **SVG** with any setting you desire
