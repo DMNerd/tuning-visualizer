@@ -35,6 +35,7 @@ import {
   FRETS_MAX,
   STR_FACTORY,
   FRETS_FACTORY,
+  getFactoryFrets,
 } from "@/lib/theory/constants";
 
 import {
@@ -78,7 +79,7 @@ export default function App() {
 
   // ----- Strings / Frets (via hooks) -----
   const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
-    useFretsTouched(FRETS_FACTORY);
+    useFretsTouched(getFactoryFrets(system.divisions));
 
   const { strings, setStrings, resetInstrumentPrefs } = useInstrumentPrefs({
     frets,
@@ -268,41 +269,60 @@ export default function App() {
   // ===== Quick Capo =====
   const [capoFret, setCapoFret] = useState(0);
 
-  // Merge capo with base per-string meta by advancing startFret
-  const effectiveStringMeta = useMemo(() => {
-    const out = [];
-    for (let i = 0; i < strings; i++) {
-      const base = Array.isArray(stringMeta)
-        ? stringMeta.find((m) => m.index === i) || {}
-        : {};
-      const baseStart = typeof base.startFret === "number" ? base.startFret : 0;
-      const startFret = Math.max(baseStart, capoFret);
-      if (startFret > 0 || base.greyBefore) {
-        out.push({
-          index: i,
-          ...base,
-          startFret,
-          greyBefore: true,
-        });
-      } else if (Object.keys(base).length) {
-        out.push({ index: i, ...base });
-      }
-    }
-    return out.length ? out : null;
-  }, [strings, stringMeta, capoFret]);
-
   const handleSetCapo = (f) => {
     setCapoFret((prev) => (prev === f ? 0 : f));
   };
+
+  const effectiveStringMeta = useMemo(() => {
+    // Fast paths
+    if (capoFret === 0) return stringMeta;
+    if (!strings || strings <= 0) return stringMeta;
+
+    const base = Array.isArray(stringMeta) ? stringMeta : [];
+    const byIx = new Map(base.map((m) => [m.index, m]));
+
+    const alreadyOk =
+      base.length > 0 &&
+      base.every((m) => {
+        const sf = typeof m.startFret === "number" ? m.startFret : 0;
+        return sf >= capoFret && (sf === 0 || m.greyBefore === true);
+      });
+
+    if (alreadyOk && base.length === strings) return stringMeta;
+
+    // Build the minimal updated meta
+    const out = [];
+    for (let i = 0; i < strings; i++) {
+      const m = byIx.get(i) || {};
+      const baseStart = typeof m.startFret === "number" ? m.startFret : 0;
+      const nextStart = Math.max(baseStart, capoFret);
+
+      // Only emit when something is non-default (keeps array compact)
+      if (nextStart > 0 || m.greyBefore) {
+        out.push({
+          index: i,
+          ...m,
+          startFret: nextStart,
+          // ensure everything before start is visibly greyed
+          greyBefore: true,
+        });
+      } else if (Object.keys(m).length) {
+        out.push({ index: i, ...m });
+      }
+    }
+
+    return out.length ? out : null;
+  }, [strings, stringMeta, capoFret]);
   // ======================
 
   // ===== Reset-to-factory handler =====
   const handleResetFactoryAll = () => {
-    resetInstrumentPrefs(STR_FACTORY, FRETS_FACTORY);
+    const factoryFrets = getFactoryFrets(system.divisions);
+    resetInstrumentPrefs(STR_FACTORY, factoryFrets);
     resetFactoryDefault();
     setPreset("Factory default");
     toast.success(
-      `Restored factory defaults (${STR_FACTORY} strings, ${FRETS_FACTORY} frets).`,
+      `Restored factory defaults (${STR_FACTORY} strings, ${factoryFrets} frets).`,
     );
   };
 

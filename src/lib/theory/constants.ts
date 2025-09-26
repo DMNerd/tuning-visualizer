@@ -25,7 +25,18 @@ export const FRETS_MIN = 12;
 export const FRETS_MAX = 30;
 
 export const STR_FACTORY = 6;
-export const FRETS_FACTORY = 22;
+export const FRETS_FACTORY = 24;
+
+export function getFactoryFrets(edo: number): number {
+  if (!Number.isFinite(edo) || edo <= 0) return FRETS_FACTORY;
+
+  if (edo === 12) return FRETS_FACTORY;
+  if (edo === 24) return FRETS_MIN;
+
+  const scaled = Math.round((FRETS_FACTORY * 12) / edo);
+
+  return Math.max(FRETS_MIN, Math.min(FRETS_MAX, scaled));
+}
 
 // ---------------- DRY preset definition model ----------------
 
