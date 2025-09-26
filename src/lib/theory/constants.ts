@@ -38,6 +38,24 @@ export function getFactoryFrets(edo: number): number {
   return Math.max(FRETS_MIN, Math.min(FRETS_MAX, scaled));
 }
 
+// ---------------- App-wide defaults ----------------
+export const SYSTEM_DEFAULT = "12-TET";
+export const ROOT_DEFAULT = "C";
+export const CAPO_DEFAULT = 0;
+
+// Display defaults kept in one place
+export const DISPLAY_DEFAULTS = {
+  show: "names" as "names" | "degrees" | "intervals" | "fret" | "off",
+  showOpen: true,
+  showFretNums: true,
+  dotSize: 14,
+  lefty: false,
+  openOnlyInScale: false,
+  colorByDegree: false,
+  accidental: "sharp" as "sharp" | "flat",
+  microLabelStyle: "letters" as "letters" | "unicode" | "none",
+};
+
 // ---------------- DRY preset definition model ----------------
 
 type CommonPresets = Readonly<

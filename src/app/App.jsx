@@ -1,5 +1,11 @@
 // App.jsx
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   FiMaximize,
   FiMinimize,
@@ -36,13 +42,13 @@ import {
   STR_FACTORY,
   FRETS_FACTORY,
   getFactoryFrets,
+  SYSTEM_DEFAULT,
+  ROOT_DEFAULT,
+  CAPO_DEFAULT,
+  DISPLAY_DEFAULTS,
 } from "@/lib/theory/constants";
 
-import {
-  DEFAULT_TUNINGS,
-  PRESET_TUNINGS,
-  DEFAULT_PRESET_NAME,
-} from "@/lib/theory/presetState";
+import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/presetState";
 
 // existing UI atoms
 import PanelHeader from "@/components/UI/PanelHeader";
@@ -74,7 +80,7 @@ import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
 export default function App() {
   // ----- System selection -----
-  const [systemId, setSystemId] = useState("12-TET");
+  const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
   const system = TUNINGS[systemId];
 
   // ----- Strings / Frets (via hooks) -----
@@ -95,20 +101,10 @@ export default function App() {
   });
 
   // ----- Root & accidental -----
-  const [root, setRoot] = useState("C");
+  const [root, setRoot] = useState(ROOT_DEFAULT);
 
   // ----- Display options (persistent) -----
-  const [displayPrefs, setDisplayPrefs] = useDisplayPrefs({
-    show: "names",
-    showOpen: true,
-    showFretNums: true,
-    dotSize: 14,
-    lefty: false,
-    openOnlyInScale: false,
-    colorByDegree: false,
-    accidental: "sharp",
-    microLabelStyle: "letters",
-  });
+  const [displayPrefs, setDisplayPrefs] = useDisplayPrefs(DISPLAY_DEFAULTS);
 
   const {
     show,
@@ -242,6 +238,13 @@ export default function App() {
 
   const labelValues = useMemo(() => LABEL_OPTIONS.map((o) => o.value), []);
 
+  const showCheatsheet = useCallback(() => {
+    toast(() => <HotkeysHelpToast />, {
+      id: "hotkeys-help",
+      duration: 6000,
+    });
+  }, []);
+
   useHotkeys({
     toggleFs,
     setDisplayPrefs,
@@ -252,12 +255,11 @@ export default function App() {
     strings,
     frets,
     labelValues,
-    onShowCheatsheet: () => {
-      toast(() => <HotkeysHelpToast />, {
-        id: "hotkeys-help",
-        duration: 6000,
-      });
-    },
+    onShowCheatsheet: showCheatsheet,
+    minStrings: STR_MIN,
+    maxStrings: STR_MAX,
+    minFrets: FRETS_MIN,
+    maxFrets: FRETS_MAX,
   });
 
   // Keep preset label synced with presence of a saved default
@@ -267,14 +269,13 @@ export default function App() {
   }, [systemId, strings, savedExists, setPreset]);
 
   // ===== Quick Capo =====
-  const [capoFret, setCapoFret] = useState(0);
+  const [capoFret, setCapoFret] = useState(CAPO_DEFAULT);
 
   const handleSetCapo = (f) => {
-    setCapoFret((prev) => (prev === f ? 0 : f));
+    setCapoFret((prev) => (prev === f ? CAPO_DEFAULT : f));
   };
 
   const effectiveStringMeta = useMemo(() => {
-    // Fast paths
     if (capoFret === 0) return stringMeta;
     if (!strings || strings <= 0) return stringMeta;
 
@@ -290,20 +291,17 @@ export default function App() {
 
     if (alreadyOk && base.length === strings) return stringMeta;
 
-    // Build the minimal updated meta
     const out = [];
     for (let i = 0; i < strings; i++) {
       const m = byIx.get(i) || {};
       const baseStart = typeof m.startFret === "number" ? m.startFret : 0;
       const nextStart = Math.max(baseStart, capoFret);
 
-      // Only emit when something is non-default (keeps array compact)
       if (nextStart > 0 || m.greyBefore) {
         out.push({
           index: i,
           ...m,
           startFret: nextStart,
-          // ensure everything before start is visibly greyed
           greyBefore: true,
         });
       } else if (Object.keys(m).length) {
