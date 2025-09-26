@@ -49,7 +49,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   // Load from storage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS_V2);
+    const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS);
     if (!raw) return;
     const arr = safeParse(raw);
     if (arr.length) setCustomTunings(arr);
@@ -60,7 +60,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
-        STORAGE_KEYS.CUSTOM_TUNINGS_V2,
+        STORAGE_KEYS.CUSTOM_TUNINGS,
         JSON.stringify(customTunings),
       );
     } catch {
