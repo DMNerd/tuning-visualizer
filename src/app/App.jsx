@@ -139,7 +139,6 @@ export default function App() {
     presetMetaMap,
     presetNames,
     saveDefault,
-    loadSavedDefault,
     resetFactoryDefault,
     savedExists,
     defaultForCount,
@@ -365,9 +364,7 @@ export default function App() {
           presetNames={mergedPresetNames}
           selectedPreset={selectedPreset}
           setSelectedPreset={setPreset}
-          savedExists={savedExists}
           handleSaveDefault={saveDefault}
-          handleLoadSavedDefault={loadSavedDefault}
           handleResetFactoryDefault={handleResetFactoryAll}
           systemId={systemId}
         />
