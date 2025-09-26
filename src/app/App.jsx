@@ -67,22 +67,14 @@ import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
-// keys 
-import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
-
 export default function App() {
   // ----- System selection -----
   const [systemId, setSystemId] = useState("12-TET");
   const system = TUNINGS[systemId];
 
   // ----- Strings / Frets (via hooks) -----
-  const {
-    frets,
-    setFrets,
-    fretsTouched,
-    setFretsUI,
-    setFretsTouched,
-  } = useFretsTouched(FRETS_FACTORY);
+  const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
+    useFretsTouched(FRETS_FACTORY);
 
   const { strings, setStrings, resetInstrumentPrefs } = useInstrumentPrefs({
     frets,

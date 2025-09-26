@@ -16,10 +16,7 @@ function readStore() {
 
 function writeStore(obj) {
   try {
-    localStorage.setItem(
-      STORAGE_KEYS.USER_DEFAULT_TUNING,
-      JSON.stringify(obj),
-    );
+    localStorage.setItem(STORAGE_KEYS.USER_DEFAULT_TUNING, JSON.stringify(obj));
   } catch {
     // ignore storage errors (private mode, quota, etc.)
   }
