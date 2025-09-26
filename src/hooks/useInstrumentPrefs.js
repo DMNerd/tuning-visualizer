@@ -1,4 +1,3 @@
-// src/hooks/useInstrumentPrefs.js
 import { useEffect, useState } from "react";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 

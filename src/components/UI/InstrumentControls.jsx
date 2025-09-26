@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import Section from "@/components/UI/Section";
+import { STR_MIN, STR_MAX, FRETS_MIN, FRETS_MAX } from "@/lib/theory/constants";
 
 function clamp(n, min, max) {
   const v = Number.isFinite(n) ? n : min;
   return Math.max(min, Math.min(max, v));
 }
-
-const STR_MIN = 4;
-const STR_MAX = 8;
-const FRETS_MIN = 12;
-const FRETS_MAX = 30;
 
 export default function InstrumentControls({
   strings,
@@ -22,9 +18,7 @@ export default function InstrumentControls({
   presetNames,
   selectedPreset,
   setSelectedPreset,
-  savedExists,
   handleSaveDefault,
-  handleLoadSavedDefault,
   handleResetFactoryDefault,
   systemId,
 }) {
@@ -36,7 +30,7 @@ export default function InstrumentControls({
   const [stringsErr, setStringsErr] = useState("");
   const [fretsErr, setFretsErr] = useState("");
 
-  // Keep local text in sync if parent changes (e.g., preset, system switch)
+  // Keep local text in sync if parent changes
   useEffect(() => setStringsText(String(strings)), [strings]);
   useEffect(() => setFretsText(String(frets)), [frets]);
 
@@ -225,14 +219,6 @@ export default function InstrumentControls({
         >
           <button className="btn" onClick={handleSaveDefault}>
             Save as default ({systemId}, {strings}-string)
-          </button>
-          <button
-            className="btn"
-            onClick={handleLoadSavedDefault}
-            disabled={!savedExists}
-            title={savedExists ? "" : "No saved default for this system/count"}
-          >
-            Load saved
           </button>
           <button className="btn" onClick={handleResetFactoryDefault}>
             Reset to factory default
