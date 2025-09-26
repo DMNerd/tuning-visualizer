@@ -1,5 +1,5 @@
-// useTheme.js
 import { useEffect, useMemo, useState } from "react";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 /**
  * Theme hook with persistence and <html data-theme="{light|dark}"> sync.
@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
  *   const [theme, setTheme, effectiveTheme] = useTheme(); // theme can be "auto"
  *   // effectiveTheme is "light" | "dark" (what's actually applied)
  */
-export function useTheme(key = "fb.theme") {
+export function useTheme(key = STORAGE_KEYS.THEME) {
   // Detect support once
   const media = useMemo(() => {
     try {

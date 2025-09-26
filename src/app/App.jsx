@@ -31,6 +31,12 @@ import {
   DEFAULT_TUNINGS,
   PRESET_TUNINGS,
   PRESET_TUNING_META,
+  STR_MIN,
+  STR_MAX,
+  FRETS_MIN,
+  FRETS_MAX,
+  STR_FACTORY,
+  FRETS_FACTORY,
 } from "@/lib/theory/constants";
 
 // existing UI atoms
@@ -50,6 +56,7 @@ import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
+import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
 import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
 import { useFretsTouched } from "@/hooks/useFretsTouched";
@@ -60,14 +67,35 @@ import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
+// keys 
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+
 export default function App() {
   // ----- System selection -----
   const [systemId, setSystemId] = useState("12-TET");
   const system = TUNINGS[systemId];
 
-  // ----- Strings / Frets (via hook) -----
-  const { frets, setFrets, fretsTouched, setFretsUI } = useFretsTouched(22);
-  const [strings, setStrings] = useState(6);
+  // ----- Strings / Frets (via hooks) -----
+  const {
+    frets,
+    setFrets,
+    fretsTouched,
+    setFretsUI,
+    setFretsTouched,
+  } = useFretsTouched(FRETS_FACTORY);
+
+  const { strings, setStrings, resetInstrumentPrefs } = useInstrumentPrefs({
+    frets,
+    fretsTouched,
+    setFrets,
+    setFretsUI,
+    setFretsTouched,
+    STR_MIN,
+    STR_MAX,
+    FRETS_MIN,
+    FRETS_MAX,
+    STR_FACTORY,
+  });
 
   // ----- Root & accidental -----
   const [root, setRoot] = useState("C");
@@ -131,16 +159,14 @@ export default function App() {
     PRESET_TUNING_META,
   });
 
-  // Per-string metadata (e.g., short banjo string)
+  // Per-string metadata
   const [stringMeta, setStringMeta] = useState(null);
 
-  // ----- System note names (via hook) -----
+  // ----- System note names -----
   const { pcFromName, sysNames } = useSystemNoteNames(system, accidental);
-
-  // Root index for fretboard
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
 
-  // ----- Chords (via hook) -----
+  // ----- Chords -----
   const {
     chordRoot,
     setChordRoot,
@@ -169,10 +195,10 @@ export default function App() {
     setFretsRaw: setFrets,
   });
 
-  // ----- Export filename base (via hook) -----
+  // ----- Export filename base -----
   const fileBase = useFileBase({ root, scale, accidental, strings });
 
-  // ----- Accidental respelling (via hook) -----
+  // ----- Accidental respelling -----
   useAccidentalRespell({
     system,
     accidental,
@@ -188,7 +214,7 @@ export default function App() {
     defaultForCount,
   });
 
-  // ----- Tuning IO (persist imported tunings + exporter fns) -----
+  // ----- Tuning IO -----
   const {
     customTunings,
     getCurrentTuningPack,
@@ -200,7 +226,7 @@ export default function App() {
     TUNINGS,
   });
 
-  // ----- Merge presets + manage selection (filter customs by current EDO) -----
+  // ----- Merge presets -----
   const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
     useMergedPresets({
       presetMap,
@@ -238,13 +264,21 @@ export default function App() {
     },
   });
 
+  // Keep preset label synced with presence of a saved default
   useEffect(() => {
-    if (savedExists) {
-      setPreset("Saved default");
-    } else {
-      setPreset("Factory default");
-    }
+    if (savedExists) setPreset("Saved default");
+    else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
+
+  // ===== Reset-to-factory handler (now calls the hook’s reset) =====
+  const handleResetFactoryAll = () => {
+    resetInstrumentPrefs(STR_FACTORY, FRETS_FACTORY);
+    resetFactoryDefault();
+    setPreset("Factory default");
+    toast.success(
+      `Restored factory defaults (${STR_FACTORY} strings, ${FRETS_FACTORY} frets).`,
+    );
+  };
 
   return (
     <div className="page">
@@ -342,7 +376,7 @@ export default function App() {
           savedExists={savedExists}
           handleSaveDefault={saveDefault}
           handleLoadSavedDefault={loadSavedDefault}
-          handleResetFactoryDefault={resetFactoryDefault}
+          handleResetFactoryDefault={handleResetFactoryAll}
           systemId={systemId}
         />
 
@@ -387,7 +421,6 @@ export default function App() {
         />
       </footer>
 
-      {/* Toasts: styled with your CSS variables for perfect cohesion */}
       <Toaster
         position="top-right"
         gutter={8}

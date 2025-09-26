@@ -1,6 +1,8 @@
+// hooks/useTuningIO.js
 import { useState, useCallback, useEffect } from "react";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 /* =========================
    Valibot Schemas
@@ -35,9 +37,6 @@ const TuningPackArraySchema = v.array(TuningPackSchema);
 export function useTuningIO({ systemId, strings, TUNINGS }) {
   const [customTunings, setCustomTunings] = useState([]);
 
-  // ---- persistence (localStorage) ----
-  const STORAGE_KEY = "gv.customTunings.v2";
-
   const safeParse = (s) => {
     try {
       const v = JSON.parse(s);
@@ -50,7 +49,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   // Load from storage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS_V2);
     if (!raw) return;
     const arr = safeParse(raw);
     if (arr.length) setCustomTunings(arr);
@@ -60,7 +59,10 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(customTunings));
+      window.localStorage.setItem(
+        STORAGE_KEYS.CUSTOM_TUNINGS_V2,
+        JSON.stringify(customTunings),
+      );
     } catch {
       // ignore quota/serialization errors
     }

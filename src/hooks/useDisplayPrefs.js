@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-
-const STORAGE_KEY = "tv.display-prefs";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function readStore() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.DISPLAY_PREFS);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -13,7 +12,7 @@ function readStore() {
 
 function writeStore(obj) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    localStorage.setItem(STORAGE_KEYS.DISPLAY_PREFS, JSON.stringify(obj));
   } catch {
     // ignore quota/security errors
   }

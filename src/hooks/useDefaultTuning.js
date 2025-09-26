@@ -1,7 +1,5 @@
-// hooks/useDefaultTuning.js
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-const STORAGE_KEY = "tv.user-default-tuning";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
@@ -9,7 +7,7 @@ function keyOf(systemId, strings) {
 
 function readStore() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -18,7 +16,10 @@ function readStore() {
 
 function writeStore(obj) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    localStorage.setItem(
+      STORAGE_KEYS.USER_DEFAULT_TUNING,
+      JSON.stringify(obj),
+    );
   } catch {
     // ignore storage errors (private mode, quota, etc.)
   }

@@ -32,6 +32,16 @@ export type PresetTunings = Readonly<
 
 // ---------------- Data ----------------
 
+// Instrument bounds
+export const STR_MIN = 4;
+export const STR_MAX = 8;
+
+export const FRETS_MIN = 12;
+export const FRETS_MAX = 30;
+
+export const STR_FACTORY = 6;
+export const FRETS_FACTORY = 22;
+
 /**
  * Named (built-in) presets per temperament & string count.
  * Keys are human-friendly names shown in the UI.
