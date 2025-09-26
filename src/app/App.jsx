@@ -76,6 +76,7 @@ import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
 import { useChordLogic } from "@/hooks/useChordLogic";
 import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
+import { useCapo } from "@/hooks/useCapo";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 
 export default function App() {
@@ -268,57 +269,17 @@ export default function App() {
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
 
-  // ===== Quick Capo =====
-  const [capoFret, setCapoFret] = useState(CAPO_DEFAULT);
+  const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
+    strings,
+    stringMeta,
+  });
 
-  const handleSetCapo = (f) => {
-    setCapoFret((prev) => (prev === f ? CAPO_DEFAULT : f));
-  };
-
-  const effectiveStringMeta = useMemo(() => {
-    if (capoFret === 0) return stringMeta;
-    if (!strings || strings <= 0) return stringMeta;
-
-    const base = Array.isArray(stringMeta) ? stringMeta : [];
-    const byIx = new Map(base.map((m) => [m.index, m]));
-
-    const alreadyOk =
-      base.length > 0 &&
-      base.every((m) => {
-        const sf = typeof m.startFret === "number" ? m.startFret : 0;
-        return sf >= capoFret && (sf === 0 || m.greyBefore === true);
-      });
-
-    if (alreadyOk && base.length === strings) return stringMeta;
-
-    const out = [];
-    for (let i = 0; i < strings; i++) {
-      const m = byIx.get(i) || {};
-      const baseStart = typeof m.startFret === "number" ? m.startFret : 0;
-      const nextStart = Math.max(baseStart, capoFret);
-
-      if (nextStart > 0 || m.greyBefore) {
-        out.push({
-          index: i,
-          ...m,
-          startFret: nextStart,
-          greyBefore: true,
-        });
-      } else if (Object.keys(m).length) {
-        out.push({ index: i, ...m });
-      }
-    }
-
-    return out.length ? out : null;
-  }, [strings, stringMeta, capoFret]);
-  // ======================
-
-  // ===== Reset-to-factory handler =====
   const handleResetFactoryAll = () => {
     const factoryFrets = getFactoryFrets(system.divisions);
     resetInstrumentPrefs(STR_FACTORY, factoryFrets);
     resetFactoryDefault();
     setPreset("Factory default");
+    setCapoFret(CAPO_DEFAULT);
     toast.success(
       `Restored factory defaults (${STR_FACTORY} strings, ${factoryFrets} frets).`,
     );
@@ -373,7 +334,7 @@ export default function App() {
               hideNonChord={hideNonChord}
               stringMeta={effectiveStringMeta}
               capoFret={capoFret}
-              onSetCapo={handleSetCapo}
+              onSetCapo={toggleCapoAt}
             />
           </div>
         </div>
