@@ -19,19 +19,23 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx = 0,
     intervals = [0, 2, 4, 5, 7, 9, 11],
     accidental = "sharp",
-    microLabelStyle = MICRO_LABEL_STYLES.Letters, // NEW: how micro-fret labels are drawn
-    show = "names", // 'names' | 'degrees' | 'intervals' | 'fret' | 'off'
+    microLabelStyle = MICRO_LABEL_STYLES.Letters,
+    show = "names",
     showOpen = true,
     showFretNums = true,
     dotSize = 14,
     lefty = false,
-    system, // { divisions, nameForPc(pc, accidental?) }
-    chordPCs = null, // Set<number> | null
-    chordRootPc = null, // number | null
+    system,
+    chordPCs = null,
+    chordRootPc = null,
     openOnlyInScale = false,
     colorByDegree = false,
     hideNonChord = false,
-    stringMeta = null, // per-string metadata (e.g., short 5th)
+    stringMeta = null,
+
+    // quick capo
+    capoFret = 0,
+    onSetCapo = () => {},
   },
   ref,
 ) {
@@ -66,7 +70,6 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  // const { pcForName, nameForPc } = usePitchMapping(system, accidental);
   const { pcFromName } = useSystemNoteNames(system, accidental);
   const pcForName = pcFromName;
   const nameForPc = (pc) => system.nameForPc(pc, accidental);
@@ -111,7 +114,6 @@ const Fretboard = forwardRef(function Fretboard(
   const getMetaFor = (s) =>
     Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
 
-  // Options object reused for *all* micro-fret labels (fret numbers and "fret" mode)
   const microLabelOpts = { microStyle: microLabelStyle, accidental };
 
   return (
@@ -132,10 +134,10 @@ const Fretboard = forwardRef(function Fretboard(
           fill="var(--panel)"
         />
 
-        {/* nut */}
+        {/* nut — moved to capo position */}
         <rect
           className="nut"
-          x={padLeft}
+          x={wireX(capoFret)}
           y={padTop - 8}
           width={nutW}
           height={height - padTop - padBottom + 16}
@@ -174,9 +176,8 @@ const Fretboard = forwardRef(function Fretboard(
         {/* frets */}
         {Array.from({ length: frets + 1 }).map((_, f) => {
           const isOctave = f % system.divisions === 0;
-          const isStandard = (f * 12) % system.divisions === 0; // hits 12-TET boundary
+          const isStandard = (f * 12) % system.divisions === 0;
           const isMicro = !isStandard;
-
           return (
             <line
               key={`fret-${f}`}
@@ -196,7 +197,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* center inlays (single) */}
+        {/* center inlays */}
         {inlaySingles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -213,7 +214,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* double inlays at octaves */}
+        {/* double inlays */}
         {inlayDoubles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -230,12 +231,10 @@ const Fretboard = forwardRef(function Fretboard(
 
         {/* note circles */}
         {tuning.map((openName, s) => {
-          const openPc = pcForName(openName);
           const sf = startFretFor(s);
+          const openPc = (pcForName(openName) + sf) % system.divisions;
           return Array.from({ length: frets + 1 }).map((_, f) => {
             const isOpen = f === 0;
-
-            // Open is always visible candidate; for short strings, globals 1..sf are skipped.
             const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
             if (!isPlayable) return null;
 
@@ -302,8 +301,8 @@ const Fretboard = forwardRef(function Fretboard(
 
       {/* note labels (kept out of the mirrored group; use displayX for lefty) */}
       {tuning.map((openName, s) => {
-        const openPc = pcForName(openName);
         const sf = startFretFor(s);
+        const openPc = (pcForName(openName) + sf) % system.divisions;
         return Array.from({ length: frets + 1 }).map((_, f) => {
           const isOpen = f === 0;
           const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
@@ -331,7 +330,6 @@ const Fretboard = forwardRef(function Fretboard(
           const cy = yForString(s);
           const isRoot = pc === rootIx;
 
-          // When "fret" mode is active, open uses the string's start fret number.
           const globalFretForLabel = isOpen ? sf : f;
           const raw = labelFor(pc, f);
           const label =
@@ -359,32 +357,34 @@ const Fretboard = forwardRef(function Fretboard(
         });
       })}
 
-      {/* fret numbers */}
+      {/* fret numbers — clickable to set capo */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
           const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
           const topY = padTop - FRETNUM_TOP_GAP;
-
           const isStandard = (f * 12) % system.divisions === 0;
 
-          return isStandard ? (
+          const commonProps = {
+            role: "button",
+            tabIndex: 0,
+            onClick: () => onSetCapo(f),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSetCapo(f);
+              }
+            },
+            className: `fretNum ${f === capoFret ? "capo" : ""} ${isStandard ? "" : "microNum"}`,
+          };
+
+          return (
             <text
               key={`num-${f}`}
-              className="fretNum"
               x={displayX(betweenFretsX(f))}
-              y={bottomY}
+              y={isStandard ? bottomY : topY}
               textAnchor="middle"
-            >
-              {labelNum}
-            </text>
-          ) : (
-            <text
-              key={`num-${f}`}
-              className="fretNum microNum"
-              x={displayX(betweenFretsX(f))}
-              y={topY}
-              textAnchor="middle"
+              {...commonProps}
             >
               {labelNum}
             </text>

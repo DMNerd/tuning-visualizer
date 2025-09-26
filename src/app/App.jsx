@@ -154,7 +154,7 @@ export default function App() {
     PRESET_TUNING_META,
   });
 
-  // Per-string metadata
+  // Per-string metadata (base)
   const [stringMeta, setStringMeta] = useState(null);
 
   // ----- System note names -----
@@ -265,7 +265,38 @@ export default function App() {
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
 
-  // ===== Reset-to-factory handler (now calls the hook’s reset) =====
+  // ===== Quick Capo =====
+  const [capoFret, setCapoFret] = useState(0);
+
+  // Merge capo with base per-string meta by advancing startFret
+  const effectiveStringMeta = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < strings; i++) {
+      const base = Array.isArray(stringMeta)
+        ? stringMeta.find((m) => m.index === i) || {}
+        : {};
+      const baseStart = typeof base.startFret === "number" ? base.startFret : 0;
+      const startFret = Math.max(baseStart, capoFret);
+      if (startFret > 0 || base.greyBefore) {
+        out.push({
+          index: i,
+          ...base,
+          startFret,
+          greyBefore: true,
+        });
+      } else if (Object.keys(base).length) {
+        out.push({ index: i, ...base });
+      }
+    }
+    return out.length ? out : null;
+  }, [strings, stringMeta, capoFret]);
+
+  const handleSetCapo = (f) => {
+    setCapoFret((prev) => (prev === f ? 0 : f));
+  };
+  // ======================
+
+  // ===== Reset-to-factory handler =====
   const handleResetFactoryAll = () => {
     resetInstrumentPrefs(STR_FACTORY, FRETS_FACTORY);
     resetFactoryDefault();
@@ -322,7 +353,9 @@ export default function App() {
               openOnlyInScale={openOnlyInScale}
               colorByDegree={colorByDegree}
               hideNonChord={hideNonChord}
-              stringMeta={stringMeta}
+              stringMeta={effectiveStringMeta}
+              capoFret={capoFret}
+              onSetCapo={handleSetCapo}
             />
           </div>
         </div>
