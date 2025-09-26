@@ -1,6 +1,7 @@
+import React from "react";
 import Section from "@/components/UI/Section";
 
-export default function ScaleControls({
+function ScaleControls({
   root,
   setRoot,
   scale,
@@ -43,3 +44,5 @@ export default function ScaleControls({
     </Section>
   );
 }
+
+export default React.memo(ScaleControls);

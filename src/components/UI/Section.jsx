@@ -2,7 +2,7 @@ import React from "react";
 import clsx from "clsx";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 
-export default function Section({
+function Section({
   title,
   children,
   size = "md",
@@ -76,3 +76,5 @@ export default function Section({
     </section>
   );
 }
+
+export default React.memo(Section);

@@ -5,6 +5,8 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  Suspense,
+  lazy,
 } from "react";
 import {
   FiMaximize,
@@ -27,8 +29,10 @@ import {
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
 
-// hotkeys
-import HotkeysHelpToast from "@/components/UI/HotkeysCheatsheet";
+// hotkeys (lazy for smaller initial bundle)
+const HotkeysHelpToast = lazy(
+  () => import("@/components/UI/HotkeysCheatsheet"),
+);
 
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -40,7 +44,6 @@ import {
   FRETS_MIN,
   FRETS_MAX,
   STR_FACTORY,
-  FRETS_FACTORY,
   getFactoryFrets,
   SYSTEM_DEFAULT,
   ROOT_DEFAULT,
@@ -119,8 +122,43 @@ export default function App() {
     microLabelStyle,
   } = displayPrefs;
 
-  const updatePref = (key) => (val) =>
-    setDisplayPrefs((prev) => ({ ...prev, [key]: val }));
+  // Stable setters so memoized children don't re-render unnecessarily
+  const setShow = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, show: v })),
+    [setDisplayPrefs],
+  );
+  const setShowOpen = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, showOpen: v })),
+    [setDisplayPrefs],
+  );
+  const setShowFretNums = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, showFretNums: v })),
+    [setDisplayPrefs],
+  );
+  const setDotSize = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, dotSize: v })),
+    [setDisplayPrefs],
+  );
+  const setAccidental = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, accidental: v })),
+    [setDisplayPrefs],
+  );
+  const setMicroLabelStyle = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, microLabelStyle: v })),
+    [setDisplayPrefs],
+  );
+  const setOpenOnlyInScale = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, openOnlyInScale: v })),
+    [setDisplayPrefs],
+  );
+  const setColorByDegree = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, colorByDegree: v })),
+    [setDisplayPrefs],
+  );
+  const setLefty = useCallback(
+    (v) => setDisplayPrefs((p) => ({ ...p, lefty: v })),
+    [setDisplayPrefs],
+  );
 
   const [theme, setTheme] = useTheme();
 
@@ -190,6 +228,7 @@ export default function App() {
 
   // ----- Export filename base -----
   const fileBase = useFileBase({ root, scale, accidental, strings });
+  const fileBaseSlug = useMemo(() => slug(fileBase), [fileBase]);
 
   // ----- Accidental respelling -----
   useAccidentalRespell({
@@ -240,10 +279,14 @@ export default function App() {
   const labelValues = useMemo(() => LABEL_OPTIONS.map((o) => o.value), []);
 
   const showCheatsheet = useCallback(() => {
-    toast(() => <HotkeysHelpToast />, {
-      id: "hotkeys-help",
-      duration: 6000,
-    });
+    toast(
+      () => (
+        <Suspense fallback={<div style={{ padding: 8 }}>Loading…</div>}>
+          <HotkeysHelpToast />
+        </Suspense>
+      ),
+      { id: "hotkeys-help", duration: 6000 },
+    );
   }, []);
 
   useHotkeys({
@@ -269,12 +312,14 @@ export default function App() {
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
 
+  // ----- Capo (extracted hook) -----
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
     strings,
     stringMeta,
   });
 
-  const handleResetFactoryAll = () => {
+  // ----- Reset-to-factory handler -----
+  const handleResetFactoryAll = useCallback(() => {
     const factoryFrets = getFactoryFrets(system.divisions);
     resetInstrumentPrefs(STR_FACTORY, factoryFrets);
     resetFactoryDefault();
@@ -283,7 +328,26 @@ export default function App() {
     toast.success(
       `Restored factory defaults (${STR_FACTORY} strings, ${factoryFrets} frets).`,
     );
-  };
+  }, [
+    system.divisions,
+    resetInstrumentPrefs,
+    resetFactoryDefault,
+    setPreset,
+    setCapoFret,
+  ]);
+
+  // Stable export header builder
+  const buildHeader = useCallback(
+    () => ({
+      system: systemId,
+      tuning,
+      scale,
+      chordEnabled: showChord,
+      chordRoot,
+      chordType,
+    }),
+    [systemId, tuning, scale, showChord, chordRoot, chordType],
+  );
 
   return (
     <div className="page">
@@ -387,39 +451,32 @@ export default function App() {
 
         <DisplayControls
           show={show}
-          setShow={updatePref("show")}
+          setShow={setShow}
           showOpen={showOpen}
-          setShowOpen={updatePref("showOpen")}
+          setShowOpen={setShowOpen}
           showFretNums={showFretNums}
-          setShowFretNums={updatePref("showFretNums")}
+          setShowFretNums={setShowFretNums}
           dotSize={dotSize}
-          setDotSize={updatePref("dotSize")}
+          setDotSize={setDotSize}
           accidental={accidental}
-          setAccidental={updatePref("accidental")}
+          setAccidental={setAccidental}
           microLabelStyle={microLabelStyle}
-          setMicroLabelStyle={updatePref("microLabelStyle")}
+          setMicroLabelStyle={setMicroLabelStyle}
           openOnlyInScale={openOnlyInScale}
-          setOpenOnlyInScale={updatePref("openOnlyInScale")}
+          setOpenOnlyInScale={setOpenOnlyInScale}
           colorByDegree={colorByDegree}
-          setColorByDegree={updatePref("colorByDegree")}
+          setColorByDegree={setColorByDegree}
           lefty={lefty}
-          setLefty={updatePref("lefty")}
+          setLefty={setLefty}
         />
 
         <ExportControls
           boardRef={boardRef}
-          fileBase={slug(fileBase)}
+          fileBase={fileBaseSlug}
           downloadPNG={downloadPNG}
           downloadSVG={downloadSVG}
           printFretboard={printFretboard}
-          buildHeader={() => ({
-            system: systemId,
-            tuning: tuning,
-            scale: scale,
-            chordEnabled: showChord,
-            chordRoot: chordRoot,
-            chordType: chordType,
-          })}
+          buildHeader={buildHeader}
           getCurrentTuningPack={() => getCurrentTuningPack(tuning, stringMeta)}
           getAllCustomTunings={getAllCustomTunings}
           onImportTunings={onImportTunings}

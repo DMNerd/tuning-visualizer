@@ -1,7 +1,7 @@
 // src/components/UI/HotkeysHelpToast.jsx
 import React from "react";
 
-export default function HotkeysHelpToast() {
+function HotkeysHelpToast() {
   const rows = [
     ["f", "fullscreen"],
     ["?", "show this help"],
@@ -39,3 +39,5 @@ export default function HotkeysHelpToast() {
     </div>
   );
 }
+
+export default React.memo(HotkeysHelpToast);

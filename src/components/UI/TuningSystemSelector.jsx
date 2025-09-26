@@ -1,10 +1,7 @@
+import React from "react";
 import Section from "@/components/UI/Section";
 
-export default function TuningSystemSelector({
-  systemId,
-  setSystemId,
-  systems,
-}) {
+function TuningSystemSelector({ systemId, setSystemId, systems }) {
   return (
     <Section title="Tuning System">
       <div className="field">
@@ -25,3 +22,5 @@ export default function TuningSystemSelector({
     </Section>
   );
 }
+
+export default React.memo(TuningSystemSelector);

@@ -1,9 +1,9 @@
 // src/components/UI/ExportControls.jsx
-import { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Section from "@/components/UI/Section";
 import { toast } from "react-hot-toast";
 
-export default function ExportControls({
+function ExportControls({
   boardRef,
   fileBase,
   downloadPNG,
@@ -185,3 +185,5 @@ export default function ExportControls({
     </Section>
   );
 }
+
+export default React.memo(ExportControls);

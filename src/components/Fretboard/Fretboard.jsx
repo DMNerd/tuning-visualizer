@@ -32,8 +32,6 @@ const Fretboard = forwardRef(function Fretboard(
     colorByDegree = false,
     hideNonChord = false,
     stringMeta = null,
-
-    // quick capo
     capoFret = 0,
     onSetCapo = () => {},
   },
@@ -394,4 +392,65 @@ const Fretboard = forwardRef(function Fretboard(
   );
 });
 
-export default Fretboard;
+/* =========================
+   Custom memo comparator
+   - Primitives compared by ===
+   - Arrays shallow-compared
+   - Sets shallow-compared
+   - stringMeta compared shallowly by item keys/values
+========================= */
+
+function shallowEqArray(a, b) {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+function shallowEqSet(a, b) {
+  if (a === b) return true;
+  if (!a || !b || a.size !== b.size) return false;
+  for (const v of a) if (!b.has(v)) return false;
+  return true;
+}
+
+function shallowEqArrayObj(a, b) {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i],
+      y = b[i];
+    if (!x || !y) return false;
+    const keys = new Set([...Object.keys(x), ...Object.keys(y)]);
+    for (const k of keys) if (x[k] !== y[k]) return false;
+  }
+  return true;
+}
+
+function propsAreEqual(prev, next) {
+  return (
+    prev.strings === next.strings &&
+    prev.frets === next.frets &&
+    prev.rootIx === next.rootIx &&
+    prev.accidental === next.accidental &&
+    prev.microLabelStyle === next.microLabelStyle &&
+    prev.show === next.show &&
+    prev.showOpen === next.showOpen &&
+    prev.showFretNums === next.showFretNums &&
+    prev.dotSize === next.dotSize &&
+    prev.lefty === next.lefty &&
+    prev.openOnlyInScale === next.openOnlyInScale &&
+    prev.colorByDegree === next.colorByDegree &&
+    prev.hideNonChord === next.hideNonChord &&
+    prev.capoFret === next.capoFret &&
+    prev.system === next.system && // assumes stable identity from caller
+    shallowEqArray(prev.tuning, next.tuning) &&
+    shallowEqArray(prev.intervals, next.intervals) &&
+    (prev.chordPCs === next.chordPCs ||
+      (prev.chordPCs && next.chordPCs && shallowEqSet(prev.chordPCs, next.chordPCs))) &&
+    (prev.stringMeta === next.stringMeta ||
+      (prev.stringMeta && next.stringMeta && shallowEqArrayObj(prev.stringMeta, next.stringMeta)))
+  );
+}
+
+export default React.memo(Fretboard, propsAreEqual);

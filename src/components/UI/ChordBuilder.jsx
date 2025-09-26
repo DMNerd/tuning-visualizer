@@ -1,7 +1,8 @@
+import React from "react";
 import Section from "@/components/UI/Section";
 import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
 
-export default function ChordBuilder({
+function ChordBuilder({
   root,
   onRootChange,
   sysNames,
@@ -86,3 +87,5 @@ export default function ChordBuilder({
     </Section>
   );
 }
+
+export default React.memo(ChordBuilder);

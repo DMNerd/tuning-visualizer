@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Section from "@/components/UI/Section";
 import { STR_MIN, STR_MAX, FRETS_MIN, FRETS_MAX } from "@/lib/theory/constants";
 
@@ -7,7 +7,7 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
-export default function InstrumentControls({
+function InstrumentControls({
   strings,
   frets,
   setFrets, // pass setFretsUI from App to mark 'touched'
@@ -228,3 +228,5 @@ export default function InstrumentControls({
     </Section>
   );
 }
+
+export default React.memo(InstrumentControls);

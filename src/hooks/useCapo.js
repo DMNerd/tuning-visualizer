@@ -1,4 +1,3 @@
-// src/hooks/useCapo.js
 import { useState, useMemo, useCallback } from "react";
 import { CAPO_DEFAULT } from "@/lib/theory/constants";
 
@@ -58,7 +57,7 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
           index: i,
           ...m,
           startFret: nextStart,
-          greyBefore: true, // ensure area before start is visibly greyed
+          greyBefore: true,
         });
       } else if (Object.keys(m).length) {
         out.push({ index: i, ...m });

@@ -1,9 +1,9 @@
-// src/components/UI/DisplayControls.jsx
+import React from "react";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 
-export default function DisplayControls({
+function DisplayControls({
   // labels & visibility
   show,
   setShow,
@@ -206,3 +206,4 @@ export default function DisplayControls({
     </Section>
   );
 }
+export default React.memo(DisplayControls);
