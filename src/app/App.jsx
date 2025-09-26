@@ -28,8 +28,6 @@ import HotkeysHelpToast from "@/components/UI/HotkeysCheatsheet";
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 import {
-  DEFAULT_TUNINGS,
-  PRESET_TUNINGS,
   PRESET_TUNING_META,
   STR_MIN,
   STR_MAX,
@@ -38,6 +36,12 @@ import {
   STR_FACTORY,
   FRETS_FACTORY,
 } from "@/lib/theory/constants";
+
+import {
+  DEFAULT_TUNINGS,
+  PRESET_TUNINGS,
+  DEFAULT_PRESET_NAME,
+} from "@/lib/theory/presetState";
 
 // existing UI atoms
 import PanelHeader from "@/components/UI/PanelHeader";
