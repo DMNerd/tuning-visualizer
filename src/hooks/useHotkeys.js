@@ -39,7 +39,7 @@ export function useHotkeys(options) {
     [],
   );
 
-  // --- Cheatsheet ---
+  // Cheatsheet
   useHK(
     ["shift+/", "ctrl+/", "F1"],
     () => {
@@ -49,7 +49,7 @@ export function useHotkeys(options) {
     [onShowCheatsheet],
   );
 
-  // --- Fullscreen ---
+  // Fullscreen
   useHK(
     "f",
     () => {
@@ -59,66 +59,73 @@ export function useHotkeys(options) {
     [toggleFs],
   );
 
-  // --- Labels cycle ---
+  // Labels cycle
   useHK(
     "l",
     () => {
       if (!setDisplayPrefs) return;
-      setDisplayPrefs((p) => ({
-        ...p,
-        show: labelValues.length
-          ? labelValues[
-              (labelValues.findIndex((v) => v === p.show) + 1) %
-                labelValues.length
-            ]
-          : p.show,
-      }));
+      setDisplayPrefs((d) => {
+        if (!labelValues.length) return;
+        const ix = labelValues.findIndex((v) => v === d.show);
+        d.show = labelValues[(ix + 1) % labelValues.length];
+      });
     },
     guard,
     [setDisplayPrefs, labelValues],
   );
 
-  // --- Toggles ---
+  // Toggles
   useHK(
     "o",
-    () => setDisplayPrefs?.((p) => ({ ...p, showOpen: !p.showOpen })),
+    () =>
+      setDisplayPrefs?.((d) => {
+        d.showOpen = !d.showOpen;
+      }),
     guard,
     [setDisplayPrefs],
   );
   useHK(
     "n",
-    () => setDisplayPrefs?.((p) => ({ ...p, showFretNums: !p.showFretNums })),
+    () =>
+      setDisplayPrefs?.((d) => {
+        d.showFretNums = !d.showFretNums;
+      }),
     guard,
     [setDisplayPrefs],
   );
   useHK(
     "d",
-    () => setDisplayPrefs?.((p) => ({ ...p, colorByDegree: !p.colorByDegree })),
+    () =>
+      setDisplayPrefs?.((d) => {
+        d.colorByDegree = !d.colorByDegree;
+      }),
     guard,
     [setDisplayPrefs],
   );
   useHK(
     "a",
     () =>
-      setDisplayPrefs?.((p) => ({
-        ...p,
-        accidental: p.accidental === "sharp" ? "flat" : "sharp",
-      })),
+      setDisplayPrefs?.((d) => {
+        d.accidental = d.accidental === "sharp" ? "flat" : "sharp";
+      }),
     guard,
     [setDisplayPrefs],
   );
   useHK(
     "g",
-    () => setDisplayPrefs?.((p) => ({ ...p, lefty: !p.lefty })),
+    () =>
+      setDisplayPrefs?.((d) => {
+        d.lefty = !d.lefty;
+      }),
     guard,
     [setDisplayPrefs],
   );
 
-  // --- Chord overlay ---
+  // Chord overlay
   useHK("c", () => setShowChord?.((v) => !v), guard, [setShowChord]);
   useHK("h", () => setHideNonChord?.((v) => !v), guard, [setHideNonChord]);
 
-  // --- Strings +/- ---
+  // Strings +/-
   useHK(
     "[",
     () =>
@@ -134,7 +141,7 @@ export function useHotkeys(options) {
     [handleStringsChange, strings, minStrings, maxStrings],
   );
 
-  // --- Frets +/- ---
+  // Frets +/-
   useHK(
     "-",
     () => setFrets?.(clamp((frets ?? 0) - 1, minFrets, maxFrets)),
@@ -148,24 +155,22 @@ export function useHotkeys(options) {
     [setFrets, frets, minFrets, maxFrets],
   );
 
-  // --- Dot size +/- ---
+  // Dot size +/-
   useHK(
     ",",
     () =>
-      setDisplayPrefs?.((p) => ({
-        ...p,
-        dotSize: clamp((p.dotSize ?? 14) - 1, minDot, maxDot),
-      })),
+      setDisplayPrefs?.((d) => {
+        d.dotSize = clamp((d.dotSize ?? 14) - 1, minDot, maxDot);
+      }),
     guard,
     [setDisplayPrefs, minDot, maxDot],
   );
   useHK(
     ".",
     () =>
-      setDisplayPrefs?.((p) => ({
-        ...p,
-        dotSize: clamp((p.dotSize ?? 14) + 1, minDot, maxDot),
-      })),
+      setDisplayPrefs?.((d) => {
+        d.dotSize = clamp((d.dotSize ?? 14) + 1, minDot, maxDot);
+      }),
     guard,
     [setDisplayPrefs, minDot, maxDot],
   );

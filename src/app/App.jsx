@@ -136,7 +136,10 @@ export default function App() {
     setColorByDegree,
     setLefty,
   } = useMemo(() => {
-    const wrap = (key) => (v) => setDisplayPrefs((p) => ({ ...p, [key]: v }));
+    const wrap = (key) => (v) =>
+      setDisplayPrefs((d) => {
+        d[key] = v;
+      });
     return {
       setShow: wrap("show"),
       setShowOpen: wrap("showOpen"),

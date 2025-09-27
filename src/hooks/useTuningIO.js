@@ -1,5 +1,5 @@
-// src/hooks/useTuningIO.js
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useImmer } from "use-immer";
 import { useDebounce } from "use-debounce";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
@@ -37,7 +37,7 @@ const TuningPackArraySchema = v.array(TuningPackSchema);
 ========================= */
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
-  const [customTunings, setCustomTunings] = useState([]);
+  const [customTunings, setCustomTunings] = useImmer([]);
   const [debouncedCustomTunings] = useDebounce(customTunings, 300);
 
   // Load from storage on mount
@@ -46,9 +46,10 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS);
     const arr = safeJSONParse(raw, []);
     if (Array.isArray(arr) && arr.length) {
+      // replace whole array (immer setter supports direct value)
       setCustomTunings(arr);
     }
-  }, []);
+  }, [setCustomTunings]);
 
   // Debounced save
   useEffect(() => {
@@ -95,30 +96,38 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const getAllCustomTunings = useCallback(() => customTunings, [customTunings]);
 
   // ----- Import one or more packs -----
-  const onImportTunings = useCallback((packsRaw, filenames = []) => {
-    let parsed;
-    try {
-      parsed = v.parse(TuningPackArraySchema, packsRaw);
-    } catch (err) {
-      console.error("Import failed:", err);
-      return;
-    }
+  const onImportTunings = useCallback(
+    (packsRaw, filenames = []) => {
+      let parsed;
+      try {
+        parsed = v.parse(TuningPackArraySchema, packsRaw);
+      } catch (err) {
+        console.error("Import failed:", err);
+        return;
+      }
 
-    const newTunings = parsed.map((p, i) => {
-      const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
-      const { system, ...rest } = p;
-      const cleanSystem = { edo: system.edo };
-      return { ...rest, system: cleanSystem, name: label };
-    });
+      const newTunings = parsed.map((p, i) => {
+        const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
+        const { system, ...rest } = p;
+        const cleanSystem = { edo: system.edo };
+        return { ...rest, system: cleanSystem, name: label };
+      });
 
-    setCustomTunings((prev) => [...prev, ...newTunings]);
-  }, []);
+      setCustomTunings((draft) => {
+        draft.push(...newTunings);
+      });
+    },
+    [setCustomTunings],
+  );
 
   return {
     getCurrentTuningPack,
     getAllCustomTunings,
     onImportTunings,
     customTunings,
-    clearCustomTunings: () => setCustomTunings([]),
+    clearCustomTunings: () =>
+      setCustomTunings((d) => {
+        d.length = 0;
+      }),
   };
 }

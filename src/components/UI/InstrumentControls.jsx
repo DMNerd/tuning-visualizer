@@ -182,9 +182,10 @@ function InstrumentControls({
                   name={`string-${stringNum}`}
                   value={note}
                   onChange={(e) => {
-                    const copy = [...tuning];
-                    copy[i] = e.target.value;
-                    setTuning(copy);
+                    const value = e.target.value;
+                    setTuning((d) => {
+                      d[i] = value;
+                    });
                   }}
                 >
                   {sysNames.map((n) => (

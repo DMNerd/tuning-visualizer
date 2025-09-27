@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDebounce } from "use-debounce";
+import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function readStore() {
@@ -20,7 +21,7 @@ function writeStore(obj) {
 }
 
 export function useDisplayPrefs(initial) {
-  const [prefs, setPrefs] = useState(() => ({ ...initial, ...readStore() }));
+  const [prefs, setPrefs] = useImmer(() => ({ ...initial, ...readStore() }));
   const [debouncedPrefs] = useDebounce(prefs, 300);
 
   useEffect(() => {

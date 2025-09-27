@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function keyOf(systemId, strings) {
@@ -51,11 +52,12 @@ export function useDefaultTuning({
     return Array.isArray(maybe) && maybe.length ? maybe : factory;
   }, [storeKey, factory]);
 
-  const [tuning, setTuning] = useState(() => getPreferredDefault());
+  const [tuning, setTuning] = useImmer(() => getPreferredDefault());
 
+  // Reset tuning when system/strings change (respect saved default if present)
   useEffect(() => {
     setTuning(getPreferredDefault());
-  }, [getPreferredDefault]);
+  }, [getPreferredDefault, setTuning]);
 
   const presetMap = useMemo(() => {
     const m = { "Factory default": factory };
@@ -107,11 +109,11 @@ export function useDefaultTuning({
     const fresh = readStore();
     const maybe = fresh[storeKey];
     if (Array.isArray(maybe) && maybe.length) setTuning(maybe);
-  }, [storeKey]);
+  }, [storeKey, setTuning]);
 
   const resetFactoryDefault = useCallback(() => {
     setTuning(factory);
-  }, [factory]);
+  }, [factory, setTuning]);
 
   const defaultForCount = useCallback(
     (count) => {

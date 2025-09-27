@@ -10,17 +10,29 @@ export function useStringsChange({ setStrings, setTuning, defaultForCount }) {
   return useCallback(
     (nextCount) => {
       setStrings(nextCount);
-      setTuning((prev) => {
-        if (!Array.isArray(prev)) return defaultForCount(nextCount);
 
-        const prevFactory = defaultForCount(prev.length);
-        const wasFactory = arraysEqual(prev, prevFactory);
+      setTuning((draft) => {
+        if (!Array.isArray(draft)) {
+          return defaultForCount(nextCount);
+        }
 
-        if (wasFactory) return defaultForCount(nextCount);
+        const prevLen = draft.length;
+        const prevFactory = defaultForCount(prevLen);
+        const wasFactory = arraysEqual(draft, prevFactory);
 
-        if (nextCount <= prev.length) return prev.slice(0, nextCount);
+        if (wasFactory) {
+          return defaultForCount(nextCount);
+        }
+
+        if (nextCount <= prevLen) {
+          draft.length = nextCount; // truncate in place
+          return;
+        }
+
         const targetDefault = defaultForCount(nextCount);
-        return [...prev, ...targetDefault.slice(prev.length)];
+        for (let i = prevLen; i < nextCount; i++) {
+          draft[i] = targetDefault[i];
+        }
       });
     },
     [setStrings, setTuning, defaultForCount],
