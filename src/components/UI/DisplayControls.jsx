@@ -23,9 +23,7 @@ function DegreeLegend({ k = 7 }) {
           );
         })}
       </div>
-      <p>
-        1 = tonic (root color)
-      </p>
+      <p>1 = tonic (root color)</p>
     </div>
   );
 }
