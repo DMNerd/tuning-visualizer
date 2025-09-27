@@ -169,7 +169,6 @@ export default function App() {
     presetMetaMap,
     presetNames,
     saveDefault,
-    resetFactoryDefault,
     savedExists,
     defaultForCount,
   } = useDefaultTuning({
@@ -325,19 +324,11 @@ export default function App() {
   const handleResetFactoryAll = useCallback(() => {
     const factoryFrets = getFactoryFrets(system.divisions);
     resetInstrumentPrefs(STR_FACTORY, factoryFrets);
-    resetFactoryDefault();
-    setPreset("Factory default");
     setCapoFret(CAPO_DEFAULT);
     toast.success(
       `Restored factory defaults (${STR_FACTORY} strings, ${factoryFrets} frets).`,
     );
-  }, [
-    system.divisions,
-    resetInstrumentPrefs,
-    resetFactoryDefault,
-    setPreset,
-    setCapoFret,
-  ]);
+  }, [system.divisions, resetInstrumentPrefs, setCapoFret]);
 
   // Stable export header builder
   const buildHeader = useCallback(
