@@ -151,7 +151,11 @@ function DisplayControls({
         >
           <div className="field">
             <span>Open notes</span>
-            <div role="group" aria-label="Open note scope" className="radio-row">
+            <div
+              role="group"
+              aria-label="Open note scope"
+              className="radio-row"
+            >
               <label className="check" htmlFor="showOpen">
                 <input
                   id="showOpen"
