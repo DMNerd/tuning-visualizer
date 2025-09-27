@@ -76,24 +76,27 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   );
 
   // ----- Import one or more packs -----
-  const onImportTunings = useCallback((packsRaw, filenames = []) => {
-    let parsed;
-    try {
-      parsed = v.parse(TuningPackArraySchema, packsRaw);
-    } catch (err) {
-      console.error("Import failed:", err);
-      return;
-    }
+  const onImportTunings = useCallback(
+    (packsRaw, filenames = []) => {
+      let parsed;
+      try {
+        parsed = v.parse(TuningPackArraySchema, packsRaw);
+      } catch (err) {
+        console.error("Import failed:", err);
+        return;
+      }
 
-    const newTunings = parsed.map((p, i) => {
-      const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
-      const { system, ...rest } = p;
-      const cleanSystem = { edo: system.edo };
-      return { ...rest, system: cleanSystem, name: label };
-    });
+      const newTunings = parsed.map((p, i) => {
+        const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
+        const { system, ...rest } = p;
+        const cleanSystem = { edo: system.edo };
+        return { ...rest, system: cleanSystem, name: label };
+      });
 
-    setCustomTunings((prev) => [...(prev || []), ...newTunings]);
-  }, [setCustomTunings]);
+      setCustomTunings((prev) => [...(prev || []), ...newTunings]);
+    },
+    [setCustomTunings],
+  );
 
   return {
     getCurrentTuningPack,

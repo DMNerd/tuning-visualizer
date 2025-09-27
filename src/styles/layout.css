@@ -627,6 +627,131 @@ svg {
   }
 }
 
+.tv-tooltip {
+  /* react-tooltip v5 theming vars */
+  --rt-color: var(--fg);
+  --rt-background: var(--panel);
+  --rt-border-radius: var(--card-radius);
+  --rt-padding: 8px 10px;
+  --rt-shadow: var(--card-shadow);
+  --rt-opacity: 1;
+
+  border: 1px solid var(--line);
+  backdrop-filter: none;
+  z-index: 60; /* above cards but below toasts if needed */
+
+  /* smooth appear to match the app */
+  transition:
+    transform var(--speed) var(--ease),
+    opacity var(--speed) var(--ease);
+
+  &.react-tooltip {
+    /* react-tooltip root already uses our vars; this is a nudge */
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Arrow inherits bg; add subtle border illusion */
+  .react-tooltip-arrow {
+    &::before {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      /* avoid double-thick borders where arrow meets the box */
+      box-shadow: 0 0 0 1px var(--panel) inset;
+    }
+  }
+
+  /* Content blocks inside the tooltip (our legend) */
+  .tv-legend {
+    display: grid;
+    gap: 8px;
+    min-width: 220px;
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
+      gap: 6px;
+
+      .swatch {
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        padding: 6px 4px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+
+        .dot {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: 1px solid color-mix(in oklab, black 15%, transparent);
+        }
+
+        small {
+          font-size: 11px;
+          opacity: 0.8;
+          margin-top: 4px;
+        }
+      }
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.3;
+      color: var(--muted);
+    }
+  }
+}
+
+/* Placement-specific arrow touch-ups if you want tighter alignment */
+.tv-tooltip[data-placement^="right"] .react-tooltip-arrow::before {
+  transform: translateX(-0.5px);
+}
+.tv-tooltip[data-placement^="left"] .react-tooltip-arrow::before {
+  transform: translateX(0.5px);
+}
+.tv-tooltip[data-placement^="top"] .react-tooltip-arrow::before {
+  transform: translateY(0.5px);
+}
+.tv-tooltip[data-placement^="bottom"] .react-tooltip-arrow::before {
+  transform: translateY(-0.5px);
+}
+
+/* Trigger pill matches your icon buttons */
+.tip-trigger {
+  margin-left: 6px;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--fg) 6%, transparent);
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in oklab, var(--fg) 12%, transparent);
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 18%, transparent);
+  }
+}
+
+/* Reduce motion compatibility */
+@media (prefers-reduced-motion: reduce) {
+  .tv-tooltip {
+    transition: none !important;
+  }
+}
+
 /* =========================
    Responsive tweaks
 ========================= */

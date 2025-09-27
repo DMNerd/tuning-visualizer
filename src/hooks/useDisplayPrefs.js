@@ -5,10 +5,7 @@ import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 export function useDisplayPrefs(initial) {
-  const [stored, setStored] = useLocalStorage(
-    STORAGE_KEYS.DISPLAY_PREFS,
-    {},
-  );
+  const [stored, setStored] = useLocalStorage(STORAGE_KEYS.DISPLAY_PREFS, {});
 
   const [prefs, setPrefs] = useImmer(() => ({
     ...initial,

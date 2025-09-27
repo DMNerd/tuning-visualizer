@@ -105,7 +105,7 @@ export function useDefaultTuning({
   return useMemo(
     () => ({
       tuning,
-      setTuning, 
+      setTuning,
       presetMap,
       presetMetaMap,
       getPresetMeta,

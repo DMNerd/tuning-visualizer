@@ -3,6 +3,32 @@ import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
+import { getDegreeColor } from "@/utils/degreeColors";
+import { Tooltip } from "react-tooltip";
+
+function DegreeLegend({ k = 7 }) {
+  if (!Number.isFinite(k) || k < 1) return null;
+
+  return (
+    <div className="tv-legend">
+      <div className="swatches">
+        {Array.from({ length: k }, (_, i) => {
+          const degree = i + 1;
+          const color = getDegreeColor(degree, k);
+          return (
+            <div className="swatch" key={degree} title={`Degree ${degree}`}>
+              <span className="dot" aria-hidden style={{ background: color }} />
+              <small>{degree}</small>
+            </div>
+          );
+        })}
+      </div>
+      <p>
+        1 = tonic (root color)
+      </p>
+    </div>
+  );
+}
 
 function DisplayControls({
   show,
@@ -23,6 +49,7 @@ function DisplayControls({
   setColorByDegree,
   lefty,
   setLefty,
+  degreeCount = 7,
 }) {
   return (
     <Section title="Display">
@@ -101,6 +128,19 @@ function DisplayControls({
               onChange={(e) => setColorByDegree(e.target.checked)}
             />{" "}
             Color notes by scale degree
+            <span
+              className="tip-trigger"
+              data-tooltip-id="deg-colors-tip"
+              data-tooltip-place="right"
+              aria-label="Explain scale-degree colors"
+              role="button"
+              tabIndex={0}
+            >
+              i
+            </span>
+            <Tooltip id="deg-colors-tip" clickable className="tv-tooltip">
+              <DegreeLegend k={degreeCount} />
+            </Tooltip>
           </label>
         </div>
 
@@ -205,6 +245,7 @@ function pick(p) {
     microLabelStyle: p.microLabelStyle,
     colorByDegree: p.colorByDegree,
     lefty: p.lefty,
+    degreeCount: p.degreeCount,
   };
 }
 export default React.memo(DisplayControls, (a, b) => dequal(pick(a), pick(b)));

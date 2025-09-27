@@ -472,6 +472,7 @@ export default function App() {
           setColorByDegree={setColorByDegree}
           lefty={lefty}
           setLefty={setLefty}
+          degreeCount={intervals.length}
         />
 
         <ExportControls
