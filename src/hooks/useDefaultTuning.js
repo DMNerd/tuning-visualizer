@@ -1,26 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
+import { useLocalStorage } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
-}
-
-function readStore() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeStore(obj) {
-  try {
-    localStorage.setItem(STORAGE_KEYS.USER_DEFAULT_TUNING, JSON.stringify(obj));
-  } catch {
-    /* empty */
-  }
 }
 
 export function useDefaultTuning({
@@ -32,29 +16,25 @@ export function useDefaultTuning({
 }) {
   const storeKey = keyOf(systemId, strings);
 
+  const [savedMap, setSavedMap] = useLocalStorage(
+    STORAGE_KEYS.USER_DEFAULT_TUNING,
+    {},
+  );
+
   const factory = useMemo(
     () => DEFAULT_TUNINGS?.[systemId]?.[strings] ?? [],
     [DEFAULT_TUNINGS, systemId, strings],
   );
 
-  const [storeVer, setStoreVer] = useState(0);
-
-  const saved = useMemo(() => {
-    void storeVer;
-    return readStore()[storeKey];
-  }, [storeKey, storeVer]);
-
-  const savedExists = !!saved && Array.isArray(saved) && saved.length > 0;
+  const saved = savedMap?.[storeKey];
+  const savedExists = Array.isArray(saved) && saved.length > 0;
 
   const getPreferredDefault = useCallback(() => {
-    const fresh = readStore();
-    const maybe = fresh[storeKey];
-    return Array.isArray(maybe) && maybe.length ? maybe : factory;
-  }, [storeKey, factory]);
+    return savedExists ? saved : factory;
+  }, [savedExists, saved, factory]);
 
   const [tuning, setTuning] = useImmer(() => getPreferredDefault());
 
-  // Reset tuning when system/strings change (respect saved default if present)
   useEffect(() => {
     setTuning(getPreferredDefault());
   }, [getPreferredDefault, setTuning]);
@@ -75,6 +55,7 @@ export function useDefaultTuning({
     const out = Object.create(null);
     out["Factory default"] = null;
     if (presetMap["Saved default"]) out["Saved default"] = null;
+
     for (const name of Object.keys(presetMap)) {
       if (name === "Factory default" || name === "Saved default") continue;
       const meta = metaForGroup[name];
@@ -89,27 +70,22 @@ export function useDefaultTuning({
   );
 
   const saveDefault = useCallback(() => {
-    const next = { ...readStore() };
     const isFactory =
       Array.isArray(factory) &&
       tuning.length === factory.length &&
       tuning.every((v, i) => v === factory[i]);
 
-    if (isFactory) {
-      delete next[storeKey];
-    } else {
-      next[storeKey] = tuning;
-    }
-
-    writeStore(next);
-    setStoreVer((v) => v + 1);
-  }, [storeKey, tuning, factory]);
+    setSavedMap((prev) => {
+      const next = { ...(prev || {}) };
+      if (isFactory) delete next[storeKey];
+      else next[storeKey] = tuning;
+      return next;
+    });
+  }, [factory, tuning, storeKey, setSavedMap]);
 
   const loadSavedDefault = useCallback(() => {
-    const fresh = readStore();
-    const maybe = fresh[storeKey];
-    if (Array.isArray(maybe) && maybe.length) setTuning(maybe);
-  }, [storeKey, setTuning]);
+    if (Array.isArray(saved) && saved.length) setTuning(saved);
+  }, [saved, setTuning]);
 
   const resetFactoryDefault = useCallback(() => {
     setTuning(factory);
@@ -117,20 +93,19 @@ export function useDefaultTuning({
 
   const defaultForCount = useCallback(
     (count) => {
-      const fresh = readStore();
       const k = keyOf(systemId, count);
-      const maybe = fresh[k];
+      const maybe = savedMap?.[k];
       return Array.isArray(maybe) && maybe.length
         ? maybe
         : DEFAULT_TUNINGS[systemId][count];
     },
-    [DEFAULT_TUNINGS, systemId],
+    [DEFAULT_TUNINGS, systemId, savedMap],
   );
 
   return useMemo(
     () => ({
       tuning,
-      setTuning,
+      setTuning, 
       presetMap,
       presetMetaMap,
       getPresetMeta,

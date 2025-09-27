@@ -1,10 +1,8 @@
-import { useCallback, useEffect } from "react";
-import { useImmer } from "use-immer";
-import { useDebounce } from "use-debounce";
+import { useCallback } from "react";
+import { useLocalStorage } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
-import { safeJSONParse, safeJSONStringify } from "@/lib/storage/json";
 
 /* =========================
    Valibot Schemas
@@ -37,32 +35,11 @@ const TuningPackArraySchema = v.array(TuningPackSchema);
 ========================= */
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
-  const [customTunings, setCustomTunings] = useImmer([]);
-  const [debouncedCustomTunings] = useDebounce(customTunings, 300);
-
-  // Load from storage on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS);
-    const arr = safeJSONParse(raw, []);
-    if (Array.isArray(arr) && arr.length) {
-      // replace whole array (immer setter supports direct value)
-      setCustomTunings(arr);
-    }
-  }, [setCustomTunings]);
-
-  // Debounced save
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.CUSTOM_TUNINGS,
-        safeJSONStringify(debouncedCustomTunings, "[]"),
-      );
-    } catch {
-      // ignore quota/serialization errors
-    }
-  }, [debouncedCustomTunings]);
+  // Persist array of custom packs directly
+  const [customTunings, setCustomTunings] = useLocalStorage(
+    STORAGE_KEYS.CUSTOM_TUNINGS,
+    [],
+  );
 
   // ----- Export current tuning as a pack -----
   const getCurrentTuningPack = useCallback(
@@ -93,41 +70,36 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   );
 
   // ----- Export all custom tunings -----
-  const getAllCustomTunings = useCallback(() => customTunings, [customTunings]);
+  const getAllCustomTunings = useCallback(
+    () => customTunings || [],
+    [customTunings],
+  );
 
   // ----- Import one or more packs -----
-  const onImportTunings = useCallback(
-    (packsRaw, filenames = []) => {
-      let parsed;
-      try {
-        parsed = v.parse(TuningPackArraySchema, packsRaw);
-      } catch (err) {
-        console.error("Import failed:", err);
-        return;
-      }
+  const onImportTunings = useCallback((packsRaw, filenames = []) => {
+    let parsed;
+    try {
+      parsed = v.parse(TuningPackArraySchema, packsRaw);
+    } catch (err) {
+      console.error("Import failed:", err);
+      return;
+    }
 
-      const newTunings = parsed.map((p, i) => {
-        const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
-        const { system, ...rest } = p;
-        const cleanSystem = { edo: system.edo };
-        return { ...rest, system: cleanSystem, name: label };
-      });
+    const newTunings = parsed.map((p, i) => {
+      const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
+      const { system, ...rest } = p;
+      const cleanSystem = { edo: system.edo };
+      return { ...rest, system: cleanSystem, name: label };
+    });
 
-      setCustomTunings((draft) => {
-        draft.push(...newTunings);
-      });
-    },
-    [setCustomTunings],
-  );
+    setCustomTunings((prev) => [...(prev || []), ...newTunings]);
+  }, [setCustomTunings]);
 
   return {
     getCurrentTuningPack,
     getAllCustomTunings,
     onImportTunings,
-    customTunings,
-    clearCustomTunings: () =>
-      setCustomTunings((d) => {
-        d.length = 0;
-      }),
+    customTunings: customTunings || [],
+    clearCustomTunings: () => setCustomTunings([]),
   };
 }
