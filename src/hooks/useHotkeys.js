@@ -39,9 +39,9 @@ export function useHotkeys(options) {
     [],
   );
 
-
+  // --- Cheatsheet ---
   useHK(
-    ["shift+/", "shift++", "ctrl+/", "F1"],
+    ["shift+/", "ctrl+/", "F1"],
     () => {
       if (typeof onShowCheatsheet === "function") onShowCheatsheet();
     },
@@ -49,8 +49,7 @@ export function useHotkeys(options) {
     [onShowCheatsheet],
   );
 
-
-  // --- Fullscreen (migrated here) ---
+  // --- Fullscreen ---
   useHK(
     "f",
     () => {

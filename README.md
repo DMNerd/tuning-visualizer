@@ -52,7 +52,7 @@ This app will be free and open source forever and is completely self hostable
   - Quick visual **capo** setting via fret numbers
   - Validated numeric inputs for frets (friendly warnings on out-of-range values)
   - **Fullscreen** viewing mode
-  - **Hotkeys** with cheatsheet (press ?)
+  - **Hotkeys** with cheatsheet (press f1)
 
 - **Export & Print**
   - Export fretboard as **PNG** or **SVG** with any setting you desire
