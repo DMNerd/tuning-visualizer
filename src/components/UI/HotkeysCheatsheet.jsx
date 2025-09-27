@@ -12,9 +12,9 @@ function HotkeysHelpToast() {
     ["g", "left-handed layout"],
     ["c", "chord overlay"],
     ["h", "hide non-chord tones"],
-    ["[ / ]", "strings − / ＋"],
-    ["- / =", "frets − / ＋"],
-    [", / .", "dot size − / ＋"],
+    ["[ / ]", "strings - / +"],
+    ["- / =", "frets - / +"],
+    [", / .", "dot size - / +"],
   ];
 
   return (

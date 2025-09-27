@@ -20,7 +20,6 @@ function makePolicy(isDev) {
     "font-src": ["'self'"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
-    "frame-ancestors": ["'self'"],
   };
 
   if (isDev) {
