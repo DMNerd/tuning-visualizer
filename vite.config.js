@@ -9,35 +9,31 @@ import csp from "vite-plugin-csp-guard";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Development CSP: allow HMR websockets and localhost fetches.
-const devPolicy = {
-  "default-src": ["'self'"],
-  "script-src": ["'self'"],
-  "style-src": ["'self'"],
-  "img-src": ["'self'", "data:"],
-  "connect-src": [
-    "'self'",
-    "ws://localhost:*",
-    "ws://127.0.0.1:*",
-    "http://localhost:*",
-    "http://127.0.0.1:*",
-  ],
-  "font-src": ["'self'"],
-  "frame-ancestors": ["'self'"],
-};
+function makePolicy(isDev) {
+  const base = {
+    "default-src": ["'self'"],
+    "script-src": ["'self'"],
+    "style-src-elem": ["'self'", "'unsafe-inline'"],
+    "style-src-attr": ["'unsafe-inline'"],
+    "img-src": ["'self'", "data:"],
+    "connect-src": ["'self'"],
+    "font-src": ["'self'"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "frame-ancestors": ["'self'"],
+  };
 
-// Production CSP: tighten as needed for your external CDNs/APIs.
-const prodPolicy = {
-  "default-src": ["'self'"],
-  "script-src": ["'self'"],
-  "style-src": ["'self'"],
-  "img-src": ["'self'", "data:"],
-  "connect-src": ["'self'"],
-  "font-src": ["'self'"],
-  "object-src": ["'none'"],
-  "base-uri": ["'self'"],
-  "frame-ancestors": ["'self'"],
-};
+  if (isDev) {
+    base["connect-src"].push(
+      "ws://localhost:*",
+      "ws://127.0.0.1:*",
+      "http://localhost:*",
+      "http://127.0.0.1:*",
+    );
+  }
+
+  return base;
+}
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
@@ -58,8 +54,8 @@ export default defineConfig(({ mode }) => {
         },
       }),
       csp({
-        policy: isDev ? devPolicy : prodPolicy,
-        sri: true, // enable Subresource Integrity
+        policy: makePolicy(isDev),
+        sri: true,
       }),
     ],
     resolve: {
