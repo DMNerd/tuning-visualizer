@@ -18,7 +18,7 @@ function writeStore(obj) {
   try {
     localStorage.setItem(STORAGE_KEYS.USER_DEFAULT_TUNING, JSON.stringify(obj));
   } catch {
-    // ignore storage errors (private mode, quota, etc.)
+    /* empty */
   }
 }
 
@@ -31,40 +31,32 @@ export function useDefaultTuning({
 }) {
   const storeKey = keyOf(systemId, strings);
 
-  // Memoize factory so callbacks/memos using it have stable deps
   const factory = useMemo(
     () => DEFAULT_TUNINGS?.[systemId]?.[strings] ?? [],
     [DEFAULT_TUNINGS, systemId, strings],
   );
 
-  // Version to force re-reads of localStorage after writes
   const [storeVer, setStoreVer] = useState(0);
 
-  // "Saved default" for the current (system, strings), live-retrieved.
-  // Touch storeVer inside so ESLint is happy and the memo recomputes after saves.
   const saved = useMemo(() => {
-    void storeVer; // intentional reference
+    void storeVer;
     return readStore()[storeKey];
   }, [storeKey, storeVer]);
 
   const savedExists = !!saved && Array.isArray(saved) && saved.length > 0;
 
-  // Preferred default = Saved (if exists) else Factory
   const getPreferredDefault = useCallback(() => {
     const fresh = readStore();
     const maybe = fresh[storeKey];
     return Array.isArray(maybe) && maybe.length ? maybe : factory;
   }, [storeKey, factory]);
 
-  // Live tuning state initialized to preferred default
   const [tuning, setTuning] = useState(() => getPreferredDefault());
 
-  // When instrument identity changes, reset tuning to preferred default
   useEffect(() => {
     setTuning(getPreferredDefault());
   }, [getPreferredDefault]);
 
-  // Build preset map shown in UI
   const presetMap = useMemo(() => {
     const m = { "Factory default": factory };
     if (savedExists) m["Saved default"] = saved;
@@ -76,7 +68,6 @@ export function useDefaultTuning({
     return m;
   }, [factory, savedExists, saved, systemId, strings, PRESET_TUNINGS]);
 
-  // Build meta map for presets (optional metadata per preset)
   const presetMetaMap = useMemo(() => {
     const metaForGroup = PRESET_TUNING_META?.[systemId]?.[strings] || {};
     const out = Object.create(null);
@@ -95,10 +86,8 @@ export function useDefaultTuning({
     [presetMetaMap],
   );
 
-  // Actions for saved default
   const saveDefault = useCallback(() => {
     const next = { ...readStore() };
-    // If user is saving the factory default, just remove any saved default.
     const isFactory =
       Array.isArray(factory) &&
       tuning.length === factory.length &&
@@ -111,7 +100,7 @@ export function useDefaultTuning({
     }
 
     writeStore(next);
-    setStoreVer((v) => v + 1); // refresh savedExists/presetMap immediately
+    setStoreVer((v) => v + 1);
   }, [storeKey, tuning, factory]);
 
   const loadSavedDefault = useCallback(() => {
@@ -124,7 +113,6 @@ export function useDefaultTuning({
     setTuning(factory);
   }, [factory]);
 
-  // For changing string count: also prefer a saved default for that count
   const defaultForCount = useCallback(
     (count) => {
       const fresh = readStore();
@@ -137,19 +125,31 @@ export function useDefaultTuning({
     [DEFAULT_TUNINGS, systemId],
   );
 
-  return {
-    tuning,
-    setTuning,
-    presetMap,
-    presetMetaMap,
-    getPresetMeta,
-    presetNames: Object.keys(presetMap),
-    savedExists,
-    saveDefault,
-    loadSavedDefault,
-    resetFactoryDefault,
-    defaultForCount,
-  };
+  return useMemo(
+    () => ({
+      tuning,
+      setTuning,
+      presetMap,
+      presetMetaMap,
+      getPresetMeta,
+      presetNames: Object.keys(presetMap),
+      savedExists,
+      saveDefault,
+      loadSavedDefault,
+      resetFactoryDefault,
+      defaultForCount,
+    }),
+    [
+      tuning,
+      setTuning,
+      presetMap,
+      presetMetaMap,
+      getPresetMeta,
+      savedExists,
+      saveDefault,
+      loadSavedDefault,
+      resetFactoryDefault,
+      defaultForCount,
+    ],
+  );
 }
-
-export default useDefaultTuning;

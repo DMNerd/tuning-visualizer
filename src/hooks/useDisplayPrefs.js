@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "use-debounce";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function readStore() {
@@ -20,10 +21,11 @@ function writeStore(obj) {
 
 export function useDisplayPrefs(initial) {
   const [prefs, setPrefs] = useState(() => ({ ...initial, ...readStore() }));
+  const [debouncedPrefs] = useDebounce(prefs, 300);
 
   useEffect(() => {
-    writeStore(prefs);
-  }, [prefs]);
+    writeStore(debouncedPrefs);
+  }, [debouncedPrefs]);
 
-  return [prefs, setPrefs];
+  return useMemo(() => [prefs, setPrefs], [prefs, setPrefs]);
 }

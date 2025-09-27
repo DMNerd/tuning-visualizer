@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 /**
  * Fullscreen hook for a specific element.
@@ -62,7 +62,6 @@ export function useFullscreen(
   useEffect(() => {
     if (!hotkey) return;
     const onKey = (e) => {
-      // Ignore when typing in inputs/textareas
       const t = e.target;
       const isTyping =
         t &&
@@ -71,7 +70,6 @@ export function useFullscreen(
           t.isContentEditable);
       if (isTyping) return;
 
-      // 'f' to toggle fullscreen
       if (
         (e.key === "f" || e.key === "F") &&
         !e.metaKey &&
@@ -86,5 +84,8 @@ export function useFullscreen(
     return () => window.removeEventListener("keydown", onKey);
   }, [hotkey, toggle]);
 
-  return { isActive, toggle, enter, exit };
+  return useMemo(
+    () => ({ isActive, toggle, enter, exit }),
+    [isActive, toggle, enter, exit],
+  );
 }

@@ -1,5 +1,15 @@
-// useHotkeys.js
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+
+const isTypingTarget = (el) => {
+  if (!el) return false;
+  const tag = el.tagName?.toLowerCase();
+  const editable = el.getAttribute?.("contenteditable") === "true";
+  return editable || tag === "input" || tag === "textarea" || tag === "select";
+};
+
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+const cycle = (arr, cur) =>
+  arr[(arr.findIndex((v) => v === cur) + 1) % arr.length];
 
 export function useHotkeys({
   toggleFs,
@@ -11,7 +21,7 @@ export function useHotkeys({
   strings,
   frets,
   labelValues,
-  onShowCheatsheet, // NEW
+  onShowCheatsheet,
   minStrings = 4,
   maxStrings = 8,
   minFrets = 12,
@@ -19,28 +29,15 @@ export function useHotkeys({
   minDot = 8,
   maxDot = 24,
 }) {
-  useEffect(() => {
-    const isTypingTarget = (el) => {
-      if (!el) return false;
-      const tag = el.tagName?.toLowerCase();
-      const editable = el.getAttribute?.("contenteditable") === "true";
-      return (
-        editable || tag === "input" || tag === "textarea" || tag === "select"
-      );
-    };
-
-    const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-    const cycle = (arr, cur) =>
-      arr[(arr.findIndex((v) => v === cur) + 1) % arr.length];
-
-    const onKeyDown = (e) => {
+  const onKeyDown = useCallback(
+    (e) => {
       if (isTypingTarget(document.activeElement)) return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
 
       switch (e.key) {
         case "?":
           e.preventDefault();
-          if (onShowCheatsheet) onShowCheatsheet();
+          onShowCheatsheet?.();
           break;
         case "f":
           e.preventDefault();
@@ -120,26 +117,29 @@ export function useHotkeys({
         default:
           break;
       }
-    };
+    },
+    [
+      toggleFs,
+      setDisplayPrefs,
+      setFrets,
+      handleStringsChange,
+      setShowChord,
+      setHideNonChord,
+      strings,
+      frets,
+      labelValues,
+      onShowCheatsheet,
+      minStrings,
+      maxStrings,
+      minFrets,
+      maxFrets,
+      minDot,
+      maxDot,
+    ],
+  );
 
+  useEffect(() => {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [
-    toggleFs,
-    setDisplayPrefs,
-    setFrets,
-    handleStringsChange,
-    setShowChord,
-    setHideNonChord,
-    strings,
-    frets,
-    labelValues,
-    onShowCheatsheet,
-    minStrings,
-    maxStrings,
-    minFrets,
-    maxFrets,
-    minDot,
-    maxDot,
-  ]);
+  }, [onKeyDown]);
 }

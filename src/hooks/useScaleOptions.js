@@ -7,12 +7,11 @@ import { useEffect, useMemo, useState } from "react";
 export function useScaleOptions({ system, ALL_SCALES, initial = "" }) {
   const scaleOptions = useMemo(
     () => ALL_SCALES.filter((s) => s.systemId === system.id),
-    [ALL_SCALES, system.id],
+    [ALL_SCALES, system],
   );
 
   const [scale, setScale] = useState(initial || (scaleOptions[0]?.label ?? ""));
 
-  // if system changes and current scale becomes invalid, pick first available
   useEffect(() => {
     if (!scaleOptions.length) return;
     const stillValid = scaleOptions.some((s) => s.label === scale);
@@ -24,5 +23,8 @@ export function useScaleOptions({ system, ALL_SCALES, initial = "" }) {
     return def?.pcs ?? (scaleOptions[0]?.pcs || []);
   }, [scaleOptions, scale]);
 
-  return { scale, setScale, scaleOptions, intervals };
+  return useMemo(
+    () => ({ scale, setScale, scaleOptions, intervals }),
+    [scale, setScale, scaleOptions, intervals],
+  );
 }

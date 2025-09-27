@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -9,10 +9,6 @@ const loadNum = (key, fallback, min, max) => {
 
 /**
  * Manages instrument-level persisted prefs (strings/frets).
- * - Initializes strings from storage with clamping
- * - Loads saved frets once on mount
- * - Persists strings and (touched) frets to storage
- * - Exposes a reset helper that only resets strings/frets storage/state
  */
 export function useInstrumentPrefs({
   frets,
@@ -55,14 +51,20 @@ export function useInstrumentPrefs({
   }, [frets, fretsTouched, FRETS_MIN, FRETS_MAX]);
 
   // Reset only the instrument prefs (strings/frets) and related storage
-  const resetInstrumentPrefs = (nextStringsFactory, nextFretsFactory) => {
-    setStrings(nextStringsFactory);
-    localStorage.setItem(STORAGE_KEYS.STRINGS, String(nextStringsFactory));
+  const resetInstrumentPrefs = useCallback(
+    (nextStringsFactory, nextFretsFactory) => {
+      setStrings(nextStringsFactory);
+      localStorage.setItem(STORAGE_KEYS.STRINGS, String(nextStringsFactory));
 
-    setFrets(nextFretsFactory);
-    localStorage.removeItem(STORAGE_KEYS.FRETS);
-    setFretsTouched?.(false);
-  };
+      setFrets(nextFretsFactory);
+      localStorage.removeItem(STORAGE_KEYS.FRETS);
+      setFretsTouched?.(false);
+    },
+    [setFrets, setFretsTouched],
+  );
 
-  return { strings, setStrings, resetInstrumentPrefs };
+  return useMemo(
+    () => ({ strings, setStrings, resetInstrumentPrefs }),
+    [strings, resetInstrumentPrefs],
+  );
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 /**
  * Maps between note-name spellings and pitch classes for a given tuning system.
@@ -7,7 +7,6 @@ import { useMemo } from "react";
  *  - nameForPc(pc) → string (using current accidental preference)
  */
 export function usePitchMapping(system, accidental) {
-  // Build a spelling → pitch-class map that accepts BOTH sharps and flats
   const nameToPc = useMemo(() => {
     const map = new Map();
     for (let pc = 0; pc < system.divisions; pc++) {
@@ -17,12 +16,18 @@ export function usePitchMapping(system, accidental) {
     return map;
   }, [system]);
 
-  const pcForName = (name) => {
-    const pc = nameToPc.get(name);
-    return typeof pc === "number" ? pc : 0;
-  };
+  const pcForName = useCallback(
+    (name) => {
+      const pc = nameToPc.get(name);
+      return typeof pc === "number" ? pc : 0;
+    },
+    [nameToPc],
+  );
 
-  const nameForPc = (pc) => system.nameForPc(pc, accidental);
+  const nameForPc = useCallback(
+    (pc) => system.nameForPc(pc, accidental),
+    [system, accidental],
+  );
 
-  return { pcForName, nameForPc };
+  return useMemo(() => ({ pcForName, nameForPc }), [pcForName, nameForPc]);
 }

@@ -1,4 +1,3 @@
-// src/components/Fretboard/Fretboard.jsx
 import React, { forwardRef, useLayoutEffect, useRef } from "react";
 
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
@@ -68,9 +67,9 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  const { pcFromName } = useSystemNoteNames(system, accidental);
+  // pull mapping funcs from hook
+  const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental);
   const pcForName = pcFromName;
-  const nameForPc = (pc) => system.nameForPc(pc, accidental);
 
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,
@@ -394,10 +393,6 @@ const Fretboard = forwardRef(function Fretboard(
 
 /* =========================
    Custom memo comparator
-   - Primitives compared by ===
-   - Arrays shallow-compared
-   - Sets shallow-compared
-   - stringMeta compared shallowly by item keys/values
 ========================= */
 
 function shallowEqArray(a, b) {
@@ -443,13 +438,17 @@ function propsAreEqual(prev, next) {
     prev.colorByDegree === next.colorByDegree &&
     prev.hideNonChord === next.hideNonChord &&
     prev.capoFret === next.capoFret &&
-    prev.system === next.system && // assumes stable identity from caller
+    prev.system === next.system &&
     shallowEqArray(prev.tuning, next.tuning) &&
     shallowEqArray(prev.intervals, next.intervals) &&
     (prev.chordPCs === next.chordPCs ||
-      (prev.chordPCs && next.chordPCs && shallowEqSet(prev.chordPCs, next.chordPCs))) &&
+      (prev.chordPCs &&
+        next.chordPCs &&
+        shallowEqSet(prev.chordPCs, next.chordPCs))) &&
     (prev.stringMeta === next.stringMeta ||
-      (prev.stringMeta && next.stringMeta && shallowEqArrayObj(prev.stringMeta, next.stringMeta)))
+      (prev.stringMeta &&
+        next.stringMeta &&
+        shallowEqArrayObj(prev.stringMeta, next.stringMeta)))
   );
 }
 

@@ -80,7 +80,7 @@ import { useChordLogic } from "@/hooks/useChordLogic";
 import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useCapo } from "@/hooks/useCapo";
-import { LABEL_OPTIONS } from "@/hooks/useLabels";
+import { LABEL_VALUES } from "@/hooks/useLabels";
 
 export default function App() {
   // ----- System selection -----
@@ -276,8 +276,6 @@ export default function App() {
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
-  const labelValues = useMemo(() => LABEL_OPTIONS.map((o) => o.value), []);
-
   const showCheatsheet = useCallback(() => {
     toast(
       () => (
@@ -298,7 +296,7 @@ export default function App() {
     setHideNonChord,
     strings,
     frets,
-    labelValues,
+    LABEL_VALUES,
     onShowCheatsheet: showCheatsheet,
     minStrings: STR_MIN,
     maxStrings: STR_MAX,

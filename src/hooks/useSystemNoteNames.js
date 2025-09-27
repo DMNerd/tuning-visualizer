@@ -12,8 +12,11 @@ export function useSystemNoteNames(system, accidental) {
 
   const sysNames = useMemo(
     () => Array.from({ length: system.divisions }, (_, pc) => nameForPc(pc)),
-    [system.divisions, nameForPc],
+    [system, nameForPc],
   );
 
-  return { pcFromName, nameForPc, sysNames };
+  return useMemo(
+    () => ({ pcFromName, nameForPc, sysNames }),
+    [pcFromName, nameForPc, sysNames],
+  );
 }

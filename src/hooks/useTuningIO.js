@@ -1,5 +1,5 @@
-// hooks/useTuningIO.js
 import { useState, useCallback, useEffect } from "react";
+import { useDebounce } from "use-debounce";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
@@ -36,6 +36,7 @@ const TuningPackArraySchema = v.array(TuningPackSchema);
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
   const [customTunings, setCustomTunings] = useState([]);
+  const [debouncedCustomTunings] = useDebounce(customTunings, 300);
 
   const safeParse = (s) => {
     try {
@@ -55,18 +56,18 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     if (arr.length) setCustomTunings(arr);
   }, []);
 
-  // Save to storage whenever customTunings changes
+  // Debounced save
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
         STORAGE_KEYS.CUSTOM_TUNINGS,
-        JSON.stringify(customTunings),
+        JSON.stringify(debouncedCustomTunings),
       );
     } catch {
       // ignore quota/serialization errors
     }
-  }, [customTunings]);
+  }, [debouncedCustomTunings]);
 
   // ----- Export current tuning as a pack -----
   const getCurrentTuningPack = useCallback(
@@ -97,9 +98,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   );
 
   // ----- Export all custom tunings -----
-  const getAllCustomTunings = useCallback(() => {
-    return customTunings;
-  }, [customTunings]);
+  const getAllCustomTunings = useCallback(() => customTunings, [customTunings]);
 
   // ----- Import one or more packs -----
   const onImportTunings = useCallback((packsRaw, filenames = []) => {
@@ -112,8 +111,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     }
 
     const newTunings = parsed.map((p, i) => {
-      let label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
-      // Explicitly strip accidentals if present in imported JSON
+      const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
       const { system, ...rest } = p;
       const cleanSystem = { edo: system.edo };
       return { ...rest, system: cleanSystem, name: label };

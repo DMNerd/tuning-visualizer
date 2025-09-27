@@ -20,16 +20,19 @@ export function useChordLogic(system, pcFromName) {
     [showChord, chordRootIx, chordType, system.divisions],
   );
 
-  return {
-    chordRoot,
-    setChordRoot,
-    chordType,
-    setChordType,
-    showChord,
-    setShowChord,
-    hideNonChord,
-    setHideNonChord,
-    chordRootIx,
-    chordPCs,
-  };
+  return useMemo(
+    () => ({
+      chordRoot,
+      setChordRoot,
+      chordType,
+      setChordType,
+      showChord,
+      setShowChord,
+      hideNonChord,
+      setHideNonChord,
+      chordRootIx,
+      chordPCs,
+    }),
+    [chordRoot, chordType, showChord, hideNonChord, chordRootIx, chordPCs],
+  );
 }

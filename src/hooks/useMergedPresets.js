@@ -99,12 +99,22 @@ export function useMergedPresets({
     setSelectedPreset("Factory default");
   }, []);
 
-  return {
-    mergedPresetMap,
-    mergedPresetMetaMap,
-    mergedPresetNames,
-    selectedPreset,
-    setPreset,
-    resetSelection,
-  };
+  return useMemo(
+    () => ({
+      mergedPresetMap,
+      mergedPresetMetaMap,
+      mergedPresetNames,
+      selectedPreset,
+      setPreset,
+      resetSelection,
+    }),
+    [
+      mergedPresetMap,
+      mergedPresetMetaMap,
+      mergedPresetNames,
+      selectedPreset,
+      setPreset,
+      resetSelection,
+    ],
+  );
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 /**
  * Computes scale membership and degree lookup, and passes through chord info.
@@ -21,16 +21,23 @@ export function useScaleAndChord({
   chordPCs,
   chordRootPc,
 }) {
-  const scaleSet = useMemo(
-    () => new Set(intervals.map((v) => (v + rootIx) % system.divisions)),
-    [intervals, rootIx, system.divisions],
+  const scaleSet = useMemo(() => {
+    const N = system.divisions;
+    return new Set(intervals.map((v) => (v + rootIx) % N));
+  }, [system, intervals, rootIx]);
+
+  const degreeForPc = useCallback(
+    (pc) => {
+      const N = system.divisions;
+      const rel = (pc - rootIx + N) % N;
+      const ix = intervals.indexOf(rel);
+      return ix >= 0 ? ix + 1 : null;
+    },
+    [system, rootIx, intervals],
   );
 
-  const degreeForPc = (pc) => {
-    const rel = (pc - rootIx + system.divisions) % system.divisions;
-    const ix = intervals.indexOf(rel);
-    return ix >= 0 ? ix + 1 : null;
-  };
-
-  return { scaleSet, degreeForPc, chordPCs, chordRootPc };
+  return useMemo(
+    () => ({ scaleSet, degreeForPc, chordPCs, chordRootPc }),
+    [scaleSet, degreeForPc, chordPCs, chordRootPc],
+  );
 }

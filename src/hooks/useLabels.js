@@ -1,3 +1,5 @@
+import { useMemo, useCallback } from "react";
+
 export const LABEL_OPTIONS = [
   { value: "names", label: "Note names" },
   { value: "degrees", label: "Degrees" },
@@ -5,6 +7,8 @@ export const LABEL_OPTIONS = [
   { value: "fret", label: "Fret number" },
   { value: "off", label: "Off" },
 ];
+
+export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);
 
 // 12-TET interval names by semitone distance up from root
 const INTERVAL_12 = [
@@ -86,26 +90,35 @@ export function useLabels({
   nameForPc,
   accidental = "sharp",
 }) {
-  const intervalOf = makeIntervalFormatter(system, rootIx, accidental);
+  const intervalOf = useMemo(
+    () => makeIntervalFormatter(system, rootIx, accidental),
+    [system, rootIx, accidental], // fixed deps
+  );
 
-  const labelFor = (pc, fret) => {
-    switch (mode) {
-      case "off":
-        return "";
-      case "degrees": {
-        const d = degreeForPc(pc);
-        return d == null ? "" : String(d);
+  const labelFor = useCallback(
+    (pc, fret) => {
+      switch (mode) {
+        case "off":
+          return "";
+        case "degrees": {
+          const d = degreeForPc(pc);
+          return d == null ? "" : String(d);
+        }
+        case "intervals":
+          return intervalOf(pc);
+        case "names":
+          return nameForPc(pc);
+        case "fret":
+          return String(fret);
+        default:
+          return "";
       }
-      case "intervals":
-        return intervalOf(pc);
-      case "names":
-        return nameForPc(pc);
-      case "fret":
-        return String(fret);
-      default:
-        return "";
-    }
-  };
+    },
+    [mode, degreeForPc, nameForPc, intervalOf],
+  );
 
-  return { labelFor, intervalOf, LABEL_OPTIONS };
+  return useMemo(
+    () => ({ labelFor, intervalOf, LABEL_OPTIONS }),
+    [labelFor, intervalOf],
+  );
 }

@@ -27,15 +27,12 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
   }, []);
 
   const effectiveStringMeta = useMemo(() => {
-    // Fast paths: no capo / invalid strings
     if (capoFret === 0) return stringMeta;
     if (!strings || strings <= 0) return stringMeta;
 
     const base = Array.isArray(stringMeta) ? stringMeta : [];
     const byIx = new Map(base.map((m) => [m.index, m]));
 
-    // If every string in base already satisfies the capo constraints,
-    // return the original reference to avoid downstream rerenders.
     const alreadyOk =
       base.length > 0 &&
       base.every((m) => {
@@ -45,7 +42,6 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
 
     if (alreadyOk && base.length === strings) return stringMeta;
 
-    // Build minimal updated meta (only emit when something is non-default)
     const out = [];
     for (let i = 0; i < strings; i++) {
       const m = byIx.get(i) || {};
@@ -67,5 +63,8 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
     return out.length ? out : null;
   }, [strings, stringMeta, capoFret]);
 
-  return { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta };
+  return useMemo(
+    () => ({ capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta }),
+    [capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta],
+  );
 }

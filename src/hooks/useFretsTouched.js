@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 export function useFretsTouched(initial = 22) {
   const [frets, setFrets] = useState(initial);
@@ -9,5 +9,8 @@ export function useFretsTouched(initial = 22) {
     setFretsTouched(true);
   }, []);
 
-  return { frets, setFrets, fretsTouched, setFretsTouched, setFretsUI };
+  return useMemo(
+    () => ({ frets, setFrets, fretsTouched, setFretsTouched, setFretsUI }),
+    [frets, setFrets, fretsTouched, setFretsTouched, setFretsUI],
+  );
 }
