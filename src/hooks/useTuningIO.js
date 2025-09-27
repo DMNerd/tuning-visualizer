@@ -1,8 +1,10 @@
+// src/hooks/useTuningIO.js
 import { useState, useCallback, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { safeJSONParse, safeJSONStringify } from "@/lib/storage/json";
 
 /* =========================
    Valibot Schemas
@@ -38,22 +40,14 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const [customTunings, setCustomTunings] = useState([]);
   const [debouncedCustomTunings] = useDebounce(customTunings, 300);
 
-  const safeParse = (s) => {
-    try {
-      const v = JSON.parse(s);
-      return Array.isArray(v) ? v : [];
-    } catch {
-      return [];
-    }
-  };
-
   // Load from storage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const raw = window.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS);
-    if (!raw) return;
-    const arr = safeParse(raw);
-    if (arr.length) setCustomTunings(arr);
+    const arr = safeJSONParse(raw, []);
+    if (Array.isArray(arr) && arr.length) {
+      setCustomTunings(arr);
+    }
   }, []);
 
   // Debounced save
@@ -62,7 +56,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEYS.CUSTOM_TUNINGS,
-        JSON.stringify(debouncedCustomTunings),
+        safeJSONStringify(debouncedCustomTunings, "[]"),
       );
     } catch {
       // ignore quota/serialization errors

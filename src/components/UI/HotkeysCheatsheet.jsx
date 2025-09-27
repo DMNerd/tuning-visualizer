@@ -3,7 +3,7 @@ import React from "react";
 function HotkeysHelpToast() {
   const rows = [
     ["f", "fullscreen"],
-    ["?", "show this help"],
+    ["shift+/  •  ctrl+/  •  F1", "show this help"],
     ["l", "cycle labels"],
     ["o", "toggle open notes"],
     ["n", "toggle fret numbers"],

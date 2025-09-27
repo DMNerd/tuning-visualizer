@@ -49,6 +49,7 @@ This app will be free and open source forever and is completely self hostable
 
 - **Layout & Controls**
   - Consistent, responsive fretboard geometry across any fret/string count
+  - Quick visual **capo** setting via fret numbers
   - Validated numeric inputs for frets (friendly warnings on out-of-range values)
   - **Fullscreen** viewing mode
   - **Hotkeys** with cheatsheet (press ?)

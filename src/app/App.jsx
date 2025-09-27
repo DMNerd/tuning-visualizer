@@ -157,7 +157,6 @@ export default function App() {
   const stageRef = useRef(null);
 
   const { isActive: isFs, toggle: toggleFs } = useFullscreen(stageRef, {
-    hotkey: true,
     docClass: "is-fs",
   });
 
