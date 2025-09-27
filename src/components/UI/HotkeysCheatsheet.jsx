@@ -1,4 +1,3 @@
-// src/components/UI/HotkeysHelpToast.jsx
 import React from "react";
 
 function HotkeysHelpToast() {

@@ -9,6 +9,7 @@ import React, {
   lazy,
 } from "react";
 import clsx from "clsx";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   FiMaximize,
   FiMinimize,
@@ -62,6 +63,7 @@ import DisplayControls from "@/components/UI/DisplayControls";
 import InstrumentControls from "@/components/UI/InstrumentControls";
 import ExportControls from "@/components/UI/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
+import ErrorFallback from "@/components/UI/ErrorFallback";
 
 // hooks
 import { useTheme } from "@/hooks/useTheme";
@@ -267,9 +269,24 @@ export default function App() {
   const showCheatsheet = useCallback(() => {
     toast(
       () => (
-        <Suspense fallback={<div style={{ padding: 8 }}>Loading…</div>}>
-          <HotkeysHelpToast />
-        </Suspense>
+        <ErrorBoundary
+          FallbackComponent={({ resetErrorBoundary }) => (
+            <div style={{ padding: 8 }}>
+              Failed to load help.
+              <button
+                className="btn"
+                style={{ marginLeft: 8 }}
+                onClick={resetErrorBoundary}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        >
+          <Suspense fallback={<div style={{ padding: 8 }}>Loading…</div>}>
+            <HotkeysHelpToast />
+          </Suspense>
+        </ErrorBoundary>
       ),
       { id: "hotkeys-help", duration: 6000 },
     );
@@ -362,30 +379,38 @@ export default function App() {
               </button>
             </div>
 
-            <Fretboard
-              ref={boardRef}
-              strings={strings}
-              frets={drawFrets}
-              tuning={tuning}
-              rootIx={rootIx}
-              intervals={intervals}
-              accidental={accidental}
-              microLabelStyle={microLabelStyle}
-              show={show}
-              showOpen={showOpen}
-              showFretNums={showFretNums}
-              dotSize={dotSize}
-              lefty={lefty}
-              system={system}
-              chordPCs={chordPCs}
-              chordRootPc={chordRootIx}
-              openOnlyInScale={openOnlyInScale}
-              colorByDegree={colorByDegree}
-              hideNonChord={hideNonChord}
-              stringMeta={effectiveStringMeta}
-              capoFret={capoFret}
-              onSetCapo={toggleCapoAt}
-            />
+            <ErrorBoundary
+              FallbackComponent={ErrorFallback}
+              onReset={() => {
+                setCapoFret(CAPO_DEFAULT);
+                setRoot(ROOT_DEFAULT);
+              }}
+            >
+              <Fretboard
+                ref={boardRef}
+                strings={strings}
+                frets={drawFrets}
+                tuning={tuning}
+                rootIx={rootIx}
+                intervals={intervals}
+                accidental={accidental}
+                microLabelStyle={microLabelStyle}
+                show={show}
+                showOpen={showOpen}
+                showFretNums={showFretNums}
+                dotSize={dotSize}
+                lefty={lefty}
+                system={system}
+                chordPCs={chordPCs}
+                chordRootPc={chordRootIx}
+                openOnlyInScale={openOnlyInScale}
+                colorByDegree={colorByDegree}
+                hideNonChord={hideNonChord}
+                stringMeta={effectiveStringMeta}
+                capoFret={capoFret}
+                onSetCapo={toggleCapoAt}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       </main>
