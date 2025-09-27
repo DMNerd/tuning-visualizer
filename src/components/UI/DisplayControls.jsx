@@ -5,6 +5,7 @@ import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 import { Tooltip } from "react-tooltip";
+import { FiInfo } from "react-icons/fi";
 
 function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
@@ -23,7 +24,7 @@ function DegreeLegend({ k = 7 }) {
           );
         })}
       </div>
-      <p>1 = tonic (root color)</p>
+      <p>1 = tonic (root color).</p>
     </div>
   );
 }
@@ -134,7 +135,7 @@ function DisplayControls({
               role="button"
               tabIndex={0}
             >
-              i
+              <FiInfo size={14} aria-hidden="true" />
             </span>
             <Tooltip id="deg-colors-tip" clickable className="tv-tooltip">
               <DegreeLegend k={degreeCount} />
@@ -150,11 +151,7 @@ function DisplayControls({
         >
           <div className="field">
             <span>Open notes</span>
-            <div
-              role="group"
-              aria-label="Open note scope"
-              className="radio-row"
-            >
+            <div role="group" aria-label="Open note scope" className="radio-row">
               <label className="check" htmlFor="showOpen">
                 <input
                   id="showOpen"
