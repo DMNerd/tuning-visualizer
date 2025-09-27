@@ -8,6 +8,7 @@ import React, {
   Suspense,
   lazy,
 } from "react";
+import clsx from "clsx";
 import {
   FiMaximize,
   FiMinimize,
@@ -122,43 +123,30 @@ export default function App() {
     microLabelStyle,
   } = displayPrefs;
 
-  // Stable setters so memoized children don't re-render unnecessarily
-  const setShow = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, show: v })),
-    [setDisplayPrefs],
-  );
-  const setShowOpen = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, showOpen: v })),
-    [setDisplayPrefs],
-  );
-  const setShowFretNums = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, showFretNums: v })),
-    [setDisplayPrefs],
-  );
-  const setDotSize = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, dotSize: v })),
-    [setDisplayPrefs],
-  );
-  const setAccidental = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, accidental: v })),
-    [setDisplayPrefs],
-  );
-  const setMicroLabelStyle = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, microLabelStyle: v })),
-    [setDisplayPrefs],
-  );
-  const setOpenOnlyInScale = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, openOnlyInScale: v })),
-    [setDisplayPrefs],
-  );
-  const setColorByDegree = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, colorByDegree: v })),
-    [setDisplayPrefs],
-  );
-  const setLefty = useCallback(
-    (v) => setDisplayPrefs((p) => ({ ...p, lefty: v })),
-    [setDisplayPrefs],
-  );
+  const {
+    setShow,
+    setShowOpen,
+    setShowFretNums,
+    setDotSize,
+    setAccidental,
+    setMicroLabelStyle,
+    setOpenOnlyInScale,
+    setColorByDegree,
+    setLefty,
+  } = useMemo(() => {
+    const wrap = (key) => (v) => setDisplayPrefs((p) => ({ ...p, [key]: v }));
+    return {
+      setShow: wrap("show"),
+      setShowOpen: wrap("showOpen"),
+      setShowFretNums: wrap("showFretNums"),
+      setDotSize: wrap("dotSize"),
+      setAccidental: wrap("accidental"),
+      setMicroLabelStyle: wrap("microLabelStyle"),
+      setOpenOnlyInScale: wrap("openOnlyInScale"),
+      setColorByDegree: wrap("colorByDegree"),
+      setLefty: wrap("lefty"),
+    };
+  }, [setDisplayPrefs]);
 
   const [theme, setTheme] = useTheme();
 
@@ -359,7 +347,7 @@ export default function App() {
             <div className="stage-toolbar">
               <button
                 type="button"
-                className={`icon-btn fs-btn${isFs ? " active" : ""}`}
+                className={clsx("icon-btn", "fs-btn", { active: isFs })}
                 aria-label={
                   isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
                 }

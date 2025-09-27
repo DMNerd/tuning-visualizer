@@ -1,4 +1,5 @@
 import React from "react";
+import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
 
@@ -50,7 +51,6 @@ function ChordBuilder({
           </div>
         </div>
 
-        {/* Inline group for chord overlay controls */}
         <div className="field">
           <span>Chord overlay</span>
           <div
@@ -88,4 +88,13 @@ function ChordBuilder({
   );
 }
 
-export default React.memo(ChordBuilder);
+function pick(p) {
+  return {
+    root: p.root,
+    type: p.type,
+    showChord: p.showChord,
+    hideNonChord: p.hideNonChord,
+    sysNames: p.sysNames,
+  };
+}
+export default React.memo(ChordBuilder, (a, b) => dequal(pick(a), pick(b)));

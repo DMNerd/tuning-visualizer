@@ -1,5 +1,5 @@
-// src/components/UI/ExportControls.jsx
 import React, { useState, useMemo, useRef } from "react";
+import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { toast } from "react-hot-toast";
 
@@ -10,10 +10,9 @@ function ExportControls({
   downloadSVG,
   printFretboard,
   buildHeader,
-  // required to wire correct EDO + strings for tuning export/import:
-  getCurrentTuningPack, // () => TuningPack
-  getAllCustomTunings, // () => TuningPack[]
-  onImportTunings, // (packs: TuningPack[], filenames?: string[]) => void
+  getCurrentTuningPack,
+  getAllCustomTunings,
+  onImportTunings,
 }) {
   const [includeHeader, setIncludeHeader] = useState(true);
   const fileInputRef = useRef(null);
@@ -99,7 +98,6 @@ function ExportControls({
       const text = await file.text();
       const json = JSON.parse(text);
 
-      // Normalize into an array and let onImportTunings (Valibot) validate
       let packsArray;
       if (Array.isArray(json)) {
         packsArray = json;
@@ -162,7 +160,6 @@ function ExportControls({
           Print
         </button>
 
-        {/* Tuning I/O */}
         <button className="btn" onClick={exportCurrentTuning}>
           Export current tuning (.tuning.json)
         </button>
@@ -186,4 +183,17 @@ function ExportControls({
   );
 }
 
-export default React.memo(ExportControls);
+function pick(p) {
+  return {
+    boardRef: !!p.boardRef,
+    fileBase: p.fileBase,
+    downloadPNG: p.downloadPNG,
+    downloadSVG: p.downloadSVG,
+    printFretboard: p.printFretboard,
+    buildHeader: p.buildHeader,
+    getCurrentTuningPack: p.getCurrentTuningPack,
+    getAllCustomTunings: p.getAllCustomTunings,
+    onImportTunings: p.onImportTunings,
+  };
+}
+export default React.memo(ExportControls, (a, b) => dequal(pick(a), pick(b)));

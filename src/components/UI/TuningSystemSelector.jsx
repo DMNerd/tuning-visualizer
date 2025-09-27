@@ -1,4 +1,5 @@
 import React from "react";
+import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 
 function TuningSystemSelector({ systemId, setSystemId, systems }) {
@@ -23,4 +24,9 @@ function TuningSystemSelector({ systemId, setSystemId, systems }) {
   );
 }
 
-export default React.memo(TuningSystemSelector);
+function pick(p) {
+  return { systemId: p.systemId, systems: p.systems };
+}
+export default React.memo(TuningSystemSelector, (a, b) =>
+  dequal(pick(a), pick(b)),
+);

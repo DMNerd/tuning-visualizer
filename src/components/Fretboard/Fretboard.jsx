@@ -1,4 +1,6 @@
-import React, { forwardRef, useLayoutEffect, useRef } from "react";
+import React, { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
+import { dequal } from "dequal";
+import clsx from "clsx";
 
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
@@ -67,7 +69,6 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  // pull mapping funcs from hook
   const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental);
   const pcForName = pcFromName;
 
@@ -93,25 +94,129 @@ const Fretboard = forwardRef(function Fretboard(
     accidental,
   });
 
-  if (!Array.isArray(intervals) || intervals.length === 0) {
-    return (
-      <svg
-        ref={svgRef}
-        width="100%"
-        preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block" }}
-      >
-        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
-          No scale selected
-        </text>
-      </svg>
-    );
-  }
+  const noScale = !Array.isArray(intervals) || intervals.length === 0;
 
   const getMetaFor = (s) =>
     Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
 
-  const microLabelOpts = { microStyle: microLabelStyle, accidental };
+  const microLabelOpts = useMemo(
+    () => ({ microStyle: microLabelStyle, accidental }),
+    [microLabelStyle, accidental],
+  );
+
+  const notes = useMemo(() => {
+    if (noScale) return [];
+    const out = [];
+    const N = system.divisions;
+
+    for (let s = 0; s < tuning.length; s++) {
+      const openName = tuning[s];
+      const sf = startFretFor(s);
+      const openPc = (pcForName(openName) + sf) % N;
+      const cy = yForString(s);
+
+      for (let f = 0; f <= frets; f++) {
+        const isOpen = f === 0;
+        const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
+        if (!isPlayable) continue;
+
+        const step = isOpen ? 0 : sf === 0 ? f : f - sf;
+        const pc = (openPc + step) % N;
+
+        const inScale = scaleSet.has(pc);
+        const inChord = chordPCs ? chordPCs.has(pc) : false;
+
+        let visible;
+        if (hideNonChord && chordPCs) {
+          const baselineVisible = isOpen ? showOpen : true;
+          visible = baselineVisible && inChord;
+        } else {
+          const baselineVisible = isOpen
+            ? showOpen && (!openOnlyInScale || inScale)
+            : inScale;
+          visible = baselineVisible;
+        }
+        if (!visible) continue;
+
+        const cx = isOpen ? openXForString(s) : noteX(f, s);
+
+        const isRoot = pc === rootIx;
+        const isStandard = (f * 12) % N === 0;
+        const isMicro = !isStandard;
+
+        const rBase = (isRoot ? 1.1 : 1) * dotSize;
+        const r = inChord ? rBase * 1.05 : rBase;
+
+        let fill;
+        if (colorByDegree) {
+          const deg = degreeForPc(pc);
+          if (deg != null) {
+            fill = getDegreeColor(deg, intervals.length);
+          } else {
+            fill = isMicro ? "var(--note-micro)" : "var(--note)";
+          }
+        } else {
+          fill = isRoot
+            ? "var(--root)"
+            : isMicro
+              ? "var(--note-micro)"
+              : "var(--note)";
+        }
+
+        const isChordRoot = inChord && chordRootPc === pc;
+
+        const globalFretForLabel = isOpen ? sf : f;
+        const raw = labelFor(pc, f);
+        const label =
+          show === "fret"
+            ? buildFretLabel(globalFretForLabel, N, microLabelOpts)
+            : raw;
+
+        out.push({
+          key: `${s}-${f}`,
+          s,
+          f,
+          pc,
+          cx,
+          cy,
+          isRoot,
+          isStandard,
+          isMicro,
+          inChord,
+          isChordRoot,
+          r,
+          fill,
+          label,
+        });
+      }
+    }
+
+    return out;
+  }, [
+    noScale,
+    tuning,
+    frets,
+    system.divisions,
+    startFretFor,
+    yForString,
+    openXForString,
+    noteX,
+    pcForName,
+    scaleSet,
+    chordPCs,
+    chordRootPc,
+    showOpen,
+    openOnlyInScale,
+    hideNonChord,
+    rootIx,
+    dotSize,
+    colorByDegree,
+    degreeForPc,
+    intervals.length,
+    labelFor,
+    show,
+    microLabelOpts,
+  ]);
 
   return (
     <svg
@@ -120,7 +225,6 @@ const Fretboard = forwardRef(function Fretboard(
       preserveAspectRatio="xMidYMid meet"
       style={{ display: "block" }}
     >
-      {/* Geometry (mirrored as one group for left-handed) */}
       <g transform={lefty ? `scale(-1,1) translate(-${width},0)` : undefined}>
         <rect
           x="0"
@@ -131,7 +235,6 @@ const Fretboard = forwardRef(function Fretboard(
           fill="var(--panel)"
         />
 
-        {/* nut — moved to capo position */}
         <rect
           className="nut"
           x={wireX(capoFret)}
@@ -141,7 +244,6 @@ const Fretboard = forwardRef(function Fretboard(
           rx="2"
         />
 
-        {/* strings: optional grey pre-start stub + active segment */}
         {Array.from({ length: strings }).map((_, s) => {
           const y = yForString(s);
           const startX = stringStartX(s);
@@ -170,7 +272,6 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* frets */}
         {Array.from({ length: frets + 1 }).map((_, f) => {
           const isOctave = f % system.divisions === 0;
           const isStandard = (f * 12) % system.divisions === 0;
@@ -182,19 +283,15 @@ const Fretboard = forwardRef(function Fretboard(
               y1={padTop}
               x2={wireX(f)}
               y2={height - padBottom}
-              className={[
-                "fretLine",
-                isOctave ? "strong" : "",
-                isStandard ? "standard" : "",
-                isMicro ? "micro" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+              className={clsx("fretLine", {
+                strong: isOctave,
+                standard: isStandard,
+                micro: isMicro,
+              })}
             />
           );
         })}
 
-        {/* center inlays */}
         {inlaySingles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -211,7 +308,6 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* double inlays */}
         {inlayDoubles.map((f) => {
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
@@ -226,135 +322,34 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {/* note circles */}
-        {tuning.map((openName, s) => {
-          const sf = startFretFor(s);
-          const openPc = (pcForName(openName) + sf) % system.divisions;
-          return Array.from({ length: frets + 1 }).map((_, f) => {
-            const isOpen = f === 0;
-            const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
-            if (!isPlayable) return null;
-
-            const step = isOpen ? 0 : sf === 0 ? f : f - sf;
-            const pc = (openPc + step) % system.divisions;
-
-            const inScale = scaleSet.has(pc);
-            const inChord = chordPCs ? chordPCs.has(pc) : false;
-
-            let visible;
-            if (hideNonChord && chordPCs) {
-              const baselineVisible = isOpen ? showOpen : true;
-              visible = baselineVisible && inChord;
-            } else {
-              const baselineVisible = isOpen
-                ? showOpen && (!openOnlyInScale || inScale)
-                : inScale;
-              visible = baselineVisible;
-            }
-            if (!visible) return null;
-
-            const cx = isOpen ? openXForString(s) : noteX(f, s);
-            const cy = yForString(s);
-
-            const isRoot = pc === rootIx;
-            const isStandard = (f * 12) % system.divisions === 0;
-            const isMicro = !isStandard;
-
-            const rBase = (isRoot ? 1.1 : 1) * dotSize;
-            const r = inChord ? rBase * 1.05 : rBase;
-
-            let fill;
-            if (colorByDegree) {
-              const deg = degreeForPc(pc);
-              if (deg != null) {
-                fill = getDegreeColor(deg, intervals.length);
-              } else {
-                fill = isMicro ? "var(--note-micro)" : "var(--note)";
-              }
-            } else {
-              fill = isRoot
-                ? "var(--root)"
-                : isMicro
-                  ? "var(--note-micro)"
-                  : "var(--note)";
-            }
-
-            const isChordRoot = inChord && chordRootPc === pc;
-
-            return (
-              <circle
-                key={`noteCirc-${s}-${f}`}
-                cx={cx}
-                cy={cy}
-                r={r}
-                fill={fill}
-                stroke={inChord ? "var(--fg)" : "none"}
-                strokeWidth={isChordRoot ? 2.4 : inChord ? 1.8 : 0}
-              />
-            );
-          });
-        })}
+        {notes.map((n) => (
+          <circle
+            key={`noteCirc-${n.key}`}
+            cx={n.cx}
+            cy={n.cy}
+            r={n.r}
+            fill={n.fill}
+            stroke={n.inChord ? "var(--fg)" : "none"}
+            strokeWidth={n.isChordRoot ? 2.4 : n.inChord ? 1.8 : 0}
+          />
+        ))}
       </g>
 
-      {/* note labels (kept out of the mirrored group; use displayX for lefty) */}
-      {tuning.map((openName, s) => {
-        const sf = startFretFor(s);
-        const openPc = (pcForName(openName) + sf) % system.divisions;
-        return Array.from({ length: frets + 1 }).map((_, f) => {
-          const isOpen = f === 0;
-          const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
-          if (!isPlayable) return null;
-
-          const step = isOpen ? 0 : sf === 0 ? f : f - sf;
-          const pc = (openPc + step) % system.divisions;
-
-          const inScale = scaleSet.has(pc);
-          const inChord = chordPCs ? chordPCs.has(pc) : false;
-
-          let visible;
-          if (hideNonChord && chordPCs) {
-            const baselineVisible = isOpen ? showOpen : true;
-            visible = baselineVisible && inChord;
-          } else {
-            const baselineVisible = isOpen
-              ? showOpen && (!openOnlyInScale || inScale)
-              : inScale;
-            visible = baselineVisible;
-          }
-          if (!visible) return null;
-
-          const cx = isOpen ? openXForString(s) : noteX(f, s);
-          const cy = yForString(s);
-          const isRoot = pc === rootIx;
-
-          const globalFretForLabel = isOpen ? sf : f;
-          const raw = labelFor(pc, f);
-          const label =
-            show === "fret"
-              ? buildFretLabel(
-                  globalFretForLabel,
-                  system.divisions,
-                  microLabelOpts,
-                )
-              : raw;
-
-          if (label === "") return null;
-
-          return (
-            <text
-              key={`noteText-${s}-${f}`}
-              className={`noteText ${isRoot ? "big" : ""}`}
-              x={displayX(cx)}
-              y={cy + 4}
-              textAnchor="middle"
-            >
-              {label}
-            </text>
-          );
-        });
+      {notes.map((n) => {
+        if (!n.label) return null;
+        return (
+          <text
+            key={`noteText-${n.key}`}
+            className={clsx("noteText", { big: n.isRoot })}
+            x={displayX(n.cx)}
+            y={n.cy + 4}
+            textAnchor="middle"
+          >
+            {n.label}
+          </text>
+        );
       })}
 
-      {/* fret numbers — clickable to set capo */}
       {showFretNums &&
         Array.from({ length: frets + 1 }).map((_, f) => {
           const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
@@ -372,7 +367,10 @@ const Fretboard = forwardRef(function Fretboard(
                 onSetCapo(f);
               }
             },
-            className: `fretNum ${f === capoFret ? "capo" : ""} ${isStandard ? "" : "microNum"}`,
+            className: clsx("fretNum", {
+              capo: f === capoFret,
+              microNum: !isStandard,
+            }),
           };
 
           return (
@@ -387,69 +385,51 @@ const Fretboard = forwardRef(function Fretboard(
             </text>
           );
         })}
+
+      {noScale && (
+        <text
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{ opacity: 0.8 }}
+        >
+          No scale selected
+        </text>
+      )}
     </svg>
   );
 });
 
 /* =========================
-   Custom memo comparator
+   Memo comparator using dequal
 ========================= */
 
-function shallowEqArray(a, b) {
-  if (a === b) return true;
-  if (!a || !b || a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-  return true;
+function pickRenderProps(p) {
+  return {
+    strings: p.strings,
+    frets: p.frets,
+    rootIx: p.rootIx,
+    accidental: p.accidental,
+    microLabelStyle: p.microLabelStyle,
+    show: p.show,
+    showOpen: p.showOpen,
+    showFretNums: p.showFretNums,
+    dotSize: p.dotSize,
+    lefty: p.lefty,
+    openOnlyInScale: p.openOnlyInScale,
+    colorByDegree: p.colorByDegree,
+    hideNonChord: p.hideNonChord,
+    capoFret: p.capoFret,
+    system: p.system,
+    tuning: p.tuning,
+    intervals: p.intervals,
+    chordPCs: p.chordPCs,
+    chordRootPc: p.chordRootPc,
+    stringMeta: p.stringMeta,
+  };
 }
 
-function shallowEqSet(a, b) {
-  if (a === b) return true;
-  if (!a || !b || a.size !== b.size) return false;
-  for (const v of a) if (!b.has(v)) return false;
-  return true;
-}
-
-function shallowEqArrayObj(a, b) {
-  if (a === b) return true;
-  if (!a || !b || a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i],
-      y = b[i];
-    if (!x || !y) return false;
-    const keys = new Set([...Object.keys(x), ...Object.keys(y)]);
-    for (const k of keys) if (x[k] !== y[k]) return false;
-  }
-  return true;
-}
-
-function propsAreEqual(prev, next) {
-  return (
-    prev.strings === next.strings &&
-    prev.frets === next.frets &&
-    prev.rootIx === next.rootIx &&
-    prev.accidental === next.accidental &&
-    prev.microLabelStyle === next.microLabelStyle &&
-    prev.show === next.show &&
-    prev.showOpen === next.showOpen &&
-    prev.showFretNums === next.showFretNums &&
-    prev.dotSize === next.dotSize &&
-    prev.lefty === next.lefty &&
-    prev.openOnlyInScale === next.openOnlyInScale &&
-    prev.colorByDegree === next.colorByDegree &&
-    prev.hideNonChord === next.hideNonChord &&
-    prev.capoFret === next.capoFret &&
-    prev.system === next.system &&
-    shallowEqArray(prev.tuning, next.tuning) &&
-    shallowEqArray(prev.intervals, next.intervals) &&
-    (prev.chordPCs === next.chordPCs ||
-      (prev.chordPCs &&
-        next.chordPCs &&
-        shallowEqSet(prev.chordPCs, next.chordPCs))) &&
-    (prev.stringMeta === next.stringMeta ||
-      (prev.stringMeta &&
-        next.stringMeta &&
-        shallowEqArrayObj(prev.stringMeta, next.stringMeta)))
-  );
-}
-
-export default React.memo(Fretboard, propsAreEqual);
+export default React.memo(Fretboard, (prev, next) =>
+  dequal(pickRenderProps(prev), pickRenderProps(next)),
+);

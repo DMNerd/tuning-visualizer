@@ -1,4 +1,5 @@
 import React from "react";
+import clsx from "clsx";
 import { FaGithub } from "react-icons/fa";
 import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
 
@@ -26,7 +27,7 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
           <div className="theme-segment" role="group" aria-label="Theme mode">
             <button
               type="button"
-              className={`seg-btn ${isAuto ? "active" : ""}`}
+              className={clsx("seg-btn", { active: isAuto })}
               aria-pressed={isAuto}
               onClick={setAuto}
               title="Auto theme (follow system)"
@@ -36,7 +37,7 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
             </button>
             <button
               type="button"
-              className={`seg-btn ${isLight ? "active" : ""}`}
+              className={clsx("seg-btn", { active: isLight })}
               aria-pressed={isLight}
               onClick={setLight}
               title="Light theme"
@@ -46,7 +47,7 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
             </button>
             <button
               type="button"
-              className={`seg-btn ${isDark ? "active" : ""}`}
+              className={clsx("seg-btn", { active: isDark })}
               aria-pressed={isDark}
               onClick={setDark}
               title="Dark theme"

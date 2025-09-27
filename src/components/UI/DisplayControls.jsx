@@ -1,10 +1,10 @@
 import React from "react";
+import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 
 function DisplayControls({
-  // labels & visibility
   show,
   setShow,
   showOpen,
@@ -13,28 +13,21 @@ function DisplayControls({
   setShowFretNums,
   dotSize,
   setDotSize,
-  // open-note scope
   openOnlyInScale,
   setOpenOnlyInScale,
-  // accidentals
   accidental,
   setAccidental,
-  // micro-fret labels
   microLabelStyle,
   setMicroLabelStyle,
-  // degree coloring
   colorByDegree,
   setColorByDegree,
-  // NEW: handedness
   lefty,
   setLefty,
 }) {
   return (
     <Section title="Display">
       <div className="display-controls">
-        {/* ───────── Notation ───────── */}
         <div className="group" role="region" aria-label="Notation">
-          {/* Accidentals */}
           <div className="field">
             <span>Accidentals</span>
             <div role="group" aria-label="Accidentals" className="radio-row">
@@ -63,7 +56,6 @@ function DisplayControls({
             </div>
           </div>
 
-          {/* Labels (from single source of truth) */}
           <div className="field">
             <span>Labels</span>
             <select
@@ -80,7 +72,6 @@ function DisplayControls({
             </select>
           </div>
 
-          {/* Micro-fret labels */}
           <div className="field">
             <span>Micro-fret labels</span>
             <select
@@ -101,7 +92,6 @@ function DisplayControls({
             </select>
           </div>
 
-          {/* Degree coloring toggle */}
           <label className="check" htmlFor="colorByDegree">
             <input
               id="colorByDegree"
@@ -114,7 +104,6 @@ function DisplayControls({
           </label>
         </div>
 
-        {/* ───────── Open strings ───────── */}
         <div
           className="group"
           role="region"
@@ -164,7 +153,6 @@ function DisplayControls({
           </div>
         </div>
 
-        {/* ───────── Markers & sizing ───────── */}
         <div className="group" role="region" aria-label="Markers and sizing">
           <label className="check" htmlFor="showFretNums">
             <input
@@ -190,7 +178,6 @@ function DisplayControls({
             />
           </div>
 
-          {/* NEW: Left-handed layout */}
           <label className="check" htmlFor="lefty">
             <input
               id="lefty"
@@ -206,4 +193,18 @@ function DisplayControls({
     </Section>
   );
 }
-export default React.memo(DisplayControls);
+
+function pick(p) {
+  return {
+    show: p.show,
+    showOpen: p.showOpen,
+    showFretNums: p.showFretNums,
+    dotSize: p.dotSize,
+    openOnlyInScale: p.openOnlyInScale,
+    accidental: p.accidental,
+    microLabelStyle: p.microLabelStyle,
+    colorByDegree: p.colorByDegree,
+    lefty: p.lefty,
+  };
+}
+export default React.memo(DisplayControls, (a, b) => dequal(pick(a), pick(b)));

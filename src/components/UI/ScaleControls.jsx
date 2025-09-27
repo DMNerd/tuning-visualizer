@@ -1,4 +1,5 @@
 import React from "react";
+import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 
 function ScaleControls({
@@ -45,4 +46,12 @@ function ScaleControls({
   );
 }
 
-export default React.memo(ScaleControls);
+function pick(p) {
+  return {
+    root: p.root,
+    scale: p.scale,
+    sysNames: p.sysNames,
+    scaleOptions: p.scaleOptions,
+  };
+}
+export default React.memo(ScaleControls, (a, b) => dequal(pick(a), pick(b)));
