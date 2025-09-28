@@ -24,7 +24,7 @@ import {
   downloadSVG,
   printFretboard,
   slug,
-} from "@/lib/export/exporters";
+} from "@/lib/export/scales";
 
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
