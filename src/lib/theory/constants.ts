@@ -77,48 +77,61 @@ type SystemOverrides = Readonly<
 
 const COMMON_PRESETS: CommonPresets = {
   4: {
-    "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
-    "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
-    "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
-    "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
-
-    // Bass (4)
+    // Most common
     "Bass 4 Standard (EADG)": ["G", "D", "A", "E"],
     "Bass 4 Drop D (DADG)": ["G", "D", "A", "D"],
     "Bass 4 D Standard (DGCF)": ["F", "C", "G", "D"],
     "Bass 4 C Standard (C F Bb Eb)": ["Eb", "Bb", "F", "C"],
     "Bass 4 BEAD (no G)": ["D", "A", "E", "B"],
+    "Bass 4 Drop C (CGCF)": ["F", "C", "G", "C"],
+    "Bass 4 Drop B (BF#BE)": ["E", "B", "F#", "B"],
+
+    // Other 4-string
+    "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
+    "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
+    "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
+    "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
   },
 
   5: {
-    // Bass (5)
+    // Most common
     "Bass 5 Standard (BEADG)": ["G", "D", "A", "E", "B"],
     "Bass 5 High C (EADGC)": ["C", "G", "D", "A", "E"],
     "Bass 5 Drop A (AEADG)": ["G", "D", "A", "E", "A"],
     "Bass 5 Low F# (F#BEAD)": ["D", "A", "E", "B", "F#"],
 
-    // Banjo (5)
+    // Other
     "Banjo — 5-string (g D G B D)": ["D", "B", "G", "D", "G"],
   },
 
   6: {
-    // Guitar (6)
+    // Very common
     "Standard (EADGBE)": ["E", "B", "G", "D", "A", "E"],
+    "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
     "Drop D": ["E", "B", "G", "D", "A", "D"],
+    "Drop C# / Db (Db Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Db"],
     "Drop C (CGCFAD)": ["D", "A", "F", "C", "G", "C"],
-    DADGAD: ["D", "A", "G", "D", "A", "D"],
+    "Drop B (BF#BEG#C#)": ["C#", "G#", "E", "B", "F#", "B"],
     "C Standard (C F Bb Eb G C)": ["C", "G", "Eb", "Bb", "F", "C"],
     "D Standard (DGCFAD)": ["D", "A", "F", "C", "G", "D"],
+
+    // Open tunings (folk/blues)
     "Open G (DGDGBD)": ["D", "B", "G", "D", "G", "D"],
     "Open D (DADF#AD)": ["D", "A", "F#", "D", "A", "D"],
+    "Open Dm (DADFAD)": ["D", "A", "F", "D", "A", "D"],
     "Open C (CGCGCE)": ["E", "C", "G", "C", "G", "C"],
     "Open E (EBEG#BE)": ["E", "B", "G#", "E", "B", "E"],
     "Open A (EAEAC#E)": ["E", "C#", "A", "E", "A", "E"],
-    "Open B (F#BF#B D# F#)": ["F#", "D#", "B", "F#", "B", "F#"],
-    "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
-    "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
+    "Open B (F#BF#BD#F#)": ["F#", "D#", "B", "F#", "B", "F#"],
+    "Open F (FACFAD)": ["D", "A", "F", "C", "A", "F"],
 
-    // Midwest Emo additions
+    // Other alternates
+    "Double Drop D (DADGBD)": ["D", "B", "G", "D", "A", "D"],
+    "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
+    "Nashville High-Strung (EADGBE)": ["E", "B", "G", "D", "A", "E"],
+    DADGAD: ["D", "A", "G", "D", "A", "D"],
+
+    // Midwest Emo
     "Midwest Emo — Fmaj7 (FACGCE)": ["E", "C", "G", "C", "A", "F"],
     "Midwest Emo — Dmaj(add9) (DADF#AE)": ["E", "A", "F#", "D", "A", "D"],
     "Midwest Emo — Csus2 (CGDGAD)": ["D", "A", "G", "D", "G", "C"],
@@ -127,17 +140,27 @@ const COMMON_PRESETS: CommonPresets = {
 
     // Bass (6)
     "Bass 6 Standard (BEADGC)": ["C", "G", "D", "A", "E", "B"],
+    "Bass 6 Low F# (F#BEADG)": ["G", "D", "A", "E", "B", "F#"],
   },
 
   7: {
+    // Most common 7-string
     "Standard 7 (BEADGBE)": ["E", "B", "G", "D", "A", "E", "B"],
     "Drop A (AEADGBE)": ["E", "B", "G", "D", "A", "E", "A"],
+    "Standard A (AEADGBE)": ["E", "B", "G", "D", "A", "E", "A"],
+    "Drop G (GDGCFAD)": ["D", "A", "F", "C", "G", "D", "G"],
+
+    // Niche
     "All Fourths 7 (EADGCF Bb)": ["Bb", "F", "C", "G", "D", "A", "E"],
   },
 
   8: {
+    // Most common 8-string
     "Standard 8 (F#BEADGBE)": ["E", "B", "G", "D", "A", "E", "B", "F#"],
     "Drop E (EBEADGBE)": ["E", "B", "G", "D", "A", "E", "B", "E"],
+
+    // Less common
+    "Drop D (DADGCFAD)": ["D", "A", "F", "C", "G", "D", "A", "D"],
     "All Fourths 8 (EADGCF Bb Eb)": ["Eb", "Bb", "F", "C", "G", "D", "A", "E"],
   },
 } as const;
