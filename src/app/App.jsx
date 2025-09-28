@@ -238,16 +238,8 @@ export default function App() {
   });
 
   // ----- Tuning IO -----
-  const {
-    customTunings,
-    getCurrentTuningPack,
-    getAllCustomTunings,
-    onImportTunings,
-  } = useTuningIO({
-    systemId,
-    strings,
-    TUNINGS,
-  });
+  const { customTunings, importFromJson, exportCurrent, exportAll } =
+    useTuningIO({ systemId, strings, TUNINGS });
 
   // ----- Merge presets -----
   const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
@@ -269,28 +261,21 @@ export default function App() {
   }, [systemId, strings, resetSelection]);
 
   const showCheatsheet = useCallback(() => {
-    toast(
-      () => (
-        <ErrorBoundary
-          FallbackComponent={({ resetErrorBoundary }) => (
-            <div style={{ padding: 8 }}>
-              Failed to load help.
-              <button
-                className="btn"
-                style={{ marginLeft: 8 }}
-                onClick={resetErrorBoundary}
-              >
-                Retry
-              </button>
-            </div>
-          )}
-        >
-          <Suspense fallback={<div style={{ padding: 8 }}>Loading…</div>}>
-            <HotkeysHelpToast />
-          </Suspense>
-        </ErrorBoundary>
-      ),
-      { id: "hotkeys-help", duration: 6000 },
+    toast.promise(
+      import("@/components/UI/HotkeysCheatsheet"),
+      {
+        loading: "Loading hotkeys…",
+        success: (mod) => {
+          const Comp = mod.default || mod;
+          toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
+            id: "hotkeys-help",
+            duration: 6000,
+          });
+          return "Hotkeys ready.";
+        },
+        error: "Failed to load hotkeys.",
+      },
+      { id: "hotkeys-loader" },
     );
   }, []);
 
@@ -328,9 +313,6 @@ export default function App() {
     const factoryFrets = getFactoryFrets(system.divisions);
     resetInstrumentPrefs(STR_FACTORY, factoryFrets);
     setCapoFret(CAPO_DEFAULT);
-    toast.success(
-      `Restored factory defaults (${STR_FACTORY} strings, ${factoryFrets} frets).`,
-    );
   }, [system.divisions, resetInstrumentPrefs, setCapoFret]);
 
   // Stable export header builder
@@ -523,11 +505,9 @@ export default function App() {
             downloadSVG={downloadSVG}
             printFretboard={printFretboard}
             buildHeader={buildHeader}
-            getCurrentTuningPack={() =>
-              getCurrentTuningPack(tuning, stringMeta)
-            }
-            getAllCustomTunings={getAllCustomTunings}
-            onImportTunings={onImportTunings}
+            exportCurrent={() => exportCurrent(tuning, stringMeta)}
+            exportAll={exportAll}
+            importFromJson={importFromJson}
           />
         </ErrorBoundary>
       </footer>

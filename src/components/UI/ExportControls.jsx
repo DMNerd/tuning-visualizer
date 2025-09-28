@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { toast } from "react-hot-toast";
@@ -10,174 +10,140 @@ function ExportControls({
   downloadSVG,
   printFretboard,
   buildHeader,
-  getCurrentTuningPack,
-  getAllCustomTunings,
-  onImportTunings,
+  exportCurrent,
+  exportAll,
+  importFromJson,
 }) {
-  const [includeHeader, setIncludeHeader] = useState(true);
   const fileInputRef = useRef(null);
 
-  const header = useMemo(() => {
-    if (!includeHeader || !buildHeader) return null;
-    try {
-      return buildHeader();
-    } catch {
-      return null;
-    }
-  }, [includeHeader, buildHeader]);
+  const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
 
-  const downloadJSON = (dataObj, filename) => {
-    const blob = new Blob([JSON.stringify(dataObj, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
+  const withToastPromise = (op, { loading, success, error }, id) =>
+    toast.promise(
+      Promise.resolve().then(op),
+      { loading, success, error },
+      id ? { id } : undefined,
+    );
 
-  const exportCurrentTuning = () => {
-    if (typeof getCurrentTuningPack !== "function") {
-      toast.error(
-        "Export not wired: getCurrentTuningPack is missing. Pass it from useTuningIO / tuningIO.",
-      );
-      return;
-    }
-    try {
-      const pack = getCurrentTuningPack();
-      const safe = (pack.name || fileBase || "tuning").replace(
-        /[^a-z0-9\-_]+/gi,
-        "_",
-      );
-      downloadJSON(pack, `${safe}.tuning.json`);
-      toast.success(`Exported "${pack.name || safe}" tuning.`);
-    } catch (e) {
-      toast.error(`Export failed: ${e?.message || e}`);
-    }
-  };
+  const doDownloadPNG = () =>
+    withToastPromise(
+      () => downloadPNG?.(boardRef?.current, safeFileBase),
+      {
+        loading: "Rendering PNG…",
+        success: "PNG saved.",
+        error: "PNG export failed.",
+      },
+      "export-png",
+    );
 
-  const exportAllCustom = () => {
-    if (typeof getAllCustomTunings !== "function") {
-      toast.error(
-        "Export not wired: getAllCustomTunings is missing. Pass it from useTuningIO.",
-      );
-      return;
-    }
-    try {
-      const packs = getAllCustomTunings() || [];
-      if (!packs.length) {
-        toast("No custom tunings to export.", { icon: "ℹ️" });
-        return;
-      }
-      downloadJSON(
-        { version: 1, type: "tuning-bundle", items: packs },
-        `tunings.bundle.json`,
-      );
-      toast.success(`Exported ${packs.length} custom tuning(s).`);
-    } catch (e) {
-      toast.error(`Export failed: ${e?.message || e}`);
-    }
-  };
+  const doDownloadSVG = () =>
+    withToastPromise(
+      () => downloadSVG?.(boardRef?.current, safeFileBase, buildHeader?.()),
+      {
+        loading: "Rendering SVG…",
+        success: "SVG saved.",
+        error: "SVG export failed.",
+      },
+      "export-svg",
+    );
 
-  const onPickFile = () => fileInputRef.current?.click();
+  const doPrint = () =>
+    withToastPromise(
+      () => printFretboard?.(boardRef?.current, buildHeader?.()),
+      {
+        loading: "Opening print dialog…",
+        success: "Print dialog opened.",
+        error: "Print failed.",
+      },
+      "export-print",
+    );
 
-  const handleFileChange = async (e) => {
+  const doExportCurrent = () =>
+    withToastPromise(
+      () => exportCurrent?.(),
+      {
+        loading: "Preparing current tuning…",
+        success: "Current tuning exported.",
+        error: "Export failed.",
+      },
+      "export-current-tuning",
+    );
+
+  const doExportAll = () =>
+    withToastPromise(
+      () => exportAll?.(),
+      {
+        loading: "Collecting custom tunings…",
+        success: "Custom tunings exported.",
+        error: "Export failed.",
+      },
+      "export-all-tunings",
+    );
+
+  const triggerImport = () => fileInputRef.current?.click();
+
+  const onFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (typeof onImportTunings !== "function") {
-      toast.error(
-        "Import not wired: onImportTunings is missing. Pass it from useTuningIO.",
-      );
-      return;
-    }
-    try {
-      const text = await file.text();
-      const json = JSON.parse(text);
 
-      let packsArray;
-      if (Array.isArray(json)) {
-        packsArray = json;
-      } else if (json?.items && Array.isArray(json.items)) {
-        packsArray = json.items;
-      } else {
-        packsArray = [json];
-      }
-
-      onImportTunings(packsArray, [file.name]);
-      e.target.value = "";
-      toast.success(`Imported ${packsArray.length} tuning(s).`);
-    } catch (err) {
-      console.error(err);
-      toast.error(`Import failed: ${err?.message || err}`);
-    }
+    withToastPromise(
+      async () => {
+        const text = await file.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          throw new Error("Selected file is not valid JSON.");
+        }
+        const json = Array.isArray(parsed) ? parsed : [parsed];
+        await importFromJson?.(json, [file.name]);
+        e.target.value = "";
+      },
+      {
+        loading: `Importing “${file.name}”…`,
+        success: "Tunings imported.",
+        error: (err) => err?.message || "Import failed.",
+      },
+      "import-tunings",
+    );
   };
 
   return (
-    <Section title="Export">
-      <div className="field" style={{ marginBottom: 12 }}>
-        <label htmlFor="include-header" className="check">
+    <Section title="Export / Import">
+      <div className="export-controls">
+        <div className="row">
+          <button type="button" className="btn" onClick={doDownloadPNG}>
+            Export PNG
+          </button>
+          <button type="button" className="btn" onClick={doDownloadSVG}>
+            Export SVG
+          </button>
+          <button type="button" className="btn" onClick={doPrint}>
+            Print
+          </button>
+        </div>
+
+        <div className="row">
+          <button type="button" className="btn" onClick={doExportCurrent}>
+            Export current tuning (.json)
+          </button>
+          <button type="button" className="btn" onClick={doExportAll}>
+            Export all custom (.json)
+          </button>
+        </div>
+
+        <div className="row">
+          <button type="button" className="btn" onClick={triggerImport}>
+            Import tunings (.json)
+          </button>
           <input
-            id="include-header"
-            type="checkbox"
-            checked={includeHeader}
-            onChange={(e) => setIncludeHeader(e.target.checked)}
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onFileChange}
+            hidden
           />
-          <span>Include info header</span>
-        </label>
-      </div>
-
-      <div className="btn-row">
-        <button
-          className="btn"
-          onClick={() =>
-            boardRef.current &&
-            downloadPNG(boardRef.current, `${fileBase}.png`, 3, 16, header)
-          }
-        >
-          Export PNG
-        </button>
-
-        <button
-          className="btn"
-          onClick={() =>
-            boardRef.current &&
-            downloadSVG(boardRef.current, `${fileBase}.svg`, header, 16)
-          }
-        >
-          Export SVG
-        </button>
-
-        <button
-          className="btn"
-          onClick={() =>
-            boardRef.current && printFretboard(boardRef.current, header, 16)
-          }
-        >
-          Print
-        </button>
-
-        <button className="btn" onClick={exportCurrentTuning}>
-          Export current tuning (.tuning.json)
-        </button>
-
-        <button className="btn" onClick={exportAllCustom}>
-          Export all custom (bundle)
-        </button>
-
-        <button className="btn" onClick={onPickFile}>
-          Import tuning(s)…
-        </button>
-        <input
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          type="file"
-          accept=".json,.tuning.json,application/json"
-          style={{ display: "none" }}
-        />
+        </div>
       </div>
     </Section>
   );
@@ -191,9 +157,10 @@ function pick(p) {
     downloadSVG: p.downloadSVG,
     printFretboard: p.printFretboard,
     buildHeader: p.buildHeader,
-    getCurrentTuningPack: p.getCurrentTuningPack,
-    getAllCustomTunings: p.getAllCustomTunings,
-    onImportTunings: p.onImportTunings,
+    exportCurrent: p.exportCurrent,
+    exportAll: p.exportAll,
+    importFromJson: p.importFromJson,
   };
 }
+
 export default React.memo(ExportControls, (a, b) => dequal(pick(a), pick(b)));

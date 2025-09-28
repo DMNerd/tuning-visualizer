@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { STR_MIN, STR_MAX, FRETS_MIN, FRETS_MAX } from "@/lib/theory/constants";
+import { toast } from "react-hot-toast";
 
 function clamp(n, min, max) {
   const v = Number.isFinite(n) ? n : min;
@@ -112,6 +113,28 @@ function InstrumentControls({
     }
   };
 
+  const onSaveDefault = () =>
+    toast.promise(
+      Promise.resolve().then(() => handleSaveDefault?.()),
+      {
+        loading: "Saving default…",
+        success: "Default saved.",
+        error: "Failed to save default.",
+      },
+      { id: "save-default" },
+    );
+
+  const onResetFactory = () =>
+    toast.promise(
+      Promise.resolve().then(() => handleResetFactoryDefault?.()),
+      {
+        loading: "Restoring factory settings…",
+        success: "Factory settings restored.",
+        error: "Failed to restore factory settings.",
+      },
+      { id: "reset-factory" },
+    );
+
   return (
     <Section title="Instrument">
       <div className="instrument">
@@ -219,10 +242,10 @@ function InstrumentControls({
           className="defaults-row"
           style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
         >
-          <button className="btn" onClick={handleSaveDefault}>
+          <button className="btn" onClick={onSaveDefault}>
             Save as default ({systemId}, {strings}-string)
           </button>
-          <button className="btn" onClick={handleResetFactoryDefault}>
+          <button className="btn" onClick={onResetFactory}>
             Reset to factory default
           </button>
         </div>

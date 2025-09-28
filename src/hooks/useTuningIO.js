@@ -3,6 +3,7 @@ import { useLocalStorage } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { toast } from "react-hot-toast";
 
 /* =========================
    Valibot Schemas
@@ -41,7 +42,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [],
   );
 
-  // ----- Export current tuning as a pack -----
+  // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null) => {
       const sys = TUNINGS[systemId];
@@ -69,22 +70,24 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [systemId, strings, TUNINGS],
   );
 
-  // ----- Export all custom tunings -----
+  // ----- Export all custom tunings (pure) -----
   const getAllCustomTunings = useCallback(
     () => customTunings || [],
     [customTunings],
   );
 
-  // ----- Import one or more packs -----
+  // ----- Import one or more packs (pure) -----
   const onImportTunings = useCallback(
     (packsRaw, filenames = []) => {
-      let parsed;
-      try {
-        parsed = v.parse(TuningPackArraySchema, packsRaw);
-      } catch (err) {
-        console.error("Import failed:", err);
-        return;
+      const res = v.safeParse(TuningPackArraySchema, packsRaw);
+      if (!res.success) {
+        const msg =
+          res.issues?.map((i) => i.message).join("; ") ||
+          "Selected file is not a valid tuning pack.";
+        throw new Error(msg);
       }
+
+      const parsed = res.output;
 
       const newTunings = parsed.map((p, i) => {
         const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
@@ -98,11 +101,84 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [setCustomTunings],
   );
 
+  /* =========================
+     Toast-wrapped helpers
+     (optional convenience)
+  ========================= */
+
+  const importFromJson = useCallback(
+    async (json, filenames = []) => {
+      return toast.promise(
+        Promise.resolve().then(() => onImportTunings(json, filenames)),
+        {
+          loading: "Importing tunings…",
+          success: "Tunings imported.",
+          error: (e) => e?.message || "Import failed.",
+        },
+        { id: "import-tunings" },
+      );
+    },
+    [onImportTunings],
+  );
+
+  const exportCurrent = useCallback(
+    (tuning, stringMeta) => {
+      return toast.promise(
+        Promise.resolve().then(() => {
+          const pack = getCurrentTuningPack(tuning, stringMeta);
+          if (!pack)
+            throw new Error("Nothing to export for the current tuning.");
+          const blob = new Blob([JSON.stringify(pack, null, 2)], {
+            type: "application/json",
+          });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `current-tuning.json`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }),
+        {
+          loading: "Preparing current tuning…",
+          success: "Current tuning exported.",
+          error: (e) => e?.message || "Export failed.",
+        },
+        { id: "export-current-tuning" },
+      );
+    },
+    [getCurrentTuningPack],
+  );
+
+  const exportAll = useCallback(() => {
+    return toast.promise(
+      Promise.resolve().then(() => {
+        const packs = getAllCustomTunings() || [];
+        if (!packs.length) throw new Error("No custom tunings to export.");
+        const blob = new Blob([JSON.stringify(packs, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `custom-tunings.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }),
+      {
+        loading: "Collecting custom tunings…",
+        success: "Custom tunings exported.",
+        error: (e) => e?.message || "Export failed.",
+      },
+      { id: "export-all-tunings" },
+    );
+  }, [getAllCustomTunings]);
+
   return {
     getCurrentTuningPack,
     getAllCustomTunings,
     onImportTunings,
     customTunings: customTunings || [],
     clearCustomTunings: () => setCustomTunings([]),
+    importFromJson,
+    exportCurrent,
+    exportAll,
   };
 }
