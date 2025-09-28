@@ -105,7 +105,7 @@ const COMMON_PRESETS: CommonPresets = {
   },
 
   6: {
-    // Very common
+    // Guitar (6)
     "Standard (EADGBE)": ["E", "B", "G", "D", "A", "E"],
     "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
     "Drop D": ["E", "B", "G", "D", "A", "D"],
@@ -114,6 +114,13 @@ const COMMON_PRESETS: CommonPresets = {
     "Drop B (BF#BEG#C#)": ["C#", "G#", "E", "B", "F#", "B"],
     "C Standard (C F Bb Eb G C)": ["C", "G", "Eb", "Bb", "F", "C"],
     "D Standard (DGCFAD)": ["D", "A", "F", "C", "G", "D"],
+
+    // Baritone (6)
+    "Baritone B Standard (BEADF#B)": ["B", "F#", "D", "A", "E", "B"],
+    "Baritone A Standard (ADGCFAD)": ["A", "D", "G", "C", "F", "A"],
+    "Baritone C Standard (CFBbEbGC)": ["C", "G", "Eb", "Bb", "F", "C"],
+    "Baritone Drop A (AEADF#B)": ["B", "F#", "D", "A", "E", "A"],
+    "Baritone Drop B (BF#BEG#C#)": ["C#", "G#", "E", "B", "F#", "B"],
 
     // Open tunings (folk/blues)
     "Open G (DGDGBD)": ["D", "B", "G", "D", "G", "D"],
