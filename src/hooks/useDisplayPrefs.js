@@ -3,6 +3,7 @@ import { useLocalStorage } from "react-use";
 import { useDebounce } from "use-debounce";
 import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 export function useDisplayPrefs(initial) {
   const [stored, setStored] = useLocalStorage(STORAGE_KEYS.DISPLAY_PREFS, {});
@@ -23,5 +24,24 @@ export function useDisplayPrefs(initial) {
     setStored(debouncedPrefs);
   }, [debouncedPrefs, setStored]);
 
-  return useMemo(() => [prefs, setPrefs], [prefs, setPrefs]);
+  const fieldSetters = useMemo(
+    () =>
+      makeImmerSetters(setPrefs, [
+        "show",
+        "showOpen",
+        "showFretNums",
+        "dotSize",
+        "accidental",
+        "microLabelStyle",
+        "openOnlyInScale",
+        "colorByDegree",
+        "lefty",
+      ]),
+    [setPrefs],
+  );
+
+  return useMemo(
+    () => [prefs, setPrefs, fieldSetters],
+    [prefs, setPrefs, fieldSetters],
+  );
 }

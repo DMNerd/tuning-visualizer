@@ -85,6 +85,8 @@ import { useHotkeys } from "@/hooks/useHotkeys";
 import { useCapo } from "@/hooks/useCapo";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 
+import { makeImmerSetters } from "@/utils/makeImmerSetters";
+
 export default function App() {
   // ----- System selection -----
   const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
@@ -135,23 +137,21 @@ export default function App() {
     setOpenOnlyInScale,
     setColorByDegree,
     setLefty,
-  } = useMemo(() => {
-    const wrap = (key) => (v) =>
-      setDisplayPrefs((d) => {
-        d[key] = v;
-      });
-    return {
-      setShow: wrap("show"),
-      setShowOpen: wrap("showOpen"),
-      setShowFretNums: wrap("showFretNums"),
-      setDotSize: wrap("dotSize"),
-      setAccidental: wrap("accidental"),
-      setMicroLabelStyle: wrap("microLabelStyle"),
-      setOpenOnlyInScale: wrap("openOnlyInScale"),
-      setColorByDegree: wrap("colorByDegree"),
-      setLefty: wrap("lefty"),
-    };
-  }, [setDisplayPrefs]);
+  } = useMemo(
+    () =>
+      makeImmerSetters(setDisplayPrefs, [
+        "show",
+        "showOpen",
+        "showFretNums",
+        "dotSize",
+        "accidental",
+        "microLabelStyle",
+        "openOnlyInScale",
+        "colorByDegree",
+        "lefty",
+      ]),
+    [setDisplayPrefs],
+  );
 
   const [theme, setTheme] = useTheme();
 
@@ -259,6 +259,7 @@ export default function App() {
       setTuning,
       setStringMeta,
       currentEdo: system.divisions,
+      currentStrings: strings,
     });
 
   // Reset meta and preset label when system or string count changes
@@ -415,77 +416,120 @@ export default function App() {
           systems={TUNINGS}
         />
 
-        <ScaleControls
-          root={root}
-          setRoot={setRoot}
-          scale={scale}
-          setScale={setScale}
-          sysNames={sysNames}
-          scaleOptions={scaleOptions}
-        />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[systemId, root, scale]}
+          onReset={() => {
+            setRoot(ROOT_DEFAULT);
+          }}
+        >
+          <ScaleControls
+            root={root}
+            setRoot={setRoot}
+            scale={scale}
+            setScale={setScale}
+            sysNames={sysNames}
+            scaleOptions={scaleOptions}
+          />
+        </ErrorBoundary>
 
-        <ChordBuilder
-          root={chordRoot}
-          onRootChange={setChordRoot}
-          sysNames={sysNames}
-          type={chordType}
-          onTypeChange={setChordType}
-          showChord={showChord}
-          setShowChord={setShowChord}
-          hideNonChord={hideNonChord}
-          setHideNonChord={setHideNonChord}
-        />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
+          onReset={() => {
+            setChordRoot(ROOT_DEFAULT);
+            setShowChord(false);
+            setHideNonChord(false);
+          }}
+        >
+          <ChordBuilder
+            root={chordRoot}
+            onRootChange={setChordRoot}
+            sysNames={sysNames}
+            type={chordType}
+            onTypeChange={setChordType}
+            showChord={showChord}
+            setShowChord={setShowChord}
+            hideNonChord={hideNonChord}
+            setHideNonChord={setHideNonChord}
+          />
+        </ErrorBoundary>
 
-        <InstrumentControls
-          strings={strings}
-          setStrings={setStrings}
-          frets={frets}
-          setFrets={setFretsUI}
-          sysNames={sysNames}
-          tuning={tuning}
-          setTuning={setTuning}
-          handleStringsChange={handleStringsChange}
-          presetNames={mergedPresetNames}
-          selectedPreset={selectedPreset}
-          setSelectedPreset={setPreset}
-          handleSaveDefault={saveDefault}
-          handleResetFactoryDefault={handleResetFactoryAll}
-          systemId={systemId}
-        />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[strings, frets, systemId]}
+          onReset={() => {
+            setStrings(STR_FACTORY);
+            setFretsUI(getFactoryFrets(system.divisions));
+          }}
+        >
+          <InstrumentControls
+            strings={strings}
+            setStrings={setStrings}
+            frets={frets}
+            setFrets={setFretsUI}
+            sysNames={sysNames}
+            tuning={tuning}
+            setTuning={setTuning}
+            handleStringsChange={handleStringsChange}
+            presetNames={mergedPresetNames}
+            selectedPreset={selectedPreset}
+            setSelectedPreset={setPreset}
+            handleSaveDefault={saveDefault}
+            handleResetFactoryDefault={handleResetFactoryAll}
+            systemId={systemId}
+          />
+        </ErrorBoundary>
 
-        <DisplayControls
-          show={show}
-          setShow={setShow}
-          showOpen={showOpen}
-          setShowOpen={setShowOpen}
-          showFretNums={showFretNums}
-          setShowFretNums={setShowFretNums}
-          dotSize={dotSize}
-          setDotSize={setDotSize}
-          accidental={accidental}
-          setAccidental={setAccidental}
-          microLabelStyle={microLabelStyle}
-          setMicroLabelStyle={setMicroLabelStyle}
-          openOnlyInScale={openOnlyInScale}
-          setOpenOnlyInScale={setOpenOnlyInScale}
-          colorByDegree={colorByDegree}
-          setColorByDegree={setColorByDegree}
-          lefty={lefty}
-          setLefty={setLefty}
-          degreeCount={intervals.length}
-        />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[displayPrefs]}
+          onReset={() => {
+            setDisplayPrefs(DISPLAY_DEFAULTS);
+          }}
+        >
+          <DisplayControls
+            show={show}
+            setShow={setShow}
+            showOpen={showOpen}
+            setShowOpen={setShowOpen}
+            showFretNums={showFretNums}
+            setShowFretNums={setShowFretNums}
+            dotSize={dotSize}
+            setDotSize={setDotSize}
+            accidental={accidental}
+            setAccidental={setAccidental}
+            microLabelStyle={microLabelStyle}
+            setMicroLabelStyle={setMicroLabelStyle}
+            openOnlyInScale={openOnlyInScale}
+            setOpenOnlyInScale={setOpenOnlyInScale}
+            colorByDegree={colorByDegree}
+            setColorByDegree={setColorByDegree}
+            lefty={lefty}
+            setLefty={setLefty}
+            degreeCount={intervals.length}
+          />
+        </ErrorBoundary>
 
-        <ExportControls
-          boardRef={boardRef}
-          fileBase={fileBaseSlug}
-          downloadPNG={downloadPNG}
-          downloadSVG={downloadSVG}
-          printFretboard={printFretboard}
-          buildHeader={buildHeader}
-          getCurrentTuningPack={() => getCurrentTuningPack(tuning, stringMeta)}
-          getAllCustomTunings={getAllCustomTunings}
-          onImportTunings={onImportTunings}
-        />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[fileBaseSlug]}
+          onReset={() => {}}
+        >
+          <ExportControls
+            boardRef={boardRef}
+            fileBase={fileBaseSlug}
+            downloadPNG={downloadPNG}
+            downloadSVG={downloadSVG}
+            printFretboard={printFretboard}
+            buildHeader={buildHeader}
+            getCurrentTuningPack={() =>
+              getCurrentTuningPack(tuning, stringMeta)
+            }
+            getAllCustomTunings={getAllCustomTunings}
+            onImportTunings={onImportTunings}
+          />
+        </ErrorBoundary>
       </footer>
 
       <Toaster

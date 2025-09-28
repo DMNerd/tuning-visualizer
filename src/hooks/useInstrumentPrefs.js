@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useCallback } from "react";
 import { useLocalStorage } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 /**
  * Manages instrument-level persisted prefs (strings/frets).
- * - strings: stored via useLocalStorage (immediate persistence)
- * - frets: loaded from storage; persisted only after user "touches"
+ * - strings: persisted immediately via localStorage
+ * - frets: hydrated from storage on mount (if present) but persisted only after user "touches"
+ *   using the fretsTouched flag provided by the caller.
  */
 export function useInstrumentPrefs({
   frets,
@@ -21,54 +23,78 @@ export function useInstrumentPrefs({
   FRETS_MAX,
   STR_FACTORY,
 }) {
-  // Persisted strings (clamped)
   const [strings, setStrings] = useLocalStorage(
     STORAGE_KEYS.STRINGS,
     STR_FACTORY,
   );
 
-  // Clamp strings if someone edited storage manually
   useEffect(() => {
-    if (typeof strings === "number") {
-      const fixed = clamp(strings, STR_MIN, STR_MAX);
-      if (fixed !== strings) setStrings(fixed);
+    if (typeof strings !== "number") {
+      setStrings(STR_FACTORY);
+      return;
     }
-  }, [strings, STR_MIN, STR_MAX, setStrings]);
+    const fixed = clamp(strings, STR_MIN, STR_MAX);
+    if (fixed !== strings) setStrings(fixed);
+  }, [strings, setStrings, STR_MIN, STR_MAX, STR_FACTORY]);
 
-  // Persisted frets value (WRITE only after user touches)
   const [savedFrets, setSavedFrets, removeSavedFrets] = useLocalStorage(
     STORAGE_KEYS.FRETS,
     undefined,
   );
 
-  // Apply saved frets when present (clamped)
   useEffect(() => {
-    const savedNum = Number(savedFrets);
-    if (Number.isFinite(savedNum)) {
-      setFretsUI(clamp(savedNum, FRETS_MIN, FRETS_MAX));
+    if (typeof savedFrets === "number" && !fretsTouched) {
+      const fixed = clamp(savedFrets, FRETS_MIN, FRETS_MAX);
+      setFretsUI(fixed);
     }
-  }, [savedFrets, setFretsUI, FRETS_MIN, FRETS_MAX]);
+  }, [savedFrets, fretsTouched, setFretsUI, FRETS_MIN, FRETS_MAX]);
 
-  // Persist frets only if user has touched the control
   useEffect(() => {
-    if (fretsTouched) {
-      setSavedFrets(clamp(frets, FRETS_MIN, FRETS_MAX)); // <-- keep name if your const is FREETS_MAX
+    if (fretsTouched && typeof frets === "number") {
+      setSavedFrets(clamp(frets, FRETS_MIN, FRETS_MAX));
     }
   }, [frets, fretsTouched, FRETS_MIN, FRETS_MAX, setSavedFrets]);
 
-  // Reset only the instrument prefs (strings/frets) and related storage
   const resetInstrumentPrefs = useCallback(
     (nextStringsFactory, nextFretsFactory) => {
       setStrings(nextStringsFactory);
       setFrets(nextFretsFactory);
-      removeSavedFrets(); // drop persisted frets
+      removeSavedFrets();
       setFretsTouched?.(false);
     },
     [setStrings, setFrets, removeSavedFrets, setFretsTouched],
   );
 
+  const setDraft = useCallback(
+    (updater) => {
+      const prev = { strings, frets, fretsTouched };
+      const draft = { ...prev };
+      updater(draft);
+      if (draft.strings !== prev.strings) setStrings(draft.strings);
+      if (draft.frets !== prev.frets) setFretsUI(draft.frets);
+      if (draft.fretsTouched !== prev.fretsTouched)
+        setFretsTouched?.(draft.fretsTouched);
+    },
+    [strings, frets, fretsTouched, setStrings, setFretsUI, setFretsTouched],
+  );
+
+  const fieldSetters = useMemo(
+    () =>
+      makeImmerSetters(setDraft, {
+        strings: "setStringsPref",
+        frets: "setFretsPref",
+        fretsTouched: "setFretsTouchedPref",
+      }),
+    [setDraft],
+  );
+
   return useMemo(
-    () => ({ strings, setStrings, resetInstrumentPrefs }),
-    [strings, setStrings, resetInstrumentPrefs],
+    () => ({
+      strings,
+      setStrings,
+      resetInstrumentPrefs,
+      ...fieldSetters,
+    }),
+    [strings, setStrings, resetInstrumentPrefs, fieldSetters],
   );
 }

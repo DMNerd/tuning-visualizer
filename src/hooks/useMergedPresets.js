@@ -7,14 +7,20 @@ export function useMergedPresets({
   customTunings,
   setTuning,
   setStringMeta,
-  currentEdo, // number, e.g. system.divisions
+  currentEdo,
+  currentStrings,
 }) {
-  // Only show custom packs compatible with the current EDO
   const compatibleCustoms = useMemo(() => {
     if (!Array.isArray(customTunings)) return [];
     const edoNum = Number(currentEdo);
-    return customTunings.filter((p) => Number(p?.system?.edo) === edoNum);
-  }, [customTunings, currentEdo]);
+    const strNum = Number(currentStrings);
+    return customTunings.filter((p) => {
+      const edoOk = Number(p?.system?.edo) === edoNum;
+      const arr = Array.isArray(p?.tuning?.strings) ? p.tuning.strings : null;
+      const stringsOk = Array.isArray(arr) && arr.length === strNum;
+      return edoOk && stringsOk;
+    });
+  }, [customTunings, currentEdo, currentStrings]);
 
   // Build map of tuning arrays from compatible customs
   const customPresetMap = useMemo(() => {
