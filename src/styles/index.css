@@ -1,3 +1,5 @@
-@import "./tokens.css";
-@import "./base.css";
-@import "./layout.css";
+@layer tokens, base, layout;
+
+@import "./tokens.css" layer(tokens);
+@import "./base.css" layer(base);
+@import "./layout.css" layer(layout);

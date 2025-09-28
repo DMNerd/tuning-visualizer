@@ -11,7 +11,7 @@ function ScaleControls({
   scaleOptions,
 }) {
   return (
-    <Section title="Scale">
+    <Section title="Scale" size="sm">
       <div className="grid2">
         <div className="field">
           <span>Root</span>
