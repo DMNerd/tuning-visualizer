@@ -35,9 +35,7 @@ import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
-import {
-  PRESET_TUNING_META,
-} from "@/lib/theory/presets";
+import { PRESET_TUNING_META } from "@/lib/theory/presets";
 
 import {
   STR_MIN,
@@ -51,7 +49,6 @@ import {
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
 } from "@/lib/config/appDefaults";
-
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/presetState";
 

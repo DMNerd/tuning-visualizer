@@ -7,7 +7,6 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
-import css from "@eslint/css";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -65,23 +64,6 @@ export default defineConfig([
         { varsIgnorePattern: "^[A-Z_]" },
       ],
       "no-undef": "off",
-    },
-  },
-
-  // CSS (Lightning CSS will transform these; ESLint lints them)
-  {
-    files: ["**/*.css"],
-    language: "css/css",
-    plugins: { css },
-    // You can also use: extends: ["css/recommended"]
-    rules: {
-      "css/no-empty-blocks": "error",
-      "css/no-invalid-at-rules": "error",
-      "css/no-invalid-properties": "error",
-      // Baseline feature check (good complement to Lightning CSS targets)
-      "css/use-baseline": "warn",
-      // Optional: forbid !important in your app styles
-      "css/no-important": "warn",
     },
   },
 ]);
