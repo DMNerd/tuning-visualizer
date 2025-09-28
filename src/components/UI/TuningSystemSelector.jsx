@@ -4,7 +4,7 @@ import Section from "@/components/UI/Section";
 
 function TuningSystemSelector({ systemId, setSystemId, systems }) {
   return (
-    <Section title="Tuning System">
+    <Section title="Tuning System" size="sm">
       <div className="field">
         <span>System</span>
         <select
