@@ -1,8 +1,8 @@
 // Generic N-TET utilities + 24-TET names
 
-export type Accidental = "sharp" | "flat";
+type Accidental = "sharp" | "flat";
 
-export type TuningSystem = {
+type TuningSystem = {
   id: string; // e.g. "12-TET", "24-TET"
   divisions: number; // N: divisions per octave
   refFreq: number; // A4 reference

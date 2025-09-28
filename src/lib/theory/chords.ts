@@ -1,4 +1,4 @@
-export type ChordType =
+type ChordType =
   // Standard triads & sevenths
   | "maj"
   | "min"
@@ -23,7 +23,7 @@ export type ChordType =
   | "min↓3" // 1 b3↓ 5
   | "quartal"; // 1 4 7♭ (stacked fourths)
 
-export interface ChordFormula {
+interface ChordFormula {
   label: string;
   /** Steps from the root in system divisions (EDO steps). */
   steps: number[];
