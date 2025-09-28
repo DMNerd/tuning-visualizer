@@ -27,7 +27,7 @@ export function slug(
 function getBox(svg: SVGSVGElement): Box {
   const vb = svg.viewBox?.baseVal;
   if (vb) return { x: vb.x, y: vb.y, width: vb.width, height: vb.height };
-  const b = (svg as unknown as SVGGraphicsElement).getBBox();
+  const b = svg.getBBox();
   return { x: b.x, y: b.y, width: b.width, height: b.height };
 }
 
@@ -43,10 +43,12 @@ function cloneSvg(
 
   const html = document.documentElement;
   const prevTheme = html.getAttribute("data-theme");
-  const mustToggle = opts?.forceTheme && prevTheme !== opts.forceTheme;
+  const mustToggle = !!(opts?.forceTheme && prevTheme !== opts.forceTheme);
 
   try {
-    if (mustToggle) html.setAttribute("data-theme", opts!.forceTheme!);
+    if (mustToggle && opts?.forceTheme) {
+      html.setAttribute("data-theme", opts.forceTheme);
+    }
     inlineComputedStyles(svg, clone);
   } finally {
     if (mustToggle) {
@@ -59,32 +61,31 @@ function cloneSvg(
 }
 
 function inlineComputedStyles(src: Element, dest: Element) {
-  const maybeWin = src.ownerDocument?.defaultView as
-    | (Window & typeof globalThis)
-    | null;
-  if (!maybeWin) return;
-  const W = maybeWin;
+  const win = src.ownerDocument?.defaultView;
+  if (!win) return;
 
-  const walker = document.createTreeWalker(src, NodeFilter.SHOW_ELEMENT);
-  const destWalker = document.createTreeWalker(dest, NodeFilter.SHOW_ELEMENT);
+  const srcDoc = src.ownerDocument;
+  if (!srcDoc) return;
+  const destDoc = dest.ownerDocument ?? document;
 
-  applyStyle(src as HTMLElement, dest as HTMLElement, W);
+  const srcWalker = srcDoc.createTreeWalker(src, NodeFilter.SHOW_ELEMENT);
+  const destWalker = destDoc.createTreeWalker(dest, NodeFilter.SHOW_ELEMENT);
 
+  // Root first
+  applyStyle(src, dest, win);
+
+  // Walk both trees in lockstep
   while (true) {
-    const s = walker.nextNode() as HTMLElement | null;
-    const d = destWalker.nextNode() as HTMLElement | null;
+    const s = srcWalker.nextNode() as Element | null;
+    const d = destWalker.nextNode() as Element | null;
     if (!s || !d) break;
-    applyStyle(s, d, W);
+    applyStyle(s, d, win);
   }
 
-  function applyStyle(
-    from: HTMLElement,
-    to: HTMLElement,
-    win: Window & typeof globalThis,
-  ) {
-    const cs = win.getComputedStyle(from);
+  function applyStyle(from: Element, to: Element, w: Window) {
+    const cs = w.getComputedStyle(from);
+
     const props = [
-      // general text/paint
       "opacity",
       "font",
       "font-family",
@@ -92,8 +93,6 @@ function inlineComputedStyles(src: Element, dest: Element) {
       "font-weight",
       "color",
       "fill",
-
-      // strokes (include dash props so micro-frets look right)
       "stroke",
       "stroke-width",
       "stroke-linejoin",
@@ -102,8 +101,6 @@ function inlineComputedStyles(src: Element, dest: Element) {
       "stroke-opacity",
       "stroke-dasharray",
       "stroke-dashoffset",
-
-      // rendering hints
       "paint-order",
       "text-rendering",
       "shape-rendering",
@@ -135,9 +132,11 @@ function withPaddingAndHeader(
 
   const { width, height, x, y } = getBox(source);
 
-  const HEADER_TEXT = header ? formatHeaderSingleLine(header) : null;
+  const headerStr = header ? formatHeaderSingleLine(header) : "";
+  const hasHeader = headerStr.trim().length > 0;
+
   const HEADER_FONT_SIZE = 32;
-  const HEADER_GAP = HEADER_TEXT ? 12 : 0;
+  const HEADER_GAP = hasHeader ? 12 : 0;
 
   const CARD_RADIUS = 22;
   const CARD_BORDER = "#e6e6e6";
@@ -149,7 +148,8 @@ function withPaddingAndHeader(
   const cardH = height + INNER * 2;
 
   const totalW = cardW + OUTER * 2;
-  const headerBlock = HEADER_TEXT ? HEADER_FONT_SIZE + HEADER_GAP : 0;
+  // Baseline-friendly: reserve exactly font-size + gap when we have a header
+  const headerBlock = hasHeader ? HEADER_FONT_SIZE + HEADER_GAP : 0;
   const totalH = headerBlock + cardH + OUTER * 2;
 
   const outer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -166,12 +166,13 @@ function withPaddingAndHeader(
   bg.setAttribute("fill", "#0b0b0b");
   outer.appendChild(bg);
 
-  if (HEADER_TEXT) {
+  if (hasHeader) {
     const t = document.createElementNS(outer.namespaceURI, "text");
-    t.textContent = HEADER_TEXT;
+    t.textContent = headerStr;
     t.setAttribute("x", String(totalW / 2));
     t.setAttribute("y", String(OUTER + HEADER_FONT_SIZE));
     t.setAttribute("text-anchor", "middle");
+    t.setAttribute("xml:space", "preserve");
     t.setAttribute(
       "font-family",
       "system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif",
@@ -222,7 +223,7 @@ function formatHeaderSingleLine(h: ExportHeader): string {
   return bits.join(" • ");
 }
 
-export async function downloadSVG(
+export function downloadSVG(
   svgEl: SVGSVGElement,
   filename = "fretboard.svg",
   header: ExportHeader | null = null,
@@ -272,7 +273,7 @@ export async function downloadPNG(
   URL.revokeObjectURL(url);
 }
 
-export async function printFretboard(
+export function printFretboard(
   svgEl: SVGSVGElement,
   header: ExportHeader | null = null,
   padding = 16,
@@ -292,7 +293,13 @@ export async function printFretboard(
   document.body.appendChild(iframe);
 
   iframe.onload = () => {
-    const doc = iframe.contentDocument!;
+    const doc = iframe.contentDocument;
+    if (!doc) {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(iframe);
+      return;
+    }
+
     doc.body.style.margin = "0";
     doc.body.style.padding = "0";
     doc.body.style.background = "#fff";
@@ -350,7 +357,14 @@ function canvasToBlob(
   type: string,
   quality?: number,
 ): Promise<Blob> {
-  return new Promise((resolve) =>
-    canvas.toBlob((b) => resolve(b!), type, quality),
-  );
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => {
+        if (b) resolve(b);
+        else reject(new Error("Failed to create blob from canvas."));
+      },
+      type,
+      quality,
+    );
+  });
 }

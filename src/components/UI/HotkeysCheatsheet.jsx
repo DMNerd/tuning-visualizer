@@ -21,7 +21,10 @@ function HotkeysCheatsheet({ onClose }) {
   );
 
   const renderKeys = (text) => {
-    const alts = text.split("•").map((s) => s.trim()).filter(Boolean);
+    const alts = text
+      .split("•")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     const renderAlt = (alt) => {
       if (alt.includes(" / ")) {
@@ -29,7 +32,10 @@ function HotkeysCheatsheet({ onClose }) {
         return (
           <span className="hk-alt" key={alt}>
             <kbd>{pair[0]}</kbd>
-            <span className="hk-sep" aria-hidden="true"> / </span>
+            <span className="hk-sep" aria-hidden="true">
+              {" "}
+              /{" "}
+            </span>
             <kbd>{pair[1]}</kbd>
           </span>
         );
@@ -42,7 +48,10 @@ function HotkeysCheatsheet({ onClose }) {
               <span className="hk-combo" key={`${alt}-${p}-${i}`}>
                 <kbd>{p}</kbd>
                 {i < parts.length - 1 ? (
-                  <span className="hk-sep" aria-hidden="true"> + </span>
+                  <span className="hk-sep" aria-hidden="true">
+                    {" "}
+                    +{" "}
+                  </span>
                 ) : null}
               </span>
             ))}
@@ -60,14 +69,21 @@ function HotkeysCheatsheet({ onClose }) {
       <span className="hk-alt-wrap" key={`alt-${i}`}>
         {renderAlt(alt)}
         {i < alts.length - 1 ? (
-          <span className="hk-sep" aria-hidden="true"> • </span>
+          <span className="hk-sep" aria-hidden="true">
+            {" "}
+            •{" "}
+          </span>
         ) : null}
       </span>
     ));
   };
 
   return (
-    <div className="hotkeys-toast" role="dialog" aria-label="Keyboard shortcuts">
+    <div
+      className="hotkeys-toast"
+      role="dialog"
+      aria-label="Keyboard shortcuts"
+    >
       <div className="hotkeys-title">
         <span>Hotkeys</span>
         {onClose ? (

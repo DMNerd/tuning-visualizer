@@ -39,7 +39,7 @@ export function getFactoryFrets(edo: number): number {
 }
 
 // ---------------- App-wide defaults ----------------
-export const SYSTEM_DEFAULT = "12-TET";
+export const SYSTEM_DEFAULT: SystemId = "12-TET";
 export const ROOT_DEFAULT = "C";
 export const CAPO_DEFAULT = 0;
 
@@ -170,11 +170,16 @@ const SYSTEM_OVERRIDES: SystemOverrides = {
 
 // ---------------- Utility ----------------
 
+function isObjectRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null;
+}
+
 function freezeDeep<T>(o: T): T {
-  if (o && typeof o === "object") {
-    Object.freeze(o as object);
-    for (const v of Object.values(o as any)) {
-      if (v && typeof v === "object" && !Object.isFrozen(v)) freezeDeep(v);
+  if (!isObjectRecord(o)) return o;
+  if (!Object.isFrozen(o)) Object.freeze(o);
+  for (const v of Object.values(o)) {
+    if (isObjectRecord(v) && !Object.isFrozen(v)) {
+      freezeDeep(v);
     }
   }
   return o;
@@ -190,7 +195,10 @@ function buildPresetTunings(
   const result: Record<
     SystemId,
     Partial<Record<StringCount, Record<string, TuningArray>>>
-  > = {} as any;
+  > = {} as Record<
+    SystemId,
+    Partial<Record<StringCount, Record<string, TuningArray>>>
+  >;
 
   for (const system of systems) {
     const sysOverrides = overrides[system] ?? {};
@@ -198,7 +206,7 @@ function buildPresetTunings(
       {};
 
     for (const n of [4, 5, 6, 7, 8] as const) {
-      const group = {
+      const group: Record<string, TuningArray> = {
         ...(common[n] ?? {}),
         ...(sysOverrides[n] ?? {}),
       };
@@ -208,7 +216,7 @@ function buildPresetTunings(
     result[system] = byCount;
   }
 
-  return freezeDeep(result) as unknown as PresetTunings;
+  return freezeDeep(result) as PresetTunings;
 }
 
 type DefaultNamesCommon = Readonly<Partial<Record<StringCount, string>>>;
@@ -221,7 +229,10 @@ function materializeDefaultNames(
   common: DefaultNamesCommon,
   perSystem: DefaultNamesBySystem,
 ): Readonly<Record<SystemId, Readonly<Record<StringCount, string>>>> {
-  const out: Record<SystemId, Partial<Record<StringCount, string>>> = {} as any;
+  const out: Record<
+    SystemId,
+    Partial<Record<StringCount, string>>
+  > = {} as Record<SystemId, Partial<Record<StringCount, string>>>;
 
   for (const system of systems) {
     const s: Partial<Record<StringCount, string>> = {};
@@ -243,7 +254,7 @@ function makeDefaultsFromPresets(
   const out: Record<
     SystemId,
     Partial<Record<StringCount, TuningArray>>
-  > = {} as any;
+  > = {} as Record<SystemId, Partial<Record<StringCount, TuningArray>>>;
 
   for (const system of Object.keys(picks) as SystemId[]) {
     const s: Partial<Record<StringCount, TuningArray>> = {};
@@ -261,7 +272,7 @@ function makeDefaultsFromPresets(
     out[system] = s;
   }
 
-  return freezeDeep(out) as unknown as DefaultTunings;
+  return freezeDeep(out) as DefaultTunings;
 }
 
 // ---------------- Public helpers to derive from runtime TUNINGS ----------------

@@ -27,7 +27,8 @@ function ExportControls({
 
   const doDownloadPNG = () =>
     withToastPromise(
-      () => downloadPNG?.(boardRef?.current, safeFileBase),
+      () =>
+        downloadPNG?.(boardRef?.current, safeFileBase, 3, 16, buildHeader?.()),
       {
         loading: "Rendering PNG…",
         success: "PNG saved.",
