@@ -31,6 +31,11 @@
   --space-sm: 10px;
   --icon-size: 1rem;
 
+  /* shared card sizing */
+  --card-h-sm: clamp(180px, 28vh, 240px);
+  --card-h-md: clamp(220px, 34vh, 300px);
+  --card-h-lg: clamp(280px, 42vh, 380px);
+
   /* masonry */
   --card-gap: clamp(8px, 1.6vw, 12px);
   --col-width: clamp(260px, 24vw, 360px);

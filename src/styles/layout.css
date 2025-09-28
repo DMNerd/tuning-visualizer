@@ -8,39 +8,39 @@
   background: var(--bg);
   color: var(--fg);
 
-  & .page-header {
+  .page-header {
     flex: 0 0 auto;
     margin-bottom: var(--gap);
     background: var(--panel);
     border-bottom: 1px solid var(--line);
 
-    & .panel-header {
+    .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-sm);
       padding: var(--space-xs) var(--space-sm);
 
-      & a svg {
+      a svg {
         width: 1.125rem !important;
         height: 1.125rem !important;
       }
     }
 
-    & .app-title {
+    .app-title {
       margin: 0;
       font-size: 1rem;
       font-weight: 700;
     }
 
-    & .header-right,
-    & .toggles {
+    .header-right,
+    .toggles {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
     }
 
-    & .gh-link {
+    .gh-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -53,14 +53,14 @@
         background var(--speed) var(--ease),
         color var(--speed) var(--ease);
 
-      & svg {
+      svg {
         width: 1.125rem;
         height: 1.125rem;
         flex: 0 0 1.125rem;
       }
     }
 
-    & .switch {
+    .switch {
       display: flex;
       gap: var(--space-xs);
       align-items: center;
@@ -70,18 +70,18 @@
   }
 
   /* ---- Stage (fretboard) ---- */
-  & .page-main {
+  .page-main {
     margin-block: var(--gap);
     max-width: var(--max-stage);
     width: 100%;
     padding-inline: var(--gutter);
     margin-inline: auto;
 
-    & .stage {
+    .stage {
       width: 100%;
     }
 
-    & .fretboard-wrap {
+    .fretboard-wrap {
       position: relative;
       margin-inline: 0;
       width: 100%;
@@ -96,7 +96,7 @@
       padding-block-start: 14px;
       padding-inline-end: 14px;
 
-      & svg {
+      svg {
         width: 100%;
         height: 100%;
         display: block;
@@ -107,7 +107,7 @@
       }
     }
 
-    & .stage-toolbar {
+    .stage-toolbar {
       position: absolute;
       inset: var(--space-xs) var(--space-xs) auto auto;
       display: inline-flex;
@@ -136,7 +136,7 @@
     padding: 8px;
   }
 
-  & .page-controls {
+  .page-controls {
     width: calc(100% - var(--gutter) * 2);
     max-width: calc(var(--max-stage) - var(--gutter) * 2);
     margin-inline: auto;
@@ -151,13 +151,6 @@
     );
     gap: var(--card-gap);
     align-content: start;
-  }
-
-  /* Standard card sizes for consistent rows */
-  :root {
-    --card-h-sm: clamp(180px, 28vh, 240px);
-    --card-h-md: clamp(220px, 34vh, 300px);
-    --card-h-lg: clamp(280px, 42vh, 380px);
   }
 
   /* Card base + internal scroll */
@@ -236,8 +229,8 @@
   /* Optional: compact mode reduces all cards one step */
 
   /* Single column on narrow screens */
-  @media (max-width: 760px) {
-    .page .page-controls {
+  @media (width <= 760px) {
+    .page-controls {
       grid-template-columns: 1fr;
     }
   }
@@ -270,14 +263,14 @@ html.is-fs {
     transform var(--speed) var(--ease),
     opacity var(--speed) var(--ease);
 
-  & svg {
+  svg {
     width: 1.125rem;
     height: 1.125rem;
     flex: 0 0 1.125rem;
     fill: currentColor;
   }
 
-  & .label {
+  .label {
     font-size: 0.75rem;
   }
 
@@ -293,7 +286,7 @@ html.is-fs {
   margin-top: 8px;
 }
 
-@media (max-width: 560px) {
+@media (width <= 560px) {
   .icon-btn .label {
     display: none;
   }
@@ -315,11 +308,11 @@ html.is-fs {
   gap: 4px;
   font-size: 0.75rem;
 
-  & > span {
+  > span {
     color: var(--muted);
   }
 
-  & small {
+  small {
     font-size: 11.5px;
     line-height: 1.2;
     color: var(--muted);
@@ -357,17 +350,17 @@ input[type="text"] {
   display: grid;
   gap: 14px;
 
-  & .field {
+  .field {
     margin-bottom: 2px;
   }
 
-  & .radio-row {
+  .radio-row {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
   }
 
-  & .check {
+  .check {
     margin-top: 4px;
   }
 }
@@ -376,11 +369,11 @@ input[type="text"] {
   display: grid;
   gap: 14px;
 
-  & .grid2 {
+  .grid2 {
     gap: var(--space-sm);
   }
 
-  & .field .check {
+  .field .check {
     margin-top: 2px;
   }
 }
@@ -411,28 +404,28 @@ input[type="text"] {
   gap: var(--space-sm);
   min-width: 0;
 
-  & .row-2 {
+  .row-2 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
     min-width: 0;
   }
 
-  & .strings-grid {
+  .strings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: var(--space-sm);
     min-width: 0;
   }
 
-  & input,
-  & select {
+  input,
+  select {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
   }
 
-  & .btn {
+  .btn {
     width: 100%;
     white-space: normal;
     line-height: 1.2;
@@ -536,7 +529,7 @@ svg {
   }
 }
 
-:root[data-theme="dark"] & .noteText {
+:root[data-theme="dark"] .noteText {
   fill: #0b0b0b;
 }
 
@@ -547,7 +540,7 @@ svg {
   border-radius: 12px;
   overflow: hidden;
 
-  & .seg-btn {
+  .seg-btn {
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs);
@@ -562,7 +555,7 @@ svg {
       background var(--speed) var(--ease),
       color var(--speed) var(--ease);
 
-    & svg {
+    svg {
       width: var(--icon-size);
       height: var(--icon-size);
     }
@@ -659,7 +652,7 @@ svg {
   }
 }
 
-@media (max-width: 420px) {
+@media (width <= 420px) {
   .hotkeys-toast .hotkeys-list .desc {
     white-space: normal;
   }
@@ -669,7 +662,7 @@ svg {
 .seg-label {
   display: none;
 
-  @media (min-width: 480px) {
+  @media (width >= 480px) {
     display: inline;
   }
 }
@@ -780,13 +773,13 @@ svg {
 /* =========================
    Responsive tweaks
 ========================= */
-@media (max-width: 1200px) {
+@media (width <= 1200px) {
   :root {
     --col-width: clamp(240px, 30vw, 340px);
   }
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   body {
     font-size: 0.9375rem;
   }
@@ -795,13 +788,13 @@ svg {
   }
 }
 
-@media (max-width: 760px) {
-  & .page-controls {
+@media (width <= 760px) {
+  .page-controls {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   select,
   input[type="number"],
   input[type="range"],
@@ -812,7 +805,7 @@ svg {
   }
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
   .noteText {
     font-size: 0.6875rem;
   }
@@ -859,12 +852,12 @@ svg {
   .page {
     min-height: auto;
 
-    & .page-header,
-    & .page-controls {
+    .page-header,
+    .page-controls {
       display: none !important;
     }
 
-    & .page-main {
+    .page-main {
       padding: 0;
       max-width: none;
       margin: 0;
@@ -872,7 +865,7 @@ svg {
   }
 }
 
-@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+@media (width <= 900px), (hover: none) and (pointer: coarse) {
   .fs-btn {
     display: none !important;
   }
