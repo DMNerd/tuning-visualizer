@@ -5,8 +5,6 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  Suspense,
-  lazy,
 } from "react";
 import clsx from "clsx";
 import { ErrorBoundary } from "react-error-boundary";
@@ -31,10 +29,8 @@ import {
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
 
-// hotkeys (lazy for smaller initial bundle)
-const HotkeysHelpToast = lazy(
-  () => import("@/components/UI/HotkeysCheatsheet"),
-);
+// normal (eager) import of cheatsheet
+import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -260,37 +256,12 @@ export default function App() {
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
+  // Normal-load cheatsheet opener
   const showCheatsheet = useCallback(() => {
-    const loadedRef = showCheatsheet.loadedRef || { current: false };
-    showCheatsheet.loadedRef = loadedRef;
-
-    if (loadedRef.current) {
-      import("@/components/UI/HotkeysCheatsheet").then((mod) => {
-        const Comp = mod.default || mod;
-        toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
-          id: "hotkeys-help",
-          duration: 6000,
-        });
-      });
-      return;
-    }
-
-    const loaderId = "hotkeys-loader";
-    toast.loading("Loading hotkeys…", { id: loaderId });
-    import("@/components/UI/HotkeysCheatsheet")
-      .then((mod) => {
-        const Comp = mod.default || mod;
-        loadedRef.current = true;
-        toast.dismiss(loaderId);
-        toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
-          id: "hotkeys-help",
-          duration: 6000,
-        });
-      })
-      .catch(() => {
-        toast.dismiss(loaderId);
-        toast.error("Failed to load hotkeys.");
-      });
+    toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
+      id: "hotkeys-help",
+      duration: 6000,
+    });
   }, []);
 
   useHotkeys({

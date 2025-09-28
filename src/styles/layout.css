@@ -577,10 +577,36 @@ svg {
 /* hotkeys toast styling */
 .hotkeys-toast {
   line-height: 1.4;
+  max-width: 520px;
 
   .hotkeys-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .hotkeys-close {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 0 4px;
+    line-height: 1;
+    font-size: 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+      color var(--speed) var(--ease),
+      background var(--speed) var(--ease);
+  }
+  .hotkeys-close:hover,
+  .hotkeys-close:focus-visible {
+    color: var(--fg);
+    background: color-mix(in oklab, var(--fg) 10%, transparent);
+    outline: none;
   }
 
   .hotkeys-list {
@@ -590,31 +616,52 @@ svg {
 
     li {
       display: grid;
-      grid-template-columns: auto 1fr;
+      /* allow the KEYS column to wrap; DESC stays on one line */
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px 12px;
-      align-items: center;
-      margin: 4px 0;
+      align-items: start; /* multi-line keys align nicely with single-line desc */
+      margin: 6px 0;
+      min-width: 0; /* grid children can shrink */
     }
 
     .keys {
-      display: inline-flex;
-      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      align-items: center;
+      min-width: 0; /* critical so the flex container can shrink in its grid area */
+    }
 
-      kbd {
-        display: inline-block;
-        padding: 1px 6px;
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        background: color-mix(in oklab, var(--fg) 10%, transparent);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.2;
-      }
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: color-mix(in oklab, var(--fg) 10%, transparent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .hk-sep {
+      opacity: 0.7;
+      inline-size: auto;
+      display: inline-block;
+      margin: 0 2px;
     }
 
     .desc {
-      opacity: 0.9;
+      white-space: nowrap;
+      opacity: 0.95;
     }
+  }
+}
+
+@media (max-width: 420px) {
+  .hotkeys-toast .hotkeys-list .desc {
+    white-space: normal;
   }
 }
 
