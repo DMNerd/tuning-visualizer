@@ -3,11 +3,6 @@ import clsx from "clsx";
 import { FaGithub } from "react-icons/fa";
 import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
 
-/**
- * Keeps original layout + title ("TunningViz") and GitHub link.
- * Replaces the Dark Mode checkbox with a segmented Auto/Light/Dark control.
- * Lefty toggle was moved to Display section, so it's not rendered here anymore.
- */
 function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   const setAuto = () => setTheme("auto");
   const setLight = () => setTheme("light");

@@ -29,7 +29,7 @@ import {
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
 
-// normal (eager) import of cheatsheet
+// cheatsheet
 import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 
 // theory

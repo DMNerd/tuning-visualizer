@@ -17,7 +17,7 @@ function clamp(n, min, max) {
 function InstrumentControls({
   strings,
   frets,
-  setFrets, // pass setFretsUI from App to mark 'touched'
+  setFrets,
   sysNames,
   tuning,
   setTuning,
