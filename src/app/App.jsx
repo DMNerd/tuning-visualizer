@@ -261,22 +261,36 @@ export default function App() {
   }, [systemId, strings, resetSelection]);
 
   const showCheatsheet = useCallback(() => {
-    toast.promise(
-      import("@/components/UI/HotkeysCheatsheet"),
-      {
-        loading: "Loading hotkeys…",
-        success: (mod) => {
-          const Comp = mod.default || mod;
-          toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
-            id: "hotkeys-help",
-            duration: 6000,
-          });
-          return "Hotkeys ready.";
-        },
-        error: "Failed to load hotkeys.",
-      },
-      { id: "hotkeys-loader" },
-    );
+    const loadedRef = showCheatsheet.loadedRef || { current: false };
+    showCheatsheet.loadedRef = loadedRef;
+
+    if (loadedRef.current) {
+      import("@/components/UI/HotkeysCheatsheet").then((mod) => {
+        const Comp = mod.default || mod;
+        toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
+          id: "hotkeys-help",
+          duration: 6000,
+        });
+      });
+      return;
+    }
+
+    const loaderId = "hotkeys-loader";
+    toast.loading("Loading hotkeys…", { id: loaderId });
+    import("@/components/UI/HotkeysCheatsheet")
+      .then((mod) => {
+        const Comp = mod.default || mod;
+        loadedRef.current = true;
+        toast.dismiss(loaderId);
+        toast((t) => <Comp onClose={() => toast.dismiss(t.id)} />, {
+          id: "hotkeys-help",
+          duration: 6000,
+        });
+      })
+      .catch(() => {
+        toast.dismiss(loaderId);
+        toast.error("Failed to load hotkeys.");
+      });
   }, []);
 
   useHotkeys({
