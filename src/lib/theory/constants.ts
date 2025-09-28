@@ -88,6 +88,12 @@ const COMMON_PRESETS: CommonPresets = {
 
     // Other 4-string
     "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
+    "Mandolin — GDAD (modal D)": ["D", "A", "D", "G"],
+    "Mandolin — ADAD": ["D", "A", "D", "A"],
+    "Mandolin — AEAE (cross-tune)": ["E", "A", "E", "A"],
+    "Mandolin — GDGD (cross-tune)": ["D", "G", "D", "G"],
+    "Mandolin — ADAE (old-time)": ["E", "A", "D", "A"],
+    
     "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
     "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
     "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
