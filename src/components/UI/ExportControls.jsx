@@ -122,18 +122,12 @@ function ExportControls({
           <button type="button" className="btn" onClick={doPrint}>
             Print
           </button>
-        </div>
-
-        <div className="row">
           <button type="button" className="btn" onClick={doExportCurrent}>
             Export current tuning (.json)
           </button>
           <button type="button" className="btn" onClick={doExportAll}>
             Export all custom (.json)
           </button>
-        </div>
-
-        <div className="row">
           <button type="button" className="btn" onClick={triggerImport}>
             Import tunings (.json)
           </button>
