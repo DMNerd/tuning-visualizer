@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { CAPO_DEFAULT } from "@/lib/theory/constants";
+import { CAPO_DEFAULT } from "@/lib/config/appDefaults";
 
 /**
  * Manages capo state and derives per-string metadata that respects the capo.

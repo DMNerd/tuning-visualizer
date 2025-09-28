@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
-import { STR_MIN, STR_MAX, FRETS_MIN, FRETS_MAX } from "@/lib/theory/constants";
+import { STR_MIN, STR_MAX, FRETS_MIN, FRETS_MAX } from "@/lib/config/appDefaults";
 import { toast } from "react-hot-toast";
 
 function clamp(n, min, max) {

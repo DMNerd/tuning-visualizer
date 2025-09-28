@@ -1,4 +1,6 @@
-// ---------------- Types ----------------
+/* =========================
+   Types
+========================= */
 
 export type SystemId = `${number}-TET`;
 export type StringCount = 4 | 5 | 6 | 7 | 8;
@@ -16,47 +18,9 @@ export type DefaultTunings = Readonly<
   Record<SystemId, Readonly<Record<StringCount, TuningArray>>>
 >;
 
-// ---------------- Instrument bounds & factories ----------------
-
-export const STR_MIN = 4;
-export const STR_MAX = 8;
-
-export const FRETS_MIN = 12;
-export const FRETS_MAX = 30;
-
-export const STR_FACTORY = 6;
-export const FRETS_FACTORY = 24;
-
-export function getFactoryFrets(edo: number): number {
-  if (!Number.isFinite(edo) || edo <= 0) return FRETS_FACTORY;
-
-  if (edo === 12) return FRETS_FACTORY;
-  if (edo === 24) return FRETS_MIN;
-
-  const scaled = Math.round((FRETS_FACTORY * 12) / edo);
-
-  return Math.max(FRETS_MIN, Math.min(FRETS_MAX, scaled));
-}
-
-// ---------------- App-wide defaults ----------------
-export const SYSTEM_DEFAULT: SystemId = "12-TET";
-export const ROOT_DEFAULT = "C";
-export const CAPO_DEFAULT = 0;
-
-// Display defaults kept in one place
-export const DISPLAY_DEFAULTS = {
-  show: "names" as "names" | "degrees" | "intervals" | "fret" | "off",
-  showOpen: true,
-  showFretNums: true,
-  dotSize: 14,
-  lefty: false,
-  openOnlyInScale: false,
-  colorByDegree: false,
-  accidental: "sharp" as "sharp" | "flat",
-  microLabelStyle: "letters" as "letters" | "unicode" | "none",
-};
-
-// ---------------- DRY preset definition model ----------------
+/* =========================
+   DRY preset definition model
+========================= */
 
 type CommonPresets = Readonly<
   Partial<Record<StringCount, Readonly<Record<string, TuningArray>>>>
@@ -73,11 +37,12 @@ type SystemOverrides = Readonly<
   >
 >;
 
-// ---------------- Common presets (shared across systems) ----------------
+/* =========================
+   Common presets (shared across systems)
+========================= */
 
 const COMMON_PRESETS: CommonPresets = {
   4: {
-    // Most common
     "Bass 4 Standard (EADG)": ["G", "D", "A", "E"],
     "Bass 4 Drop D (DADG)": ["G", "D", "A", "D"],
     "Bass 4 D Standard (DGCF)": ["F", "C", "G", "D"],
@@ -86,32 +51,28 @@ const COMMON_PRESETS: CommonPresets = {
     "Bass 4 Drop C (CGCF)": ["F", "C", "G", "C"],
     "Bass 4 Drop B (BF#BE)": ["E", "B", "F#", "B"],
 
-    // Other 4-string
     "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
     "Mandolin — GDAD (modal D)": ["D", "A", "D", "G"],
     "Mandolin — ADAD": ["D", "A", "D", "A"],
     "Mandolin — AEAE (cross-tune)": ["E", "A", "E", "A"],
     "Mandolin — GDGD (cross-tune)": ["D", "G", "D", "G"],
     "Mandolin — ADAE (old-time)": ["E", "A", "D", "A"],
-    
+
     "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
     "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
     "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
   },
 
   5: {
-    // Most common
     "Bass 5 Standard (BEADG)": ["G", "D", "A", "E", "B"],
     "Bass 5 High C (EADGC)": ["C", "G", "D", "A", "E"],
     "Bass 5 Drop A (AEADG)": ["G", "D", "A", "E", "A"],
     "Bass 5 Low F# (F#BEAD)": ["D", "A", "E", "B", "F#"],
 
-    // Other
     "Banjo — 5-string (g D G B D)": ["D", "B", "G", "D", "G"],
   },
 
   6: {
-    // Guitar (6)
     "Standard (EADGBE)": ["E", "B", "G", "D", "A", "E"],
     "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
     "Drop D": ["E", "B", "G", "D", "A", "D"],
@@ -121,14 +82,12 @@ const COMMON_PRESETS: CommonPresets = {
     "C Standard (C F Bb Eb G C)": ["C", "G", "Eb", "Bb", "F", "C"],
     "D Standard (DGCFAD)": ["D", "A", "F", "C", "G", "D"],
 
-    // Baritone (6)
     "Baritone B Standard (BEADF#B)": ["B", "F#", "D", "A", "E", "B"],
     "Baritone A Standard (ADGCFAD)": ["A", "D", "G", "C", "F", "A"],
     "Baritone C Standard (CFBbEbGC)": ["C", "G", "Eb", "Bb", "F", "C"],
     "Baritone Drop A (AEADF#B)": ["B", "F#", "D", "A", "E", "A"],
     "Baritone Drop B (BF#BEG#C#)": ["C#", "G#", "E", "B", "F#", "B"],
 
-    // Open tunings (folk/blues)
     "Open G (DGDGBD)": ["D", "B", "G", "D", "G", "D"],
     "Open D (DADF#AD)": ["D", "A", "F#", "D", "A", "D"],
     "Open Dm (DADFAD)": ["D", "A", "F", "D", "A", "D"],
@@ -138,47 +97,42 @@ const COMMON_PRESETS: CommonPresets = {
     "Open B (F#BF#BD#F#)": ["F#", "D#", "B", "F#", "B", "F#"],
     "Open F (FACFAD)": ["D", "A", "F", "C", "A", "F"],
 
-    // Other alternates
     "Double Drop D (DADGBD)": ["D", "B", "G", "D", "A", "D"],
     "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
     "Nashville High-Strung (EADGBE)": ["E", "B", "G", "D", "A", "E"],
     DADGAD: ["D", "A", "G", "D", "A", "D"],
 
-    // Midwest Emo
     "Midwest Emo — Fmaj7 (FACGCE)": ["E", "C", "G", "C", "A", "F"],
     "Midwest Emo — Dmaj(add9) (DADF#AE)": ["E", "A", "F#", "D", "A", "D"],
     "Midwest Emo — Csus2 (CGDGAD)": ["D", "A", "G", "D", "G", "C"],
     "Midwest Emo — Dadd9 (DAEAC#E)": ["E", "C#", "A", "E", "A", "D"],
     "Midwest Emo — Aadd4 (EAC#EAE)": ["E", "A", "E", "C#", "A", "E"],
 
-    // Bass (6)
     "Bass 6 Standard (BEADGC)": ["C", "G", "D", "A", "E", "B"],
     "Bass 6 Low F# (F#BEADG)": ["G", "D", "A", "E", "B", "F#"],
   },
 
   7: {
-    // Most common 7-string
     "Standard 7 (BEADGBE)": ["E", "B", "G", "D", "A", "E", "B"],
     "Drop A (AEADGBE)": ["E", "B", "G", "D", "A", "E", "A"],
     "Standard A (AEADGBE)": ["E", "B", "G", "D", "A", "E", "A"],
     "Drop G (GDGCFAD)": ["D", "A", "F", "C", "G", "D", "G"],
 
-    // Niche
     "All Fourths 7 (EADGCF Bb)": ["Bb", "F", "C", "G", "D", "A", "E"],
   },
 
   8: {
-    // Most common 8-string
     "Standard 8 (F#BEADGBE)": ["E", "B", "G", "D", "A", "E", "B", "F#"],
     "Drop E (EBEADGBE)": ["E", "B", "G", "D", "A", "E", "B", "E"],
 
-    // Less common
     "Drop D (DADGCFAD)": ["D", "A", "F", "C", "G", "D", "A", "D"],
     "All Fourths 8 (EADGCF Bb Eb)": ["Eb", "Bb", "F", "C", "G", "D", "A", "E"],
   },
 } as const;
 
-// ---------------- Per-system overrides (differences from common) ----------------
+/* =========================
+   Per-system overrides
+========================= */
 
 const SYSTEM_OVERRIDES: SystemOverrides = {
   "24-TET": {
@@ -186,9 +140,7 @@ const SYSTEM_OVERRIDES: SystemOverrides = {
       "Mandolin +Q on A (A↑)": ["E", "A↑", "D", "G"],
       "Bass 4 +Q G (G↑)": ["G↑", "D", "A", "E"],
     },
-    5: {
-      "Bass 5 +Q D (D↑)": ["G", "D↑", "A", "E", "B"],
-    },
+    5: { "Bass 5 +Q D (D↑)": ["G", "D↑", "A", "E", "B"] },
     6: {
       "Std +Q G string (G↑)": ["E", "B", "G↑", "D", "A", "E"],
       "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E"],
@@ -197,16 +149,14 @@ const SYSTEM_OVERRIDES: SystemOverrides = {
       "King Gizzard (C#F#C#F#BE)": ["E", "B", "F#", "C#", "F#", "C#"],
       "Bass 6 +Q G (G↑)": ["C", "G↑", "D", "A", "E", "B"],
     },
-    7: {
-      "Std +Q middle (G↑)": ["E", "B", "G↑", "D", "A", "E", "B"],
-    },
-    8: {
-      "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E", "B", "F#"],
-    },
+    7: { "Std +Q middle (G↑)": ["E", "B", "G↑", "D", "A", "E", "B"] },
+    8: { "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E", "B", "F#"] },
   },
 };
 
-// ---------------- Utility ----------------
+/* =========================
+   Internal utils
+========================= */
 
 function isObjectRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null;
@@ -223,20 +173,18 @@ function freezeDeep<T>(o: T): T {
   return o;
 }
 
-// ---------------- Builders (mutable → frozen) ----------------
+/* =========================
+   Builders (mutable → frozen)
+========================= */
 
 function buildPresetTunings(
   systems: readonly SystemId[],
   common: CommonPresets,
   overrides: SystemOverrides,
 ): PresetTunings {
-  const result: Record<
-    SystemId,
-    Partial<Record<StringCount, Record<string, TuningArray>>>
-  > = {} as Record<
-    SystemId,
-    Partial<Record<StringCount, Record<string, TuningArray>>>
-  >;
+  const result: {
+    [K in SystemId]?: Partial<Record<StringCount, Record<string, TuningArray>>>;
+  } = {};
 
   for (const system of systems) {
     const sysOverrides = overrides[system] ?? {};
@@ -267,15 +215,15 @@ function materializeDefaultNames(
   common: DefaultNamesCommon,
   perSystem: DefaultNamesBySystem,
 ): Readonly<Record<SystemId, Readonly<Record<StringCount, string>>>> {
-  const out: Record<
-    SystemId,
-    Partial<Record<StringCount, string>>
-  > = {} as Record<SystemId, Partial<Record<StringCount, string>>>;
+  const out: {
+    [K in SystemId]?: Partial<Record<StringCount, string>>;
+  } = {};
 
   for (const system of systems) {
     const s: Partial<Record<StringCount, string>> = {};
     for (const n of [4, 5, 6, 7, 8] as const) {
-      s[n] = (perSystem[system]?.[n] ?? common[n])!;
+      const pick = perSystem[system]?.[n] ?? common[n];
+      if (pick) s[n] = pick;
     }
     out[system] = s;
   }
@@ -289,16 +237,18 @@ function makeDefaultsFromPresets(
   presets: PresetTunings,
   picks: Readonly<Record<SystemId, Readonly<Record<StringCount, string>>>>,
 ): DefaultTunings {
-  const out: Record<
-    SystemId,
-    Partial<Record<StringCount, TuningArray>>
-  > = {} as Record<SystemId, Partial<Record<StringCount, TuningArray>>>;
+  const out: {
+    [K in SystemId]?: Partial<Record<StringCount, TuningArray>>;
+  } = {};
+
+  const counts = [4, 5, 6, 7, 8] as const;
 
   for (const system of Object.keys(picks) as SystemId[]) {
     const s: Partial<Record<StringCount, TuningArray>> = {};
-    for (const n of Object.keys(picks[system]) as unknown as StringCount[]) {
+    for (const n of counts) {
       const name = picks[system][n];
-      const group = presets[system][n];
+      if (!name) continue;
+      const group = presets[system]?.[n];
       const chosen = group?.[name];
       if (!chosen) {
         throw new Error(
@@ -313,7 +263,9 @@ function makeDefaultsFromPresets(
   return freezeDeep(out) as DefaultTunings;
 }
 
-// ---------------- Public helpers to derive from runtime TUNINGS ----------------
+/* =========================
+   Public helpers
+========================= */
 
 export function buildPresetStateForSystems(systems: readonly SystemId[]) {
   const PRESET_TUNINGS = buildPresetTunings(
@@ -331,8 +283,7 @@ export function buildPresetStateForSystems(systems: readonly SystemId[]) {
   } as const;
 
   const DEFAULT_NAMES_BY_SYSTEM: DefaultNamesBySystem = {
-    // Example override:
-    // "24-TET": { 6: "Std +Q B string (B↑)" },
+    // Example: "24-TET": { 6: "Std +Q B string (B↑)" },
   } as const;
 
   const DEFAULT_PRESET_NAME = materializeDefaultNames(
@@ -356,7 +307,9 @@ export function systemsFromTuningMap<T extends Record<string, unknown>>(
   return Object.freeze(Object.keys(tuningMap) as SystemId[]);
 }
 
-// ---------------- Back-compat fallback (12/24 only) ----------------
+/* =========================
+   Back-compat fallback (12/24)
+========================= */
 
 const FALLBACK_SYSTEMS = [
   "12-TET",
@@ -375,7 +328,9 @@ export const DEFAULT_PRESET_NAME = DEFAULT_PRESET_NAME_FALLBACK;
 export const getDefaultTuning = (system: SystemId, strings: StringCount) =>
   DEFAULT_TUNINGS[system][strings];
 
-// ---------------- Optional per-preset meta ----------------
+/* =========================
+   Optional per-preset meta
+========================= */
 
 export const PRESET_TUNING_META: Record<
   string,

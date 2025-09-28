@@ -37,6 +37,9 @@ import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 import {
   PRESET_TUNING_META,
+} from "@/lib/theory/presets";
+
+import {
   STR_MIN,
   STR_MAX,
   FRETS_MIN,
@@ -47,7 +50,8 @@ import {
   ROOT_DEFAULT,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
-} from "@/lib/theory/constants";
+} from "@/lib/config/appDefaults";
+
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/theory/presetState";
 
