@@ -105,16 +105,18 @@ const COMMON_PRESETS: CommonPresets = {
     // Guitar (6)
     "Standard (EADGBE)": ["E", "B", "G", "D", "A", "E"],
     "Drop D": ["E", "B", "G", "D", "A", "D"],
+    "Drop C (CGCFAD)": ["D", "A", "F", "C", "G", "C"],
     DADGAD: ["D", "A", "G", "D", "A", "D"],
+    "C Standard (C F Bb Eb G C)": ["C", "G", "Eb", "Bb", "F", "C"],
+    "D Standard (DGCFAD)": ["D", "A", "F", "C", "G", "D"],
     "Open G (DGDGBD)": ["D", "B", "G", "D", "G", "D"],
     "Open D (DADF#AD)": ["D", "A", "F#", "D", "A", "D"],
     "Open C (CGCGCE)": ["E", "C", "G", "C", "G", "C"],
     "Open E (EBEG#BE)": ["E", "B", "G#", "E", "B", "E"],
-    "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
-    "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
-    "C Standard (C F Bb Eb G C)": ["C", "G", "Eb", "Bb", "F", "C"],
     "Open A (EAEAC#E)": ["E", "C#", "A", "E", "A", "E"],
     "Open B (F#BF#B D# F#)": ["F#", "D#", "B", "F#", "B", "F#"],
+    "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
+    "Half-Step Down (Eb Ab Db Gb Bb Eb)": ["Eb", "Bb", "Gb", "Db", "Ab", "Eb"],
 
     // Midwest Emo additions
     "Midwest Emo — Fmaj7 (FACGCE)": ["E", "C", "G", "C", "A", "F"],
