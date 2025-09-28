@@ -279,6 +279,14 @@ html.is-fs {
   }
 }
 
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: color-mix(in oklab, var(--panel) 90%, transparent);
+  color: var(--muted);
+  border-color: var(--line);
+}
+
 .btn-row {
   display: flex;
   flex-direction: column;
@@ -430,6 +438,12 @@ input[type="text"] {
     white-space: normal;
     line-height: 1.2;
   }
+}
+
+.export-controls .row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
 }
 
 .section {
