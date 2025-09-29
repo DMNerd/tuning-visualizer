@@ -1,14 +1,12 @@
 import React, { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
 import { dequal } from "dequal";
 import clsx from "clsx";
-
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
 import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
-
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 
@@ -402,7 +400,7 @@ const Fretboard = forwardRef(function Fretboard(
 });
 
 /* =========================
-   Memo comparator using dequal
+  Memo comparator using dequal
 ========================= */
 
 function pickRenderProps(p) {
