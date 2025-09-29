@@ -32,7 +32,7 @@
   --icon-size: 1rem;
 
   /* shared card sizing */
-  --card-h-sm: clamp(180px, 28vh, 180px);
+  --card-h-sm: clamp(120px, 28vh, 160px);
   --card-h-md: clamp(220px, 34vh, 300px);
   --card-h-lg: clamp(280px, 42vh, 380px);
 
