@@ -111,7 +111,7 @@ function ExportControls({
 
   return (
     <Section title="Export / Import">
-      <div className="export-controls">
+      <div className="control-panel export-controls">
         <div className="row">
           <button type="button" className="btn" onClick={doDownloadPNG}>
             Export PNG

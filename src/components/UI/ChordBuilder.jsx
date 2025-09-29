@@ -16,7 +16,7 @@ function ChordBuilder({
 }) {
   return (
     <Section title="Chord Builder" size="sm">
-      <div className="chord-controls">
+      <div className="control-panel chord-controls">
         <div className="grid2">
           <div className="field">
             <span>Root</span>
