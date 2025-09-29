@@ -124,7 +124,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
 
         <a
           className="btn"
-          href="https://github.com/new"
+          href="https://github.com/DMNerd/tuning-visualizer/issues"
           target="_blank"
           rel="noreferrer"
           title="Open your issue tracker to paste details"
