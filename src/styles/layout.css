@@ -354,29 +354,33 @@ input[type="text"] {
   color: var(--fg) !important;
 }
 
-.display-controls {
+.control-panel {
   display: grid;
-  gap: 14px;
+  gap: var(--space-sm);
+  align-content: start;
 
-  .field {
-    margin-bottom: 2px;
+  .group {
+    display: grid;
+    gap: var(--space-sm);
   }
 
   .radio-row {
     display: flex;
-    gap: 12px;
+    gap: var(--space-sm);
     flex-wrap: wrap;
+    align-items: center;
   }
 
   .check {
     margin-top: 4px;
   }
+
+  .field {
+    margin-bottom: 0;
+  }
 }
 
 .chord-controls {
-  display: grid;
-  gap: 14px;
-
   .grid2 {
     gap: var(--space-sm);
   }

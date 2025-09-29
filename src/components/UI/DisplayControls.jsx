@@ -52,7 +52,7 @@ function DisplayControls({
 }) {
   return (
     <Section title="Display">
-      <div className="display-controls">
+      <div className="control-panel display-controls">
         <div className="group" role="region" aria-label="Notation">
           <div className="field">
             <span>Accidentals</span>
