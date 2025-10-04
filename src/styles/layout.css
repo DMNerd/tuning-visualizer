@@ -111,7 +111,7 @@
       position: absolute;
       inset: var(--space-xs) var(--space-xs) auto auto;
       display: inline-flex;
-      gap: 0;
+      gap: 6px;
       padding: 0;
       background: none !important;
       box-shadow: none;
@@ -267,7 +267,10 @@ html.is-fs {
     width: 1.125rem;
     height: 1.125rem;
     flex: 0 0 1.125rem;
-    fill: currentColor;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
   }
 
   .label {
@@ -804,7 +807,8 @@ svg {
   }
 
   .summary {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.8125rem;
     background: var(--card-muted-bg, transparent);
     border: 1px solid var(--card-border);
@@ -818,7 +822,8 @@ svg {
   pre.details {
     margin: 0;
     white-space: pre-wrap;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.8125rem;
     background: var(--card-muted-bg, transparent);
     border: 1px solid var(--card-border);

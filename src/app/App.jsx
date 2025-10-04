@@ -10,6 +10,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import {
   FiMaximize,
   FiMinimize,
+  FiRefreshCw,
   FiCheckCircle,
   FiAlertTriangle,
   FiInfo,
@@ -79,16 +80,18 @@ import { useChordLogic } from "@/hooks/useChordLogic";
 import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useCapo } from "@/hooks/useCapo";
+import { useResets } from "@/hooks/useResets";
+import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 export default function App() {
-  // ----- System selection -----
+  // System selection
   const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
   const system = TUNINGS[systemId];
 
-  // ----- Strings / Frets (via hooks) -----
+  // Strings / Frets
   const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
     useFretsTouched(getFactoryFrets(system.divisions));
 
@@ -105,10 +108,10 @@ export default function App() {
     STR_FACTORY,
   });
 
-  // ----- Root & accidental -----
+  // Root
   const [root, setRoot] = useState(ROOT_DEFAULT);
 
-  // ----- Display options (persistent) -----
+  // Display options
   const [displayPrefs, setDisplayPrefs] = useDisplayPrefs(DISPLAY_DEFAULTS);
 
   const {
@@ -159,7 +162,7 @@ export default function App() {
     docClass: "is-fs",
   });
 
-  // ----- Tuning (defaults + presets + meta) -----
+  // Tuning (defaults + presets + meta)
   const {
     tuning,
     setTuning,
@@ -177,14 +180,14 @@ export default function App() {
     PRESET_TUNING_META,
   });
 
-  // Per-string metadata (base)
+  // Per-string metadata
   const [stringMeta, setStringMeta] = useState(null);
 
-  // ----- System note names -----
+  // System note names
   const { pcFromName, sysNames } = useSystemNoteNames(system, accidental);
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
 
-  // ----- Chords -----
+  // Chords
   const {
     chordRoot,
     setChordRoot,
@@ -198,14 +201,14 @@ export default function App() {
     chordPCs,
   } = useChordLogic(system, pcFromName);
 
-  // ----- Scales -----
+  // Scales
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
     initial: "Major (Ionian)",
   });
 
-  // ----- Draw-frets normalization -----
+  // Draw-frets normalization
   const drawFrets = useDrawFrets({
     baseFrets: frets,
     divisions: system.divisions,
@@ -213,11 +216,11 @@ export default function App() {
     setFretsRaw: setFrets,
   });
 
-  // ----- Export filename base -----
+  // Export filename base
   const fileBase = useFileBase({ root, scale, accidental, strings });
   const fileBaseSlug = useMemo(() => slug(fileBase), [fileBase]);
 
-  // ----- Accidental respelling -----
+  // Accidental respelling
   useAccidentalRespell({
     system,
     accidental,
@@ -233,11 +236,11 @@ export default function App() {
     defaultForCount,
   });
 
-  // ----- Tuning IO -----
+  // Tuning IO
   const { customTunings, importFromJson, exportCurrent, exportAll } =
     useTuningIO({ systemId, strings, TUNINGS });
 
-  // ----- Merge presets -----
+  // Merge presets
   const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
     useMergedPresets({
       presetMap,
@@ -256,7 +259,7 @@ export default function App() {
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
-  // Normal-load cheatsheet opener
+  // Hotkeys cheatsheet
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
       id: "hotkeys-help",
@@ -287,18 +290,32 @@ export default function App() {
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
 
-  // ----- Capo (extracted hook) -----
+  // Capo
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
     strings,
     stringMeta,
   });
 
-  // ----- Reset-to-factory handler -----
-  const handleResetFactoryAll = useCallback(() => {
-    const factoryFrets = getFactoryFrets(system.divisions);
-    resetInstrumentPrefs(STR_FACTORY, factoryFrets);
-    setCapoFret(CAPO_DEFAULT);
-  }, [system.divisions, resetInstrumentPrefs, setCapoFret]);
+  // Confirm helper (native-looking)
+  const { confirm } = useConfirm();
+
+  // Resets
+  const { resetInstrumentFactory, resetAll } = useResets({
+    system,
+    resetInstrumentPrefs,
+    setCapoFret,
+    setStringMeta,
+    setDisplayPrefs,
+    setRoot,
+    setScale,
+    setChordRoot,
+    setChordType,
+    setShowChord,
+    setHideNonChord,
+    setPreset,
+    toast,
+    confirm,
+  });
 
   // Stable export header builder
   const buildHeader = useCallback(
@@ -323,6 +340,15 @@ export default function App() {
         <div className="stage fb-stage" ref={stageRef}>
           <div className="fretboard-wrap" onDoubleClick={toggleFs}>
             <div className="stage-toolbar">
+              <button
+                type="button"
+                className="icon-btn reset-btn"
+                aria-label="Reset all to defaults"
+                onClick={() => resetAll({ confirm: true })}
+                title="Reset all to defaults"
+              >
+                <FiRefreshCw size={16} aria-hidden={true} />
+              </button>
               <button
                 type="button"
                 className={clsx("icon-btn", "fs-btn", { active: isFs })}
@@ -443,7 +469,7 @@ export default function App() {
             selectedPreset={selectedPreset}
             setSelectedPreset={setPreset}
             handleSaveDefault={saveDefault}
-            handleResetFactoryDefault={handleResetFactoryAll}
+            handleResetFactoryDefault={resetInstrumentFactory}
             systemId={systemId}
           />
         </ErrorBoundary>
