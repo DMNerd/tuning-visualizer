@@ -219,7 +219,6 @@
   .panel-sec[data-collapsed="true"] .sec-header .chev {
     transform: rotate(-90deg);
   }
-
 }
 
 /* ===== Fullscreen integration ===== */

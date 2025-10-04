@@ -19,11 +19,7 @@ export default function ConfirmDialog({
         {title}
       </div>
 
-      {message ? (
-        <div className="confirm-toast__message">
-          {message}
-        </div>
-      ) : null}
+      {message ? <div className="confirm-toast__message">{message}</div> : null}
 
       <div className="confirm-toast__actions">
         <button

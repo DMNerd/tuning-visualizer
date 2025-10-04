@@ -548,9 +548,7 @@ export default function App() {
             <ToastBar toast={t}>
               {({ message, action }) => (
                 <div className="tv-toast-bar">
-                  <span className="tv-toast-icon">
-                    {icon}
-                  </span>
+                  <span className="tv-toast-icon">{icon}</span>
                   <div>{message}</div>
                   {action}
                 </div>

@@ -25,13 +25,7 @@ function DegreeLegend({ k = 7 }) {
                 height="18"
                 viewBox="0 0 18 18"
               >
-                <circle
-                  cx="9"
-                  cy="9"
-                  r="8"
-                  fill={color}
-                  stroke="var(--line)"
-                />
+                <circle cx="9" cy="9" r="8" fill={color} stroke="var(--line)" />
               </svg>
               <small>{degree}</small>
             </div>
