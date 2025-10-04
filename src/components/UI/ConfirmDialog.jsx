@@ -14,88 +14,26 @@ export default function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-title"
       className="confirm-toast"
-      style={{
-        display: "grid",
-        gap: 10,
-        maxWidth: 360,
-        padding: "6px 4px 2px",
-      }}
     >
-      <div
-        id="confirm-title"
-        style={{
-          fontWeight: 600,
-          fontSize: "0.875rem",
-          color: "var(--fg)",
-        }}
-      >
+      <div id="confirm-title" className="confirm-toast__title">
         {title}
       </div>
 
-      {message ? (
-        <div
-          style={{
-            color: "var(--muted)",
-            fontSize: "0.8125rem",
-            lineHeight: 1.4,
-          }}
-        >
-          {message}
-        </div>
-      ) : null}
+      {message ? <div className="confirm-toast__message">{message}</div> : null}
 
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginTop: 6,
-        }}
-      >
+      <div className="confirm-toast__actions">
         <button
           type="button"
           onClick={onCancel}
           autoFocus
-          style={{
-            flex: 1,
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            background: "transparent",
-            color: "var(--muted)",
-            padding: "6px 10px",
-            fontSize: "0.8125rem",
-            cursor: "pointer",
-            transition: "background var(--speed) var(--ease)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.background =
-              "color-mix(in oklab, var(--fg) 8%, transparent)")
-          }
-          onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+          className="confirm-toast__button confirm-toast__button--cancel"
         >
           {cancelText}
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          style={{
-            flex: 1,
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            background: "color-mix(in oklab, var(--root) 18%, transparent)",
-            color: "var(--fg)",
-            padding: "6px 10px",
-            fontSize: "0.8125rem",
-            cursor: "pointer",
-            transition: "background var(--speed) var(--ease)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.background =
-              "color-mix(in oklab, var(--root) 26%, transparent)")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.background =
-              "color-mix(in oklab, var(--root) 18%, transparent)")
-          }
+          className="confirm-toast__button confirm-toast__button--confirm"
         >
           {confirmText}
         </button>

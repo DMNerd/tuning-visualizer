@@ -217,12 +217,7 @@ const Fretboard = forwardRef(function Fretboard(
   ]);
 
   return (
-    <svg
-      ref={svgRef}
-      width="100%"
-      preserveAspectRatio="xMidYMid meet"
-      style={{ display: "block" }}
-    >
+    <svg ref={svgRef} width="100%" preserveAspectRatio="xMidYMid meet">
       <g transform={lefty ? `scale(-1,1) translate(-${width},0)` : undefined}>
         <rect
           x="0"
@@ -386,11 +381,11 @@ const Fretboard = forwardRef(function Fretboard(
 
       {noScale && (
         <text
+          className="fretboard-empty"
           x="50%"
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          style={{ opacity: 0.8 }}
         >
           No scale selected
         </text>

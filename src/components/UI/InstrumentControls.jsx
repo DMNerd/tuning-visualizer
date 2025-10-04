@@ -164,7 +164,7 @@ function InstrumentControls({
             />
             <small
               id="strings-help"
-              style={{ color: stringsErr ? "var(--root)" : "var(--muted)" }}
+              className={`help-text${stringsErr ? " help-text--error" : ""}`}
             >
               {stringsErr || `Allowed range: ${STR_MIN}–${STR_MAX}`}
             </small>
@@ -190,7 +190,7 @@ function InstrumentControls({
             />
             <small
               id="frets-help"
-              style={{ color: fretsErr ? "var(--root)" : "var(--muted)" }}
+              className={`help-text${fretsErr ? " help-text--error" : ""}`}
             >
               {fretsErr || `Allowed range: ${FRETS_MIN}–${FRETS_MAX}`}
             </small>
@@ -227,7 +227,7 @@ function InstrumentControls({
           })}
         </div>
 
-        <div className="field" style={{ marginTop: 8 }}>
+        <div className="field field--spaced">
           <label htmlFor="preset">Preset</label>
           <select
             id="preset"
@@ -243,10 +243,7 @@ function InstrumentControls({
           </select>
         </div>
 
-        <div
-          className="defaults-row"
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
+        <div className="defaults-row">
           <button className="btn" onClick={onSaveDefault}>
             Save as default ({systemId}, {strings}-string)
           </button>
