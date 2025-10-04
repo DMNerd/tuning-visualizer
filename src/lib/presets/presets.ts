@@ -99,7 +99,6 @@ const COMMON_PRESETS: CommonPresets = {
 
     "Double Drop D (DADGBD)": ["D", "B", "G", "D", "A", "D"],
     "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
-    "Nashville High-Strung (EADGBE)": ["E", "B", "G", "D", "A", "E"],
     DADGAD: ["D", "A", "G", "D", "A", "D"],
 
     "Midwest Emo — Fmaj7 (FACGCE)": ["E", "C", "G", "C", "A", "F"],
