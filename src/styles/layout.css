@@ -107,6 +107,11 @@
       }
     }
 
+    .fretboard-empty {
+      opacity: 0.8;
+      fill: var(--muted);
+    }
+
     .stage-toolbar {
       position: absolute;
       inset: var(--space-xs) var(--space-xs) auto auto;
@@ -123,17 +128,6 @@
         content: none !important;
       }
     }
-  }
-
-  /* =========================
-    Controls container
-  ========================= */
-  /* Shared frame so fretboard + controls look identical */
-  .panel-frame {
-    border: 1px solid var(--line);
-    border-radius: var(--card-radius);
-    background: var(--panel);
-    padding: 8px;
   }
 
   .page-controls {
@@ -226,14 +220,6 @@
     transform: rotate(-90deg);
   }
 
-  /* Optional: compact mode reduces all cards one step */
-
-  /* Single column on narrow screens */
-  @media (width <= 760px) {
-    .page-controls {
-      grid-template-columns: 1fr;
-    }
-  }
 }
 
 /* ===== Fullscreen integration ===== */
@@ -330,6 +316,18 @@ html.is-fs {
   }
 }
 
+.field--spaced {
+  margin-top: 8px;
+}
+
+.help-text {
+  color: var(--muted);
+}
+
+.help-text--error {
+  color: var(--root);
+}
+
 select,
 input[type="number"],
 input[type="range"],
@@ -414,6 +412,91 @@ input[type="text"] {
     opacity var(--speed) var(--ease);
 }
 
+.confirm-toast {
+  display: grid;
+  gap: 10px;
+  max-width: 360px;
+  padding: 6px 4px 2px;
+}
+
+.confirm-toast__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--fg);
+}
+
+.confirm-toast__message {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.confirm-toast__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.confirm-toast__button {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background var(--speed) var(--ease);
+}
+
+.confirm-toast__button--cancel {
+  background: transparent;
+  color: var(--muted);
+}
+
+.confirm-toast__button--cancel:hover,
+.confirm-toast__button--cancel:focus-visible {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  color: var(--fg);
+}
+
+.confirm-toast__button--confirm {
+  background: color-mix(in oklab, var(--root) 18%, transparent);
+  color: var(--fg);
+}
+
+.confirm-toast__button--confirm:hover,
+.confirm-toast__button--confirm:focus-visible {
+  background: color-mix(in oklab, var(--root) 26%, transparent);
+}
+
+.tv-toast-container {
+  padding: 0;
+}
+
+.tv-toast {
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  padding: 8px 10px;
+  font-size: 0.8125rem;
+  border-radius: 10px;
+}
+
+.tv-toast-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-toast-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+}
+
 .instrument {
   display: grid;
   gap: var(--space-sm);
@@ -445,6 +528,12 @@ input[type="text"] {
     white-space: normal;
     line-height: 1.2;
   }
+}
+
+.defaults-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .export-controls .row {
@@ -744,11 +833,13 @@ svg {
 }
 
 .tv-legend .dot {
-  display: inline-block;
+  display: block;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
+}
+
+.tv-legend .dot circle {
+  stroke-width: 1px;
 }
 
 .tv-legend p {

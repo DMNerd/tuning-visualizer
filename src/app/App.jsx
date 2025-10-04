@@ -528,16 +528,9 @@ export default function App() {
         gutter={8}
         toastOptions={{
           duration: 2800,
-          style: {
-            background: "var(--card-bg)",
-            color: "var(--fg)",
-            border: "1px solid var(--card-border)",
-            boxShadow: "var(--card-shadow)",
-            padding: "8px 10px",
-            fontSize: "0.8125rem",
-            borderRadius: "10px",
-          },
+          className: "tv-toast",
         }}
+        containerClassName="tv-toast-container"
       >
         {(t) => {
           const icon =
@@ -554,16 +547,8 @@ export default function App() {
           return (
             <ToastBar toast={t}>
               {({ message, action }) => (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span
-                    style={{
-                      width: 18,
-                      height: 18,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                <div className="tv-toast-bar">
+                  <span className="tv-toast-icon">
                     {icon}
                   </span>
                   <div>{message}</div>
