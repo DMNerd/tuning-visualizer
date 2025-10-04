@@ -473,13 +473,13 @@ input[type="text"] {
 }
 
 .tv-toast {
-  background: var(--card-bg);
-  color: var(--fg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
-  padding: 8px 10px;
-  font-size: 0.8125rem;
-  border-radius: 10px;
+  background: var(--card-bg) !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--card-shadow) !important;
+  padding: 8px 10px !important;
+  font-size: 0.8125rem !important;
+  border-radius: 10px !important;
 }
 
 .tv-toast-bar {
