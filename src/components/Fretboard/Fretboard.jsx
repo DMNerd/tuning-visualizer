@@ -98,7 +98,10 @@ const Fretboard = forwardRef(function Fretboard(
     Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
 
   const microLabelOpts = useMemo(
-    () => ({ microStyle: microLabelStyle ?? MICRO_LABEL_STYLES.Letters, accidental }),
+    () => ({
+      microStyle: microLabelStyle ?? MICRO_LABEL_STYLES.Letters,
+      accidental,
+    }),
     [microLabelStyle, accidental],
   );
 
