@@ -26,6 +26,7 @@ export function useHotkeys(options) {
     maxFrets = 30,
     minDot = 8,
     maxDot = 24,
+    onRandomizeScale
   } = options;
 
   const labelValues = options.labelValues || options.LABEL_VALUES || [];
@@ -179,10 +180,10 @@ export function useHotkeys(options) {
     "r",
     () => {
       if (typeof options.onRandomizeScale === "function") {
-        options.onRandomizeScale();
+        onRandomizeScale();
       }
     },
     guard,
-    [options.onRandomizeScale],
+    [onRandomizeScale],
   );
 }
