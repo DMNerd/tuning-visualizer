@@ -13,6 +13,7 @@ function HotkeysCheatsheet({ onClose }) {
       ["g", "left-handed layout"],
       ["c", "chord overlay"],
       ["h", "hide non-chord tones"],
+      ["r", "randomise scale and root"],
       ["[ / ]", "strings - / +"],
       ["- / =", "frets - / +"],
       [", / .", "dot size - / +"],

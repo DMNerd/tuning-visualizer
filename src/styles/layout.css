@@ -221,6 +221,27 @@
   }
 }
 
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+}
+
 /* ===== Fullscreen integration ===== */
 .fb-stage {
   border-radius: var(--card-radius);

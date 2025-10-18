@@ -1,5 +1,6 @@
 import React from "react";
 import { dequal } from "dequal";
+import { FiShuffle } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 
 function ScaleControls({
@@ -10,6 +11,18 @@ function ScaleControls({
   sysNames,
   scaleOptions,
 }) {
+  const pickRandom = () => {
+    if (!Array.isArray(sysNames) || !sysNames.length) return;
+    if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
+
+    const nextRoot = sysNames[Math.floor(Math.random() * sysNames.length)];
+    const nextScaleObj =
+      scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+
+    setRoot(nextRoot);
+    setScale(nextScaleObj.label);
+  };
+
   return (
     <Section title="Scale" size="sm">
       <div className="grid2">
@@ -26,20 +39,32 @@ function ScaleControls({
             ))}
           </select>
         </div>
+
         <div className="field">
           <span>Scale</span>
-          <select
-            id="scale"
-            name="scale"
-            value={scale}
-            onChange={(e) => setScale(e.target.value)}
-          >
-            {scaleOptions.map((s) => (
-              <option key={s.label} value={s.label}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          <div className="input-row">
+            <select
+              id="scale"
+              name="scale"
+              value={scale}
+              onChange={(e) => setScale(e.target.value)}
+            >
+              {scaleOptions.map((s) => (
+                <option key={s.label} value={s.label}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Pick a random root and scale"
+              title="Random root & scale"
+              onClick={pickRandom}
+            >
+              <FiShuffle size={16} aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
     </Section>
@@ -54,4 +79,5 @@ function pick(p) {
     scaleOptions: p.scaleOptions,
   };
 }
+
 export default React.memo(ScaleControls, (a, b) => dequal(pick(a), pick(b)));

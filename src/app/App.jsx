@@ -259,6 +259,18 @@ export default function App() {
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
+  const randomizeScale = useCallback(() => {
+    if (!Array.isArray(sysNames) || !sysNames.length) return;
+    if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
+
+    const nextRoot = sysNames[Math.floor(Math.random() * sysNames.length)];
+    const nextScaleObj =
+      scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+
+    setRoot(nextRoot);
+    setScale(nextScaleObj.label);
+  }, [sysNames, scaleOptions, setRoot, setScale]);
+
   // Hotkeys cheatsheet
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
@@ -282,6 +294,7 @@ export default function App() {
     maxStrings: STR_MAX,
     minFrets: FRETS_MIN,
     maxFrets: FRETS_MAX,
+    onRandomizeScale: randomizeScale,
   });
 
   // Keep preset label synced with presence of a saved default

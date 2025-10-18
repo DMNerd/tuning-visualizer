@@ -174,4 +174,15 @@ export function useHotkeys(options) {
     guard,
     [setDisplayPrefs, minDot, maxDot],
   );
+
+  useHK(
+    "r",
+    () => {
+      if (typeof options.onRandomizeScale === "function") {
+        options.onRandomizeScale();
+      }
+    },
+    guard,
+    [options.onRandomizeScale],
+  );
 }
