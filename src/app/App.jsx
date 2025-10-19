@@ -33,7 +33,7 @@ import Fretboard from "@/components/Fretboard/Fretboard";
 import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 
 // theory
-import { TUNINGS } from "@/lib/theory/tuning";
+import { TUNINGS, nameFallback } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 import { PRESET_TUNING_META } from "@/lib/presets/presets";
 
@@ -87,9 +87,48 @@ import { LABEL_VALUES } from "@/hooks/useLabels";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 export default function App() {
+  const defaultSystem = TUNINGS[SYSTEM_DEFAULT];
+
   // System selection
   const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
-  const system = TUNINGS[systemId];
+  const [customDivisor, setCustomDivisor] = useState(() =>
+    String(defaultSystem?.divisions ?? 12),
+  );
+
+  const sanitizedCustomDivisor = useMemo(() => {
+    const parsed = Number(customDivisor);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return Number(defaultSystem?.divisions ?? 12);
+    }
+    return Math.max(1, Math.round(parsed));
+  }, [customDivisor, defaultSystem]);
+
+  const customSystem = useMemo(() => {
+    const divisions = sanitizedCustomDivisor;
+    const refFreq = defaultSystem?.refFreq ?? 440;
+    const refMidi = defaultSystem?.refMidi ?? 69;
+
+    return {
+      id: `${divisions}-TET`,
+      divisions,
+      refFreq,
+      refMidi,
+      nameForPc: (pc) => {
+        const mod = ((pc % divisions) + divisions) % divisions;
+        return nameFallback(mod);
+      },
+    };
+  }, [sanitizedCustomDivisor, defaultSystem]);
+
+  const system = useMemo(() => {
+    const preset = TUNINGS[systemId];
+    return preset ?? customSystem;
+  }, [systemId, customSystem]);
+
+  const activeSystemId = useMemo(
+    () => (TUNINGS[systemId] ? systemId : customSystem.id),
+    [systemId, customSystem],
+  );
 
   // Strings / Frets
   const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
@@ -173,7 +212,7 @@ export default function App() {
     savedExists,
     defaultForCount,
   } = useDefaultTuning({
-    systemId,
+    systemId: activeSystemId,
     strings,
     DEFAULT_TUNINGS,
     PRESET_TUNINGS,
@@ -238,7 +277,7 @@ export default function App() {
 
   // Tuning IO
   const { customTunings, importFromJson, exportCurrent, exportAll } =
-    useTuningIO({ systemId, strings, TUNINGS });
+    useTuningIO({ systemId: activeSystemId, system, strings });
 
   // Merge presets
   const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
@@ -257,7 +296,7 @@ export default function App() {
   useEffect(() => {
     setStringMeta(null);
     resetSelection();
-  }, [systemId, strings, resetSelection]);
+  }, [activeSystemId, strings, resetSelection]);
 
   const randomizeScale = useCallback(() => {
     if (!Array.isArray(sysNames) || !sysNames.length) return;
@@ -301,7 +340,7 @@ export default function App() {
   useEffect(() => {
     if (savedExists) setPreset("Saved default");
     else setPreset("Factory default");
-  }, [systemId, strings, savedExists, setPreset]);
+  }, [activeSystemId, strings, savedExists, setPreset]);
 
   // Capo
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
@@ -333,14 +372,14 @@ export default function App() {
   // Stable export header builder
   const buildHeader = useCallback(
     () => ({
-      system: systemId,
+      system: activeSystemId,
       tuning,
       scale,
       chordEnabled: showChord,
       chordRoot,
       chordType,
     }),
-    [systemId, tuning, scale, showChord, chordRoot, chordType],
+    [activeSystemId, tuning, scale, showChord, chordRoot, chordType],
   );
 
   return (
@@ -420,11 +459,13 @@ export default function App() {
           systemId={systemId}
           setSystemId={setSystemId}
           systems={TUNINGS}
+          customDivisor={customDivisor}
+          onCustomDivisorChange={setCustomDivisor}
         />
 
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          resetKeys={[systemId, root, scale]}
+          resetKeys={[activeSystemId, root, scale]}
           onReset={() => {
             setRoot(ROOT_DEFAULT);
           }}
@@ -463,7 +504,7 @@ export default function App() {
 
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          resetKeys={[strings, frets, systemId]}
+          resetKeys={[strings, frets, activeSystemId]}
           onReset={() => {
             setStrings(STR_FACTORY);
             setFretsUI(getFactoryFrets(system.divisions));
@@ -483,7 +524,7 @@ export default function App() {
             setSelectedPreset={setPreset}
             handleSaveDefault={saveDefault}
             handleResetFactoryDefault={resetInstrumentFactory}
-            systemId={systemId}
+            systemId={activeSystemId}
           />
         </ErrorBoundary>
 

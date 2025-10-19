@@ -35,7 +35,7 @@ const TuningPackArraySchema = v.array(TuningPackSchema);
    Hook
 ========================= */
 
-export function useTuningIO({ systemId, strings, TUNINGS }) {
+export function useTuningIO({ systemId, system, strings }) {
   // Persist array of custom packs directly
   const [customTunings, setCustomTunings] = useLocalStorage(
     STORAGE_KEYS.CUSTOM_TUNINGS,
@@ -45,7 +45,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null) => {
-      const sys = TUNINGS[systemId];
+      const edo = Number(system?.divisions) || 12;
       const stringsArr = tuning.map((n, i) => {
         const meta = stringMeta?.find((m) => m.index === i) || {};
         return {
@@ -62,12 +62,12 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       return {
         version: 2,
         name: `${systemId} ${strings}-string`,
-        system: { edo: sys.divisions },
+        system: { edo },
         tuning: { strings: stringsArr },
         meta: stringMeta ? { stringMeta } : {},
       };
     },
-    [systemId, strings, TUNINGS],
+    [systemId, strings, system],
   );
 
   // ----- Export all custom tunings (pure) -----
