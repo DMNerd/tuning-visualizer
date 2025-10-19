@@ -21,16 +21,32 @@ export function useDefaultTuning({
     {},
   );
 
-  const factory = useMemo(
-    () => DEFAULT_TUNINGS?.[systemId]?.[strings] ?? [],
-    [DEFAULT_TUNINGS, systemId, strings],
-  );
-
   const saved = savedMap?.[storeKey];
   const savedExists = Array.isArray(saved) && saved.length > 0;
 
+  const factory = useMemo(() => {
+    const systemDefaults = DEFAULT_TUNINGS?.[systemId]?.[strings];
+    if (Array.isArray(systemDefaults) && systemDefaults.length) {
+      return systemDefaults;
+    }
+
+    if (savedExists) {
+      return Array.isArray(saved) ? saved.slice() : [];
+    }
+
+    const twelveTetFallback = DEFAULT_TUNINGS?.["12-TET"]?.[strings];
+    if (Array.isArray(twelveTetFallback) && twelveTetFallback.length) {
+      return twelveTetFallback.slice();
+    }
+
+    return Array.isArray(saved) ? saved.slice() : [];
+  }, [DEFAULT_TUNINGS, systemId, strings, savedExists, saved]);
+
   const getPreferredDefault = useCallback(() => {
-    return savedExists ? saved : factory;
+    if (savedExists) {
+      return Array.isArray(saved) ? saved.slice() : [];
+    }
+    return factory;
   }, [savedExists, saved, factory]);
 
   const [tuning, setTuning] = useImmer(() => getPreferredDefault());
@@ -93,13 +109,29 @@ export function useDefaultTuning({
 
   const defaultForCount = useCallback(
     (count) => {
-      const k = keyOf(systemId, count);
-      const maybe = savedMap?.[k];
-      return Array.isArray(maybe) && maybe.length
-        ? maybe
-        : DEFAULT_TUNINGS[systemId][count];
+      const key = keyOf(systemId, count);
+      const savedForCount = savedMap?.[key];
+      if (Array.isArray(savedForCount) && savedForCount.length) {
+        return savedForCount.slice();
+      }
+
+      const systemDefaults = DEFAULT_TUNINGS?.[systemId]?.[count];
+      if (Array.isArray(systemDefaults) && systemDefaults.length) {
+        return systemDefaults;
+      }
+
+      const fallbackDefaults = DEFAULT_TUNINGS?.["12-TET"]?.[count];
+      if (Array.isArray(fallbackDefaults) && fallbackDefaults.length) {
+        return fallbackDefaults.slice();
+      }
+
+      if (Array.isArray(tuning) && tuning.length === count) {
+        return tuning.slice();
+      }
+
+      return [];
     },
-    [DEFAULT_TUNINGS, systemId, savedMap],
+    [DEFAULT_TUNINGS, systemId, savedMap, tuning],
   );
 
   return useMemo(

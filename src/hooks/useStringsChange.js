@@ -25,11 +25,15 @@ export function useStringsChange({ setStrings, setTuning, defaultForCount }) {
         }
 
         if (nextCount <= prevLen) {
-          draft.length = nextCount; // truncate in place
+          draft.length = nextCount; 
           return;
         }
 
         const targetDefault = defaultForCount(nextCount);
+        if (!Array.isArray(targetDefault)) {
+          return;
+        }
+
         for (let i = prevLen; i < nextCount; i++) {
           draft[i] = targetDefault[i];
         }
