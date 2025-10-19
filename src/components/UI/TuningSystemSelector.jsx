@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
+import { CUSTOM_TET_MIN, CUSTOM_TET_MAX } from "@/lib/config/appDefaults";
 
 const CUSTOM_SYSTEM_ID = "custom";
 
@@ -11,19 +12,100 @@ function TuningSystemSelector({
   customDivisor,
   onCustomDivisorChange,
 }) {
-  const handleCustomDivisorChange = (event) => {
-    const { value } = event.target;
-    if (value === "") {
-      onCustomDivisorChange("");
-      return;
+  const [draftDivisor, setDraftDivisor] = useState(() => customDivisor ?? "");
+  const [divisorErr, setDivisorErr] = useState("");
+
+  useEffect(() => {
+    setDraftDivisor(customDivisor ?? "");
+  }, [customDivisor]);
+
+  const commitDivisor = useCallback(
+    (rawOverride) => {
+      const source =
+        typeof rawOverride === "number" || typeof rawOverride === "string"
+          ? rawOverride
+          : draftDivisor;
+
+      const text = typeof source === "string" ? source.trim() : String(source);
+
+      if (text === "") {
+        setDivisorErr(
+          `Please enter a number between ${CUSTOM_TET_MIN} and ${CUSTOM_TET_MAX}.`,
+        );
+        return false;
+      }
+
+      const parsed = Number(text);
+      if (!Number.isFinite(parsed)) {
+        setDivisorErr(
+          `Please enter a number between ${CUSTOM_TET_MIN} and ${CUSTOM_TET_MAX}.`,
+        );
+        return false;
+      }
+
+      const rounded = Math.round(parsed);
+      const clamped = Math.min(
+        CUSTOM_TET_MAX,
+        Math.max(CUSTOM_TET_MIN, rounded),
+      );
+
+      if (clamped !== rounded) {
+        setDivisorErr(
+          `Allowed range is ${CUSTOM_TET_MIN}–${CUSTOM_TET_MAX}. Adjusted to ${clamped}.`,
+        );
+      } else {
+        setDivisorErr("");
+      }
+
+      const next = String(clamped);
+      setDraftDivisor(next);
+
+      if (next !== (customDivisor ?? "")) {
+        onCustomDivisorChange(next);
+      }
+
+      if (systemId !== CUSTOM_SYSTEM_ID) {
+        setSystemId(CUSTOM_SYSTEM_ID);
+      }
+
+      return true;
+    },
+    [
+      draftDivisor,
+      customDivisor,
+      onCustomDivisorChange,
+      setSystemId,
+      systemId,
+    ],
+  );
+
+  const onDivisorBlur = useCallback(() => {
+    if (!commitDivisor(draftDivisor)) {
+      setDraftDivisor(customDivisor ?? "");
     }
+  }, [commitDivisor, draftDivisor, customDivisor]);
 
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return;
+  const onDivisorKeyDown = useCallback(
+    (event) => {
+      if (event.key === "Enter") {
+        const ok = commitDivisor(draftDivisor);
+        if (ok) {
+          event.currentTarget.blur();
+        }
+      }
+      if (event.key === "Escape") {
+        setDivisorErr("");
+        setDraftDivisor(customDivisor ?? "");
+        event.currentTarget.blur();
+      }
+    },
+    [commitDivisor, draftDivisor, customDivisor],
+  );
 
-    const sanitized = Math.max(1, Math.round(parsed));
-    onCustomDivisorChange(String(sanitized));
-  };
+  const customLabel = useMemo(() => {
+    if (!customDivisor) return "Custom";
+    return `Custom (${customDivisor}-TET)`;
+  }, [customDivisor]);
 
   return (
     <Section title="Tuning System" size="sm">
@@ -40,9 +122,7 @@ function TuningSystemSelector({
               {id}
             </option>
           ))}
-          <option value={CUSTOM_SYSTEM_ID}>
-            {customDivisor ? `Custom (${customDivisor}-TET)` : "Custom"}
-          </option>
+          <option value={CUSTOM_SYSTEM_ID}>{customLabel}</option>
         </select>
       </div>
       {systemId === CUSTOM_SYSTEM_ID ? (
@@ -51,12 +131,27 @@ function TuningSystemSelector({
           <input
             id="custom-tuning-divisor"
             type="number"
-            min={1}
+            min={CUSTOM_TET_MIN}
+            max={CUSTOM_TET_MAX}
             step={1}
             inputMode="numeric"
-            value={customDivisor ?? ""}
-            onChange={handleCustomDivisorChange}
+            value={draftDivisor}
+            onChange={(event) => {
+              setDivisorErr("");
+              setDraftDivisor(event.target.value);
+            }}
+            onBlur={onDivisorBlur}
+            onKeyDown={onDivisorKeyDown}
+            aria-invalid={Boolean(divisorErr)}
+            aria-describedby="custom-tuning-divisor-help"
           />
+          <small
+            id="custom-tuning-divisor-help"
+            className={`help-text${divisorErr ? " help-text--error" : ""}`}
+          >
+            {divisorErr ||
+              `Allowed range: ${CUSTOM_TET_MIN}–${CUSTOM_TET_MAX}`}
+          </small>
         </div>
       ) : null}
     </Section>

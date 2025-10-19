@@ -13,6 +13,9 @@ export const FRETS_MAX = 30;
 export const STR_FACTORY = 6;
 export const FRETS_FACTORY = 24;
 
+export const CUSTOM_TET_MIN = 2;
+export const CUSTOM_TET_MAX = 96;
+
 export function getFactoryFrets(edo: number): number {
   if (!Number.isFinite(edo) || edo <= 0) return FRETS_FACTORY;
   if (edo === 12) return FRETS_FACTORY;

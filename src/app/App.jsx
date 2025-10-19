@@ -48,6 +48,8 @@ import {
   ROOT_DEFAULT,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
+  CUSTOM_TET_MIN,
+  CUSTOM_TET_MAX,
 } from "@/lib/config/appDefaults";
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
@@ -86,8 +88,17 @@ import { LABEL_VALUES } from "@/hooks/useLabels";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
+const clampCustomDivisor = (value) => {
+  if (!Number.isFinite(value)) return CUSTOM_TET_MIN;
+  const rounded = Math.round(value);
+  if (rounded < CUSTOM_TET_MIN) return CUSTOM_TET_MIN;
+  if (rounded > CUSTOM_TET_MAX) return CUSTOM_TET_MAX;
+  return rounded;
+};
+
 export default function App() {
   const defaultSystem = TUNINGS[SYSTEM_DEFAULT];
+  const defaultDivisions = clampCustomDivisor(defaultSystem?.divisions ?? 12);
 
   // System selection
   const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
@@ -97,11 +108,11 @@ export default function App() {
 
   const sanitizedCustomDivisor = useMemo(() => {
     const parsed = Number(customDivisor);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return Number(defaultSystem?.divisions ?? 12);
+    if (!Number.isFinite(parsed)) {
+      return defaultDivisions;
     }
-    return Math.max(1, Math.round(parsed));
-  }, [customDivisor, defaultSystem]);
+    return clampCustomDivisor(parsed);
+  }, [customDivisor, defaultDivisions]);
 
   const customSystem = useMemo(() => {
     const divisions = sanitizedCustomDivisor;
