@@ -1,14 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
+import { buildBaselineScalesForSystem } from "@/lib/theory/scales";
 
 /**
  * Filters scales for the active system, keeps selection valid,
  * and exposes the current scale's intervals.
  */
 export function useScaleOptions({ system, ALL_SCALES, initial = "" }) {
-  const scaleOptions = useMemo(
-    () => ALL_SCALES.filter((s) => s.systemId === system.id),
-    [ALL_SCALES, system],
-  );
+  const scaleOptions = useMemo(() => {
+    if (!system?.id) return [];
+
+    const matches = ALL_SCALES.filter((s) => s.systemId === system.id);
+    if (matches.length) return matches;
+
+    if (typeof system.divisions === "number") {
+      return buildBaselineScalesForSystem(system.id, system.divisions);
+    }
+
+    return matches;
+  }, [ALL_SCALES, system]);
 
   const [scale, setScale] = useState(initial || (scaleOptions[0]?.label ?? ""));
 

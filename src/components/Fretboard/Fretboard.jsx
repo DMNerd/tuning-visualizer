@@ -70,10 +70,20 @@ const Fretboard = forwardRef(function Fretboard(
   const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental);
   const pcForName = pcFromName;
 
+  const chromaticIntervals = useMemo(
+    () => Array.from({ length: Math.max(1, system.divisions) }, (_, i) => i),
+    [system.divisions],
+  );
+  const activeIntervals =
+    Array.isArray(intervals) && intervals.length > 0
+      ? intervals
+      : chromaticIntervals;
+  const showNoScaleMessage = activeIntervals.length === 0;
+
   const { scaleSet, degreeForPc } = useScaleAndChord({
     system,
     rootIx,
-    intervals,
+    intervals: activeIntervals,
     chordPCs,
     chordRootPc,
   });
@@ -92,8 +102,6 @@ const Fretboard = forwardRef(function Fretboard(
     accidental,
   });
 
-  const noScale = !Array.isArray(intervals) || intervals.length === 0;
-
   const getMetaFor = (s) =>
     Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
 
@@ -106,7 +114,7 @@ const Fretboard = forwardRef(function Fretboard(
   );
 
   const notes = useMemo(() => {
-    if (noScale) return [];
+    if (!activeIntervals.length) return [];
     const out = [];
     const N = system.divisions;
 
@@ -152,7 +160,7 @@ const Fretboard = forwardRef(function Fretboard(
         if (colorByDegree) {
           const deg = degreeForPc(pc);
           if (deg != null) {
-            fill = getDegreeColor(deg, intervals.length);
+            fill = getDegreeColor(deg, activeIntervals.length);
           } else {
             fill = isMicro ? "var(--note-micro)" : "var(--note)";
           }
@@ -194,7 +202,7 @@ const Fretboard = forwardRef(function Fretboard(
 
     return out;
   }, [
-    noScale,
+    activeIntervals,
     tuning,
     frets,
     system.divisions,
@@ -213,7 +221,6 @@ const Fretboard = forwardRef(function Fretboard(
     dotSize,
     colorByDegree,
     degreeForPc,
-    intervals.length,
     labelFor,
     show,
     microLabelOpts,
@@ -382,7 +389,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-      {noScale && (
+      {showNoScaleMessage && (
         <text
           className="fretboard-empty"
           x="50%"

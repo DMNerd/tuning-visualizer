@@ -26,7 +26,7 @@ export function useHotkeys(options) {
     maxFrets = 30,
     minDot = 8,
     maxDot = 24,
-    onRandomizeScale
+    onRandomizeScale,
   } = options;
 
   const labelValues = options.labelValues || options.LABEL_VALUES || [];

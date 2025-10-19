@@ -3,9 +3,79 @@
 
 export type ScaleDef = {
   label: string;
-  systemId: "12-TET" | "24-TET"; // extend as you add more
-  pcs: number[]; // pitch classes in that system
+  systemId: string;
+  pcs: number[];
 };
+
+const TWELVE_TET = 12;
+
+const BASELINE_PATTERNS_FROM_12 = [
+  {
+    label: "Generic Major-like",
+    steps: [0, 2, 4, 5, 7, 9, 11],
+  },
+  {
+    label: "Generic Minor-like",
+    steps: [0, 2, 3, 5, 7, 8, 10],
+  },
+  {
+    label: "Generic Major Pentatonic-like",
+    steps: [0, 2, 4, 7, 9],
+  },
+  {
+    label: "Generic Minor Pentatonic-like",
+    steps: [0, 3, 5, 7, 10],
+  },
+];
+
+function clampStep(step: number, divisions: number): number {
+  if (divisions <= 1) return 0;
+  const rounded = Math.round(step);
+  return Math.min(divisions - 1, Math.max(0, rounded));
+}
+
+function projectFrom12TET(steps: number[], divisions: number): number[] {
+  const factor = divisions / TWELVE_TET;
+  const projected = steps
+    .map((step) => clampStep(step * factor, divisions))
+    .filter((value, index, arr) => arr.indexOf(value) === index);
+  return projected.sort((a, b) => a - b);
+}
+
+export function buildChromaticScale(
+  systemId: string,
+  divisions: number,
+): ScaleDef {
+  const pcs = Array.from({ length: Math.max(1, divisions) }, (_, i) => i);
+  return {
+    label: `${systemId} Chromatic (${divisions})`,
+    systemId,
+    pcs,
+  };
+}
+
+export function buildBaselineScalesForSystem(
+  systemId: string,
+  divisions: number,
+): ScaleDef[] {
+  const chromatic = buildChromaticScale(systemId, divisions);
+
+  const projected = BASELINE_PATTERNS_FROM_12.map((pattern) => ({
+    label: `${systemId} ${pattern.label} (${divisions})`,
+    systemId,
+    pcs: projectFrom12TET(pattern.steps, divisions),
+  }));
+
+  const deduped = [chromatic, ...projected].filter((scale, index, arr) => {
+    const key = scale.pcs.join(",");
+    return (
+      arr.findIndex((candidate) => candidate.pcs.join(",") === key) === index &&
+      scale.pcs.length > 0
+    );
+  });
+
+  return deduped;
+}
 
 // 12-TET classics
 export const SCALES_12: ScaleDef[] = [
