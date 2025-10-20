@@ -1,5 +1,6 @@
 import React from "react";
 import { dequal } from "dequal";
+import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
@@ -26,7 +27,7 @@ function ChordBuilder({
 
   return (
     <Section title="Chord Builder" size="sm">
-      <div className="control-panel chord-controls">
+      <div className={clsx("control-panel", "chord-controls")}>
         <div className="grid2">
           <div className="field">
             <span>Root</span>

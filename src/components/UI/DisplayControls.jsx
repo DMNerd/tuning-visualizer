@@ -1,5 +1,6 @@
 import React from "react";
 import { dequal } from "dequal";
+import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
@@ -60,7 +61,7 @@ function DisplayControls({
 }) {
   return (
     <Section title="Display">
-      <div className="control-panel display-controls">
+      <div className={clsx("control-panel", "display-controls")}>
         <div className="group" role="region" aria-label="Notation">
           <div className="field">
             <span>Accidentals</span>

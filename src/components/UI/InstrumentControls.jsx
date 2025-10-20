@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { dequal } from "dequal";
+import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
   STR_MIN,
@@ -142,7 +143,7 @@ function InstrumentControls({
 
   return (
     <Section title="Instrument">
-      <div className="instrument">
+      <div className={clsx("control-panel", "instrument")}>
         <div className="row-2">
           {/* Strings */}
           <div className="field">
@@ -164,7 +165,7 @@ function InstrumentControls({
             />
             <small
               id="strings-help"
-              className={`help-text${stringsErr ? " help-text--error" : ""}`}
+              className={clsx("help-text", { "help-text--error": stringsErr })}
             >
               {stringsErr || `Allowed range: ${STR_MIN}–${STR_MAX}`}
             </small>
@@ -190,7 +191,7 @@ function InstrumentControls({
             />
             <small
               id="frets-help"
-              className={`help-text${fretsErr ? " help-text--error" : ""}`}
+              className={clsx("help-text", { "help-text--error": fretsErr })}
             >
               {fretsErr || `Allowed range: ${FRETS_MIN}–${FRETS_MAX}`}
             </small>
