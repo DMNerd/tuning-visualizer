@@ -2,7 +2,11 @@ import React from "react";
 import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
-import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
+import {
+  CHORD_TYPES,
+  CHORD_LABELS,
+  STANDARD_CHORD_TYPES,
+} from "@/lib/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
 
 function ChordBuilder({
@@ -17,6 +21,7 @@ function ChordBuilder({
   setHideNonChord,
   defaultRoot = "C",
   defaultType = "maj",
+  supportsMicrotonal = false,
 }) {
   const resetDefaults = () => {
     onRootChange(defaultRoot);
@@ -24,6 +29,8 @@ function ChordBuilder({
     setShowChord(false);
     setHideNonChord(false);
   };
+
+  const chordTypes = supportsMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
 
   return (
     <Section title="Chord Builder" size="sm">
@@ -54,7 +61,7 @@ function ChordBuilder({
                 value={type}
                 onChange={(e) => onTypeChange(e.target.value)}
               >
-                {CHORD_TYPES.map((t) => (
+                {chordTypes.map((t) => (
                   <option key={t} value={t}>
                     {CHORD_LABELS[t]}
                   </option>
@@ -117,6 +124,7 @@ function pick(p) {
     showChord: p.showChord,
     hideNonChord: p.hideNonChord,
     sysNames: p.sysNames,
+    supportsMicrotonal: p.supportsMicrotonal,
   };
 }
 

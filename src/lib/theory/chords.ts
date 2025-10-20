@@ -23,6 +23,17 @@ type ChordType =
   | "min↓3" // 1 b3↓ 5
   | "quartal"; // 1 4 7♭ (stacked fourths)
 
+const MICROTONAL_TYPES: readonly ChordType[] = [
+  "neut",
+  "neut7",
+  "sus2↓",
+  "sus4↑",
+  "maj↑3",
+  "min↓3",
+] as const;
+
+const MICROTONAL_TYPE_SET = new Set<ChordType>(MICROTONAL_TYPES);
+
 interface ChordFormula {
   label: string;
   /** Steps from the root in system divisions (EDO steps). */
@@ -52,42 +63,46 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   min: {
     "12": {
-      label: "Minor (1 b3 5)",
+      label: "Minor (1 ♭3 5)",
       steps: [0, 3, 7],
       degrees: ["1", "b3", "5"],
     },
     "24": {
-      label: "Minor (1 b3 5)",
+      label: "Minor (1 ♭3 5)",
       steps: [0, 6, 14],
       degrees: ["1", "b3", "5"],
     },
   },
   dim: {
     "12": {
-      label: "Dim (1 b3 b5)",
+      label: "Diminished (1 ♭3 ♭5)",
       steps: [0, 3, 6],
       degrees: ["1", "b3", "b5"],
     },
     "24": {
-      label: "Dim (1 b3 b5)",
+      label: "Diminished (1 ♭3 ♭5)",
       steps: [0, 6, 12],
       degrees: ["1", "b3", "b5"],
     },
   },
   aug: {
     "12": {
-      label: "Aug (1 3 #5)",
+      label: "Augmented (1 3 #5)",
       steps: [0, 4, 8],
       degrees: ["1", "3", "#5"],
     },
     "24": {
-      label: "Aug (1 3 #5)",
+      label: "Augmented (1 3 #5)",
       steps: [0, 8, 16],
       degrees: ["1", "3", "#5"],
     },
   },
   sus2: {
-    "12": { label: "Sus2 (1 2 5)", steps: [0, 2, 7], degrees: ["1", "2", "5"] },
+    "12": {
+      label: "Sus2 (1 2 5)",
+      steps: [0, 2, 7],
+      degrees: ["1", "2", "5"],
+    },
     "24": {
       label: "Sus2 (1 2 5)",
       steps: [0, 4, 14],
@@ -95,7 +110,11 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
     },
   },
   sus4: {
-    "12": { label: "Sus4 (1 4 5)", steps: [0, 5, 7], degrees: ["1", "4", "5"] },
+    "12": {
+      label: "Sus4 (1 4 5)",
+      steps: [0, 5, 7],
+      degrees: ["1", "4", "5"],
+    },
     "24": {
       label: "Sus4 (1 4 5)",
       steps: [0, 10, 14],
@@ -116,95 +135,95 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   m6: {
     "12": {
-      label: "m6 (1 b3 5 6)",
+      label: "m6 (1 ♭3 5 6)",
       steps: [0, 3, 7, 9],
       degrees: ["1", "b3", "5", "6"],
     },
     "24": {
-      label: "m6 (1 b3 5 6)",
+      label: "m6 (1 ♭3 5 6)",
       steps: [0, 6, 14, 18],
       degrees: ["1", "b3", "5", "6"],
     },
   },
   "7": {
     "12": {
-      label: "7 (1 3 5 b7)",
+      label: "7 (1 3 5 ♭7)",
       steps: [0, 4, 7, 10],
       degrees: ["1", "3", "5", "b7"],
     },
     "24": {
-      label: "7 (1 3 5 b7)",
+      label: "7 (1 3 5 ♭7)",
       steps: [0, 8, 14, 20],
       degrees: ["1", "3", "5", "b7"],
     },
   },
   maj7: {
     "12": {
-      label: "maj7 (1 3 5 7)",
+      label: "Maj7 (1 3 5 7)",
       steps: [0, 4, 7, 11],
       degrees: ["1", "3", "5", "7"],
     },
     "24": {
-      label: "maj7 (1 3 5 7)",
+      label: "Maj7 (1 3 5 7)",
       steps: [0, 8, 14, 22],
       degrees: ["1", "3", "5", "7"],
     },
   },
   m7: {
     "12": {
-      label: "m7 (1 b3 5 b7)",
+      label: "m7 (1 ♭3 5 ♭7)",
       steps: [0, 3, 7, 10],
       degrees: ["1", "b3", "5", "b7"],
     },
     "24": {
-      label: "m7 (1 b3 5 b7)",
+      label: "m7 (1 ♭3 5 ♭7)",
       steps: [0, 6, 14, 20],
       degrees: ["1", "b3", "5", "b7"],
     },
   },
   m7b5: {
     "12": {
-      label: "m7b5 (1 b3 b5 b7)",
+      label: "m7♭5 (1 ♭3 ♭5 ♭7)",
       steps: [0, 3, 6, 10],
       degrees: ["1", "b3", "b5", "b7"],
     },
     "24": {
-      label: "m7b5 (1 b3 b5 b7)",
+      label: "m7♭5 (1 ♭3 ♭5 ♭7)",
       steps: [0, 6, 12, 20],
       degrees: ["1", "b3", "b5", "b7"],
     },
   },
   dim7: {
     "12": {
-      label: "dim7 (1 b3 b5 bb7)",
+      label: "Dim7 (1 ♭3 ♭5 6)",
       steps: [0, 3, 6, 9],
-      degrees: ["1", "b3", "b5", "bb7"],
+      degrees: ["1", "b3", "b5", "6"],
     },
     "24": {
-      label: "dim7 (1 b3 b5 bb7)",
+      label: "Dim7 (1 ♭3 ♭5 6)",
       steps: [0, 6, 12, 18],
-      degrees: ["1", "b3", "b5", "bb7"],
+      degrees: ["1", "b3", "b5", "6"],
     },
   },
   add9: {
     "12": {
-      label: "add9 (1 3 5 9)",
+      label: "Add9 (1 3 5 9)",
       steps: [0, 4, 7, 14],
       degrees: ["1", "3", "5", "9"],
     },
     "24": {
-      label: "add9 (1 3 5 9)",
+      label: "Add9 (1 3 5 9)",
       steps: [0, 8, 14, 28],
       degrees: ["1", "3", "5", "9"],
     },
   },
 
-  // ---- 24-EDO flavors (with sensible 12-TET fallbacks) ----
+  // ---- Microtonal extensions ----
   neut: {
     "12": {
-      label: "Neutral (≈ min) (1 n3 5)",
-      steps: [0, 3, 7],
-      degrees: ["1", "n3", "5"],
+      label: "Neutral (1 3 5)",
+      steps: [0, 4, 7],
+      degrees: ["1", "3", "5"],
     },
     "24": {
       label: "Neutral (1 n3 5)",
@@ -214,21 +233,21 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   neut7: {
     "12": {
-      label: "Neutral7 (≈ m7) (1 n3 5 b7)",
-      steps: [0, 3, 7, 10],
-      degrees: ["1", "n3", "5", "b7"],
+      label: "Neutral7 (1 3 5 ♭7)",
+      steps: [0, 4, 7, 10],
+      degrees: ["1", "3", "5", "b7"],
     },
     "24": {
-      label: "Neutral7 (1 n3 5 b7)",
+      label: "Neutral7 (1 n3 5 ♭7)",
       steps: [0, 7, 14, 20],
       degrees: ["1", "n3", "5", "b7"],
     },
   },
   "sus2↓": {
     "12": {
-      label: "Sus2↓ (≈ sus2) (1 2↓ 5)",
+      label: "Sus2 (1 2 5)",
       steps: [0, 2, 7],
-      degrees: ["1", "2↓", "5"],
+      degrees: ["1", "2", "5"],
     },
     "24": {
       label: "Sus2↓ (1 2↓ 5)",
@@ -238,9 +257,9 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   "sus4↑": {
     "12": {
-      label: "Sus4↑ (≈ sus4) (1 4↑ 5)",
+      label: "Sus4 (1 4 5)",
       steps: [0, 5, 7],
-      degrees: ["1", "4↑", "5"],
+      degrees: ["1", "4", "5"],
     },
     "24": {
       label: "Sus4↑ (1 4↑ 5)",
@@ -250,9 +269,9 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   "maj↑3": {
     "12": {
-      label: "Maj↑3 (≈ maj) (1 3↑ 5)",
+      label: "Major (1 3 5)",
       steps: [0, 4, 7],
-      degrees: ["1", "3↑", "5"],
+      degrees: ["1", "3", "5"],
     },
     "24": {
       label: "Maj↑3 (1 3↑ 5)",
@@ -262,12 +281,12 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
   "min↓3": {
     "12": {
-      label: "Min↓3 (≈ min) (1 b3↓ 5)",
+      label: "Minor (1 ♭3 5)",
       steps: [0, 3, 7],
-      degrees: ["1", "b3↓", "5"],
+      degrees: ["1", "b3", "5"],
     },
     "24": {
-      label: "Min↓3 (1 b3↓ 5)",
+      label: "Min↓3 (1 ♭3↓ 5)",
       steps: [0, 5, 14],
       degrees: ["1", "b3↓", "5"],
     },
@@ -299,9 +318,14 @@ export function buildChordPCsFromPc(
 }
 
 /** Convenience: list & labels for UIs */
-export const CHORD_TYPES = Object.keys(BASE) as ChordType[];
+const ALL_CHORD_TYPES = Object.keys(BASE) as ChordType[];
+export const CHORD_TYPES = ALL_CHORD_TYPES;
+export const MICROTONAL_CHORD_TYPES = MICROTONAL_TYPES;
+export const STANDARD_CHORD_TYPES = ALL_CHORD_TYPES.filter(
+  (t) => !MICROTONAL_TYPE_SET.has(t),
+);
 export const CHORD_LABELS: Record<ChordType, string> = Object.fromEntries(
-  CHORD_TYPES.map((t) => [t, BASE[t]["24"].label]), // show 24-EDO names; still fine in 12-TET
+  ALL_CHORD_TYPES.map((t) => [t, BASE[t]["24"].label]), // show 24-EDO names; still fine in 12-TET
 ) as Record<ChordType, string>;
 
 /**
@@ -336,16 +360,12 @@ export function degreeForStep(step: number, divisions: number): string {
       case 11:
         return "7";
       default:
-        return "•";
+        return "?";
     }
   };
 
-  if (divisions === 24) {
-    const approxSemi = Math.round(mod(step, 24) / 2);
-    return degreeFor12(approxSemi);
-  }
   if (divisions === 12) return degreeFor12(step);
-  // generic EDO: map to nearest 12-TET bucket
-  const approx = Math.round((mod(step, divisions) * 12) / divisions);
-  return degreeFor12(approx);
+
+  const mapped = Math.round((step / divisions) * 12);
+  return degreeFor12(mapped);
 }

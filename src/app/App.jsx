@@ -458,6 +458,7 @@ export default function App() {
             setShowChord={setShowChord}
             hideNonChord={hideNonChord}
             setHideNonChord={setHideNonChord}
+            supportsMicrotonal={system.divisions === 24}
           />
         </ErrorBoundary>
 
