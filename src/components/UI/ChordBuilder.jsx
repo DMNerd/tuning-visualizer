@@ -2,6 +2,7 @@ import React from "react";
 import { dequal } from "dequal";
 import Section from "@/components/UI/Section";
 import { CHORD_TYPES, CHORD_LABELS } from "@/lib/theory/chords";
+import { FiRotateCcw } from "react-icons/fi";
 
 function ChordBuilder({
   root,
@@ -13,7 +14,16 @@ function ChordBuilder({
   setShowChord,
   hideNonChord,
   setHideNonChord,
+  defaultRoot = "C",
+  defaultType = "maj",
 }) {
+  const resetDefaults = () => {
+    onRootChange(defaultRoot);
+    onTypeChange(defaultType);
+    setShowChord(false);
+    setHideNonChord(false);
+  };
+
   return (
     <Section title="Chord Builder" size="sm">
       <div className="control-panel chord-controls">
@@ -36,18 +46,29 @@ function ChordBuilder({
 
           <div className="field">
             <span>Type</span>
-            <select
-              id="chord-type"
-              name="chord-type"
-              value={type}
-              onChange={(e) => onTypeChange(e.target.value)}
-            >
-              {CHORD_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {CHORD_LABELS[t]}
-                </option>
-              ))}
-            </select>
+            <div className="input-row">
+              <select
+                id="chord-type"
+                name="chord-type"
+                value={type}
+                onChange={(e) => onTypeChange(e.target.value)}
+              >
+                {CHORD_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {CHORD_LABELS[t]}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Reset chord builder to defaults"
+                title="Reset to default"
+                onClick={resetDefaults}
+              >
+                <FiRotateCcw size={16} aria-hidden />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -97,4 +118,5 @@ function pick(p) {
     sysNames: p.sysNames,
   };
 }
+
 export default React.memo(ChordBuilder, (a, b) => dequal(pick(a), pick(b)));

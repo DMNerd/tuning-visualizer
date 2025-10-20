@@ -59,54 +59,44 @@ function ExportControls({
       "export-print",
     );
 
-  const doExportCurrent = () =>
-    withToastPromise(
-      () => exportCurrent?.(),
-      {
-        loading: "Preparing current tuning…",
-        success: "Current tuning exported.",
-        error: "Export failed.",
-      },
-      "export-current-tuning",
-    );
+  const doExportCurrent = () => exportCurrent?.();
 
-  const doExportAll = () =>
-    withToastPromise(
-      () => exportAll?.(),
-      {
-        loading: "Collecting custom tunings…",
-        success: "Custom tunings exported.",
-        error: "Export failed.",
-      },
-      "export-all-tunings",
-    );
+  const doExportAll = () => exportAll?.();
 
   const triggerImport = () => fileInputRef.current?.click();
 
-  const onFileChange = (e) => {
+  const onFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    withToastPromise(
-      async () => {
-        const text = await file.text();
-        let parsed;
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          throw new Error("Selected file is not valid JSON.");
-        }
-        const json = Array.isArray(parsed) ? parsed : [parsed];
-        await importFromJson?.(json, [file.name]);
+    let text;
+    try {
+      text = await file.text();
+    } catch (err) {
+      toast.error(err?.message || "Import failed.");
+      e.target.value = "";
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      toast.error("Selected file is not valid JSON.");
+      e.target.value = "";
+      return;
+    }
+
+    const json = Array.isArray(parsed) ? parsed : [parsed];
+    const maybePromise = importFromJson?.(json, [file.name]);
+    if (maybePromise && typeof maybePromise.finally === "function") {
+      return maybePromise.finally(() => {
         e.target.value = "";
-      },
-      {
-        loading: `Importing “${file.name}”…`,
-        success: "Tunings imported.",
-        error: (err) => err?.message || "Import failed.",
-      },
-      "import-tunings",
-    );
+      });
+    }
+
+    e.target.value = "";
+    return maybePromise;
   };
 
   return (

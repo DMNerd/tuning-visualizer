@@ -1,6 +1,6 @@
 import React from "react";
 import { dequal } from "dequal";
-import { FiShuffle } from "react-icons/fi";
+import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 
 function ScaleControls({
@@ -10,6 +10,8 @@ function ScaleControls({
   setScale,
   sysNames,
   scaleOptions,
+  defaultRoot = "C",
+  defaultScale = "Major",
 }) {
   const pickRandom = () => {
     if (!Array.isArray(sysNames) || !sysNames.length) return;
@@ -21,6 +23,11 @@ function ScaleControls({
 
     setRoot(nextRoot);
     setScale(nextScaleObj.label);
+  };
+
+  const resetDefaults = () => {
+    setRoot(defaultRoot);
+    setScale(defaultScale);
   };
 
   return (
@@ -63,6 +70,15 @@ function ScaleControls({
               onClick={pickRandom}
             >
               <FiShuffle size={16} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Reset to default scale and root"
+              title="Reset to default"
+              onClick={resetDefaults}
+            >
+              <FiRotateCcw size={16} aria-hidden />
             </button>
           </div>
         </div>
