@@ -1,5 +1,6 @@
 import React, { useRef, useMemo } from "react";
 import { dequal } from "dequal";
+import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { toast } from "react-hot-toast";
 
@@ -101,7 +102,7 @@ function ExportControls({
 
   return (
     <Section title="Export / Import">
-      <div className="control-panel export-controls">
+      <div className={clsx("control-panel", "export-controls")}>
         <div className="row">
           <button type="button" className="btn" onClick={doDownloadPNG}>
             Export PNG

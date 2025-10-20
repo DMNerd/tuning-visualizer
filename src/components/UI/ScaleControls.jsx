@@ -1,5 +1,6 @@
 import React from "react";
 import { dequal } from "dequal";
+import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 
@@ -32,7 +33,7 @@ function ScaleControls({
 
   return (
     <Section title="Scale" size="sm">
-      <div className="scale-controls grid2">
+      <div className={clsx("control-panel", "scale-controls", "grid2")}>
         <div className="field">
           <span>Root</span>
           <select
