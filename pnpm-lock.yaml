@@ -59,7 +59,7 @@ importers:
         version: 19.2.2(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.0.4
-        version: 5.0.4(vite@7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))
+        version: 5.0.4(vite@7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))
       eslint:
         specifier: ^9.38.0
         version: 9.38.0(jiti@2.6.0)
@@ -97,11 +97,11 @@ importers:
         specifier: ^8.46.1
         version: 8.46.1(eslint@9.38.0(jiti@2.6.0))(typescript@5.9.3)
       vite:
-        specifier: ^7.1.10
-        version: 7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
+        specifier: ^7.1.11
+        version: 7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
       vite-plugin-csp-guard:
         specifier: ^3.0.0
-        version: 3.0.0(vite@7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))
+        version: 3.0.0(vite@7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))
       vite-plugin-html-minifier-terser:
         specifier: ^3.8.0
         version: 3.8.0
@@ -806,8 +806,8 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
-  baseline-browser-mapping@2.8.17:
-    resolution: {integrity: sha512-j5zJcx6golJYTG6c05LUZ3Z8Gi+M62zRT/ycz4Xq4iCOdpcxwg7ngEYD4KA0eWZC7U17qh/Smq8bYbACJ0ipBA==}
+  baseline-browser-mapping@2.8.18:
+    resolution: {integrity: sha512-UYmTpOBwgPScZpS4A+YbapwWuBwasxvO/2IOHArSsAhL/+ZdmATBXTex3t+l2hXwLVYK382ibr/nKoY9GKe86w==}
     hasBin: true
 
   boolbase@1.0.0:
@@ -2239,8 +2239,8 @@ packages:
   vite-plugin-html-minifier-terser@3.8.0:
     resolution: {integrity: sha512-WuYxUExgecjCuom1k3TxT+FJibEKntHkr59t17Nbh1EMqgeIC3GSue8IRtufa3hgEgZiBih+FiA2VSYs5VOL9A==}
 
-  vite@7.1.10:
-    resolution: {integrity: sha512-CmuvUBzVJ/e3HGxhg6cYk88NGgTnBoOo7ogtfJJ0fefUWAxN/WDSUa50o+oVBxuIhO8FoEZW0j2eW7sfjs5EtA==}
+  vite@7.1.11:
+    resolution: {integrity: sha512-uzcxnSDVjAopEUjljkWh8EIrg6tlzrjFUfMcR1EVsRDGwf/ccef0qQPRyOrROwhrTDaApueq+ja+KLPlzR/zdg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2884,7 +2884,7 @@ snapshots:
       '@typescript-eslint/types': 8.46.1
       eslint-visitor-keys: 4.2.1
 
-  '@vitejs/plugin-react@5.0.4(vite@7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))':
+  '@vitejs/plugin-react@5.0.4(vite@7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
@@ -2892,7 +2892,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.38
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
+      vite: 7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -2982,7 +2982,7 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
-  baseline-browser-mapping@2.8.17: {}
+  baseline-browser-mapping@2.8.18: {}
 
   boolbase@1.0.0: {}
 
@@ -3001,7 +3001,7 @@ snapshots:
 
   browserslist@4.26.3:
     dependencies:
-      baseline-browser-mapping: 2.8.17
+      baseline-browser-mapping: 2.8.18
       caniuse-lite: 1.0.30001751
       electron-to-chromium: 1.5.237
       node-releases: 2.0.25
@@ -4617,17 +4617,17 @@ snapshots:
   varint@6.0.0:
     optional: true
 
-  vite-plugin-csp-guard@3.0.0(vite@7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)):
+  vite-plugin-csp-guard@3.0.0(vite@7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)):
     dependencies:
       cheerio: 1.1.2
       csp-toolkit: 1.4.0
-      vite: 7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
+      vite: 7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6)
 
   vite-plugin-html-minifier-terser@3.8.0:
     dependencies:
       html-minifier-terser: 7.2.0
 
-  vite@7.1.10(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6):
+  vite@7.1.11(@types/node@24.3.1)(jiti@2.6.0)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)(tsx@4.20.6):
     dependencies:
       esbuild: 0.25.11
       fdir: 6.5.0(picomatch@4.0.3)

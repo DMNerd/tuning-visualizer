@@ -25,7 +25,7 @@ export function useStringsChange({ setStrings, setTuning, defaultForCount }) {
         }
 
         if (nextCount <= prevLen) {
-          draft.length = nextCount; 
+          draft.length = nextCount;
           return;
         }
 

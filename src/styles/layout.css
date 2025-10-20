@@ -221,6 +221,17 @@
   }
 }
 
+.scale-controls {
+  &.grid2 { grid-template-columns: 0.8fr 1.2fr; }
+
+  select#root,
+  select#scale { min-width: 0; }
+
+  @media (width <= 900px) {
+    &.grid2 { grid-template-columns: 1fr; }
+  }
+}
+
 .input-row {
   display: flex;
   align-items: center;
