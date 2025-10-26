@@ -1,12 +1,19 @@
 import * as v from "valibot";
+import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 
-export const TuningStringSchema = v.object({
-  label: v.optional(v.string()),
-  note: v.optional(v.string()),
-  midi: v.optional(v.number()),
-  startFret: v.optional(v.number()),
-  greyBefore: v.optional(v.boolean()),
-});
+export const TuningStringSchema = v.pipe(
+  v.object({
+    label: v.optional(v.string()),
+    note: v.optional(v.string()),
+    midi: v.optional(v.number()),
+    startFret: v.optional(v.number()),
+    greyBefore: v.optional(v.boolean()),
+  }),
+  v.check(
+    (value) => typeof value.note === "string" || typeof value.midi === "number",
+    "Each string must include a note or MIDI value.",
+  ),
+);
 
 export const TuningPackSchema = v.object({
   version: v.literal(2),
@@ -19,7 +26,17 @@ export const TuningPackSchema = v.object({
     ),
   }),
   tuning: v.object({
-    strings: v.array(TuningStringSchema),
+    strings: v.pipe(
+      v.array(TuningStringSchema),
+      v.minLength(
+        STR_MIN,
+        `Tuning pack must include at least ${STR_MIN} strings.`,
+      ),
+      v.maxLength(
+        STR_MAX,
+        `Tuning pack may include at most ${STR_MAX} strings.`,
+      ),
+    ),
   }),
   meta: v.optional(v.record(v.string(), v.unknown())),
 });

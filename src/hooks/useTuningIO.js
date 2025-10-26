@@ -94,7 +94,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const res = v.safeParse(TuningPackArraySchema, packsRaw);
       if (!res.success) {
         const msg =
-          res.issues?.map((i) => i.message).join("; ") ||
+          res.issues?.map((i) => i.message).join("\n") ||
           "Selected file is not a valid tuning pack.";
         throw new Error(msg);
       }

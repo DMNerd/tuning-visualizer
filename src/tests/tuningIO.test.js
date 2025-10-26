@@ -1,13 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseTuningPack } from "@/lib/tuningIO/schema";
+import { STR_MIN } from "@/lib/config/appDefaults";
+import { parseTuningPack } from "@/lib/export/schema";
 
 const basePack = {
   version: 2,
   name: "Example Tuning",
   system: { edo: 12 },
-  tuning: { strings: [] },
+  tuning: {
+    strings: Array.from({ length: STR_MIN }, () => ({ note: "E4" })),
+  },
 };
 
 test("parseTuningPack rejects packs with non-positive edo", () => {
