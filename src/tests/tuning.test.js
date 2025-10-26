@@ -50,3 +50,24 @@ test("centsFromNearest is zero at exact step", () => {
   assert.equal(nearestStep, 3);
   assert.ok(Math.abs(cents) < 1e-6);
 });
+
+test("centsFromNearest reports small detunings across systems", () => {
+  const detuneCents = [5, -5];
+  for (const divisions of [12, 24]) {
+    const sys = makeSystem(divisions);
+    for (const centsTarget of detuneCents) {
+      const ratio = Math.pow(2, centsTarget / 1200);
+      const f = sys.refFreq * ratio;
+      const { cents, nearestStep } = centsFromNearest(f, sys);
+      assert.equal(
+        Math.abs(nearestStep),
+        0,
+        `nearest step should be 0 for ${divisions}-TET`,
+      );
+      assert.ok(
+        Math.abs(cents - centsTarget) < 1e-6,
+        `expected ${centsTarget} cents in ${divisions}-TET, got ${cents}`,
+      );
+    }
+  }
+});

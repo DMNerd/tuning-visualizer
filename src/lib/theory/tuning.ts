@@ -162,6 +162,7 @@ export function centsFromNearest(
   const raw = sys.divisions * Math.log2(f / sys.refFreq);
   const nearest = Math.round(raw);
   const deltaSteps = raw - nearest;
-  const cents = deltaSteps * 1200; // 1200 cents per octave
+  const centsPerStep = 1200 / sys.divisions;
+  const cents = deltaSteps * centsPerStep;
   return { cents, nearestStep: nearest };
 }
