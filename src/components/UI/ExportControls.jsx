@@ -102,24 +102,48 @@ function ExportControls({
 
   return (
     <Section title="Export / Import">
-      <div className={clsx("control-panel", "export-controls")}>
-        <div className="row">
-          <button type="button" className="btn" onClick={doDownloadPNG}>
+      <div className={clsx("tv-controls", "tv-controls--export")}>
+        <div className="tv-controls__grid--two">
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doDownloadPNG}
+          >
             Export PNG
           </button>
-          <button type="button" className="btn" onClick={doDownloadSVG}>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doDownloadSVG}
+          >
             Export SVG
           </button>
-          <button type="button" className="btn" onClick={doPrint}>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doPrint}
+          >
             Print
           </button>
-          <button type="button" className="btn" onClick={doExportCurrent}>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doExportCurrent}
+          >
             Export current tuning (.json)
           </button>
-          <button type="button" className="btn" onClick={doExportAll}>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doExportAll}
+          >
             Export all custom (.json)
           </button>
-          <button type="button" className="btn" onClick={triggerImport}>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={triggerImport}
+          >
             Import tunings (.json)
           </button>
           <input

@@ -13,27 +13,27 @@ export default function ConfirmDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
-      className="confirm-toast"
+      className="tv-overlay"
     >
-      <div id="confirm-title" className="confirm-toast__title">
+      <div id="confirm-title" className="tv-overlay__title">
         {title}
       </div>
 
-      {message ? <div className="confirm-toast__message">{message}</div> : null}
+      {message ? <div className="tv-overlay__message">{message}</div> : null}
 
-      <div className="confirm-toast__actions">
+      <div className="tv-overlay__actions">
         <button
           type="button"
           onClick={onCancel}
           autoFocus
-          className="confirm-toast__button confirm-toast__button--cancel"
+          className="tv-overlay__button tv-overlay__button--muted"
         >
           {cancelText}
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          className="confirm-toast__button confirm-toast__button--confirm"
+          className="tv-overlay__button tv-overlay__button--accent"
         >
           {confirmText}
         </button>

@@ -45,9 +45,9 @@ function ScaleControls({
 
   return (
     <Section title="Scale" size="sm">
-      <div className={clsx("control-panel", "scale-controls", "grid2")}>
-        <div className="field">
-          <span>Root</span>
+      <div className={clsx("tv-controls", "tv-controls--scale")}>
+        <div className="tv-field">
+          <span className="tv-field__label">Root</span>
           <select
             id="root"
             name="root"
@@ -60,9 +60,9 @@ function ScaleControls({
           </select>
         </div>
 
-        <div className="field">
-          <span>Scale</span>
-          <div className="input-row">
+        <div className="tv-field">
+          <span className="tv-field__label">Scale</span>
+          <div className="tv-controls__input-row">
             <select
               id="scale"
               name="scale"
@@ -77,7 +77,7 @@ function ScaleControls({
             </select>
             <button
               type="button"
-              className="icon-btn"
+              className="tv-button tv-button--icon"
               aria-label="Pick a random root and scale"
               title="Random root & scale"
               onClick={pickRandom}
@@ -86,7 +86,7 @@ function ScaleControls({
             </button>
             <button
               type="button"
-              className="icon-btn"
+              className="tv-button tv-button--icon"
               aria-label="Reset to default scale and root"
               title="Reset to default"
               onClick={resetDefaults}

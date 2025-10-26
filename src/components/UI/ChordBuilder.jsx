@@ -34,10 +34,10 @@ function ChordBuilder({
 
   return (
     <Section title="Chord Builder" size="sm">
-      <div className={clsx("control-panel", "chord-controls")}>
-        <div className="grid2">
-          <div className="field">
-            <span>Root</span>
+      <div className={clsx("tv-controls", "tv-controls--chord")}>
+        <div className="tv-controls__grid--two">
+          <div className="tv-field">
+            <span className="tv-field__label">Root</span>
             <select
               id="chord-root"
               name="chord-root"
@@ -52,9 +52,9 @@ function ChordBuilder({
             </select>
           </div>
 
-          <div className="field">
-            <span>Type</span>
-            <div className="input-row">
+          <div className="tv-field">
+            <span className="tv-field__label">Type</span>
+            <div className="tv-controls__input-row">
               <select
                 id="chord-type"
                 name="chord-type"
@@ -69,7 +69,7 @@ function ChordBuilder({
               </select>
               <button
                 type="button"
-                className="icon-btn"
+                className="tv-button tv-button--icon"
                 aria-label="Reset chord builder to defaults"
                 title="Reset to default"
                 onClick={resetDefaults}
@@ -80,15 +80,15 @@ function ChordBuilder({
           </div>
         </div>
 
-        <div className="field">
-          <span>Chord overlay</span>
+        <div className="tv-field">
+          <span className="tv-field__label">Chord overlay</span>
           <div
-            className="radio-row"
+            className="tv-controls__radio-row"
             role="group"
             aria-label="Chord overlay"
             aria-disabled={!showChord}
           >
-            <label className="check" htmlFor="showChord" data-primary>
+            <label className="tv-check tv-check--accent" htmlFor="showChord">
               <input
                 id="showChord"
                 name="showChord"
@@ -99,7 +99,7 @@ function ChordBuilder({
               Show chord
             </label>
 
-            <label className="check" htmlFor="hideNonChord">
+            <label className="tv-check" htmlFor="hideNonChord">
               <input
                 id="hideNonChord"
                 name="hideNonChord"

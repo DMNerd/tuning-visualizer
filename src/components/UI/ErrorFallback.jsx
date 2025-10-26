@@ -66,19 +66,19 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
   };
 
   return (
-    <div role="alert" className="error-fallback">
-      <div className="header">
+    <div role="alert" className="tv-fallback">
+      <div className="tv-fallback__header">
         <FiAlertTriangle size={20} aria-hidden="true" />
         <span>Something went wrong</span>
       </div>
 
-      <div className="summary" title={summary}>
+      <div className="tv-fallback__summary" title={summary}>
         {summary}
       </div>
 
       <button
         type="button"
-        className="btn"
+        className="tv-button tv-button--block"
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls="error-details"
@@ -89,15 +89,15 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
       </button>
 
       {open && (
-        <pre id="error-details" className="details">
+        <pre id="error-details" className="tv-fallback__details">
           {details}
         </pre>
       )}
 
-      <div className="btn-row">
+      <div className="tv-fallback__actions">
         <button
           type="button"
-          className="btn"
+          className="tv-button tv-button--block"
           onClick={() => {
             resetErrorBoundary?.();
             toast.success("Trying again…");
@@ -110,7 +110,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
 
         <button
           type="button"
-          className="btn"
+          className="tv-button tv-button--block"
           onClick={hardReload}
           title="Reload the whole app"
         >
@@ -120,7 +120,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
 
         <button
           type="button"
-          className="btn"
+          className="tv-button tv-button--block"
           onClick={copyDetails}
           title="Copy error details to clipboard"
         >
@@ -129,7 +129,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
         </button>
 
         <a
-          className="btn"
+          className="tv-button tv-button--block"
           href="https://github.com/DMNerd/tuning-visualizer/issues"
           target="_blank"
           rel="noreferrer"
@@ -141,7 +141,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
 
         <button
           type="button"
-          className="btn"
+          className="tv-button tv-button--block"
           onClick={factoryReset}
           title="Clear saved settings and custom tunings"
         >

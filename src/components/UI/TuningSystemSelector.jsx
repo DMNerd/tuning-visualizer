@@ -6,9 +6,9 @@ import Section from "@/components/UI/Section";
 function TuningSystemSelector({ systemId, setSystemId, systems }) {
   return (
     <Section title="Tuning System" size="sm">
-      <div className={clsx("control-panel", "tuning-system-controls")}>
-        <div className="field">
-          <span>System</span>
+      <div className={clsx("tv-controls", "tv-controls--system")}>
+        <div className="tv-field">
+          <span className="tv-field__label">System</span>
           <select
             id="system"
             name="system"
