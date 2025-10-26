@@ -1,5 +1,3 @@
-// src/lib/stringMeta.d.ts
-
 export type StringMeta = {
   index: number; // zero-based string index
   startFret?: number; // first playable fret on this string

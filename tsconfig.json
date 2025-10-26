@@ -24,7 +24,7 @@
       "@/*": ["src/*"]
     },
 
-    "types": ["react", "react-dom"] // makes @types/* “used” and available everywhere
+    "types": ["react", "react-dom", "node"] // makes @types/* “used” and available everywhere
   },
   "include": [
     "src/**/*.ts",

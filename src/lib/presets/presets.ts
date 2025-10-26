@@ -58,6 +58,11 @@ const COMMON_PRESETS: CommonPresets = {
     "Mandolin — GDGD (cross-tune)": ["D", "G", "D", "G"],
     "Mandolin — ADAE (old-time)": ["E", "A", "D", "A"],
 
+    "Bouzouki — Irish (GDAD)": ["D", "A", "D", "G"],
+    "Bouzouki — Irish (GDAE)": ["E", "A", "D", "G"],
+    "Bouzouki — Irish (ADAD)": ["D", "A", "D", "A"],
+    "Bouzouki — Greek Tetrachordo (CFAD)": ["D", "A", "F", "C"],
+
     "Tenor Banjo (CGDA)": ["A", "D", "G", "C"],
     "Ukulele (GCEA, re-entrant)": ["A", "E", "C", "G"],
     "Baritone Uke (DGBE)": ["E", "B", "G", "D"],
