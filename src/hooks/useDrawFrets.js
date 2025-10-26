@@ -1,4 +1,5 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useEffect } from "react";
+import { usePrevious } from "react-use";
 
 /**
  * Normalize drawn fret count across temperaments.
@@ -17,26 +18,24 @@ export function useDrawFrets({
     return Math.max(1, Math.round(baseFrets * factor));
   }, [baseFrets, divisions]);
 
-  const prevDivRef = useRef(divisions);
+  const prevDivisions = usePrevious(divisions);
 
   useEffect(() => {
-    const prevN = prevDivRef.current;
-    const nextN = divisions;
-
-    if (prevN !== nextN) {
-      if (!fretsTouched) {
-        // Preserve drawn wires: nextSelected ≈ baseFrets * (prevN / nextN)
-        const nextSelected = Math.max(
-          12,
-          Math.min(30, Math.round(baseFrets * (prevN / nextN))),
-        );
-        if (nextSelected !== baseFrets) {
-          setFretsRaw(nextSelected); // use raw setter to avoid marking as "touched"
-        }
-      }
-      prevDivRef.current = nextN;
+    if (prevDivisions === undefined || prevDivisions === divisions) {
+      return;
     }
-  }, [divisions, baseFrets, fretsTouched, setFretsRaw]);
+
+    if (!fretsTouched) {
+      // Preserve drawn wires: nextSelected ≈ baseFrets * (prevDivisions / divisions)
+      const nextSelected = Math.max(
+        12,
+        Math.min(30, Math.round(baseFrets * (prevDivisions / divisions))),
+      );
+      if (nextSelected !== baseFrets) {
+        setFretsRaw(nextSelected); // use raw setter to avoid marking as "touched"
+      }
+    }
+  }, [divisions, prevDivisions, baseFrets, fretsTouched, setFretsRaw]);
 
   return drawFrets;
 }
