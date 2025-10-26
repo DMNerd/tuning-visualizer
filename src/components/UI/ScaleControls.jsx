@@ -44,7 +44,7 @@ function ScaleControls({
   };
 
   return (
-    <Section title="Scale" size="sm">
+    <Section title="Scale" size="sm" className="tv-panel--scale-controls">
       <div className={clsx("tv-controls", "tv-controls--scale")}>
         <div className="tv-field">
           <span className="tv-field__label">Root</span>

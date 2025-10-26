@@ -1115,6 +1115,14 @@ svg {
 }
 
 @media (width <= 760px) {
+  .tv-panel--scale-controls {
+    grid-template-rows: auto auto;
+  }
+
+  .tv-panel--scale-controls:not(.is-collapsed) .tv-panel__body,
+  .tv-panel--scale-controls:not(.is-collapsed) .tv-panel__body-inner {
+    overflow: visible;
+  }
   .tv-shell__controls {
     grid-template-columns: 1fr;
   }
