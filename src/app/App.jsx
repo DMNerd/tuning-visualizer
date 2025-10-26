@@ -62,7 +62,9 @@ import InstrumentControls from "@/components/UI/InstrumentControls";
 import ExportControls from "@/components/UI/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
 import ErrorFallback from "@/components/UI/ErrorFallback";
-import TuningPackEditorModal from "@/components/UI/TuningPackEditorModal";
+const TuningPackEditorModal = React.lazy(
+  () => import("@/components/UI/TuningPackEditorModal"),
+);
 
 // hooks
 import { useTheme } from "@/hooks/useTheme";
@@ -610,15 +612,25 @@ export default function App() {
           />
         </ErrorBoundary>
       </footer>
-      <TuningPackEditorModal
-        isOpen={Boolean(editorState)}
-        mode={editorState?.mode ?? "create"}
-        initialPack={editorState?.initialPack}
-        originalName={editorState?.originalName ?? undefined}
-        onCancel={handleEditorCancel}
-        onSubmit={handleEditorSubmit}
-        themeMode={themeMode}
-      />
+      {editorState ? (
+        <React.Suspense
+          fallback={
+            <div className="tv-modal-suspense" role="status" aria-live="polite">
+              Loading editor...
+            </div>
+          }
+        >
+          <TuningPackEditorModal
+            isOpen={Boolean(editorState)}
+            mode={editorState?.mode ?? "create"}
+            initialPack={editorState?.initialPack}
+            originalName={editorState?.originalName ?? undefined}
+            onCancel={handleEditorCancel}
+            onSubmit={handleEditorSubmit}
+            themeMode={themeMode}
+          />
+        </React.Suspense>
+      ) : null}
       <Toaster
         position="top-right"
         gutter={8}
