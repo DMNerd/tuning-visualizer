@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
@@ -67,11 +66,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         { find: "@", replacement: resolve(__dirname, "src") },
-        // Normalize the accidental double-slash import path used by json-joy:
-        {
-          find: /^@jsonjoy\.com\/\/buffers/,
-          replacement: "@jsonjoy.com/buffers",
-        },
       ],
     },
   };
