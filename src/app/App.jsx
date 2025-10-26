@@ -71,6 +71,7 @@ import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 import { useStringsChange } from "@/hooks/useStringsChange";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
 import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
+import { useSystemPrefs } from "@/hooks/useSystemPrefs";
 import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
 import { useFretsTouched } from "@/hooks/useFretsTouched";
@@ -89,7 +90,13 @@ import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 export default function App() {
   // System selection
-  const [systemId, setSystemId] = useState(SYSTEM_DEFAULT);
+  const { systemId, setSystemId, root, setRoot, ensureValidRoot } =
+    useSystemPrefs({
+      tunings: TUNINGS,
+      defaultSystemId: SYSTEM_DEFAULT,
+      defaultRoot: ROOT_DEFAULT,
+    });
+
   const system = TUNINGS[systemId];
 
   // Strings / Frets
@@ -109,9 +116,6 @@ export default function App() {
       FRETS_MAX,
       STR_FACTORY,
     });
-
-  // Root
-  const [root, setRoot] = useState(ROOT_DEFAULT);
 
   // Display options
   const [displayPrefs, setDisplayPrefs] = useDisplayPrefs(DISPLAY_DEFAULTS);
@@ -166,14 +170,11 @@ export default function App() {
     onClose: () => toggleFs(false),
   });
 
-  // Reflect fullscreen state on <html> for CSS
   useEffect(() => {
     const root = document.documentElement;
     if (isFs) root.classList.add("is-fs");
     else root.classList.remove("is-fs");
-    return () => {
-      root.classList.remove("is-fs");
-    };
+    return () => root.classList.remove("is-fs");
   }, [isFs]);
 
   // Tuning (defaults + presets + meta)
@@ -194,14 +195,15 @@ export default function App() {
     PRESET_TUNING_META,
   });
 
-  // Per-string metadata
   const [stringMeta, setStringMeta] = useState(null);
 
-  // System note names
   const { pcFromName, sysNames } = useSystemNoteNames(system, accidental);
+  useEffect(() => {
+    ensureValidRoot(sysNames);
+  }, [ensureValidRoot, sysNames]);
+
   const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
 
-  // Chords
   const {
     chordRoot,
     setChordRoot,
@@ -215,14 +217,12 @@ export default function App() {
     chordPCs,
   } = useChordLogic(system, pcFromName);
 
-  // Scales
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
     initial: SCALE_DEFAULT,
   });
 
-  // Draw-frets normalization
   const drawFrets = useDrawFrets({
     baseFrets: frets,
     divisions: system.divisions,
@@ -230,11 +230,9 @@ export default function App() {
     setFretsRaw: setFrets,
   });
 
-  // Export filename base
   const fileBase = useFileBase({ root, scale, accidental, strings });
   const fileBaseSlug = useMemo(() => slug(fileBase), [fileBase]);
 
-  // Accidental respelling
   useAccidentalRespell({
     system,
     accidental,
@@ -250,11 +248,9 @@ export default function App() {
     defaultForCount,
   });
 
-  // Tuning IO
   const { customTunings, importFromJson, exportCurrent, exportAll } =
     useTuningIO({ systemId, strings, TUNINGS });
 
-  // Merge presets
   const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
     useMergedPresets({
       presetMap,
@@ -267,7 +263,6 @@ export default function App() {
       currentStrings: strings,
     });
 
-  // Reset meta and preset label when system or string count changes
   useEffect(() => {
     setStringMeta(null);
     resetSelection();
@@ -276,16 +271,13 @@ export default function App() {
   const randomizeScale = useCallback(() => {
     if (!Array.isArray(sysNames) || !sysNames.length) return;
     if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
-
     const nextRoot = sysNames[Math.floor(Math.random() * sysNames.length)];
     const nextScaleObj =
       scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
-
     setRoot(nextRoot);
     setScale(nextScaleObj.label);
   }, [sysNames, scaleOptions, setRoot, setScale]);
 
-  // Hotkeys cheatsheet
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
       id: "hotkeys-help",
@@ -311,22 +303,18 @@ export default function App() {
     onRandomizeScale: randomizeScale,
   });
 
-  // Keep preset label synced with presence of a saved default
   useEffect(() => {
     if (savedExists) setPreset("Saved default");
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
 
-  // Capo
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
     strings,
     stringMeta,
   });
 
-  // Confirm helper (native-looking)
   const { confirm } = useConfirm();
 
-  // Resets
   const { resetInstrumentFactory, resetAll } = useResets({
     system,
     resetInstrumentPrefs,
@@ -344,7 +332,6 @@ export default function App() {
     confirm,
   });
 
-  // Stable export header builder
   const buildHeader = useCallback(
     () => ({
       system: systemId,
@@ -362,7 +349,6 @@ export default function App() {
       <header className="page-header">
         <PanelHeader theme={theme} setTheme={setTheme} />
       </header>
-
       <main className="page-main">
         <div className="stage fb-stage" ref={stageRef}>
           <div className="fretboard-wrap" onDoubleClick={() => toggleFs()}>
@@ -392,7 +378,6 @@ export default function App() {
                 )}
               </button>
             </div>
-
             <ErrorBoundary
               FallbackComponent={ErrorFallback}
               onReset={() => {
@@ -428,14 +413,12 @@ export default function App() {
           </div>
         </div>
       </main>
-
       <footer className="page-controls">
         <TuningSystemSelector
           systemId={systemId}
           setSystemId={setSystemId}
           systems={TUNINGS}
         />
-
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[systemId, root, scale]}
@@ -453,7 +436,6 @@ export default function App() {
             defaultScale={SCALE_DEFAULT}
           />
         </ErrorBoundary>
-
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
@@ -476,7 +458,6 @@ export default function App() {
             supportsMicrotonal={system.divisions === 24}
           />
         </ErrorBoundary>
-
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[strings, frets, systemId]}
@@ -502,7 +483,6 @@ export default function App() {
             systemId={systemId}
           />
         </ErrorBoundary>
-
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[displayPrefs]}
@@ -532,11 +512,9 @@ export default function App() {
             degreeCount={intervals.length}
           />
         </ErrorBoundary>
-
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[fileBaseSlug]}
-          onReset={() => {}}
         >
           <ExportControls
             boardRef={boardRef}
@@ -551,7 +529,6 @@ export default function App() {
           />
         </ErrorBoundary>
       </footer>
-
       <Toaster
         position="top-right"
         gutter={8}
@@ -572,7 +549,6 @@ export default function App() {
             ) : (
               <FiInfo size={18} color="var(--fg)" />
             );
-
           return (
             <ToastBar toast={t}>
               {({ message, action }) => (

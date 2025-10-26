@@ -5,4 +5,6 @@ export const STORAGE_KEYS = {
   THEME: "tv.theme",
   USER_DEFAULT_TUNING: "tv.userDefaultTuning",
   CUSTOM_TUNINGS: "tv.customTunings",
+  SYSTEM_ID: "tv.systemId",
+  ROOT: "tv.root",
 };
