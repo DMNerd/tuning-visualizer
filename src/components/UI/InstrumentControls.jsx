@@ -24,11 +24,14 @@ function InstrumentControls({
   setTuning,
   handleStringsChange,
   presetNames,
+  customPresetNames,
   selectedPreset,
   setSelectedPreset,
   handleSaveDefault,
   handleResetFactoryDefault,
   systemId,
+  onCreateCustomPack,
+  onEditCustomPack,
 }) {
   // Local text states so users can type freely
   const [stringsText, setStringsText] = useState(String(strings));
@@ -141,6 +144,10 @@ function InstrumentControls({
       { id: "reset-factory" },
     );
 
+  const isCustomPreset = Array.isArray(customPresetNames)
+    ? customPresetNames.includes(selectedPreset)
+    : false;
+
   return (
     <Section title="Instrument">
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
@@ -248,11 +255,35 @@ function InstrumentControls({
           </select>
         </div>
 
+        <div className="tv-controls__preset-actions">
+          <button
+            type="button"
+            className="tv-button"
+            onClick={() => onCreateCustomPack?.()}
+          >
+            New custom pack
+          </button>
+          <button
+            type="button"
+            className="tv-button"
+            onClick={() => onEditCustomPack?.()}
+            disabled={!isCustomPreset}
+          >
+            Edit pack
+          </button>
+        </div>
+
         <div className="tv-controls__defaults">
-          <button className="tv-button tv-button--block" onClick={onSaveDefault}>
+          <button
+            className="tv-button tv-button--block"
+            onClick={onSaveDefault}
+          >
             Save as default ({systemId}, {strings}-string)
           </button>
-          <button className="tv-button tv-button--block" onClick={onResetFactory}>
+          <button
+            className="tv-button tv-button--block"
+            onClick={onResetFactory}
+          >
             Reset to factory default
           </button>
         </div>
@@ -268,8 +299,11 @@ function pick(p) {
     sysNames: p.sysNames,
     tuning: p.tuning,
     presetNames: p.presetNames,
+    customPresetNames: p.customPresetNames,
     selectedPreset: p.selectedPreset,
     systemId: p.systemId,
+    onCreateCustomPack: p.onCreateCustomPack,
+    onEditCustomPack: p.onEditCustomPack,
   };
 }
 export default React.memo(InstrumentControls, (a, b) =>

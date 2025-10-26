@@ -17,7 +17,7 @@ const TuningStringSchema = v.object({
   greyBefore: v.optional(v.boolean()),
 });
 
-const TuningPackSchema = v.object({
+export const TuningPackSchema = v.object({
   version: v.literal(2),
   name: v.string(),
   system: v.object({
@@ -41,6 +41,26 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     STORAGE_KEYS.CUSTOM_TUNINGS,
     [],
   );
+
+  const parsePack = useCallback((pack) => {
+    const res = v.safeParse(TuningPackSchema, pack);
+    if (!res.success) {
+      const message =
+        res.issues?.map((issue) => issue.message).join("; ") ||
+        "Pack is not a valid tuning.";
+      throw new Error(message);
+    }
+
+    const normalizedName = res.output.name?.trim?.();
+    if (!normalizedName) {
+      throw new Error("Custom tuning must include a name.");
+    }
+
+    return {
+      ...res.output,
+      name: normalizedName,
+    };
+  }, []);
 
   // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
@@ -74,6 +94,41 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const getAllCustomTunings = useCallback(
     () => customTunings || [],
     [customTunings],
+  );
+
+  const saveCustomTuning = useCallback(
+    (pack, options = {}) => {
+      const parsed = parsePack(pack);
+      const replaceName =
+        typeof options?.replaceName === "string"
+          ? options.replaceName
+          : undefined;
+
+      setCustomTunings((prev) => {
+        const existing = Array.isArray(prev) ? prev : [];
+        const filtered = existing.filter((item) => {
+          if (!item || typeof item.name !== "string") return true;
+          if (replaceName && item.name === replaceName) return false;
+          return item.name !== parsed.name;
+        });
+        return [...filtered, parsed];
+      });
+
+      return parsed;
+    },
+    [parsePack, setCustomTunings],
+  );
+
+  const deleteCustomTuning = useCallback(
+    (name) => {
+      if (!name) return;
+      setCustomTunings((prev) => {
+        const existing = Array.isArray(prev) ? prev : [];
+        const filtered = existing.filter((item) => item?.name !== name);
+        return filtered;
+      });
+    },
+    [setCustomTunings],
   );
 
   // ----- Import one or more packs (pure) -----
@@ -174,6 +229,8 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   return {
     getCurrentTuningPack,
     getAllCustomTunings,
+    saveCustomTuning,
+    deleteCustomTuning,
     onImportTunings,
     customTunings: customTunings || [],
     clearCustomTunings: () => setCustomTunings([]),

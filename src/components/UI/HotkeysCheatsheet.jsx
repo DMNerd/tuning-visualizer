@@ -80,11 +80,7 @@ function HotkeysCheatsheet({ onClose }) {
   };
 
   return (
-    <div
-      className="tv-hotkeys"
-      role="dialog"
-      aria-label="Keyboard shortcuts"
-    >
+    <div className="tv-hotkeys" role="dialog" aria-label="Keyboard shortcuts">
       <div className="tv-hotkeys__title">
         <span>Hotkeys</span>
         {onClose ? (

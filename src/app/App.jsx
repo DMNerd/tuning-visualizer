@@ -62,6 +62,7 @@ import InstrumentControls from "@/components/UI/InstrumentControls";
 import ExportControls from "@/components/UI/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
 import ErrorFallback from "@/components/UI/ErrorFallback";
+import TuningPackEditorModal from "@/components/UI/TuningPackEditorModal";
 
 // hooks
 import { useTheme } from "@/hooks/useTheme";
@@ -248,25 +249,47 @@ export default function App() {
     defaultForCount,
   });
 
-  const { customTunings, importFromJson, exportCurrent, exportAll } =
-    useTuningIO({ systemId, strings, TUNINGS });
+  const {
+    customTunings,
+    importFromJson,
+    exportCurrent,
+    exportAll,
+    getCurrentTuningPack,
+    saveCustomTuning,
+  } = useTuningIO({ systemId, strings, TUNINGS });
 
-  const { mergedPresetNames, selectedPreset, setPreset, resetSelection } =
-    useMergedPresets({
-      presetMap,
-      presetMetaMap,
-      presetNames,
-      customTunings,
-      setTuning,
-      setStringMeta,
-      currentEdo: system.divisions,
-      currentStrings: strings,
-    });
+  const {
+    mergedPresetNames,
+    customPresetNames,
+    selectedPreset,
+    setPreset,
+    resetSelection,
+  } = useMergedPresets({
+    presetMap,
+    presetMetaMap,
+    presetNames,
+    customTunings,
+    setTuning,
+    setStringMeta,
+    currentEdo: system.divisions,
+    currentStrings: strings,
+  });
+
+  const [editorState, setEditorState] = useState(null);
+  const [pendingPresetName, setPendingPresetName] = useState(null);
 
   useEffect(() => {
     setStringMeta(null);
     resetSelection();
   }, [systemId, strings, resetSelection]);
+
+  useEffect(() => {
+    if (!pendingPresetName) return;
+    if (mergedPresetNames.includes(pendingPresetName)) {
+      setPreset(pendingPresetName);
+      setPendingPresetName(null);
+    }
+  }, [pendingPresetName, mergedPresetNames, setPreset]);
 
   const randomizeScale = useCallback(() => {
     if (!Array.isArray(sysNames) || !sysNames.length) return;
@@ -307,6 +330,53 @@ export default function App() {
     if (savedExists) setPreset("Saved default");
     else setPreset("Factory default");
   }, [systemId, strings, savedExists, setPreset]);
+
+  const handleCreateCustomPack = useCallback(() => {
+    const pack = getCurrentTuningPack(tuning, stringMeta);
+    setEditorState({
+      mode: "create",
+      initialPack: pack,
+      originalName: null,
+    });
+  }, [getCurrentTuningPack, tuning, stringMeta]);
+
+  const handleEditCustomPack = useCallback(() => {
+    if (!selectedPreset) return;
+    if (!Array.isArray(customPresetNames)) return;
+    if (!customPresetNames.includes(selectedPreset)) return;
+    const existing = customTunings?.find((p) => p?.name === selectedPreset);
+    if (!existing) return;
+    setEditorState({
+      mode: "edit",
+      initialPack: existing,
+      originalName: existing.name,
+    });
+  }, [selectedPreset, customPresetNames, customTunings]);
+
+  const handleEditorCancel = useCallback(() => {
+    setEditorState(null);
+  }, []);
+
+  const handleEditorSubmit = useCallback(
+    (pack, options = {}) => {
+      try {
+        const replaceName =
+          options?.replaceName ?? editorState?.originalName ?? undefined;
+        const saved = saveCustomTuning(pack, { replaceName });
+        setPendingPresetName(saved?.name ?? pack?.name ?? null);
+        toast.success(
+          editorState?.mode === "edit"
+            ? "Custom pack updated."
+            : "Custom pack created.",
+        );
+        setEditorState(null);
+      } catch (err) {
+        const message = err?.message || "Unable to save tuning pack.";
+        toast.error(message);
+      }
+    },
+    [editorState, saveCustomTuning, setPendingPresetName],
+  );
 
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
     strings,
@@ -484,11 +554,14 @@ export default function App() {
             setTuning={setTuning}
             handleStringsChange={handleStringsChange}
             presetNames={mergedPresetNames}
+            customPresetNames={customPresetNames}
             selectedPreset={selectedPreset}
             setSelectedPreset={setPreset}
             handleSaveDefault={saveDefault}
             handleResetFactoryDefault={resetInstrumentFactory}
             systemId={systemId}
+            onCreateCustomPack={handleCreateCustomPack}
+            onEditCustomPack={handleEditCustomPack}
           />
         </ErrorBoundary>
         <ErrorBoundary
@@ -537,6 +610,14 @@ export default function App() {
           />
         </ErrorBoundary>
       </footer>
+      <TuningPackEditorModal
+        isOpen={Boolean(editorState)}
+        mode={editorState?.mode ?? "create"}
+        initialPack={editorState?.initialPack}
+        originalName={editorState?.originalName ?? undefined}
+        onCancel={handleEditorCancel}
+        onSubmit={handleEditorSubmit}
+      />
       <Toaster
         position="top-right"
         gutter={8}

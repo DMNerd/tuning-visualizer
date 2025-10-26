@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 
 export function useMergedPresets({
   presetMap,
@@ -79,11 +79,17 @@ export function useMergedPresets({
   );
 
   // Names (avoid duplicates)
+  const customPresetNames = useMemo(
+    () => Object.keys(customPresetMap),
+    [customPresetMap],
+  );
+
   const mergedPresetNames = useMemo(() => {
-    const customNames = Object.keys(customPresetMap);
-    const dedupCustom = customNames.filter((n) => !presetNames.includes(n));
+    const dedupCustom = customPresetNames.filter(
+      (n) => !presetNames.includes(n),
+    );
     return [...presetNames, ...dedupCustom];
-  }, [presetNames, customPresetMap]);
+  }, [presetNames, customPresetNames]);
 
   // Selection state + applier
   const [selectedPreset, setSelectedPreset] = useState("Factory default");
@@ -105,11 +111,19 @@ export function useMergedPresets({
     setSelectedPreset("Factory default");
   }, []);
 
+  useEffect(() => {
+    if (!selectedPreset) return;
+    if (mergedPresetMap[selectedPreset]) {
+      setPreset(selectedPreset);
+    }
+  }, [mergedPresetMap, selectedPreset, setPreset]);
+
   return useMemo(
     () => ({
       mergedPresetMap,
       mergedPresetMetaMap,
       mergedPresetNames,
+      customPresetNames,
       selectedPreset,
       setPreset,
       resetSelection,
@@ -118,6 +132,7 @@ export function useMergedPresets({
       mergedPresetMap,
       mergedPresetMetaMap,
       mergedPresetNames,
+      customPresetNames,
       selectedPreset,
       setPreset,
       resetSelection,

@@ -911,8 +911,7 @@ svg {
 }
 
 .tv-fallback__summary {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8125rem;
   background: var(--card-muted-bg, transparent);
   border: 1px solid var(--card-border);
@@ -926,8 +925,7 @@ svg {
 .tv-fallback__details {
   margin: 0;
   white-space: pre-wrap;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8125rem;
   background: var(--card-muted-bg, transparent);
   border: 1px solid var(--card-border);
@@ -955,6 +953,108 @@ svg {
   .tv-tooltip {
     transition: none !important;
   }
+}
+
+/* =========================
+   Modal editor
+========================= */
+
+.tv-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 6vw, 48px);
+}
+
+.tv-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--fg) 18%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tv-modal__card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(960px, 96vw);
+  max-height: min(720px, 92vh);
+  background: var(--panel);
+  color: var(--fg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.tv-modal__header {
+  padding: clamp(16px, 3vw, 24px);
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 86%, transparent);
+  display: grid;
+  gap: 8px;
+}
+
+.tv-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.3vw, 1.4rem);
+}
+
+.tv-modal__summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.tv-modal__body {
+  padding: clamp(12px, 3vw, 20px);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.tv-modal__editor {
+  overflow: auto;
+  border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  border-radius: calc(var(--card-radius) - 6px);
+  padding: 12px;
+  background: color-mix(in oklab, var(--panel) 88%, var(--bg) 12%);
+}
+
+.tv-modal__status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-height: 1.5rem;
+}
+
+.tv-modal__status span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tv-modal__error {
+  color: var(--root);
+  font-weight: 600;
+}
+
+.tv-modal__footer {
+  padding: clamp(16px, 3vw, 24px);
+  border-top: 1px solid color-mix(in oklab, var(--line) 86%, transparent);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: color-mix(in oklab, var(--panel) 94%, transparent);
+}
+
+.tv-modal__footer .tv-button {
+  min-width: 120px;
 }
 
 /* =========================
