@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { toast } from "react-hot-toast";
+import { useCopyToClipboard, useToggle } from "react-use";
 import {
   FiAlertTriangle,
   FiChevronDown,
@@ -12,7 +13,8 @@ import {
 } from "react-icons/fi";
 
 export default function ErrorFallback({ error, resetErrorBoundary }) {
-  const [open, setOpen] = useState(false);
+  const [open, toggleOpen] = useToggle(false);
+  const [, copy] = useCopyToClipboard();
 
   const summary = useMemo(() => {
     const name = error?.name || "Error";
@@ -34,8 +36,12 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
 
   const copyDetails = async () => {
     try {
-      await navigator.clipboard.writeText(details);
-      toast.success("Error details copied.");
+      const success = await copy(details);
+      if (success) {
+        toast.success("Error details copied.");
+      } else {
+        toast.error("Could not copy to clipboard.");
+      }
     } catch {
       toast.error("Could not copy to clipboard.");
     }
@@ -73,7 +79,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
       <button
         type="button"
         className="btn"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         aria-expanded={open}
         aria-controls="error-details"
         title={open ? "Hide technical details" : "Show technical details"}
