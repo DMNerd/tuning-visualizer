@@ -76,7 +76,7 @@ export default function TuningPackEditorModal({
         confirmText: "Discard",
         cancelText: "Keep editing",
         toastId: "confirm-pack-editor-cancel",
-        duration: 12000,
+        duration: Infinity,
       });
 
       if (!shouldDiscard) {

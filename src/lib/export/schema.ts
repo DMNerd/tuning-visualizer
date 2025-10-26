@@ -22,7 +22,7 @@ export const TuningPackSchema = v.object({
     edo: v.pipe(
       v.number(),
       v.integer("System edo must be an integer value."),
-      v.minValue(1, "System edo must be at least 1."),
+      v.minValue(12, "System edo must be at least 12."),
     ),
   }),
   tuning: v.object({

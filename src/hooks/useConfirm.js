@@ -9,10 +9,33 @@ export function useConfirm() {
     confirmText = "Reset all",
     cancelText = "Cancel",
     toastId = "confirm-reset",
-    duration = 10000,
+    duration = Infinity,
   } = {}) {
     return new Promise((resolve) => {
       toast.dismiss(toastId);
+      let isSettled = false;
+      let unsubscribe;
+
+      const cleanup = () => {
+        if (typeof unsubscribe === "function") {
+          unsubscribe();
+          unsubscribe = undefined;
+        }
+      };
+
+      const settle = (value) => {
+        if (isSettled) return;
+        isSettled = true;
+        cleanup();
+        resolve(value);
+      };
+
+      unsubscribe = toast.onChange((toastEvent) => {
+        if (toastEvent.id === toastId && toastEvent.status === "removed") {
+          settle(false);
+        }
+      });
+
       toast(
         (t) =>
           React.createElement(ConfirmDialog, {
@@ -21,12 +44,12 @@ export function useConfirm() {
             confirmText,
             cancelText,
             onConfirm: () => {
+              settle(true);
               toast.dismiss(t.id);
-              resolve(true);
             },
             onCancel: () => {
+              settle(false);
               toast.dismiss(t.id);
-              resolve(false);
             },
           }),
         { id: toastId, duration },
