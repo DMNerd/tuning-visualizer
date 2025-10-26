@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useLocalStorage } from "react-use";
-import { useDebounce } from "use-debounce";
+import { useDebounce, useLocalStorage } from "react-use";
 import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
@@ -19,10 +18,7 @@ export function useDisplayPrefs(initial) {
     });
   }, [stored, initial, setPrefs]);
 
-  const [debouncedPrefs] = useDebounce(prefs, 300);
-  useEffect(() => {
-    setStored(debouncedPrefs);
-  }, [debouncedPrefs, setStored]);
+  useDebounce(() => setStored(prefs), 300, [prefs, setStored]);
 
   const fieldSetters = useMemo(
     () =>

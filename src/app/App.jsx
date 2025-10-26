@@ -48,7 +48,7 @@ import {
   ROOT_DEFAULT,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
-  SCALE_DEFAULT
+  SCALE_DEFAULT,
 } from "@/lib/config/appDefaults";
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
@@ -69,7 +69,6 @@ import { useScaleOptions } from "@/hooks/useScaleOptions";
 import { useDrawFrets } from "@/hooks/useDrawFrets";
 import { useDefaultTuning } from "@/hooks/useDefaultTuning";
 import { useStringsChange } from "@/hooks/useStringsChange";
-import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
 import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
 import { useTuningIO } from "@/hooks/useTuningIO";
@@ -84,6 +83,7 @@ import { useCapo } from "@/hooks/useCapo";
 import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
+import { useFullscreen, useToggle } from "react-use"
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
@@ -159,9 +159,21 @@ export default function App() {
   const boardRef = useRef(null);
   const stageRef = useRef(null);
 
-  const { isActive: isFs, toggle: toggleFs } = useFullscreen(stageRef, {
-    docClass: "is-fs",
+  // Fullscreen (react-use)
+  const [isFsRequested, toggleFs] = useToggle(false);
+  const isFs = useFullscreen(stageRef, isFsRequested, {
+    onClose: () => toggleFs(false),
   });
+
+  // Reflect fullscreen state on <html> for CSS
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isFs) root.classList.add("is-fs");
+    else root.classList.remove("is-fs");
+    return () => {
+      root.classList.remove("is-fs");
+    };
+  }, [isFs]);
 
   // Tuning (defaults + presets + meta)
   const {
@@ -352,7 +364,7 @@ export default function App() {
 
       <main className="page-main">
         <div className="stage fb-stage" ref={stageRef}>
-          <div className="fretboard-wrap" onDoubleClick={toggleFs}>
+          <div className="fretboard-wrap" onDoubleClick={() => toggleFs()}>
             <div className="stage-toolbar">
               <button
                 type="button"
@@ -361,7 +373,7 @@ export default function App() {
                 onClick={() => resetAll({ confirm: true })}
                 title="Reset all to defaults"
               >
-                <FiRefreshCw size={16} aria-hidden={true} />
+                <FiRefreshCw size={16} aria-hidden />
               </button>
               <button
                 type="button"
@@ -369,13 +381,13 @@ export default function App() {
                 aria-label={
                   isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
                 }
-                onClick={toggleFs}
+                onClick={() => toggleFs()}
                 title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
               >
                 {isFs ? (
-                  <FiMinimize size={16} aria-hidden={true} />
+                  <FiMinimize size={16} aria-hidden />
                 ) : (
-                  <FiMaximize size={16} aria-hidden={true} />
+                  <FiMaximize size={16} aria-hidden />
                 )}
               </button>
             </div>
