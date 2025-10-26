@@ -87,6 +87,11 @@
     gap: var(--space-xs);
   }
 
+  .tv-header__title {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
   .tv-header__actions {
     width: 100%;
     flex-direction: column;
