@@ -130,6 +130,7 @@
   max-width: calc(var(--max-stage) - var(--gutter) * 2);
   margin-inline: auto;
   margin-block: var(--gap);
+  padding: var(--card-gap);
   border: 1px solid var(--line);
   border-radius: var(--card-radius);
   background: var(--panel);
@@ -240,7 +241,7 @@ html.is-fs {
 
 .tv-controls--scale {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   gap: var(--space-sm);
 }
 
