@@ -310,25 +310,6 @@ export default function App() {
     });
   }, []);
 
-  useHotkeys({
-    toggleFs,
-    setDisplayPrefs,
-    setFrets: setFretsUI,
-    handleStringsChange,
-    setShowChord,
-    setHideNonChord,
-    strings,
-    frets,
-    LABEL_VALUES,
-    onShowCheatsheet: showCheatsheet,
-    minStrings: STR_MIN,
-    maxStrings: STR_MAX,
-    minFrets: FRETS_MIN,
-    maxFrets: FRETS_MAX,
-    onRandomizeScale: randomizeScale,
-    onCreateCustomPack: handleCreateCustomPack
-  });
-
   useEffect(() => {
     if (savedExists) setPreset("Saved default");
     else setPreset("Factory default");
@@ -387,6 +368,25 @@ export default function App() {
   });
 
   const { confirm } = useConfirm();
+
+  useHotkeys({
+    toggleFs,
+    setDisplayPrefs,
+    setFrets: setFretsUI,
+    handleStringsChange,
+    setShowChord,
+    setHideNonChord,
+    strings,
+    frets,
+    LABEL_VALUES,
+    onShowCheatsheet: showCheatsheet,
+    minStrings: STR_MIN,
+    maxStrings: STR_MAX,
+    minFrets: FRETS_MIN,
+    maxFrets: FRETS_MAX,
+    onRandomizeScale: randomizeScale,
+    onCreateCustomPack: handleCreateCustomPack,
+  });
 
   const { resetInstrumentFactory, resetAll } = useResets({
     system,
