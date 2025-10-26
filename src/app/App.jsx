@@ -394,6 +394,7 @@ export default function App() {
     setCapoFret,
     setStringMeta,
     setDisplayPrefs,
+    setSystemId,
     setRoot,
     setScale,
     setChordRoot,

@@ -4,6 +4,7 @@ import {
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
   ROOT_DEFAULT,
+  SYSTEM_DEFAULT,
   getFactoryFrets,
 } from "@/lib/config/appDefaults";
 
@@ -13,6 +14,7 @@ export function useResets({
   setCapoFret,
   setStringMeta,
   setDisplayPrefs,
+  setSystemId,
   setRoot,
   setScale,
   setChordRoot,
@@ -33,6 +35,10 @@ export function useResets({
   const resetDisplay = useCallback(() => {
     setDisplayPrefs(DISPLAY_DEFAULTS);
   }, [setDisplayPrefs]);
+
+  const resetSystem = useCallback(() => {
+    setSystemId?.(SYSTEM_DEFAULT);
+  }, [setSystemId]);
 
   const resetMusicalState = useCallback(() => {
     setRoot(ROOT_DEFAULT);
@@ -58,7 +64,7 @@ export function useResets({
         const ok = await confirm({
           title: "Reset all settings?",
           message:
-            "This will reset instrument (strings, frets, capo), display, scale & root, and chord overlay.",
+            "This will reset tuning system, instrument (strings, frets, capo), display, scale & root, and chord overlay.",
           confirmText: "Reset all",
           cancelText: "Cancel",
           toastId: "confirm-reset",
@@ -66,18 +72,27 @@ export function useResets({
         if (!ok) return;
       }
 
+      resetSystem();
       resetInstrumentFactory();
       resetDisplay();
       resetMusicalState();
 
       toast?.success?.("All settings reset.");
     },
-    [confirm, resetInstrumentFactory, resetDisplay, resetMusicalState, toast],
+    [
+      confirm,
+      resetSystem,
+      resetInstrumentFactory,
+      resetDisplay,
+      resetMusicalState,
+      toast,
+    ],
   );
 
   return {
     resetInstrumentFactory,
     resetDisplay,
+    resetSystem,
     resetMusicalState,
     resetAll,
   };

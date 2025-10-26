@@ -249,7 +249,6 @@ html.is-fs {
   min-width: 0;
 }
 
-
 .tv-controls__input-row {
   display: flex;
   align-items: center;
@@ -319,7 +318,6 @@ html.is-fs {
   color: var(--muted);
   border-color: var(--line);
 }
-
 
 .tv-field {
   display: flex;
@@ -451,7 +449,6 @@ input[type="text"] {
   justify-content: center;
   white-space: normal;
 }
-
 
 .tv-controls__defaults {
   display: flex;
@@ -679,7 +676,6 @@ svg {
   display: none;
 }
 
-
 .tv-hotkeys {
   line-height: 1.4;
   max-width: 520px;
@@ -775,7 +771,6 @@ svg {
   white-space: nowrap;
   opacity: 0.95;
 }
-
 
 .tv-tooltip.react-tooltip {
   --rt-opacity: 1 !important;
@@ -937,7 +932,6 @@ svg {
   width: auto;
 }
 
-
 /* =========================
    Modal editor
 ========================= */
@@ -1080,4 +1074,3 @@ svg {
 .tv-stage__surface::-webkit-scrollbar-track {
   background: transparent;
 }
-
