@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
 import { useKey, useLockBodyScroll } from "react-use";
-import { TuningPackSchema } from "@/hooks/useTuningIO";
+import { TuningPackSchema } from "@/lib/export/schema";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -104,7 +104,7 @@ export default function TuningPackEditorModal({
     const isDark = themeMode === "dark";
 
     return {
-      rootFontSize: 13,
+      rootFontSize: 11,
       styles: {
         container: {
           backgroundColor: "transparent",

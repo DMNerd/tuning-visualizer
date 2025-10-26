@@ -4,32 +4,7 @@ import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { toast } from "react-hot-toast";
-
-/* =========================
-   Valibot Schemas
-========================= */
-
-const TuningStringSchema = v.object({
-  label: v.optional(v.string()),
-  note: v.optional(v.string()),
-  midi: v.optional(v.number()),
-  startFret: v.optional(v.number()),
-  greyBefore: v.optional(v.boolean()),
-});
-
-export const TuningPackSchema = v.object({
-  version: v.literal(2),
-  name: v.string(),
-  system: v.object({
-    edo: v.number(),
-  }),
-  tuning: v.object({
-    strings: v.array(TuningStringSchema),
-  }),
-  meta: v.optional(v.record(v.unknown())),
-});
-
-const TuningPackArraySchema = v.array(TuningPackSchema);
+import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
 
 /* =========================
    Hook
@@ -42,25 +17,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [],
   );
 
-  const parsePack = useCallback((pack) => {
-    const res = v.safeParse(TuningPackSchema, pack);
-    if (!res.success) {
-      const message =
-        res.issues?.map((issue) => issue.message).join("; ") ||
-        "Pack is not a valid tuning.";
-      throw new Error(message);
-    }
-
-    const normalizedName = res.output.name?.trim?.();
-    if (!normalizedName) {
-      throw new Error("Custom tuning must include a name.");
-    }
-
-    return {
-      ...res.output,
-      name: normalizedName,
-    };
-  }, []);
+  const parsePack = useCallback(parseTuningPack, []);
 
   // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
