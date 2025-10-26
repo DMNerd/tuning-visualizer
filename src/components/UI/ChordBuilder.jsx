@@ -88,7 +88,7 @@ function ChordBuilder({
             aria-label="Chord overlay"
             aria-disabled={!showChord}
           >
-            <label className="tv-check tv-check--accent" htmlFor="showChord">
+            <label className="tv-check" htmlFor="showChord">
               <input
                 id="showChord"
                 name="showChord"

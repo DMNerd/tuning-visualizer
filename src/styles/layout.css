@@ -413,11 +413,6 @@ input[type="text"] {
   align-items: center;
 }
 
-.tv-check--accent {
-  color: var(--fg);
-  font-weight: 600;
-}
-
 .tv-controls__grid--two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -997,7 +992,7 @@ svg {
 .tv-modal__card {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(100%, 960px);
   max-width: min(960px, 100%);
   max-height: min(100dvh - clamp(24px, 8vh, 96px), 960px);
@@ -1030,18 +1025,41 @@ svg {
 .tv-modal__body {
   padding: clamp(12px, 3vw, 20px);
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 12px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .tv-modal__editor {
-  overflow: auto;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
   min-height: 0;
   border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
   border-radius: calc(var(--card-radius) - 6px);
   padding: 12px;
   background: color-mix(in oklab, var(--panel) 88%, var(--bg) 12%);
+}
+
+.tv-modal__editor > div {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.tv-modal__editor .tv-json-editor {
+  width: 100%;
+  max-width: 100%;
+  min-height: 320px;
+  height: 100% !important;
+  max-height: 100%;
+  overflow: auto;
+  resize: none;
+}
+
+.tv-modal__editor .tv-json-editor + .tv-json-editor {
+  overflow: hidden;
 }
 
 .tv-modal__status {
@@ -1076,11 +1094,6 @@ svg {
 
 .tv-modal__footer .tv-button {
   min-width: 120px;
-}
-
-.tv-modal__editor .tv-json-editor {
-  width: 100%;
-  min-height: 320px;
 }
 
 /* =========================
