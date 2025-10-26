@@ -27,6 +27,7 @@ export function useHotkeys(options) {
     minDot = 8,
     maxDot = 24,
     onRandomizeScale,
+    onCreateCustomPack,
   } = options;
 
   const labelValues = options.labelValues || options.LABEL_VALUES || [];
@@ -54,12 +55,12 @@ export function useHotkeys(options) {
   useHK(
     ["ctrl+n", "meta+n"],
     () => {
-      if (typeof options.onCreateCustomPack === "function") {
-        options.onCreateCustomPack();
+      if (typeof onCreateCustomPack === "function") {
+        onCreateCustomPack();
       }
     },
     guard,
-    [options.onCreateCustomPack],
+    [onCreateCustomPack],
   );
 
   // Fullscreen

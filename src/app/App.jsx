@@ -326,6 +326,7 @@ export default function App() {
     minFrets: FRETS_MIN,
     maxFrets: FRETS_MAX,
     onRandomizeScale: randomizeScale,
+    onCreateCustomPack: handleCreateCustomPack
   });
 
   useEffect(() => {
