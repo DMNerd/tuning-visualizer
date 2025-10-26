@@ -83,7 +83,7 @@ import { useCapo } from "@/hooks/useCapo";
 import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
-import { useFullscreen, useToggle } from "react-use"
+import { useFullscreen, useToggle } from "react-use";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
@@ -96,18 +96,19 @@ export default function App() {
   const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
     useFretsTouched(getFactoryFrets(system.divisions));
 
-  const { strings, setStrings, resetInstrumentPrefs } = useInstrumentPrefs({
-    frets,
-    fretsTouched,
-    setFrets,
-    setFretsUI,
-    setFretsTouched,
-    STR_MIN,
-    STR_MAX,
-    FRETS_MIN,
-    FRETS_MAX,
-    STR_FACTORY,
-  });
+  const { strings, setStrings, resetInstrumentPrefs, setFretsPref } =
+    useInstrumentPrefs({
+      frets,
+      fretsTouched,
+      setFrets,
+      setFretsUI,
+      setFretsTouched,
+      STR_MIN,
+      STR_MAX,
+      FRETS_MIN,
+      FRETS_MAX,
+      STR_FACTORY,
+    });
 
   // Root
   const [root, setRoot] = useState(ROOT_DEFAULT);
@@ -481,14 +482,14 @@ export default function App() {
           resetKeys={[strings, frets, systemId]}
           onReset={() => {
             setStrings(STR_FACTORY);
-            setFretsUI(getFactoryFrets(system.divisions));
+            setFretsPref(getFactoryFrets(system.divisions));
           }}
         >
           <InstrumentControls
             strings={strings}
             setStrings={setStrings}
             frets={frets}
-            setFrets={setFretsUI}
+            setFrets={setFretsPref}
             sysNames={sysNames}
             tuning={tuning}
             setTuning={setTuning}
