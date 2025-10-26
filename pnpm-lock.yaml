@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@jsonjoy.com/buffers':
+        specifier: ^17.61.1
+        version: 17.61.1(tslib@2.8.1)
       '@jsonjoy.com/json-pointer':
         specifier: ^17.61.1
         version: 17.61.1(tslib@2.8.1)

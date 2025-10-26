@@ -49,20 +49,14 @@ export default defineConfig(({ mode }) => {
           minifyJS: true,
         },
       }),
-      csp({
-        policy: makePolicy(isDev),
-        sri: true,
-      }),
+      csp({ policy: makePolicy(isDev), sri: true }),
     ],
 
     css: {
       transformer: "lightningcss",
       lightningcss: {
         targets: { chrome: 109, safari: 15, firefox: 102, edge: 109 },
-        drafts: {
-          nesting: true,
-          customMedia: true,
-        },
+        drafts: { nesting: true, customMedia: true },
       },
     },
 
@@ -71,7 +65,11 @@ export default defineConfig(({ mode }) => {
     },
 
     resolve: {
-      alias: { "@": resolve(__dirname, "src") },
+      alias: [
+        { find: "@", replacement: resolve(__dirname, "src") },
+        // Normalize the accidental double-slash import path used by json-joy:
+        { find: /^@jsonjoy\.com\/\/buffers/, replacement: "@jsonjoy.com/buffers" },
+      ],
     },
   };
 });

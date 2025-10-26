@@ -14,6 +14,7 @@
     "test": "tsx --test"
   },
   "dependencies": {
+    "@jsonjoy.com/buffers": "^17.61.1",
     "@jsonjoy.com/json-pointer": "^17.61.1",
     "@jsonjoy.com/util": "^17.61.1",
     "clickable-json": "^1.15.1",
