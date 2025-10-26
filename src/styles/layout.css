@@ -1130,6 +1130,19 @@ svg {
   }
 }
 
+@media (width <= 600px) {
+  .tv-panel,
+  .tv-panel--size-sm,
+  .tv-panel--size-md,
+  .tv-panel--size-lg {
+    min-height: auto;
+  }
+
+  .tv-panel__body {
+    grid-template-rows: auto;
+  }
+}
+
 /* =========================
   Scrollbars
 ========================= */
