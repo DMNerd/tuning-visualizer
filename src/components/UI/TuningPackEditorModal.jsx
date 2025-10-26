@@ -4,6 +4,8 @@ import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
 import { useKey, useLockBodyScroll } from "react-use";
 import { TuningPackSchema } from "@/lib/export/schema";
+import { useConfirm } from "@/hooks/useConfirm";
+import { toast } from "react-hot-toast";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -36,10 +38,21 @@ export default function TuningPackEditorModal({
   const [draft, setDraft] = useState(() => ensurePack(initialPack));
   const [error, setError] = useState("");
   const [pointer, setPointer] = useState(null);
+  const [baselineSnapshotString, setBaselineSnapshotString] = useState(() =>
+    JSON.stringify(ensurePack(initialPack)),
+  );
+  const [draftString, setDraftString] = useState(() =>
+    JSON.stringify(ensurePack(initialPack)),
+  );
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(ensurePack(clonePack(initialPack)));
+      const snapshot = ensurePack(clonePack(initialPack));
+      const snapshotString = JSON.stringify(snapshot);
+      setDraft(snapshot);
+      setBaselineSnapshotString(snapshotString);
+      setDraftString(snapshotString);
       setError("");
       setPointer(null);
     }
@@ -47,15 +60,47 @@ export default function TuningPackEditorModal({
 
   useLockBodyScroll(isOpen);
 
+  const hasUnsavedChanges = useMemo(
+    () => isOpen && baselineSnapshotString !== draftString,
+    [baselineSnapshotString, draftString, isOpen],
+  );
+
+  const handleCancel = useCallback(async () => {
+    if (!isOpen) return;
+
+    if (hasUnsavedChanges) {
+      const shouldDiscard = await confirm({
+        title: "Discard unsaved changes?",
+        message:
+          "You have unsaved edits to this tuning pack. Close the editor without saving?",
+        confirmText: "Discard",
+        cancelText: "Keep editing",
+        toastId: "confirm-pack-editor-cancel",
+        duration: 12000,
+      });
+
+      if (!shouldDiscard) {
+        toast("Continue editing to keep your changes.", {
+          id: "warn-pack-editor-unsaved",
+          duration: 4000,
+          icon: "⚠️",
+        });
+        return;
+      }
+    }
+
+    onCancel?.();
+  }, [confirm, hasUnsavedChanges, isOpen, onCancel]);
+
   useKey(
     "Escape",
     (event) => {
       if (!isOpen) return;
       event.preventDefault();
-      onCancel?.();
+      handleCancel();
     },
     { event: "keydown" },
-    [isOpen, onCancel],
+    [isOpen, handleCancel],
   );
 
   const title = useMemo(
@@ -68,6 +113,16 @@ export default function TuningPackEditorModal({
 
   const handleDataChange = useCallback((nextData) => {
     setDraft(nextData);
+    try {
+      setDraftString(JSON.stringify(nextData));
+    } catch (serializationError) {
+      const message =
+        serializationError?.message ||
+        "Unable to track changes in the current draft.";
+      toast.error(message, {
+        id: "pack-editor-track-error",
+      });
+    }
     setError("");
   }, []);
 
@@ -203,7 +258,7 @@ export default function TuningPackEditorModal({
 
   return createPortal(
     <div className="tv-modal" role="presentation">
-      <div className="tv-modal__backdrop" aria-hidden onClick={onCancel} />
+      <div className="tv-modal__backdrop" aria-hidden onClick={handleCancel} />
       <div
         className="tv-modal__card"
         role="dialog"
@@ -237,7 +292,7 @@ export default function TuningPackEditorModal({
           </div>
         </div>
         <footer className="tv-modal__footer">
-          <button type="button" className="tv-button" onClick={onCancel}>
+          <button type="button" className="tv-button" onClick={handleCancel}>
             Cancel
           </button>
           <button type="button" className="tv-button" onClick={handleSave}>
