@@ -1,4 +1,5 @@
 export type SystemId = `${number}-TET`;
+export const SCALE_DEFAULT = "Major (Ionian)";
 
 /* =========================
    Instrument bounds & factories

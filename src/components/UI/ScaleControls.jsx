@@ -12,8 +12,20 @@ function ScaleControls({
   sysNames,
   scaleOptions,
   defaultRoot = "C",
-  defaultScale = "Major",
+  defaultScale,
 }) {
+  const resolvedDefaultScale = React.useMemo(() => {
+    if (
+      defaultScale &&
+      Array.isArray(scaleOptions) &&
+      scaleOptions.some((option) => option.label === defaultScale)
+    ) {
+      return defaultScale;
+    }
+
+    return scaleOptions?.[0]?.label ?? "";
+  }, [defaultScale, scaleOptions]);
+
   const pickRandom = () => {
     if (!Array.isArray(sysNames) || !sysNames.length) return;
     if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
@@ -28,7 +40,7 @@ function ScaleControls({
 
   const resetDefaults = () => {
     setRoot(defaultRoot);
-    setScale(defaultScale);
+    if (resolvedDefaultScale) setScale(resolvedDefaultScale);
   };
 
   return (

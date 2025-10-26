@@ -48,6 +48,7 @@ import {
   ROOT_DEFAULT,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
+  SCALE_DEFAULT
 } from "@/lib/config/appDefaults";
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
@@ -205,7 +206,7 @@ export default function App() {
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
-    initial: "Major (Ionian)",
+    initial: SCALE_DEFAULT,
   });
 
   // Draw-frets normalization
@@ -436,6 +437,7 @@ export default function App() {
             setScale={setScale}
             sysNames={sysNames}
             scaleOptions={scaleOptions}
+            defaultScale={SCALE_DEFAULT}
           />
         </ErrorBoundary>
 
