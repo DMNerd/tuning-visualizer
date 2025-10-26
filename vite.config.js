@@ -71,7 +71,10 @@ export default defineConfig(({ mode }) => {
     },
 
     resolve: {
-      alias: { "@": resolve(__dirname, "src") },
+        alias: {
+        "@": resolve(__dirname, "src"),
+        "@jsonjoy.com//buffers": "@jsonjoy.com/buffers",
+      },
     },
   };
 });
