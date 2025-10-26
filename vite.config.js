@@ -68,7 +68,10 @@ export default defineConfig(({ mode }) => {
       alias: [
         { find: "@", replacement: resolve(__dirname, "src") },
         // Normalize the accidental double-slash import path used by json-joy:
-        { find: /^@jsonjoy\.com\/\/buffers/, replacement: "@jsonjoy.com/buffers" },
+        {
+          find: /^@jsonjoy\.com\/\/buffers/,
+          replacement: "@jsonjoy.com/buffers",
+        },
       ],
     },
   };

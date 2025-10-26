@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { ClickableJson } from "clickable-json";
-import { applyPatch } from "json-joy/esm/json-patch/applyPatch";
+import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
-import { Provider as NanoThemeProvider } from "nano-theme";
 import { useKey, useLockBodyScroll } from "react-use";
 import { TuningPackSchema } from "@/hooks/useTuningIO";
 
@@ -68,22 +66,107 @@ export default function TuningPackEditorModal({
     [mode, originalName],
   );
 
-  const handlePatch = useCallback(
-    (patch) => {
-      setDraft((prev) => {
-        try {
-          const current = prev ?? {};
-          const result = applyPatch(current, patch, { mutate: false });
-          setError("");
-          return result.doc;
-        } catch (e) {
-          setError(e?.message || "Unable to update pack.");
-          return prev;
-        }
+  const handleDataChange = useCallback((nextData) => {
+    setDraft(nextData);
+    setError("");
+  }, []);
+
+  const handleError = useCallback((props) => {
+    const message = props?.error?.message ?? "Unable to update pack.";
+    setError(message);
+  }, []);
+
+  const handleEditEvent = useCallback((path, isKey) => {
+    if (!path) {
+      setPointer(null);
+      return;
+    }
+
+    const pointerParts = path
+      .filter((part) => part !== undefined)
+      .map((part) => {
+        if (part === null) return "(new)";
+        const value = String(part);
+        return value.replace(/~/g, "~0").replace(/\//g, "~1");
       });
-    },
-    [setError],
-  );
+
+    const pointerText = `/${pointerParts.join("/")}`;
+    setPointer(isKey ? `${pointerText} (key)` : pointerText);
+  }, []);
+
+  const editorTheme = useMemo(() => {
+    const baseBoolean = "#0f766e";
+    const baseNumber = "#2563eb";
+    const baseNull = "#b91c1c";
+    const baseBooleanDark = "#34d399";
+    const baseNumberDark = "#38bdf8";
+    const baseNullDark = "#fca5a5";
+    const isDark = themeMode === "dark";
+
+    return {
+      rootFontSize: 13,
+      styles: {
+        container: {
+          backgroundColor: "transparent",
+          color: "var(--fg)",
+          fontFamily:
+            'var(--font-mono, "JetBrains Mono", "Fira Code", "IBM Plex Mono", "ui-monospace", monospace)',
+        },
+        collection: {
+          backgroundColor: "transparent",
+        },
+        collectionInner: {
+          backgroundColor: "transparent",
+        },
+        collectionElement: {
+          borderRadius: "6px",
+          paddingBlock: "2px",
+        },
+        property: {
+          color: "var(--muted)",
+        },
+        bracket: {
+          color: isDark
+            ? "rgba(226, 232, 240, 0.85)"
+            : "rgba(17, 24, 39, 0.75)",
+          fontWeight: 600,
+        },
+        itemCount: {
+          color: "var(--muted)",
+          fontStyle: "italic",
+        },
+        string: "var(--accent)",
+        number: isDark ? baseNumberDark : baseNumber,
+        boolean: isDark ? baseBooleanDark : baseBoolean,
+        null: isDark ? baseNullDark : baseNull,
+        input: [
+          "var(--fg)",
+          {
+            backgroundColor: isDark
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.95)",
+            border: isDark
+              ? "1px solid rgba(148, 163, 184, 0.35)"
+              : "1px solid rgba(148, 163, 184, 0.45)",
+            borderRadius: "6px",
+            padding: "2px 4px",
+          },
+        ],
+        inputHighlight: isDark
+          ? "rgba(59, 130, 246, 0.35)"
+          : "rgba(59, 130, 246, 0.2)",
+        error: {
+          color: isDark ? "#f87171" : "#b91c1c",
+          fontWeight: 600,
+        },
+        iconCollection: "var(--muted)",
+        iconEdit: "var(--accent)",
+        iconDelete: isDark ? "#f87171" : "#dc2626",
+        iconAdd: "var(--accent)",
+        iconCopy: isDark ? baseNumberDark : baseNumber,
+      },
+    };
+  }, [themeMode]);
 
   const handleSave = useCallback(() => {
     try {
@@ -118,8 +201,6 @@ export default function TuningPackEditorModal({
 
   if (!isOpen) return null;
 
-  const resolvedTheme = themeMode === "dark" ? "dark" : "light";
-
   return createPortal(
     <div className="tv-modal" role="presentation">
       <div className="tv-modal__backdrop" aria-hidden onClick={onCancel} />
@@ -138,14 +219,17 @@ export default function TuningPackEditorModal({
         </header>
         <div className="tv-modal__body">
           <div className="tv-modal__editor">
-            <NanoThemeProvider theme={resolvedTheme}>
-              <ClickableJson
-                doc={draft}
-                onChange={handlePatch}
-                onFocus={setPointer}
-                fontSize="13px"
-              />
-            </NanoThemeProvider>
+            <JsonEditor
+              data={draft}
+              setData={handleDataChange}
+              onError={handleError}
+              onEditEvent={handleEditEvent}
+              theme={editorTheme}
+              className="tv-json-editor"
+              showStringQuotes={false}
+              enableClipboard
+              indent={2}
+            />
           </div>
           <div className="tv-modal__status" role="status" aria-live="polite">
             {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}

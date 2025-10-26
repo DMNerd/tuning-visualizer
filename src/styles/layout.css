@@ -1075,6 +1075,11 @@ svg {
   min-width: 120px;
 }
 
+.tv-modal__editor .tv-json-editor {
+  width: 100%;
+  min-height: 320px;
+}
+
 /* =========================
    Responsive tweaks
 ========================= */

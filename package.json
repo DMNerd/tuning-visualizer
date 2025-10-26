@@ -14,15 +14,10 @@
     "test": "tsx --test"
   },
   "dependencies": {
-    "@jsonjoy.com/buffers": "^17.61.1",
-    "@jsonjoy.com/json-pointer": "^17.61.1",
-    "@jsonjoy.com/util": "^17.61.1",
-    "clickable-json": "^1.15.1",
     "clsx": "^2.1.1",
     "dequal": "^2.0.3",
-    "json-joy": "^17.61.1",
+    "json-edit-react": "^1.29.0",
     "nano-theme": "^1.5.0",
-    "nice-ui": "^1.32.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-error-boundary": "^6.0.0",
