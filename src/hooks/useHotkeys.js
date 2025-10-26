@@ -123,8 +123,8 @@ export function useHotkeys(options) {
   );
 
   // Chord overlay
-  useHK("c", () => setShowChord?.((v) => !v), guard, [setShowChord]);
-  useHK("h", () => setHideNonChord?.((v) => !v), guard, [setHideNonChord]);
+  useHK("c", () => setShowChord?.(), guard, [setShowChord]);
+  useHK("h", () => setHideNonChord?.(), guard, [setHideNonChord]);
 
   // Strings +/-
   useHK(

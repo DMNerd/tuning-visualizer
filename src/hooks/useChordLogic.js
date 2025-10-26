@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useToggle } from "react-use";
 import {
   buildChordPCsFromPc,
   MICROTONAL_CHORD_TYPES,
@@ -9,8 +10,8 @@ const MICROTONAL_TYPE_SET = new Set(MICROTONAL_CHORD_TYPES);
 export function useChordLogic(system, pcFromName) {
   const [chordRoot, setChordRoot] = useState("C");
   const [chordType, setChordType] = useState("maj");
-  const [showChord, setShowChord] = useState(false);
-  const [hideNonChord, setHideNonChord] = useState(false);
+  const [showChord, toggleShowChord] = useToggle(false);
+  const [hideNonChord, toggleHideNonChord] = useToggle(false);
 
   const chordRootIx = useMemo(
     () => pcFromName(chordRoot),
@@ -38,12 +39,21 @@ export function useChordLogic(system, pcFromName) {
       chordType,
       setChordType,
       showChord,
-      setShowChord,
+      setShowChord: toggleShowChord,
       hideNonChord,
-      setHideNonChord,
+      setHideNonChord: toggleHideNonChord,
       chordRootIx,
       chordPCs,
     }),
-    [chordRoot, chordType, showChord, hideNonChord, chordRootIx, chordPCs],
+    [
+      chordRoot,
+      chordType,
+      showChord,
+      hideNonChord,
+      chordRootIx,
+      chordPCs,
+      toggleShowChord,
+      toggleHideNonChord,
+    ],
   );
 }
