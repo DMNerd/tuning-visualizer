@@ -159,7 +159,7 @@ export default function App() {
     [setDisplayPrefs],
   );
 
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme, themeMode] = useTheme();
 
   // Refs
   const boardRef = useRef(null);
@@ -617,6 +617,7 @@ export default function App() {
         originalName={editorState?.originalName ?? undefined}
         onCancel={handleEditorCancel}
         onSubmit={handleEditorSubmit}
+        themeMode={themeMode}
       />
       <Toaster
         position="top-right"

@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { ClickableJson } from "clickable-json";
 import { applyPatch } from "json-joy/esm/json-patch/applyPatch";
 import * as v from "valibot";
+import { Provider as NanoThemeProvider } from "nano-theme";
+import { useKey, useLockBodyScroll } from "react-use";
 import { TuningPackSchema } from "@/hooks/useTuningIO";
 
 function clonePack(pack) {
@@ -31,6 +33,7 @@ export default function TuningPackEditorModal({
   originalName,
   onCancel,
   onSubmit,
+  themeMode = "light",
 }) {
   const [draft, setDraft] = useState(() => ensurePack(initialPack));
   const [error, setError] = useState("");
@@ -44,29 +47,18 @@ export default function TuningPackEditorModal({
     }
   }, [isOpen, initialPack]);
 
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const { body } = document;
-    const prevOverflow = body.style.overflow;
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.overflow = prevOverflow;
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const handleKey = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCancel?.();
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => {
-      window.removeEventListener("keydown", handleKey);
-    };
-  }, [isOpen, onCancel]);
+  useKey(
+    "Escape",
+    (event) => {
+      if (!isOpen) return;
+      event.preventDefault();
+      onCancel?.();
+    },
+    { event: "keydown" },
+    [isOpen, onCancel],
+  );
 
   const title = useMemo(
     () =>
@@ -98,8 +90,8 @@ export default function TuningPackEditorModal({
       const validation = v.safeParse(TuningPackSchema, draft);
       if (!validation.success) {
         const msg =
-          validation.issues?.map((issue) => issue.message).join("; ") ||
-          "Pack is not valid.";
+          validation.issues?.map((i) => i.message).join("; ") ||
+          "Invalid pack data.";
         setError(msg);
         return;
       }
@@ -126,6 +118,8 @@ export default function TuningPackEditorModal({
 
   if (!isOpen) return null;
 
+  const resolvedTheme = themeMode === "dark" ? "dark" : "light";
+
   return createPortal(
     <div className="tv-modal" role="presentation">
       <div className="tv-modal__backdrop" aria-hidden onClick={onCancel} />
@@ -144,12 +138,14 @@ export default function TuningPackEditorModal({
         </header>
         <div className="tv-modal__body">
           <div className="tv-modal__editor">
-            <ClickableJson
-              doc={draft}
-              onChange={handlePatch}
-              onFocus={setPointer}
-              fontSize="13px"
-            />
+            <NanoThemeProvider theme={resolvedTheme}>
+              <ClickableJson
+                doc={draft}
+                onChange={handlePatch}
+                onFocus={setPointer}
+                fontSize="13px"
+              />
+            </NanoThemeProvider>
           </div>
           <div className="tv-modal__status" role="status" aria-live="polite">
             {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}

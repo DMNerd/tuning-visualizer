@@ -455,6 +455,24 @@ input[type="text"] {
   box-sizing: border-box;
 }
 
+.tv-controls__preset-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-sm);
+}
+
+.tv-controls__preset-actions .tv-button {
+  width: 100%;
+  justify-content: center;
+  white-space: normal;
+}
+
+@media (width <= 520px) {
+  .tv-controls__preset-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tv-controls__defaults {
   display: flex;
   gap: 8px;
