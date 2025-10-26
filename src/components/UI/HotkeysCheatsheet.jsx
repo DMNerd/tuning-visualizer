@@ -17,6 +17,7 @@ function HotkeysCheatsheet({ onClose }) {
       ["[ / ]", "strings - / +"],
       ["- / =", "frets - / +"],
       [", / .", "dot size - / +"],
+      ["Ctrl+N", "create new tuning pack"],
     ],
     [],
   );

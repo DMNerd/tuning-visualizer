@@ -49,6 +49,18 @@ export function useHotkeys(options) {
     guard,
     [onShowCheatsheet],
   );
+  
+  //TunningIO
+  useHK(
+  ["ctrl+n", "meta+n"],
+  () => {
+    if (typeof options.onCreateCustomPack === "function") {
+      options.onCreateCustomPack();
+    }
+  },
+  guard,
+  [options.onCreateCustomPack],
+);
 
   // Fullscreen
   useHK(
