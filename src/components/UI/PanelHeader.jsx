@@ -13,48 +13,48 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   const isDark = theme === "dark";
 
   return (
-    <div className="panel-header">
-      <h1 className="app-title">TunningViz</h1>
+    <div className="tv-header">
+      <h1 className="tv-header__title">TunningViz</h1>
 
-      <div className="header-right">
-        <div className="toggles">
+      <div className="tv-header__actions">
+        <div className="tv-header__toggles">
           {/* Theme segmented control (Auto / Light / Dark) */}
-          <div className="theme-segment" role="group" aria-label="Theme mode">
+          <div className="tv-theme" role="group" aria-label="Theme mode">
             <button
               type="button"
-              className={clsx("seg-btn", { active: isAuto })}
+              className={clsx("tv-theme__option", { "is-active": isAuto })}
               aria-pressed={isAuto}
               onClick={setAuto}
               title="Auto theme (follow system)"
             >
               <FiMonitor aria-hidden="true" />
-              <span className="seg-label">Auto</span>
+              <span className="tv-theme__label">Auto</span>
             </button>
             <button
               type="button"
-              className={clsx("seg-btn", { active: isLight })}
+              className={clsx("tv-theme__option", { "is-active": isLight })}
               aria-pressed={isLight}
               onClick={setLight}
               title="Light theme"
             >
               <FiSun aria-hidden="true" />
-              <span className="seg-label">Light</span>
+              <span className="tv-theme__label">Light</span>
             </button>
             <button
               type="button"
-              className={clsx("seg-btn", { active: isDark })}
+              className={clsx("tv-theme__option", { "is-active": isDark })}
               aria-pressed={isDark}
               onClick={setDark}
               title="Dark theme"
             >
               <FiMoon aria-hidden="true" />
-              <span className="seg-label">Dark</span>
+              <span className="tv-theme__label">Dark</span>
             </button>
           </div>
         </div>
 
         <a
-          className="gh-link"
+          className="tv-header__link"
           href="https://github.com/DMNerd/tuning-visualizer"
           target="_blank"
           rel="noopener noreferrer"

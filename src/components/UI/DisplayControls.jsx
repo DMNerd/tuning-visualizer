@@ -61,12 +61,16 @@ function DisplayControls({
 }) {
   return (
     <Section title="Display">
-      <div className={clsx("control-panel", "display-controls")}>
-        <div className="group" role="region" aria-label="Notation">
-          <div className="field">
-            <span>Accidentals</span>
-            <div role="group" aria-label="Accidentals" className="radio-row">
-              <label className="check" htmlFor="acc-sharp">
+      <div className={clsx("tv-controls", "tv-controls--display")}>
+        <div className="tv-controls__group" role="region" aria-label="Notation">
+          <div className="tv-field">
+            <span className="tv-field__label">Accidentals</span>
+            <div
+              role="group"
+              aria-label="Accidentals"
+              className="tv-controls__radio-row"
+            >
+              <label className="tv-check" htmlFor="acc-sharp">
                 <input
                   id="acc-sharp"
                   name="accidental"
@@ -77,7 +81,7 @@ function DisplayControls({
                 />
                 Sharps (C, C#, D…)
               </label>
-              <label className="check" htmlFor="acc-flat">
+              <label className="tv-check" htmlFor="acc-flat">
                 <input
                   id="acc-flat"
                   name="accidental"
@@ -91,8 +95,8 @@ function DisplayControls({
             </div>
           </div>
 
-          <div className="field">
-            <span>Labels</span>
+          <div className="tv-field">
+            <span className="tv-field__label">Labels</span>
             <select
               id="labels"
               name="labels"
@@ -107,8 +111,8 @@ function DisplayControls({
             </select>
           </div>
 
-          <div className="field">
-            <span>Micro-fret labels</span>
+          <div className="tv-field">
+            <span className="tv-field__label">Micro-fret labels</span>
             <select
               id="microLabelStyle"
               name="microLabelStyle"
@@ -127,7 +131,7 @@ function DisplayControls({
             </select>
           </div>
 
-          <label className="check" htmlFor="colorByDegree">
+          <label className="tv-check" htmlFor="colorByDegree">
             <input
               id="colorByDegree"
               name="colorByDegree"
@@ -137,7 +141,7 @@ function DisplayControls({
             />{" "}
             Color notes by scale degree
             <span
-              className="tip-trigger"
+              className="tv-tip"
               data-tooltip-id="deg-colors-tip"
               data-tooltip-place="right"
               aria-label="Explain scale-degree colors"
@@ -153,19 +157,19 @@ function DisplayControls({
         </div>
 
         <div
-          className="group"
+          className="tv-controls__group"
           role="region"
           aria-label="Open strings"
           aria-disabled={!showOpen}
         >
-          <div className="field">
-            <span>Open notes</span>
+          <div className="tv-field">
+            <span className="tv-field__label">Open notes</span>
             <div
               role="group"
               aria-label="Open note scope"
-              className="radio-row"
+              className="tv-controls__radio-row"
             >
-              <label className="check" htmlFor="showOpen">
+              <label className="tv-check" htmlFor="showOpen">
                 <input
                   id="showOpen"
                   name="showOpen"
@@ -175,7 +179,7 @@ function DisplayControls({
                 />{" "}
                 Show open notes
               </label>
-              <label className="check" htmlFor="open-all">
+              <label className="tv-check" htmlFor="open-all">
                 <input
                   id="open-all"
                   name="open-scope"
@@ -186,7 +190,7 @@ function DisplayControls({
                 />
                 All strings
               </label>
-              <label className="check" htmlFor="open-scale">
+              <label className="tv-check" htmlFor="open-scale">
                 <input
                   id="open-scale"
                   name="open-scope"
@@ -201,8 +205,12 @@ function DisplayControls({
           </div>
         </div>
 
-        <div className="group" role="region" aria-label="Markers and sizing">
-          <label className="check" htmlFor="showFretNums">
+        <div
+          className="tv-controls__group"
+          role="region"
+          aria-label="Markers and sizing"
+        >
+          <label className="tv-check" htmlFor="showFretNums">
             <input
               id="showFretNums"
               name="showFretNums"
@@ -213,8 +221,8 @@ function DisplayControls({
             Show fret numbers
           </label>
 
-          <div className="field">
-            <span>Dot size</span>
+          <div className="tv-field">
+            <span className="tv-field__label">Dot size</span>
             <input
               id="dotSize"
               name="dotSize"
@@ -226,7 +234,7 @@ function DisplayControls({
             />
           </div>
 
-          <label className="check" htmlFor="lefty">
+          <label className="tv-check" htmlFor="lefty">
             <input
               id="lefty"
               name="lefty"

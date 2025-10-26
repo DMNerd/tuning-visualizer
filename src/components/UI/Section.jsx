@@ -28,11 +28,11 @@ function Section({
 
   const headerContent = (
     <>
-      <span className="sec-title">{title}</span>
-      <div className="sec-actions">
+      <span className="tv-panel__title">{title}</span>
+      <div className="tv-panel__actions">
         {actions}
         {collapsible && (
-          <span className="chev" aria-hidden>
+          <span className="tv-panel__icon" aria-hidden>
             {open ? <FiChevronDown /> : <FiChevronRight />}
           </span>
         )}
@@ -42,15 +42,18 @@ function Section({
 
   return (
     <section
-      className={clsx("panel-sec", className)}
-      data-size={size}
-      data-collapsed={open ? "false" : "true"}
+      className={clsx(
+        "tv-panel",
+        `tv-panel--size-${size}`,
+        { "is-collapsed": collapsible && !open },
+        className,
+      )}
       aria-labelledby={headerId}
     >
       {collapsible ? (
         <button
           id={headerId}
-          className="sec-header"
+          className="tv-panel__header"
           onClick={toggle}
           aria-expanded={open}
           aria-controls={bodyId}
@@ -59,7 +62,7 @@ function Section({
           {headerContent}
         </button>
       ) : (
-        <div id={headerId} className="sec-header" aria-controls={bodyId}>
+        <div id={headerId} className="tv-panel__header" aria-controls={bodyId}>
           {headerContent}
         </div>
       )}
@@ -67,11 +70,11 @@ function Section({
       {/* Keep body in the DOM for smooth size control & internal scrolling via CSS */}
       <div
         id={bodyId}
-        className="sec-body"
+        className="tv-panel__body"
         role="region"
         aria-hidden={collapsible ? (!open).toString() : "false"}
       >
-        <div className="sec-body-inner">{children}</div>
+        <div className="tv-panel__body-inner">{children}</div>
       </div>
     </section>
   );

@@ -31,9 +31,9 @@ function HotkeysCheatsheet({ onClose }) {
       if (alt.includes(" / ")) {
         const pair = alt.split(" / ").map((s) => s.trim());
         return (
-          <span className="hk-alt" key={alt}>
+          <span className="tv-hotkeys__alt" key={alt}>
             <kbd>{pair[0]}</kbd>
-            <span className="hk-sep" aria-hidden="true">
+            <span className="tv-hotkeys__sep" aria-hidden="true">
               {" "}
               /{" "}
             </span>
@@ -44,12 +44,12 @@ function HotkeysCheatsheet({ onClose }) {
       if (alt.includes("+")) {
         const parts = alt.split("+").map((s) => s.trim());
         return (
-          <span className="hk-alt" key={alt}>
+          <span className="tv-hotkeys__alt" key={alt}>
             {parts.map((p, i) => (
-              <span className="hk-combo" key={`${alt}-${p}-${i}`}>
+              <span className="tv-hotkeys__combo" key={`${alt}-${p}-${i}`}>
                 <kbd>{p}</kbd>
                 {i < parts.length - 1 ? (
-                  <span className="hk-sep" aria-hidden="true">
+                  <span className="tv-hotkeys__sep" aria-hidden="true">
                     {" "}
                     +{" "}
                   </span>
@@ -60,17 +60,17 @@ function HotkeysCheatsheet({ onClose }) {
         );
       }
       return (
-        <span className="hk-alt" key={alt}>
+        <span className="tv-hotkeys__alt" key={alt}>
           <kbd>{alt}</kbd>
         </span>
       );
     };
 
     return alts.map((alt, i) => (
-      <span className="hk-alt-wrap" key={`alt-${i}`}>
+      <span className="tv-hotkeys__alt-wrap" key={`alt-${i}`}>
         {renderAlt(alt)}
         {i < alts.length - 1 ? (
-          <span className="hk-sep" aria-hidden="true">
+          <span className="tv-hotkeys__sep" aria-hidden="true">
             {" "}
             •{" "}
           </span>
@@ -81,16 +81,16 @@ function HotkeysCheatsheet({ onClose }) {
 
   return (
     <div
-      className="hotkeys-toast"
+      className="tv-hotkeys"
       role="dialog"
       aria-label="Keyboard shortcuts"
     >
-      <div className="hotkeys-title">
+      <div className="tv-hotkeys__title">
         <span>Hotkeys</span>
         {onClose ? (
           <button
             type="button"
-            className="hotkeys-close"
+            className="tv-hotkeys__close"
             aria-label="Close"
             onClick={onClose}
           >
@@ -98,11 +98,11 @@ function HotkeysCheatsheet({ onClose }) {
           </button>
         ) : null}
       </div>
-      <ul className="hotkeys-list">
+      <ul className="tv-hotkeys__list">
         {rows.map(([keys, desc]) => (
-          <li className="hotkeys-row" key={keys}>
-            <span className="keys">{renderKeys(keys)}</span>
-            <span className="desc">{desc}</span>
+          <li className="tv-hotkeys__row" key={keys}>
+            <span className="tv-hotkeys__keys">{renderKeys(keys)}</span>
+            <span className="tv-hotkeys__desc">{desc}</span>
           </li>
         ))}
       </ul>

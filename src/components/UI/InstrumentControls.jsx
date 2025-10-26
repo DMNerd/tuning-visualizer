@@ -143,10 +143,10 @@ function InstrumentControls({
 
   return (
     <Section title="Instrument">
-      <div className={clsx("control-panel", "instrument")}>
-        <div className="row-2">
+      <div className={clsx("tv-controls", "tv-controls--instrument")}>
+        <div className="tv-controls__row--two">
           {/* Strings */}
-          <div className="field">
+          <div className="tv-field">
             <label htmlFor="strings">Strings</label>
             <input
               id="strings"
@@ -165,14 +165,16 @@ function InstrumentControls({
             />
             <small
               id="strings-help"
-              className={clsx("help-text", { "help-text--error": stringsErr })}
+              className={clsx("tv-field__help", {
+                "tv-field__help--error": stringsErr,
+              })}
             >
               {stringsErr || `Allowed range: ${STR_MIN}–${STR_MAX}`}
             </small>
           </div>
 
           {/* Frets */}
-          <div className="field">
+          <div className="tv-field">
             <label htmlFor="frets">Frets</label>
             <input
               id="frets"
@@ -191,18 +193,20 @@ function InstrumentControls({
             />
             <small
               id="frets-help"
-              className={clsx("help-text", { "help-text--error": fretsErr })}
+              className={clsx("tv-field__help", {
+                "tv-field__help--error": fretsErr,
+              })}
             >
               {fretsErr || `Allowed range: ${FRETS_MIN}–${FRETS_MAX}`}
             </small>
           </div>
         </div>
 
-        <div className="strings-grid">
+        <div className="tv-controls__strings-grid">
           {tuning.map((note, i) => {
             const stringNum = strings - i;
             return (
-              <div key={i} className="field">
+              <div key={i} className="tv-field">
                 <label htmlFor={`string-${stringNum}`}>
                   String {stringNum}
                 </label>
@@ -228,7 +232,7 @@ function InstrumentControls({
           })}
         </div>
 
-        <div className="field field--spaced">
+        <div className="tv-field tv-field--spaced">
           <label htmlFor="preset">Preset</label>
           <select
             id="preset"
@@ -244,11 +248,11 @@ function InstrumentControls({
           </select>
         </div>
 
-        <div className="defaults-row">
-          <button className="btn" onClick={onSaveDefault}>
+        <div className="tv-controls__defaults">
+          <button className="tv-button tv-button--block" onClick={onSaveDefault}>
             Save as default ({systemId}, {strings}-string)
           </button>
-          <button className="btn" onClick={onResetFactory}>
+          <button className="tv-button tv-button--block" onClick={onResetFactory}>
             Reset to factory default
           </button>
         </div>

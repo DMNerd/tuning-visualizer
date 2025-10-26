@@ -345,17 +345,20 @@ export default function App() {
   );
 
   return (
-    <div className="page">
-      <header className="page-header">
+    <div className="tv-shell">
+      <header className="tv-shell__header">
         <PanelHeader theme={theme} setTheme={setTheme} />
       </header>
-      <main className="page-main">
-        <div className="stage fb-stage" ref={stageRef}>
-          <div className="fretboard-wrap" onDoubleClick={() => toggleFs()}>
-            <div className="stage-toolbar">
+      <main className="tv-shell__main">
+        <div className="tv-stage" ref={stageRef}>
+          <div
+            className={clsx("tv-stage__surface", { "is-lefty": lefty })}
+            onDoubleClick={() => toggleFs()}
+          >
+            <div className="tv-stage__toolbar">
               <button
                 type="button"
-                className="icon-btn reset-btn"
+                className="tv-button tv-button--icon"
                 aria-label="Reset all to defaults"
                 onClick={() => resetAll({ confirm: true })}
                 title="Reset all to defaults"
@@ -364,7 +367,12 @@ export default function App() {
               </button>
               <button
                 type="button"
-                className={clsx("icon-btn", "fs-btn", { active: isFs })}
+                className={clsx(
+                  "tv-button",
+                  "tv-button--icon",
+                  "tv-button--fullscreen",
+                  { "is-active": isFs },
+                )}
                 aria-label={
                   isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
                 }
@@ -413,7 +421,7 @@ export default function App() {
           </div>
         </div>
       </main>
-      <footer className="page-controls">
+      <footer className="tv-shell__controls">
         <TuningSystemSelector
           systemId={systemId}
           setSystemId={setSystemId}
@@ -545,7 +553,7 @@ export default function App() {
             ) : t.type === "error" ? (
               <FiAlertTriangle size={18} color="var(--root)" />
             ) : t.type === "loading" ? (
-              <FiLoader size={18} className="spin" />
+              <FiLoader size={18} className="tv-u-spin" />
             ) : (
               <FiInfo size={18} color="var(--fg)" />
             );

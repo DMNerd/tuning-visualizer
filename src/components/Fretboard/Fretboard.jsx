@@ -239,7 +239,7 @@ const Fretboard = forwardRef(function Fretboard(
         />
 
         <rect
-          className="nut"
+          className="tv-fretboard__nut"
           x={wireX(capoFret)}
           y={padTop - 8}
           width={nutW}
@@ -261,7 +261,10 @@ const Fretboard = forwardRef(function Fretboard(
                   y1={y}
                   x2={startX}
                   y2={y}
-                  className="stringLine greyBefore"
+                  className={clsx(
+                    "tv-fretboard__string",
+                    "tv-fretboard__string--ghost",
+                  )}
                 />
               )}
               <line
@@ -269,7 +272,7 @@ const Fretboard = forwardRef(function Fretboard(
                 y1={y}
                 x2={boardEndX}
                 y2={y}
-                className="stringLine"
+                className="tv-fretboard__string"
               />
             </g>
           );
@@ -286,10 +289,9 @@ const Fretboard = forwardRef(function Fretboard(
               y1={padTop}
               x2={wireX(f)}
               y2={height - padBottom}
-              className={clsx("fretLine", {
-                strong: isOctave,
-                standard: isStandard,
-                micro: isMicro,
+              className={clsx("tv-fretboard__fret", {
+                "tv-fretboard__fret--strong": isOctave,
+                "tv-fretboard__fret--micro": isMicro,
               })}
             />
           );
@@ -303,7 +305,7 @@ const Fretboard = forwardRef(function Fretboard(
           return (
             <circle
               key={`inlay-s-${f}`}
-              className="inlay"
+              className="tv-fretboard__inlay"
               cx={cx}
               cy={cy}
               r="6.5"
@@ -319,8 +321,18 @@ const Fretboard = forwardRef(function Fretboard(
           const cy2 = padTop + (height - padTop - padBottom) / 2 + 14;
           return (
             <g key={`inlay-d-${f}`}>
-              <circle className="inlay" cx={cx} cy={cy1} r="6.5" />
-              <circle className="inlay" cx={cx} cy={cy2} r="6.5" />
+              <circle
+                className="tv-fretboard__inlay"
+                cx={cx}
+                cy={cy1}
+                r="6.5"
+              />
+              <circle
+                className="tv-fretboard__inlay"
+                cx={cx}
+                cy={cy2}
+                r="6.5"
+              />
             </g>
           );
         })}
@@ -343,7 +355,9 @@ const Fretboard = forwardRef(function Fretboard(
         return (
           <text
             key={`noteText-${n.key}`}
-            className={clsx("noteText", { big: n.isRoot })}
+            className={clsx("tv-fretboard__note", {
+              "tv-fretboard__note--root": n.isRoot,
+            })}
             x={displayX(n.cx)}
             y={n.cy + 4}
             textAnchor="middle"
@@ -370,9 +384,9 @@ const Fretboard = forwardRef(function Fretboard(
                 onSetCapo(f);
               }
             },
-            className: clsx("fretNum", {
-              capo: f === capoFret,
-              microNum: !isStandard,
+            className: clsx("tv-fretboard__marker", {
+              "tv-fretboard__marker--capo": f === capoFret,
+              "tv-fretboard__marker--micro": !isStandard,
             }),
           };
 
@@ -391,7 +405,7 @@ const Fretboard = forwardRef(function Fretboard(
 
       {showNoScaleMessage && (
         <text
-          className="fretboard-empty"
+          className="tv-stage__empty"
           x="50%"
           y="50%"
           textAnchor="middle"
