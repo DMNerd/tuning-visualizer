@@ -154,6 +154,7 @@
     grid-template-rows: auto 1fr;
     margin: 0; /* grid handles spacing */
     width: 100%;
+    min-width: 0;
     border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--panel);
@@ -334,6 +335,9 @@ html.is-fs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  > * {
+    min-width: 0;
+  }
 }
 
 .field {

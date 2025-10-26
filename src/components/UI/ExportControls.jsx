@@ -1,9 +1,8 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useRef, useMemo } from "react";
 import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { toast } from "react-hot-toast";
-import { useFilePicker } from "react-use";
 
 function ExportControls({
   boardRef,
@@ -16,11 +15,7 @@ function ExportControls({
   exportAll,
   importFromJson,
 }) {
-  const [openFileSelector, { filesContent, errors, clear }] = useFilePicker({
-    accept: ["application/json", ".json"],
-    multiple: false,
-    readAs: "Text",
-  });
+  const fileInputRef = useRef(null);
 
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
 
@@ -69,38 +64,41 @@ function ExportControls({
 
   const doExportAll = () => exportAll?.();
 
-  useEffect(() => {
-    if (!errors?.length) return;
-    errors.forEach((error) => {
-      toast.error(error?.message || "Import failed.");
-    });
-    clear();
-  }, [errors, clear]);
+  const triggerImport = () => fileInputRef.current?.click();
 
-  useEffect(() => {
-    if (!filesContent?.length) return;
-    const file = filesContent[0];
+  const onFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    let text;
+    try {
+      text = await file.text();
+    } catch (err) {
+      toast.error(err?.message || "Import failed.");
+      e.target.value = "";
+      return;
+    }
 
     let parsed;
     try {
-      parsed = JSON.parse(file.content);
+      parsed = JSON.parse(text);
     } catch {
       toast.error("Selected file is not valid JSON.");
-      clear();
+      e.target.value = "";
       return;
     }
 
     const json = Array.isArray(parsed) ? parsed : [parsed];
     const maybePromise = importFromJson?.(json, [file.name]);
     if (maybePromise && typeof maybePromise.finally === "function") {
-      maybePromise.finally(() => {
-        clear();
+      return maybePromise.finally(() => {
+        e.target.value = "";
       });
-      return;
     }
 
-    clear();
-  }, [filesContent, importFromJson, clear]);
+    e.target.value = "";
+    return maybePromise;
+  };
 
   return (
     <Section title="Export / Import">
@@ -121,9 +119,16 @@ function ExportControls({
           <button type="button" className="btn" onClick={doExportAll}>
             Export all custom (.json)
           </button>
-          <button type="button" className="btn" onClick={openFileSelector}>
+          <button type="button" className="btn" onClick={triggerImport}>
             Import tunings (.json)
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onFileChange}
+            hidden
+          />
         </div>
       </div>
     </Section>
