@@ -1143,6 +1143,21 @@ svg {
   }
 }
 
+@media (width <= 520px) {
+  .tv-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tv-header__actions,
+  .tv-header__toggles {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+}
+
 /* =========================
   Scrollbars
 ========================= */
