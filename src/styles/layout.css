@@ -249,11 +249,6 @@ html.is-fs {
   min-width: 0;
 }
 
-@media (width <= 900px) {
-  .tv-controls--scale {
-    grid-template-columns: 1fr;
-  }
-}
 
 .tv-controls__input-row {
   display: flex;
@@ -325,11 +320,6 @@ html.is-fs {
   border-color: var(--line);
 }
 
-@media (width <= 560px) {
-  .tv-button--icon .tv-button__label {
-    display: none;
-  }
-}
 
 .tv-field {
   display: flex;
@@ -462,11 +452,6 @@ input[type="text"] {
   white-space: normal;
 }
 
-@media (width <= 520px) {
-  .tv-controls__preset-actions {
-    grid-template-columns: 1fr;
-  }
-}
 
 .tv-controls__defaults {
   display: flex;
@@ -694,11 +679,6 @@ svg {
   display: none;
 }
 
-@media (width >= 480px) {
-  .tv-theme__label {
-    display: inline;
-  }
-}
 
 .tv-hotkeys {
   line-height: 1.4;
@@ -796,11 +776,6 @@ svg {
   opacity: 0.95;
 }
 
-@media (width <= 420px) {
-  .tv-hotkeys__desc {
-    white-space: normal;
-  }
-}
 
 .tv-tooltip.react-tooltip {
   --rt-opacity: 1 !important;
@@ -962,11 +937,6 @@ svg {
   width: auto;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .tv-tooltip {
-    transition: none !important;
-  }
-}
 
 /* =========================
    Modal editor
@@ -1097,187 +1067,6 @@ svg {
 }
 
 /* =========================
-   Responsive tweaks
-========================= */
-@media (width <= 1200px) {
-  :root {
-    --col-width: clamp(240px, 30vw, 340px);
-  }
-}
-
-@media (width <= 900px) {
-  body {
-    font-size: 0.9375rem;
-  }
-  .tv-controls__grid--two {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (width <= 760px) {
-  .tv-panel--scale-controls {
-    grid-template-rows: auto auto;
-  }
-
-  .tv-panel--scale-controls:not(.is-collapsed) .tv-panel__body,
-  .tv-panel--scale-controls:not(.is-collapsed) .tv-panel__body-inner {
-    overflow: visible;
-  }
-  .tv-shell__controls {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (width <= 600px) {
-  select,
-  input[type="number"],
-  input[type="range"],
-  input[type="text"],
-  .tv-button {
-    min-height: 2.5rem;
-    font-size: 1rem;
-  }
-}
-
-@media (width <= 480px) {
-  .tv-fretboard__note {
-    font-size: 0.6875rem;
-  }
-  .tv-fretboard__note--root {
-    font-size: 0.75rem;
-  }
-  .tv-fretboard__marker {
-    font-size: 0.6875rem;
-  }
-  :root {
-    --gutter: 10px;
-  }
-}
-
-@media (width <= 600px) {
-  .tv-panel,
-  .tv-panel--size-sm,
-  .tv-panel--size-md,
-  .tv-panel--size-lg {
-    min-height: auto;
-  }
-
-  .tv-panel__body {
-    grid-template-rows: auto;
-  }
-}
-
-@media (width <= 520px) {
-  .tv-header {
-    flex-wrap: wrap;
-    align-items: center;
-    row-gap: var(--space-xs);
-  }
-
-  .tv-header__actions {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-  }
-
-  .tv-header__toggles {
-    flex: 1 1 auto;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-  }
-}
-
-@media (max-width: 600px) {
-  .tv-modal {
-    padding-block: clamp(12px, 6vw, 28px);
-    padding-inline: clamp(8px, 5vw, 20px);
-  }
-
-  .tv-modal__card {
-    width: min(100%, 540px);
-    max-width: min(540px, 100%);
-  }
-}
-
-@media (max-height: 600px) {
-  .tv-modal {
-    padding-block: clamp(8px, 5vh, 16px);
-  }
-
-  .tv-modal__card {
-    max-height: min(100dvh - clamp(16px, 6vh, 40px), 820px);
-  }
-
-  .tv-modal__header,
-  .tv-modal__footer {
-    padding: 12px clamp(12px, 4vw, 18px);
-  }
-
-  .tv-modal__body {
-    padding: 10px clamp(12px, 4vw, 18px);
-  }
-
-  .tv-modal__editor .tv-json-editor {
-    min-height: 240px;
-  }
-}
-
-@media (max-height: 480px) {
-  .tv-modal {
-    padding-block: clamp(6px, 5vh, 14px);
-  }
-
-  .tv-modal__header,
-  .tv-modal__footer {
-    padding: 10px clamp(12px, 5vw, 18px);
-  }
-
-  .tv-modal__body {
-    padding: 10px clamp(12px, 5vw, 18px);
-  }
-
-  .tv-modal__editor .tv-json-editor {
-    min-height: 200px;
-  }
-}
-
-@media (max-height: 420px) {
-  .tv-modal__editor .tv-json-editor {
-    min-height: 180px;
-  }
-
-  .tv-modal {
-    padding-block: clamp(6px, 6vh, 12px);
-  }
-}
-
-@media (max-height: 360px) {
-  .tv-modal {
-    padding-block: clamp(4px, 6vh, 10px);
-  }
-
-  .tv-modal__card {
-    max-height: calc(100dvh - clamp(8px, 6vh, 20px));
-  }
-
-  .tv-modal__header,
-  .tv-modal__footer {
-    padding: 8px clamp(10px, 6vw, 16px);
-  }
-
-  .tv-modal__body {
-    padding: 8px clamp(10px, 6vw, 16px);
-    gap: 8px;
-  }
-
-  .tv-modal__editor .tv-json-editor {
-    min-height: 150px;
-  }
-}
-
-/* =========================
   Scrollbars
 ========================= */
 .tv-stage__surface::-webkit-scrollbar {
@@ -1292,32 +1081,3 @@ svg {
   background: transparent;
 }
 
-/* =========================
-  Print
-========================= */
-@media print {
-  * {
-    print-color-adjust: exact;
-  }
-
-  .tv-shell {
-    min-height: auto;
-
-    .tv-shell__header,
-    .tv-shell__controls {
-      display: none !important;
-    }
-
-    .tv-shell__main {
-      padding: 0;
-      max-width: none;
-      margin: 0;
-    }
-  }
-}
-
-@media (width <= 900px), (hover: none) and (pointer: coarse) {
-  .tv-button--fullscreen {
-    display: none !important;
-  }
-}
