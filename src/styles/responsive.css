@@ -49,6 +49,9 @@
 }
 
 @media (width <= 600px) {
+  .tv-stage__surface {
+    padding-block-start: clamp(48px, 12vw, 64px);
+  }
   select,
   input[type="number"],
   input[type="range"],
