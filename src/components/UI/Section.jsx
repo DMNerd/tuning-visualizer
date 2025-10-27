@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, memo } from "react";
+import { useCallback, useEffect, memo } from "react";
 import clsx from "clsx";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
-import { useToggle } from "react-use";
+import { useToggle, useUpdateEffect } from "react-use";
 
 function Section({
   title,
@@ -23,13 +23,7 @@ function Section({
     setOpen();
   }, [collapsible, setOpen]);
 
-  const previousOpenRef = useRef(open);
-  useEffect(() => {
-    if (previousOpenRef.current !== open) {
-      previousOpenRef.current = open;
-      onToggle?.(open);
-    }
-  }, [open, onToggle]);
+  useUpdateEffect(() => onToggle?.(open), [open, onToggle]);
 
   useEffect(() => {
     setOpen(defaultOpen);
