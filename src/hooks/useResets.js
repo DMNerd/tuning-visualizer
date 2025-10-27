@@ -25,12 +25,16 @@ export function useResets({
   toast,
   confirm,
 }) {
-  const resetInstrumentFactory = useCallback(() => {
-    const factoryFrets = getFactoryFrets(system.divisions);
-    resetInstrumentPrefs(STR_FACTORY, factoryFrets);
-    setCapoFret(CAPO_DEFAULT);
-    setStringMeta(null);
-  }, [system.divisions, resetInstrumentPrefs, setCapoFret, setStringMeta]);
+  const resetInstrumentFactory = useCallback(
+    (divisions) => {
+      const edo = Number.isFinite(divisions) ? divisions : system.divisions;
+      const factoryFrets = getFactoryFrets(edo);
+      resetInstrumentPrefs(STR_FACTORY, factoryFrets);
+      setCapoFret(CAPO_DEFAULT);
+      setStringMeta(null);
+    },
+    [system.divisions, resetInstrumentPrefs, setCapoFret, setStringMeta],
+  );
 
   const resetDisplay = useCallback(() => {
     setDisplayPrefs(DISPLAY_DEFAULTS);
@@ -72,8 +76,10 @@ export function useResets({
         if (!ok) return;
       }
 
+      const defaultEdo = Number.parseInt(SYSTEM_DEFAULT, 10);
+
       resetSystem();
-      resetInstrumentFactory();
+      resetInstrumentFactory(Number.isFinite(defaultEdo) ? defaultEdo : undefined);
       resetDisplay();
       resetMusicalState();
 

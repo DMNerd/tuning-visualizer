@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
-import * as v from "valibot";
 import { useKey, useLockBodyScroll } from "react-use";
-import { TuningPackSchema } from "@/lib/export/schema";
+import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
 import { memoWithPick } from "@/utils/memo";
@@ -226,26 +225,7 @@ function TuningPackEditorModal({
 
   const handleSave = useCallback(() => {
     try {
-      const validation = v.safeParse(TuningPackSchema, draft);
-      if (!validation.success) {
-        const msg =
-          validation.issues?.map((i) => i.message).join("; ") ||
-          "Invalid pack data.";
-        setError(msg);
-        return;
-      }
-
-      const pack = validation.output;
-      const trimmedName = pack.name?.trim?.();
-      if (!trimmedName) {
-        setError("Please provide a pack name.");
-        return;
-      }
-
-      const normalized = {
-        ...pack,
-        name: trimmedName,
-      };
+      const normalized = parseTuningPack(draft);
 
       onSubmit?.(normalized, {
         replaceName: mode === "edit" ? originalName : undefined,
