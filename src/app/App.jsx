@@ -87,7 +87,7 @@ import { useCapo } from "@/hooks/useCapo";
 import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
-import { useFullscreen, useToggle } from "react-use";
+import { useFullscreen, useToggle, useThrottleFn } from "react-use";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
@@ -303,6 +303,26 @@ export default function App() {
     setScale(nextScaleObj.label);
   }, [sysNames, scaleOptions, setRoot, setScale]);
 
+    const randomizeScaleRef = useRef(randomizeScale);
+  useEffect(() => {
+    randomizeScaleRef.current = randomizeScale;
+  }, [randomizeScale]);
+
+  const [randomizeHotkeyTick, setRandomizeHotkeyTick] = useState(-1);
+
+  useThrottleFn(
+    (tick) => {
+      if (tick < 0) return;
+      randomizeScaleRef.current();
+    },
+    150,
+    [randomizeHotkeyTick],
+  );
+
+  const handleRandomizeHotkey = useCallback(() => {
+    setRandomizeHotkeyTick((count) => count + 1);
+  }, []);
+
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
       id: "hotkeys-help",
@@ -384,7 +404,7 @@ export default function App() {
     maxStrings: STR_MAX,
     minFrets: FRETS_MIN,
     maxFrets: FRETS_MAX,
-    onRandomizeScale: randomizeScale,
+    onRandomizeScale: handleRandomizeHotkey,
     onCreateCustomPack: handleCreateCustomPack,
   });
 

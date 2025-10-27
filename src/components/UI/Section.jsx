@@ -1,6 +1,7 @@
-import React from "react";
+import { useCallback, useEffect, useRef, memo } from "react";
 import clsx from "clsx";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { useToggle } from "react-use";
 
 function Section({
   title,
@@ -13,18 +14,26 @@ function Section({
   onToggle,
   id,
 }) {
-  const [open, setOpen] = React.useState(defaultOpen);
+  const [open, setOpen] = useToggle(defaultOpen);
   const bodyId = id ? `${id}-body` : undefined;
   const headerId = id ? `${id}-header` : undefined;
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     if (!collapsible) return;
-    setOpen((prev) => {
-      const next = !prev;
-      onToggle?.(next);
-      return next;
-    });
-  };
+    setOpen();
+  }, [collapsible, setOpen]);
+
+  const previousOpenRef = useRef(open);
+  useEffect(() => {
+    if (previousOpenRef.current !== open) {
+      previousOpenRef.current = open;
+      onToggle?.(open);
+    }
+  }, [open, onToggle]);
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen, setOpen]);
 
   const headerContent = (
     <>
@@ -67,7 +76,6 @@ function Section({
         </div>
       )}
 
-      {/* Keep body in the DOM for smooth size control & internal scrolling via CSS */}
       <div
         id={bodyId}
         className="tv-panel__body"
@@ -80,4 +88,4 @@ function Section({
   );
 }
 
-export default React.memo(Section);
+export default memo(Section);
