@@ -8,8 +8,8 @@ import {
   FRETS_MIN,
   FRETS_MAX,
 } from "@/lib/config/appDefaults";
-import { toast } from "react-hot-toast";
 import { clamp } from "@/utils/math";
+import { withToastPromise } from "@/utils/toast";
 
 function commitNumberField({
   rawOverride,
@@ -57,19 +57,14 @@ function InstrumentControls({
   onCreateCustomPack,
   onEditCustomPack,
 }) {
-  // Local text states so users can type freely
   const [stringsText, setStringsText] = useState(String(strings));
   const [fretsText, setFretsText] = useState(String(frets));
-
-  // Error messages (shown under inputs)
   const [stringsErr, setStringsErr] = useState("");
   const [fretsErr, setFretsErr] = useState("");
 
-  // Keep local text in sync if parent changes
   useEffect(() => setStringsText(String(strings)), [strings]);
   useEffect(() => setFretsText(String(frets)), [frets]);
 
-  // ---- Commit helpers ----
   function commitStrings(rawOverride) {
     return commitNumberField({
       rawOverride,
@@ -90,20 +85,15 @@ function InstrumentControls({
       max: FRETS_MAX,
       setError: setFretsErr,
       setText: setFretsText,
-      onSubmit: setFrets, // marks fretsTouched in App
+      onSubmit: setFrets,
     });
   }
 
-  // ---- Handlers ----
   const onStringsBlur = () => {
-    if (!commitStrings()) {
-      setStringsText(String(strings));
-    }
+    if (!commitStrings()) setStringsText(String(strings));
   };
   const onFretsBlur = () => {
-    if (!commitFrets()) {
-      setFretsText(String(frets));
-    }
+    if (!commitFrets()) setFretsText(String(frets));
   };
 
   const onStringsKeyDown = (e) => {
@@ -125,25 +115,25 @@ function InstrumentControls({
   };
 
   const onSaveDefault = () =>
-    toast.promise(
-      Promise.resolve().then(() => handleSaveDefault?.()),
+    withToastPromise(
+      () => handleSaveDefault?.(),
       {
         loading: "Saving default…",
         success: "Default saved.",
         error: "Failed to save default.",
       },
-      { id: "save-default" },
+      "save-default",
     );
 
   const onResetFactory = () =>
-    toast.promise(
-      Promise.resolve().then(() => handleResetFactoryDefault?.()),
+    withToastPromise(
+      () => handleResetFactoryDefault?.(),
       {
         loading: "Restoring factory settings…",
         success: "Factory settings restored.",
         error: "Failed to restore factory settings.",
       },
-      { id: "reset-factory" },
+      "reset-factory",
     );
 
   const isCustomPreset = Array.isArray(customPresetNames)
@@ -154,7 +144,6 @@ function InstrumentControls({
     <Section title="Instrument">
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
         <div className="tv-controls__row--two">
-          {/* Strings */}
           <div className="tv-field">
             <label htmlFor="strings">Strings</label>
             <input
@@ -182,7 +171,6 @@ function InstrumentControls({
             </small>
           </div>
 
-          {/* Frets */}
           <div className="tv-field">
             <label htmlFor="frets">Frets</label>
             <input
@@ -314,6 +302,7 @@ function pick(p) {
     onEditCustomPack: p.onEditCustomPack,
   };
 }
+
 export default React.memo(InstrumentControls, (a, b) =>
   dequal(pick(a), pick(b)),
 );

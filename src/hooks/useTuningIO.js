@@ -3,9 +3,9 @@ import { useLocalStorage } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
-import { toast } from "react-hot-toast";
 import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
+import { withToastPromise } from "@/utils/toast";
 
 /* =========================
    Hook
@@ -115,14 +115,14 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const importFromJson = useCallback(
     async (json, filenames = []) => {
-      return toast.promise(
-        Promise.resolve().then(() => onImportTunings(json, filenames)),
+      return withToastPromise(
+        () => onImportTunings(json, filenames),
         {
           loading: "Importing tunings…",
           success: "Tunings imported.",
           error: (e) => e?.message || "Import failed.",
         },
-        { id: "import-tunings" },
+        "import-tunings",
       );
     },
     [onImportTunings],
@@ -130,37 +130,37 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const exportCurrent = useCallback(
     (tuning, stringMeta) => {
-      return toast.promise(
-        Promise.resolve().then(() => {
+      return withToastPromise(
+        () => {
           const pack = getCurrentTuningPack(tuning, stringMeta);
           if (!pack)
             throw new Error("Nothing to export for the current tuning.");
           downloadJsonFile(pack, "current-tuning.json");
-        }),
+        },
         {
           loading: "Preparing current tuning…",
           success: "Current tuning exported.",
           error: (e) => e?.message || "Export failed.",
         },
-        { id: "export-current-tuning" },
+        "export-current-tuning",
       );
     },
     [getCurrentTuningPack],
   );
 
   const exportAll = useCallback(() => {
-    return toast.promise(
-      Promise.resolve().then(() => {
+    return withToastPromise(
+      () => {
         const packs = getAllCustomTunings() || [];
         if (!packs.length) throw new Error("No custom tunings to export.");
         downloadJsonFile(packs, "custom-tunings.json");
-      }),
+      },
       {
         loading: "Collecting custom tunings…",
         success: "Custom tunings exported.",
         error: (e) => e?.message || "Export failed.",
       },
-      { id: "export-all-tunings" },
+      "export-all-tunings",
     );
   }, [getAllCustomTunings]);
 

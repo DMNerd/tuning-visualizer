@@ -2,7 +2,7 @@ import React, { useRef, useMemo } from "react";
 import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
-import { toast } from "react-hot-toast";
+import { withToastPromise } from "@/utils/toast";
 
 function ExportControls({
   boardRef,
@@ -16,15 +16,7 @@ function ExportControls({
   importFromJson,
 }) {
   const fileInputRef = useRef(null);
-
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
-
-  const withToastPromise = (op, { loading, success, error }, id) =>
-    toast.promise(
-      Promise.resolve().then(op),
-      { loading, success, error },
-      id ? { id } : undefined,
-    );
 
   const doDownloadPNG = () =>
     withToastPromise(
@@ -61,9 +53,7 @@ function ExportControls({
     );
 
   const doExportCurrent = () => exportCurrent?.();
-
   const doExportAll = () => exportAll?.();
-
   const triggerImport = () => fileInputRef.current?.click();
 
   const onFileChange = async (e) => {
@@ -74,7 +64,7 @@ function ExportControls({
     try {
       text = await file.text();
     } catch (err) {
-      toast.error(err?.message || "Import failed.");
+      console.error(err);
       e.target.value = "";
       return;
     }
@@ -83,7 +73,7 @@ function ExportControls({
     try {
       parsed = JSON.parse(text);
     } catch {
-      toast.error("Selected file is not valid JSON.");
+      console.error("Selected file is not valid JSON.");
       e.target.value = "";
       return;
     }
