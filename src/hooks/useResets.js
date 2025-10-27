@@ -79,7 +79,9 @@ export function useResets({
       const defaultEdo = Number.parseInt(SYSTEM_DEFAULT, 10);
 
       resetSystem();
-      resetInstrumentFactory(Number.isFinite(defaultEdo) ? defaultEdo : undefined);
+      resetInstrumentFactory(
+        Number.isFinite(defaultEdo) ? defaultEdo : undefined,
+      );
       resetDisplay();
       resetMusicalState();
 

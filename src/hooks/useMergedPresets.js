@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { toStringMetaMap } from "@/lib/meta/meta";
 
 export function useMergedPresets({
   presetMap,
@@ -56,7 +57,7 @@ export function useMergedPresets({
       const fromMeta = Array.isArray(p?.meta?.stringMeta)
         ? p.meta.stringMeta.filter((m) => m && typeof m.index === "number")
         : [];
-      const byIx = new Map(fromStrings.map((m) => [m.index, m]));
+      const byIx = toStringMetaMap(fromStrings);
       for (const m of fromMeta) {
         const prev = byIx.get(m.index) || { index: m.index };
         byIx.set(m.index, { ...m, ...prev });

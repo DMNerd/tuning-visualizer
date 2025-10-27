@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { normalizeStringMeta } from "@/lib/meta/meta";
+import { toStringMetaMap } from "@/lib/meta/meta";
 
 /**
  * Geometry/layout for the fretboard SVG.
@@ -70,8 +70,7 @@ export function useFretboardLayout({
     const yForString = (s) => PAD.top + s * STRING_GAP;
 
     // ---- Per-string metadata helpers ----
-    const meta = normalizeStringMeta(stringMeta);
-    const metaByIndex = new Map(meta.map((m) => [m.index, m]));
+    const metaByIndex = toStringMetaMap(stringMeta);
     const startFretFor = (s) => metaByIndex.get(s)?.startFret ?? 0;
 
     const stringStartX = (s) => {

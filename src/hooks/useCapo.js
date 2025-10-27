@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { CAPO_DEFAULT } from "@/lib/config/appDefaults";
+import { toStringMetaMap } from "@/lib/meta/meta";
 
 /**
  * Manages capo state and derives per-string metadata that respects the capo.
@@ -31,7 +32,7 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
     if (!strings || strings <= 0) return stringMeta;
 
     const base = Array.isArray(stringMeta) ? stringMeta : [];
-    const byIx = new Map(base.map((m) => [m.index, m]));
+    const byIx = toStringMetaMap(stringMeta);
 
     const alreadyOk =
       base.length > 0 &&

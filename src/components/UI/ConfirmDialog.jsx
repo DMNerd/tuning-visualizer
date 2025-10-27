@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 
 export default function ConfirmDialog({
   title = "Are you sure?",
@@ -7,7 +7,16 @@ export default function ConfirmDialog({
   cancelText = "Cancel",
   onConfirm,
   onCancel,
+  onDismiss,
 }) {
+  useEffect(
+    () => () => {
+      if (typeof onDismiss === "function") {
+        onDismiss();
+      }
+    },
+    [onDismiss],
+  );
   return (
     <div
       role="dialog"

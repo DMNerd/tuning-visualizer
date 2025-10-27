@@ -14,27 +14,12 @@ export function useConfirm() {
     return new Promise((resolve) => {
       toast.dismiss(toastId);
       let isSettled = false;
-      let unsubscribe;
-
-      const cleanup = () => {
-        if (typeof unsubscribe === "function") {
-          unsubscribe();
-          unsubscribe = undefined;
-        }
-      };
 
       const settle = (value) => {
         if (isSettled) return;
         isSettled = true;
-        cleanup();
         resolve(value);
       };
-
-      unsubscribe = toast.onChange((toastEvent) => {
-        if (toastEvent.id === toastId && toastEvent.status === "removed") {
-          settle(false);
-        }
-      });
 
       toast(
         (t) =>
@@ -50,6 +35,9 @@ export function useConfirm() {
             onCancel: () => {
               settle(false);
               toast.dismiss(t.id);
+            },
+            onDismiss: () => {
+              settle(false);
             },
           }),
         { id: toastId, duration },
