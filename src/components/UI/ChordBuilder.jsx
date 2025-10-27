@@ -14,6 +14,7 @@ function ChordBuilder({
   root,
   onRootChange,
   sysNames,
+  nameForPc = null,
   type,
   onTypeChange,
   showChord,
@@ -80,7 +81,7 @@ function ChordBuilder({
     });
 
     const tones = pcs.map((pc) => {
-      const noteName = sysNames?.[pc] ?? String(pc);
+      const noteName = nameForPc?.(pc) ?? String(pc);
       const degree = degreeForPc(pc);
       const inScale = scaleSet.has(pc);
       return { noteName, degree, inScale };
@@ -108,9 +109,9 @@ function ChordBuilder({
     chordPCs,
     chordRootPc,
     degreeForPc,
+    nameForPc,
     rootIx,
     scaleSet,
-    sysNames,
     system?.divisions,
   ]);
 
@@ -215,6 +216,7 @@ function pick(p) {
     showChord: p.showChord,
     hideNonChord: p.hideNonChord,
     sysNames: p.sysNames,
+    nameForPc: p.nameForPc,
     supportsMicrotonal: p.supportsMicrotonal,
     system: p.system,
     rootIx: p.rootIx,

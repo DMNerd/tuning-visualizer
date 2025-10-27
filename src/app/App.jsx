@@ -91,6 +91,7 @@ import { useFullscreen, useToggle, useThrottleFn } from "react-use";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { pickRandomScale } from "@/utils/random";
+import { withToastPromise } from "@/utils/toast";
 
 export default function App() {
   // System selection
@@ -383,23 +384,27 @@ export default function App() {
 
   const handleEditorSubmit = useCallback(
     (pack, options = {}) => {
-      try {
-        const replaceName =
-          options?.replaceName ?? editorState?.originalName ?? undefined;
-        const saved = saveCustomTuning(pack, { replaceName });
+      const replaceName =
+        options?.replaceName ?? editorState?.originalName ?? undefined;
+      const mode = editorState?.mode === "edit" ? "edit" : "create";
+
+      return withToastPromise(
+        () => saveCustomTuning(pack, { replaceName }),
+        {
+          loading:
+            mode === "edit" ? "Updating custom pack…" : "Saving custom pack…",
+          success:
+            mode === "edit" ? "Custom pack updated." : "Custom pack created.",
+          error: "Unable to save tuning pack.",
+        },
+        "save-custom-pack",
+      ).then((saved) => {
         setPendingPresetName(saved?.name ?? pack?.name ?? null);
-        toast.success(
-          editorState?.mode === "edit"
-            ? "Custom pack updated."
-            : "Custom pack created.",
-        );
         setEditorState(null);
-      } catch (err) {
-        const message = err?.message || "Unable to save tuning pack.";
-        toast.error(message);
-      }
+        return saved;
+      });
     },
-    [editorState, saveCustomTuning, setPendingPresetName],
+    [editorState, saveCustomTuning, setPendingPresetName, setEditorState],
   );
 
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
@@ -572,6 +577,7 @@ export default function App() {
             root={chordRoot}
             onRootChange={setChordRoot}
             sysNames={sysNames}
+            nameForPc={nameForPc}
             type={chordType}
             onTypeChange={setChordType}
             showChord={showChord}
