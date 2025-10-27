@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
+import { useEffect, useCallback } from "react";
+import { useKey } from "react-use";
 
 export default function ConfirmDialog({
   title = "Are you sure?",
@@ -19,33 +19,40 @@ export default function ConfirmDialog({
     [onDismiss],
   );
 
-  useHotkeys(
-    "escape",
+  const handleCancel = useCallback(
     (event) => {
       event.preventDefault();
       if (typeof onCancel === "function") {
         onCancel();
       }
     },
-    {
-      preventDefault: true,
-    },
     [onCancel],
   );
 
-  useHotkeys(
-    ["enter", "space"],
+  const handleConfirm = useCallback(
     (event) => {
       event.preventDefault();
       if (typeof onConfirm === "function") {
         onConfirm();
       }
     },
-    {
-      preventDefault: true,
-    },
     [onConfirm],
   );
+
+  useKey((e) => e.key.toLowerCase() === "escape", handleCancel, undefined, [
+    handleCancel,
+  ]);
+
+  useKey(
+    (e) => {
+      const k = e.key.toLowerCase();
+      return k === "enter" || k === " ";
+    },
+    handleConfirm,
+    undefined,
+    [handleConfirm],
+  );
+
   return (
     <div
       role="dialog"
@@ -71,7 +78,6 @@ export default function ConfirmDialog({
         <button
           type="button"
           onClick={onConfirm}
-          autoFocus
           className="tv-overlay__button tv-overlay__button--accent"
         >
           {confirmText}
