@@ -43,7 +43,7 @@ function formatStringsCount(stringsCount) {
   return `${stringsCount} string${stringsCount === 1 ? "" : "s"}`;
 }
 
-function TuningsManagerModal({
+function TuningPackManagerModal({
   isOpen,
   tunings = [],
   systems = {},
@@ -239,6 +239,6 @@ function pick(p) {
   };
 }
 
-const TuningsManagerModalMemo = memoWithPick(TuningsManagerModal, pick);
+const TuningPackManagerModalMemo = memoWithPick(TuningPackManagerModal, pick);
 
-export default TuningsManagerModalMemo;
+export default TuningPackManagerModalMemo;

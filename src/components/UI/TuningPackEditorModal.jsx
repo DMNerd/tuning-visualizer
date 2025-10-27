@@ -6,6 +6,15 @@ import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
 import { memoWithPick } from "@/utils/memo";
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiClipboard,
+  FiCheck,
+  FiX,
+  FiChevronRight,
+} from "react-icons/fi";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -149,6 +158,8 @@ function TuningPackEditorModal({
     setPointer(isKey ? `${pointerText} (key)` : pointerText);
   }, []);
 
+  const isDark = themeMode === "dark";
+
   const editorTheme = useMemo(() => {
     const baseBoolean = "#0f766e";
     const baseNumber = "#2563eb";
@@ -156,7 +167,6 @@ function TuningPackEditorModal({
     const baseBooleanDark = "#34d399";
     const baseNumberDark = "#38bdf8";
     const baseNullDark = "#fca5a5";
-    const isDark = themeMode === "dark";
 
     return {
       rootFontSize: 11,
@@ -214,14 +224,32 @@ function TuningPackEditorModal({
           color: isDark ? "#f87171" : "#b91c1c",
           fontWeight: 600,
         },
-        iconCollection: "var(--muted)",
-        iconEdit: "var(--accent)",
-        iconDelete: isDark ? "#f87171" : "#dc2626",
-        iconAdd: "var(--accent)",
-        iconCopy: isDark ? baseNumberDark : baseNumber,
       },
     };
-  }, [themeMode]);
+  }, [isDark]);
+
+  const icons = useMemo(() => {
+    const base = {
+      size: 14,
+      style: { verticalAlign: "middle" },
+    };
+
+    const accent = { color: "var(--accent)" };
+    const muted = { color: "var(--muted)" };
+    const danger = { color: isDark ? "#f87171" : "#dc2626" };
+
+    return {
+      add: <FiPlus {...base} style={{ ...base.style, ...accent }} />,
+      edit: <FiEdit2 {...base} style={{ ...base.style, ...accent }} />,
+      delete: <FiTrash2 {...base} style={{ ...base.style, ...danger }} />,
+      copy: <FiClipboard {...base} style={{ ...base.style, ...accent }} />,
+      ok: <FiCheck {...base} style={{ ...base.style, ...accent }} />,
+      cancel: <FiX {...base} style={{ ...base.style, ...muted }} />,
+      chevron: (
+        <FiChevronRight {...base} style={{ ...base.style, ...muted }} />
+      ),
+    };
+  }, [isDark]);
 
   const handleSave = useCallback(() => {
     try {
@@ -261,6 +289,7 @@ function TuningPackEditorModal({
               onError={handleError}
               onEditEvent={handleEditEvent}
               theme={editorTheme}
+              icons={icons}
               className="tv-json-editor"
               showStringQuotes={false}
               enableClipboard
