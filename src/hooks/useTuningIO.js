@@ -5,6 +5,7 @@ import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { toast } from "react-hot-toast";
 import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
+import { buildTuningPack } from "@/lib/export/tuningIO";
 
 /* =========================
    Hook
@@ -23,25 +24,19 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null) => {
       const sys = TUNINGS[systemId];
-      const stringsArr = tuning.map((n, i) => {
-        const meta = stringMeta?.find((m) => m.index === i) || {};
-        return {
-          note: n,
-          ...(typeof meta.startFret === "number"
-            ? { startFret: meta.startFret }
-            : {}),
-          ...(typeof meta.greyBefore === "boolean"
-            ? { greyBefore: meta.greyBefore }
-            : {}),
-        };
+      const pack = buildTuningPack({
+        systemDivisions: sys.divisions,
+        systemId,
+        stringsCount: strings,
+        tuning,
+        stringMeta: stringMeta ?? undefined,
       });
 
       return {
-        version: 2,
-        name: `${systemId} ${strings}-string`,
-        system: { edo: sys.divisions },
-        tuning: { strings: stringsArr },
-        meta: stringMeta ? { stringMeta } : {},
+        ...pack,
+        meta: stringMeta
+          ? { ...(pack.meta || {}), stringMeta }
+          : { ...(pack.meta || {}) },
       };
     },
     [systemId, strings, TUNINGS],

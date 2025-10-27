@@ -15,6 +15,34 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
+function commitNumberField({
+  rawOverride,
+  textValue,
+  min,
+  max,
+  setError,
+  setText,
+  onSubmit,
+}) {
+  const raw =
+    typeof rawOverride === "number" ? rawOverride : parseInt(textValue, 10);
+
+  if (!Number.isFinite(raw)) {
+    setError(`Please enter a number between ${min} and ${max}.`);
+    return false;
+  }
+
+  const val = clamp(raw, min, max);
+  if (val !== raw) {
+    setError(`Allowed range is ${min}–${max}. Adjusted to ${val}.`);
+  } else {
+    setError("");
+  }
+  onSubmit(val);
+  setText(String(val));
+  return true;
+}
+
 function InstrumentControls({
   strings,
   frets,
@@ -47,49 +75,27 @@ function InstrumentControls({
 
   // ---- Commit helpers ----
   function commitStrings(rawOverride) {
-    const raw =
-      typeof rawOverride === "number" ? rawOverride : parseInt(stringsText, 10);
-
-    if (!Number.isFinite(raw)) {
-      setStringsErr(`Please enter a number between ${STR_MIN} and ${STR_MAX}.`);
-      return false;
-    }
-
-    const val = clamp(raw, STR_MIN, STR_MAX);
-    if (val !== raw) {
-      setStringsErr(
-        `Allowed range is ${STR_MIN}–${STR_MAX}. Adjusted to ${val}.`,
-      );
-    } else {
-      setStringsErr("");
-    }
-    handleStringsChange(val);
-    setStringsText(String(val));
-    return true;
+    return commitNumberField({
+      rawOverride,
+      textValue: stringsText,
+      min: STR_MIN,
+      max: STR_MAX,
+      setError: setStringsErr,
+      setText: setStringsText,
+      onSubmit: handleStringsChange,
+    });
   }
 
   function commitFrets(rawOverride) {
-    const raw =
-      typeof rawOverride === "number" ? rawOverride : parseInt(fretsText, 10);
-
-    if (!Number.isFinite(raw)) {
-      setFretsErr(
-        `Please enter a number between ${FRETS_MIN} and ${FRETS_MAX}.`,
-      );
-      return false;
-    }
-
-    const val = clamp(raw, FRETS_MIN, FRETS_MAX);
-    if (val !== raw) {
-      setFretsErr(
-        `Allowed range is ${FRETS_MIN}–${FRETS_MAX}. Adjusted to ${val}.`,
-      );
-    } else {
-      setFretsErr("");
-    }
-    setFrets(val); // marks fretsTouched in App
-    setFretsText(String(val));
-    return true;
+    return commitNumberField({
+      rawOverride,
+      textValue: fretsText,
+      min: FRETS_MIN,
+      max: FRETS_MAX,
+      setError: setFretsErr,
+      setText: setFretsText,
+      onSubmit: setFrets, // marks fretsTouched in App
+    });
   }
 
   // ---- Handlers ----
@@ -296,11 +302,17 @@ function pick(p) {
   return {
     strings: p.strings,
     frets: p.frets,
+    setFrets: p.setFrets,
     sysNames: p.sysNames,
     tuning: p.tuning,
+    setTuning: p.setTuning,
     presetNames: p.presetNames,
     customPresetNames: p.customPresetNames,
     selectedPreset: p.selectedPreset,
+    setSelectedPreset: p.setSelectedPreset,
+    handleStringsChange: p.handleStringsChange,
+    handleSaveDefault: p.handleSaveDefault,
+    handleResetFactoryDefault: p.handleResetFactoryDefault,
     systemId: p.systemId,
     onCreateCustomPack: p.onCreateCustomPack,
     onEditCustomPack: p.onEditCustomPack,
