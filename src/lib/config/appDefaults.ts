@@ -1,3 +1,5 @@
+import { clamp } from "@/utils/math";
+
 export type SystemId = `${number}-TET`;
 export const SCALE_DEFAULT = "Major (Ionian)";
 
@@ -19,7 +21,7 @@ export function getFactoryFrets(edo: number): number {
   if (edo === 12) return FRETS_FACTORY;
   if (edo === 24) return FRETS_MIN;
   const scaled = Math.round((FRETS_FACTORY * 12) / edo);
-  return Math.max(FRETS_MIN, Math.min(FRETS_MAX, scaled));
+  return clamp(scaled, FRETS_MIN, FRETS_MAX);
 }
 
 /* =========================

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useHotkeys as useHK } from "react-hotkeys-hook";
+import { clamp } from "@/utils/math";
 
 const isTypingTarget = (el) => {
   if (!el) return false;
@@ -7,7 +8,6 @@ const isTypingTarget = (el) => {
   const editable = el.getAttribute?.("contenteditable") === "true";
   return editable || tag === "input" || tag === "textarea" || tag === "select";
 };
-const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
 export function useHotkeys(options) {
   const {

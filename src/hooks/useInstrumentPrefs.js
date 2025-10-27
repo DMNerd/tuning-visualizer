@@ -2,8 +2,7 @@ import { useEffect, useMemo, useCallback } from "react";
 import { useDebounce, useLocalStorage } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
-
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+import { clamp } from "@/utils/math";
 
 const makeNumberStorageOptions = ({ min, max, fallback }) => {
   const coerce = (value) => {

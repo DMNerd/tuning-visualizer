@@ -9,11 +9,7 @@ import {
   FRETS_MAX,
 } from "@/lib/config/appDefaults";
 import { toast } from "react-hot-toast";
-
-function clamp(n, min, max) {
-  const v = Number.isFinite(n) ? n : min;
-  return Math.max(min, Math.min(max, v));
-}
+import { clamp } from "@/utils/math";
 
 function commitNumberField({
   rawOverride,
