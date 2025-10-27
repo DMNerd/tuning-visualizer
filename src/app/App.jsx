@@ -165,6 +165,8 @@ export default function App() {
 
   const [theme, setTheme, themeMode] = useTheme();
 
+  const { confirm } = useConfirm();
+
   // Refs
   const boardRef = useRef(null);
   const stageRef = useRef(null);
@@ -262,6 +264,7 @@ export default function App() {
     exportAll,
     getCurrentTuningPack,
     saveCustomTuning,
+    clearCustomTunings,
   } = useTuningIO({ systemId, strings, TUNINGS });
 
   const {
@@ -340,6 +343,35 @@ export default function App() {
     [nameForPc, sysNames, setChordRoot, setRoot],
   );
 
+  const handleClearCustomTunings = useCallback(async () => {
+    if (typeof clearCustomTunings !== "function") return false;
+
+    if (typeof confirm === "function") {
+      const ok = await confirm({
+        title: "Clear all custom tunings?",
+        message:
+          "This will permanently remove every saved custom tuning pack. This action cannot be undone.",
+        confirmText: "Clear custom tunings",
+        cancelText: "Cancel",
+        toastId: "confirm-clear-custom",
+      });
+
+      if (!ok) return false;
+    }
+
+    return withToastPromise(
+      async () => {
+        await Promise.resolve(clearCustomTunings());
+      },
+      {
+        loading: "Clearing custom tunings…",
+        success: "Custom tunings cleared.",
+        error: "Unable to clear custom tunings.",
+      },
+      "clear-custom-tunings",
+    ).then(() => true);
+  }, [clearCustomTunings, confirm]);
+
   const handleRandomizeHotkey = useCallback(() => {
     setRandomizeHotkeyTick((count) => count + 1);
   }, []);
@@ -412,8 +444,6 @@ export default function App() {
     stringMeta,
   });
 
-  const { confirm } = useConfirm();
-
   useHotkeys({
     toggleFs,
     setDisplayPrefs,
@@ -421,16 +451,16 @@ export default function App() {
     handleStringsChange,
     setShowChord,
     setHideNonChord,
+    onShowCheatsheet: showCheatsheet,
+    onRandomizeScale: handleRandomizeHotkey,
+    onCreateCustomPack: handleCreateCustomPack,
     strings,
     frets,
     LABEL_VALUES,
-    onShowCheatsheet: showCheatsheet,
     minStrings: STR_MIN,
     maxStrings: STR_MAX,
     minFrets: FRETS_MIN,
     maxFrets: FRETS_MAX,
-    onRandomizeScale: handleRandomizeHotkey,
-    onCreateCustomPack: handleCreateCustomPack,
   });
 
   const { resetInstrumentFactory, resetAll } = useResets({
@@ -663,6 +693,7 @@ export default function App() {
             exportCurrent={() => exportCurrent(tuning, stringMeta)}
             exportAll={exportAll}
             importFromJson={importFromJson}
+            onClearCustom={handleClearCustomTunings}
           />
         </ErrorBoundary>
       </footer>
