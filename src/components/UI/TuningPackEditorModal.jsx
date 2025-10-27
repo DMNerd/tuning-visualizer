@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
 import { useKey, useLockBodyScroll } from "react-use";
+import { dequal } from "dequal";
 import { TuningPackSchema } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
@@ -305,16 +306,14 @@ function TuningPackEditorModal({
   );
 }
 
-function areEqual(prevProps, nextProps) {
-  return (
-    prevProps.isOpen === nextProps.isOpen &&
-    prevProps.mode === nextProps.mode &&
-    prevProps.initialPack === nextProps.initialPack &&
-    prevProps.originalName === nextProps.originalName &&
-    prevProps.onCancel === nextProps.onCancel &&
-    prevProps.onSubmit === nextProps.onSubmit &&
-    prevProps.themeMode === nextProps.themeMode
-  );
+function pick(p) {
+  return {
+    isOpen: p.isOpen,
+    mode: p.mode,
+    initialPack: p.initialPack,
+    originalName: p.originalName,
+    themeMode: p.themeMode,
+  };
 }
 
-export default memo(TuningPackEditorModal, areEqual);
+export default memo(TuningPackEditorModal, (a, b) => dequal(pick(a), pick(b)));
