@@ -1,13 +1,13 @@
-# Tuning Visualizer aka TunningViz
+# Tuning Visualizer aka TuningViz
 
-An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.  
-Built with React
+An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.
+Built with React.
 
-Why? Because my friend is a big [King Gizzard & the Lizard Wizard](https://kinggizzardandthelizardwizard.com/) fan and finding any resources on microtonal music is a pain...
+Why? Because my friend is a big [King Gizzard & the Lizard Wizard](https://kinggizzardandthelizardwizard.com/) fan, and finding any resources on microtonal music is can be painful
 
-Images of guitar scales are inconsistent or paid and finding ones you like is a equaly as painfull
+Images of guitar scales are inconsistent or paywalled, and finding ones you like is equally painful
 
-This app will be free and open source forever and is completely self hostable
+This app will be free and open source forever and is completely self-hostable
 
 ---
 
@@ -32,15 +32,17 @@ This app will be free and open source forever and is completely self hostable
 - **Scales & Chords**
   - Scale picker filtered by tuning system
   - **Chord Builder**: highlight chord tones on top of the selected scale
-  - Select any **root** note; choose **sharps/flats**
+  - Select any **root** note, choose **sharps/flats**, or use the **Random root & scale** control (`r`)
 
 - **Tunings**
   - Presets for **6/7/8-string guitar**, **violin family (G–D–A–E)**, and **experimental** sets (e.g., King Gizzard C#–F#–C#–F#–B–E)
-  - Custom tuning presets
+  - Custom tuning presets with dedicated **New custom pack** and **Edit pack** workflows for organizing instruments
+  - Built-in modal **JSON editor** lets you inspect and fine-tune pack definitions without leaving the app
   - Per string tuning
 
 - **Display**
   - Multiple label modes: **note names**, **degrees/intervals**, **fret numbers (relative to 12-TET)**, or **fret numbers**
+  - "**Micro-fret labels**" selector with styles for **letters**, **accidentals**, or **fractions** to match your preferred microtonal notation
   - Option to color the notes based on **degrees** (independently)
   - Toggle **open strings** and **fret numbers**
   - Classic **inlay markers**
@@ -79,7 +81,12 @@ Example of exported scales (microtonal, colored degrees)
 git clone https://github.com/DMNerd/tuning-visualizer.git
 cd tuning-visualizer
 pnpm install
+# Start a local development server with hot module reloading
+pnpm dev
+
+# Create an optimized production build, then preview it locally
 pnpm build
+pnpm preview
 ```
 
 Then you can serve it with a static webserver like [sWS](https://github.com/static-web-server/static-web-server) (or use vite preview/dev functions)
