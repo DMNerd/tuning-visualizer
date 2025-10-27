@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useToggle } from "react-use";
 import {
   buildChordPCsFromPc,
-  MICROTONAL_CHORD_TYPES,
+  isMicrotonalChordType,
 } from "@/lib/theory/chords";
-
-const MICROTONAL_TYPE_SET = new Set(MICROTONAL_CHORD_TYPES);
 
 export function useChordLogic(system, pcFromName) {
   const [chordRoot, setChordRoot] = useState("C");
@@ -28,7 +26,7 @@ export function useChordLogic(system, pcFromName) {
 
   useEffect(() => {
     if (system.divisions === 24) return;
-    if (!MICROTONAL_TYPE_SET.has(chordType)) return;
+    if (!isMicrotonalChordType(chordType)) return;
     setChordType("maj");
   }, [system.divisions, chordType, setChordType]);
 

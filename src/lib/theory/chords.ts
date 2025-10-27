@@ -33,6 +33,8 @@ const MICROTONAL_TYPES: readonly ChordType[] = [
 ] as const;
 
 const MICROTONAL_TYPE_SET = new Set<ChordType>(MICROTONAL_TYPES);
+export const isMicrotonalChordType = (type: ChordType): boolean =>
+  MICROTONAL_TYPE_SET.has(type);
 
 interface ChordFormula {
   label: string;
@@ -322,7 +324,7 @@ const ALL_CHORD_TYPES = Object.keys(BASE) as ChordType[];
 export const CHORD_TYPES = ALL_CHORD_TYPES;
 export const MICROTONAL_CHORD_TYPES = MICROTONAL_TYPES;
 export const STANDARD_CHORD_TYPES = ALL_CHORD_TYPES.filter(
-  (t) => !MICROTONAL_TYPE_SET.has(t),
+  (t) => !isMicrotonalChordType(t),
 );
 export const CHORD_LABELS: Record<ChordType, string> = Object.fromEntries(
   ALL_CHORD_TYPES.map((t) => [t, BASE[t]["24"].label]), // show 24-EDO names; still fine in 12-TET

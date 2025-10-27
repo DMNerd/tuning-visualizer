@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 import { memoWithPick } from "@/utils/memo";
+import { pickRandomScale } from "@/utils/random";
 
 function ScaleControls({
   root,
@@ -27,15 +28,12 @@ function ScaleControls({
   }, [defaultScale, scaleOptions]);
 
   const pickRandom = () => {
-    if (!Array.isArray(sysNames) || !sysNames.length) return;
-    if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
-
-    const nextRoot = sysNames[Math.floor(Math.random() * sysNames.length)];
-    const nextScaleObj =
-      scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+    const result = pickRandomScale({ sysNames, scaleOptions });
+    if (!result) return;
+    const { root: nextRoot, scale: nextScale } = result;
 
     setRoot(nextRoot);
-    setScale(nextScaleObj.label);
+    setScale(nextScale);
   };
 
   const resetDefaults = () => {

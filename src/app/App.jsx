@@ -90,6 +90,7 @@ import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useFullscreen, useToggle, useThrottleFn } from "react-use";
 
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
+import { pickRandomScale } from "@/utils/random";
 
 export default function App() {
   // System selection
@@ -297,13 +298,11 @@ export default function App() {
   }, [pendingPresetName, mergedPresetNames, setPreset]);
 
   const randomizeScale = useCallback(() => {
-    if (!Array.isArray(sysNames) || !sysNames.length) return;
-    if (!Array.isArray(scaleOptions) || !scaleOptions.length) return;
-    const nextRoot = sysNames[Math.floor(Math.random() * sysNames.length)];
-    const nextScaleObj =
-      scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+    const result = pickRandomScale({ sysNames, scaleOptions });
+    if (!result) return;
+    const { root: nextRoot, scale: nextScale } = result;
     setRoot(nextRoot);
-    setScale(nextScaleObj.label);
+    setScale(nextScale);
   }, [sysNames, scaleOptions, setRoot, setScale]);
 
   const randomizeScaleRef = useRef(randomizeScale);
