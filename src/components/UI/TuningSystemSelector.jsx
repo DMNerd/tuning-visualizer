@@ -1,7 +1,7 @@
 import React from "react";
-import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
+import { memoWithPick } from "@/utils/memo";
 
 function TuningSystemSelector({ systemId, setSystemId, systems }) {
   return (
@@ -30,6 +30,6 @@ function TuningSystemSelector({ systemId, setSystemId, systems }) {
 function pick(p) {
   return { systemId: p.systemId, systems: p.systems };
 }
-export default React.memo(TuningSystemSelector, (a, b) =>
-  dequal(pick(a), pick(b)),
-);
+const TuningSystemSelectorMemo = memoWithPick(TuningSystemSelector, pick);
+
+export default TuningSystemSelectorMemo;

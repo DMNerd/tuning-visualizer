@@ -1,5 +1,4 @@
-import React, { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
-import { dequal } from "dequal";
+import { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
 import clsx from "clsx";
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
@@ -9,6 +8,7 @@ import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
+import { memoWithPick } from "@/utils/memo";
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -471,6 +471,6 @@ function pickRenderProps(p) {
   };
 }
 
-export default React.memo(Fretboard, (prev, next) =>
-  dequal(pickRenderProps(prev), pickRenderProps(next)),
-);
+const FretboardMemo = memoWithPick(Fretboard, pickRenderProps);
+
+export default FretboardMemo;

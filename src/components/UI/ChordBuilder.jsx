@@ -1,5 +1,3 @@
-import React from "react";
-import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
@@ -8,6 +6,7 @@ import {
   STANDARD_CHORD_TYPES,
 } from "@/lib/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
+import { memoWithPick } from "@/utils/memo";
 
 function ChordBuilder({
   root,
@@ -128,4 +127,6 @@ function pick(p) {
   };
 }
 
-export default React.memo(ChordBuilder, (a, b) => dequal(pick(a), pick(b)));
+const ChordBuilderMemo = memoWithPick(ChordBuilder, pick);
+
+export default ChordBuilderMemo;

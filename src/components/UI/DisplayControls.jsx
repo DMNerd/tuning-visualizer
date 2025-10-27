@@ -1,5 +1,3 @@
-import React from "react";
-import { dequal } from "dequal";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
@@ -7,6 +5,7 @@ import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 import { Tooltip } from "react-tooltip";
 import { FiInfo } from "react-icons/fi";
+import { memoWithPick } from "@/utils/memo";
 
 function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
@@ -268,4 +267,7 @@ function pick(p) {
     degreeCount: p.degreeCount,
   };
 }
-export default React.memo(DisplayControls, (a, b) => dequal(pick(a), pick(b)));
+
+const DisplayControlsMemo = memoWithPick(DisplayControls, pick);
+
+export default DisplayControlsMemo;

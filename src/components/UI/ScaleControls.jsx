@@ -1,8 +1,8 @@
 import React from "react";
-import { dequal } from "dequal";
 import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
+import { memoWithPick } from "@/utils/memo";
 
 function ScaleControls({
   root,
@@ -109,4 +109,6 @@ function pick(p) {
   };
 }
 
-export default React.memo(ScaleControls, (a, b) => dequal(pick(a), pick(b)));
+const ScaleControlsMemo = memoWithPick(ScaleControls, pick);
+
+export default ScaleControlsMemo;

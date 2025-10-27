@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { dequal } from "dequal";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
@@ -10,6 +9,7 @@ import {
 } from "@/lib/config/appDefaults";
 import { clamp } from "@/utils/math";
 import { withToastPromise } from "@/utils/toast";
+import { memoWithPick } from "@/utils/memo";
 
 function commitNumberField({
   rawOverride,
@@ -303,6 +303,6 @@ function pick(p) {
   };
 }
 
-export default React.memo(InstrumentControls, (a, b) =>
-  dequal(pick(a), pick(b)),
-);
+const InstrumentControlsMemo = memoWithPick(InstrumentControls, pick);
+
+export default InstrumentControlsMemo;

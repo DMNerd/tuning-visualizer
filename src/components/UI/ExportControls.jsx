@@ -1,8 +1,8 @@
-import React, { useRef, useMemo } from "react";
-import { dequal } from "dequal";
+import { useRef, useMemo } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { withToastPromise } from "@/utils/toast";
+import { memoWithPick } from "@/utils/memo";
 
 function ExportControls({
   boardRef,
@@ -163,4 +163,6 @@ function pick(p) {
   };
 }
 
-export default React.memo(ExportControls, (a, b) => dequal(pick(a), pick(b)));
+const ExportControlsMemo = memoWithPick(ExportControls, pick);
+
+export default ExportControlsMemo;

@@ -1,12 +1,12 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
 import { useKey, useLockBodyScroll } from "react-use";
-import { dequal } from "dequal";
 import { TuningPackSchema } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
+import { memoWithPick } from "@/utils/memo";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -316,4 +316,6 @@ function pick(p) {
   };
 }
 
-export default memo(TuningPackEditorModal, (a, b) => dequal(pick(a), pick(b)));
+const TuningPackEditorModalMemo = memoWithPick(TuningPackEditorModal, pick);
+
+export default TuningPackEditorModalMemo;

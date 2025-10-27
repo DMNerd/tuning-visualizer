@@ -2,7 +2,7 @@ import fractionUnicodeModule from "fraction-unicode";
 
 type FractionUnicodeFn = (numerator: number, denominator: number) => string;
 
-const fractionUnicode: FractionUnicodeFn =
+const fractionUnicode =
   typeof fractionUnicodeModule === "function"
     ? fractionUnicodeModule
     : (fractionUnicodeModule as { default: FractionUnicodeFn }).default;
