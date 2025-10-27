@@ -812,13 +812,13 @@ svg {
   min-width: 220px;
 }
 
-.tv-legend .swatches {
+.tv-legend__swatches {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
   gap: 6px;
 }
 
-.tv-legend .swatch {
+.tv-legend__swatch {
   display: grid;
   place-items: center;
   border-radius: 8px;
@@ -827,13 +827,13 @@ svg {
   background: var(--panel);
 }
 
-.tv-legend .dot {
+.tv-legend__dot {
   display: block;
   width: 18px;
   height: 18px;
 }
 
-.tv-legend .dot circle {
+.tv-legend__dot circle {
   stroke-width: 1px;
 }
 

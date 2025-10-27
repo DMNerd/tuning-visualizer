@@ -13,14 +13,18 @@ function DegreeLegend({ k = 7 }) {
 
   return (
     <div className="tv-legend">
-      <div className="swatches">
+      <div className="tv-legend__swatches">
         {Array.from({ length: k }, (_, i) => {
           const degree = i + 1;
           const color = getDegreeColor(degree, k);
           return (
-            <div className="swatch" key={degree} title={`Degree ${degree}`}>
+            <div
+              className="tv-legend__swatch"
+              key={degree}
+              title={`Degree ${degree}`}
+            >
               <svg
-                className="dot"
+                className="tv-legend__dot"
                 aria-hidden
                 width="18"
                 height="18"
