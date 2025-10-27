@@ -940,10 +940,15 @@ svg {
   position: fixed;
   inset: 0;
   z-index: 40;
-  display: grid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   place-items: center;
   padding-block: clamp(16px, 4vw, 48px);
   padding-inline: clamp(12px, 4vw, 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 100dvh;
 }
 
 .tv-modal__backdrop {
@@ -965,7 +970,9 @@ svg {
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   border: 1px solid var(--line);
-  overflow: auto;
+  overflow: hidden;
+  margin-block: auto;
+  touch-action: pan-y;
 }
 
 .tv-modal__header {
@@ -991,8 +998,9 @@ svg {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 12px;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tv-modal__editor {
@@ -1013,12 +1021,15 @@ svg {
 }
 
 .tv-modal__editor .tv-json-editor {
-  width: 100%;
-  max-width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   min-height: 320px;
   height: 100% !important;
   max-height: 100%;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   resize: none;
 }
 

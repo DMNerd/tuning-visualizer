@@ -303,7 +303,7 @@ export default function App() {
     setScale(nextScaleObj.label);
   }, [sysNames, scaleOptions, setRoot, setScale]);
 
-    const randomizeScaleRef = useRef(randomizeScale);
+  const randomizeScaleRef = useRef(randomizeScale);
   useEffect(() => {
     randomizeScaleRef.current = randomizeScale;
   }, [randomizeScale]);
