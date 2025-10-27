@@ -15,6 +15,7 @@ function ExportControls({
   exportAll,
   importFromJson,
   onClearCustom,
+  onManageCustom,
 }) {
   const fileInputRef = useRef(null);
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
@@ -56,6 +57,7 @@ function ExportControls({
   const doExportCurrent = () => exportCurrent?.();
   const doExportAll = () => exportAll?.();
   const doClearCustom = () => onClearCustom?.();
+  const doManageCustom = () => onManageCustom?.();
   const triggerImport = () => fileInputRef.current?.click();
 
   const onFileChange = async (e) => {
@@ -130,6 +132,14 @@ function ExportControls({
             onClick={doExportAll}
           >
             Export all custom (.json)
+          </button>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doManageCustom}
+            disabled={!onManageCustom}
+          >
+            Manage custom tunings
           </button>
           <button
             type="button"
