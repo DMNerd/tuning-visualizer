@@ -1,61 +1,57 @@
-// src/utils/fretLabels.js
+import fractionUnicodeModule from "fraction-unicode";
+
+type FractionUnicodeFn = (numerator: number, denominator: number) => string;
+
+const fractionUnicode: FractionUnicodeFn =
+  typeof fractionUnicodeModule === "function"
+    ? fractionUnicodeModule
+    : (fractionUnicodeModule as { default: FractionUnicodeFn }).default;
 
 export const MICRO_LABEL_STYLES = {
   Letters: "letters",
   Accidentals: "accidentals",
   Fractions: "fractions",
-};
+} as const;
 
-const FRAC_SLASH = "⁄"; // Unicode fraction slash (⁄)
+export type MicroLabelStyle =
+  (typeof MICRO_LABEL_STYLES)[keyof typeof MICRO_LABEL_STYLES];
 
-// Common Unicode vulgar fractions for compact display
-const VULGAR = {
-  "1/2": "½",
-  "1/3": "⅓",
-  "2/3": "⅔",
-  "1/4": "¼",
-  "3/4": "¾",
-  "1/5": "⅕",
-  "2/5": "⅖",
-  "3/5": "⅗",
-  "4/5": "⅘",
-  "1/6": "⅙",
-  "5/6": "⅚",
-  "1/8": "⅛",
-  "3/8": "⅜",
-  "5/8": "⅝",
-  "7/8": "⅞",
-  "1/10": "⅒",
-};
+type Accidental = "sharp" | "flat";
 
-function gcd(a, b) {
-  a = Math.abs(a);
-  b = Math.abs(b);
-  while (b) [a, b] = [b, a % b];
-  return a || 1;
+function gcd(a: number, b: number): number {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y) [x, y] = [y, x % y];
+  return x || 1;
 }
 
-function simplify(n, d) {
+function simplify(n: number, d: number): [number, number] {
   if (n === 0) return [0, 1];
   const g = gcd(n, d);
   return [Math.floor(n / g), Math.floor(d / g)];
 }
 
-function formatFractionLabel(baseSemi, num, den) {
+function formatFractionLabel(
+  baseSemi: number,
+  num: number,
+  den: number,
+): string {
   if (num === 0) return String(baseSemi);
   if (num === den) return String(baseSemi + 1);
 
   // reduce and try to use a single glyph if available
   const [n, d] = simplify(num, den);
-  const key = `${n}/${d}`;
-  const glyph = VULGAR[key];
-  if (glyph) return `${baseSemi}${glyph}`; // e.g., 6½
+  const glyph = fractionUnicode(n, d);
+  if (glyph.length === 1) return `${baseSemi}${glyph}`; // e.g., 6½
 
-  // fallback: compact ascii using Unicode fraction slash (no extra spaces)
-  return `${baseSemi}+${n}${FRAC_SLASH}${d}`; // e.g., 6+5⁄12
+  // Prefix with "+" so multi-character fractions stay readable next to the base semitone.
+  return `${baseSemi}+${glyph}`; // e.g., 6+⁵⁄₁₂
 }
 
-function perSemitoneInfo(fret, divisions) {
+function perSemitoneInfo(
+  fret: number,
+  divisions: number,
+): { baseSemi: number; num: number; den: number } {
   // position expressed in 12-TET semitone units
   const pos12 = (fret * 12) / divisions;
   const baseSemi = Math.floor(pos12);
@@ -65,7 +61,7 @@ function perSemitoneInfo(fret, divisions) {
   return { baseSemi, num, den };
 }
 
-function labelLetters(fret, divisions) {
+function labelLetters(fret: number, divisions: number): string {
   // If divisions is a multiple of 12 → k micro-steps per 12-TET semitone
   if (divisions % 12 === 0) {
     const k = divisions / 12;
@@ -90,7 +86,11 @@ function labelLetters(fret, divisions) {
   return `${n}a`;
 }
 
-function labelAccidentals(fret, divisions, accidental = "sharp") {
+function labelAccidentals(
+  fret: number,
+  divisions: number,
+  accidental: Accidental = "sharp",
+): string {
   // Only well-defined when divisions is a multiple of 12.
   if (divisions % 12 === 0) {
     const k = divisions / 12;
@@ -110,24 +110,33 @@ function labelAccidentals(fret, divisions, accidental = "sharp") {
   return formatFractionLabel(baseSemi, num, den);
 }
 
-function labelFractions(fret, divisions) {
+function labelFractions(fret: number, divisions: number): string {
   const { baseSemi, num, den } = perSemitoneInfo(fret, divisions);
   return formatFractionLabel(baseSemi, num, den);
 }
 
-export function buildFretLabel(fret, divisions, opts = {}) {
+export interface BuildFretLabelOptions {
+  microStyle?: MicroLabelStyle;
+  accidental?: Accidental;
+}
+
+export function buildFretLabel(
+  fret: number,
+  divisions: number,
+  opts: BuildFretLabelOptions = {},
+): string {
   const style = opts.microStyle ?? MICRO_LABEL_STYLES.Letters;
   if (!Number.isFinite(fret) || !Number.isFinite(divisions) || divisions <= 0)
     return "";
 
-  // 12‑TET trivial case
+  // 12-TET trivial case
   if (divisions === 12) return String(fret);
 
   switch (style) {
     case MICRO_LABEL_STYLES.Fractions:
       return labelFractions(fret, divisions);
     case MICRO_LABEL_STYLES.Accidentals:
-      return labelAccidentals(fret, divisions, opts.accidental);
+      return labelAccidentals(fret, divisions, opts.accidental ?? "sharp");
     case MICRO_LABEL_STYLES.Letters:
     default:
       return labelLetters(fret, divisions);
@@ -135,7 +144,12 @@ export function buildFretLabel(fret, divisions, opts = {}) {
 }
 
 // Helper for tests and previews
-export function sampleLabels(start, count, divisions, opts = {}) {
+export function sampleLabels(
+  start: number,
+  count: number,
+  divisions: number,
+  opts: BuildFretLabelOptions = {},
+): string[] {
   return Array.from({ length: count }, (_, i) =>
     buildFretLabel(start + i, divisions, opts),
   );

@@ -1,4 +1,4 @@
-export function ordinal(n) {
+export function ordinal(n: number): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return `${n}st`;

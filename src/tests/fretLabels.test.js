@@ -5,7 +5,7 @@ import {
   buildFretLabel,
   MICRO_LABEL_STYLES,
   sampleLabels,
-} from "@/utils/fretLabels.js";
+} from "@/utils/fretLabels";
 
 // ───────────────── 12‑TET (baseline) ─────────────────
 test("12-TET integers only across styles", () => {
@@ -150,14 +150,14 @@ test("36-TET letters and accidentals show two distinct micro steps; fractions co
 test("19-TET fractions (unicode slash) and accidental fallback", () => {
   assert.equal(
     buildFretLabel(1, 19, { microStyle: MICRO_LABEL_STYLES.Fractions }),
-    "0+12⁄19",
+    "0+¹²⁄₁₉",
   );
   assert.equal(
     buildFretLabel(1, 19, {
       microStyle: MICRO_LABEL_STYLES.Accidentals,
       accidental: "sharp",
     }),
-    "0+12⁄19",
+    "0+¹²⁄₁₉",
   );
 });
 
