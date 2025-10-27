@@ -200,7 +200,10 @@ export default function App() {
 
   const [stringMeta, setStringMeta] = useState(null);
 
-  const { pcFromName, sysNames } = useSystemNoteNames(system, accidental);
+  const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
+    system,
+    accidental,
+  );
   useEffect(() => {
     ensureValidRoot(sysNames);
   }, [ensureValidRoot, sysNames]);
@@ -317,6 +320,25 @@ export default function App() {
     },
     150,
     [randomizeHotkeyTick],
+  );
+
+  const handleSelectNote = useCallback(
+    (pc, providedName, event) => {
+      const noteName = providedName ?? nameForPc(pc);
+      if (!noteName) return;
+      if (!sysNames.includes(noteName)) return;
+
+      if (event?.type === "contextmenu" || event?.button === 2) {
+        event?.preventDefault?.();
+        if (typeof setChordRoot === "function") {
+          setChordRoot(noteName);
+        }
+        return;
+      }
+
+      setRoot(noteName);
+    },
+    [nameForPc, sysNames, setChordRoot, setRoot],
   );
 
   const handleRandomizeHotkey = useCallback(() => {
@@ -508,6 +530,7 @@ export default function App() {
                 colorByDegree={colorByDegree}
                 hideNonChord={hideNonChord}
                 stringMeta={effectiveStringMeta}
+                onSelectNote={handleSelectNote}
                 capoFret={capoFret}
                 onSetCapo={toggleCapoAt}
               />

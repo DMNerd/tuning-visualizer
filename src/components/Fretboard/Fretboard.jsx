@@ -31,6 +31,7 @@ const Fretboard = forwardRef(function Fretboard(
     colorByDegree,
     hideNonChord,
     stringMeta,
+    onSelectNote,
     capoFret,
     onSetCapo = () => {},
   },
@@ -346,6 +347,17 @@ const Fretboard = forwardRef(function Fretboard(
             fill={n.fill}
             stroke={n.inChord ? "var(--fg)" : "none"}
             strokeWidth={n.isChordRoot ? 2.4 : n.inChord ? 1.8 : 0}
+            onClick={(event) => {
+              if (!onSelectNote) return;
+              const noteName = nameForPc(n.pc);
+              onSelectNote(n.pc, noteName, event);
+            }}
+            onContextMenu={(event) => {
+              if (!onSelectNote) return;
+              event.preventDefault();
+              const noteName = nameForPc(n.pc);
+              onSelectNote(n.pc, noteName, event);
+            }}
           />
         ))}
       </g>
@@ -361,6 +373,17 @@ const Fretboard = forwardRef(function Fretboard(
             x={displayX(n.cx)}
             y={n.cy + 4}
             textAnchor="middle"
+            onClick={(event) => {
+              if (!onSelectNote) return;
+              const noteName = nameForPc(n.pc);
+              onSelectNote(n.pc, noteName, event);
+            }}
+            onContextMenu={(event) => {
+              if (!onSelectNote) return;
+              event.preventDefault();
+              const noteName = nameForPc(n.pc);
+              onSelectNote(n.pc, noteName, event);
+            }}
           >
             {n.label}
           </text>
@@ -444,6 +467,7 @@ function pickRenderProps(p) {
     chordPCs: p.chordPCs,
     chordRootPc: p.chordRootPc,
     stringMeta: p.stringMeta,
+    onSelectNote: p.onSelectNote,
   };
 }
 
