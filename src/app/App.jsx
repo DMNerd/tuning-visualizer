@@ -243,7 +243,6 @@ export default function App() {
   useAccidentalRespell({
     system,
     accidental,
-    pcFromName,
     setRoot,
     setTuning,
     setChordRoot,
@@ -580,6 +579,11 @@ export default function App() {
             hideNonChord={hideNonChord}
             setHideNonChord={setHideNonChord}
             supportsMicrotonal={system.divisions === 24}
+            system={system}
+            rootIx={rootIx}
+            intervals={intervals}
+            chordPCs={chordPCs}
+            chordRootPc={chordRootIx}
           />
         </ErrorBoundary>
         <ErrorBoundary

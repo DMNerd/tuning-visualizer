@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { toast } from "react-hot-toast";
+import { withToastPromise } from "@/utils/toast";
 import { useCopyToClipboard, useToggle } from "react-use";
 import {
   FiAlertTriangle,
@@ -34,18 +35,21 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
     return JSON.stringify(info, null, 2);
   }, [error]);
 
-  const copyDetails = async () => {
-    try {
-      const success = await copy(details);
-      if (success) {
-        toast.success("Error details copied.");
-      } else {
-        toast.error("Could not copy to clipboard.");
-      }
-    } catch {
-      toast.error("Could not copy to clipboard.");
-    }
-  };
+  const copyDetails = () =>
+    withToastPromise(
+      async () => {
+        const success = await copy(details);
+        if (!success) {
+          throw new Error("Copy failed");
+        }
+      },
+      {
+        loading: "Copying error details…",
+        success: "Error details copied.",
+        error: "Could not copy to clipboard.",
+      },
+      "error-details-copy",
+    );
 
   const hardReload = () => {
     window.location.reload();

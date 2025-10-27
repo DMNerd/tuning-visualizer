@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
 import { memoWithPick } from "@/utils/memo";
+import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 
 function ChordBuilder({
   root,
@@ -21,6 +23,11 @@ function ChordBuilder({
   defaultRoot = "C",
   defaultType = "maj",
   supportsMicrotonal = false,
+  system,
+  rootIx,
+  intervals,
+  chordPCs,
+  chordRootPc,
 }) {
   const resetDefaults = () => {
     onRootChange(defaultRoot);
@@ -30,6 +37,82 @@ function ChordBuilder({
   };
 
   const chordTypes = supportsMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
+
+  const safeIntervals = Array.isArray(intervals) ? intervals : [];
+
+  const { scaleSet, degreeForPc } = useScaleAndChord({
+    system,
+    rootIx: typeof rootIx === "number" ? rootIx : 0,
+    intervals: safeIntervals,
+    chordPCs,
+    chordRootPc,
+  });
+
+  const chordSummary = useMemo(() => {
+    if (!chordPCs || chordPCs.size === 0) return null;
+
+    if (!system?.divisions) return null;
+
+    if (scaleSet.size === 0) {
+      return {
+        kind: "info",
+        text: "Select a scale to analyse the chord.",
+      };
+    }
+
+    const divisions = system.divisions;
+    const anchorRaw = Number.isFinite(chordRootPc)
+      ? chordRootPc
+      : Number.isFinite(rootIx)
+        ? rootIx
+        : 0;
+    const anchor = ((anchorRaw % divisions) + divisions) % divisions;
+
+    const pcs = Array.from(chordPCs, (value) => {
+      const wrapped = ((value % divisions) + divisions) % divisions;
+      return wrapped;
+    });
+
+    pcs.sort((a, b) => {
+      const da = (a - anchor + divisions) % divisions;
+      const db = (b - anchor + divisions) % divisions;
+      return da - db;
+    });
+
+    const tones = pcs.map((pc) => {
+      const noteName = sysNames?.[pc] ?? String(pc);
+      const degree = degreeForPc(pc);
+      const inScale = scaleSet.has(pc);
+      return { noteName, degree, inScale };
+    });
+
+    const outside = tones.filter((tone) => !tone.inScale);
+    if (outside.length > 0) {
+      return {
+        kind: "warning",
+        text: `Chord tones outside current scale: ${outside
+          .map((tone) => tone.noteName)
+          .join(", ")}`,
+      };
+    }
+
+    const degreeLabels = tones
+      .map((tone) => (tone.degree != null ? String(tone.degree) : "–"))
+      .join(", ");
+
+    return {
+      kind: "success",
+      text: `Chord degrees in scale: ${degreeLabels}`,
+    };
+  }, [
+    chordPCs,
+    chordRootPc,
+    degreeForPc,
+    rootIx,
+    scaleSet,
+    sysNames,
+    system?.divisions,
+  ]);
 
   return (
     <Section title="Chord Builder" size="sm">
@@ -110,6 +193,15 @@ function ChordBuilder({
               Hide non-chord tones
             </label>
           </div>
+          {chordSummary?.text ? (
+            <small
+              className={clsx("tv-field__help", {
+                "tv-field__help--error": chordSummary.kind === "warning",
+              })}
+            >
+              {chordSummary.text}
+            </small>
+          ) : null}
         </div>
       </div>
     </Section>
@@ -124,6 +216,11 @@ function pick(p) {
     hideNonChord: p.hideNonChord,
     sysNames: p.sysNames,
     supportsMicrotonal: p.supportsMicrotonal,
+    system: p.system,
+    rootIx: p.rootIx,
+    intervals: p.intervals,
+    chordPCs: p.chordPCs,
+    chordRootPc: p.chordRootPc,
   };
 }
 
