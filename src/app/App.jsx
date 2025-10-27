@@ -65,6 +65,9 @@ import ErrorFallback from "@/components/UI/ErrorFallback";
 const TuningPackEditorModal = React.lazy(
   () => import("@/components/UI/TuningPackEditorModal"),
 );
+const TuningPackManagerModal = React.lazy(
+  () => import("@/components/UI/TuningPackManagerModal"),
+);
 
 // hooks
 import { useTheme } from "@/hooks/useTheme";
@@ -264,6 +267,7 @@ export default function App() {
     exportAll,
     getCurrentTuningPack,
     saveCustomTuning,
+    deleteCustomTuning,
     clearCustomTunings,
   } = useTuningIO({ systemId, strings, TUNINGS });
 
@@ -286,6 +290,7 @@ export default function App() {
 
   const [editorState, setEditorState] = useState(null);
   const [pendingPresetName, setPendingPresetName] = useState(null);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
 
   useEffect(() => {
     setStringMeta(null);
@@ -409,6 +414,63 @@ export default function App() {
       originalName: existing.name,
     });
   }, [selectedPreset, customPresetNames, customTunings]);
+
+  const handleOpenManage = useCallback(() => {
+    setIsManagerOpen(true);
+  }, [setIsManagerOpen]);
+
+  const handleCloseManage = useCallback(() => {
+    setIsManagerOpen(false);
+  }, [setIsManagerOpen]);
+
+  const handleEditFromManager = useCallback(
+    (pack) => {
+      if (!pack) return;
+      const name = typeof pack?.name === "string" ? pack.name : null;
+      setEditorState({
+        mode: "edit",
+        initialPack: pack,
+        originalName: name,
+      });
+      setIsManagerOpen(false);
+    },
+    [setEditorState, setIsManagerOpen],
+  );
+
+  const handleDeleteCustom = useCallback(
+    async (name) => {
+      if (typeof deleteCustomTuning !== "function") return false;
+      if (typeof name !== "string" || !name.trim()) return false;
+
+      let ok = true;
+      if (typeof confirm === "function") {
+        ok = await confirm({
+          title: "Remove custom tuning?",
+          message:
+            "This will permanently delete the selected custom tuning pack.",
+          confirmText: "Remove pack",
+          cancelText: "Cancel",
+          toastId: `confirm-delete-${slug(name)}`,
+        });
+      }
+
+      if (!ok) return false;
+
+      return withToastPromise(
+        () => Promise.resolve(deleteCustomTuning(name)),
+        {
+          loading: "Removing custom tuning…",
+          success: "Custom tuning removed.",
+          error: "Unable to remove custom tuning.",
+        },
+        `delete-custom-${slug(name)}`,
+      ).then(() => {
+        setPendingPresetName((prev) => (prev === name ? null : prev));
+        return true;
+      });
+    },
+    [deleteCustomTuning, confirm, setPendingPresetName],
+  );
 
   const handleEditorCancel = useCallback(() => {
     setEditorState(null);
@@ -694,6 +756,7 @@ export default function App() {
             exportAll={exportAll}
             importFromJson={importFromJson}
             onClearCustom={handleClearCustomTunings}
+            onManageCustom={handleOpenManage}
           />
         </ErrorBoundary>
       </footer>
@@ -713,6 +776,25 @@ export default function App() {
             onCancel={handleEditorCancel}
             onSubmit={handleEditorSubmit}
             themeMode={themeMode}
+          />
+        </React.Suspense>
+      ) : null}
+      {isManagerOpen ? (
+        <React.Suspense
+          fallback={
+            <div className="tv-modal-suspense" role="status" aria-live="polite">
+              Loading manager...
+            </div>
+          }
+        >
+          <TuningPackManagerModal
+            isOpen={isManagerOpen}
+            tunings={customTunings}
+            systems={TUNINGS}
+            themeMode={themeMode}
+            onClose={handleCloseManage}
+            onEdit={handleEditFromManager}
+            onDelete={handleDeleteCustom}
           />
         </React.Suspense>
       ) : null}

@@ -9,7 +9,9 @@ function getSystemIdByEdo(systems, edo) {
   const entries = Object.entries(systems);
   for (const [id, value] of entries) {
     if (!value) continue;
-    const divisions = Number(value?.divisions ?? value?.edo ?? value?.system?.edo);
+    const divisions = Number(
+      value?.divisions ?? value?.edo ?? value?.system?.edo,
+    );
     if (Number.isFinite(divisions) && divisions === edo) {
       return id;
     }
@@ -78,13 +80,17 @@ function TuningPackManagerModal({
       if (!normalized) return;
 
       const { edo, stringsCount } = normalized;
-      const systemId = Number.isFinite(edo) ? getSystemIdByEdo(systems, edo) : null;
+      const systemId = Number.isFinite(edo)
+        ? getSystemIdByEdo(systems, edo)
+        : null;
       const systemLabel = systemId
         ? systemId
         : Number.isFinite(edo)
-        ? `${edo}-TET`
-        : "Unknown system";
-      const normalizedStringsCount = Number.isFinite(stringsCount) ? stringsCount : null;
+          ? `${edo}-TET`
+          : "Unknown system";
+      const normalizedStringsCount = Number.isFinite(stringsCount)
+        ? stringsCount
+        : null;
       const key = `${systemLabel}__${normalizedStringsCount ?? "unknown"}`;
 
       if (!grouped.has(key)) {
@@ -116,7 +122,9 @@ function TuningPackManagerModal({
 
     result.forEach((group) => {
       group.packs.sort((a, b) =>
-        a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+        a.displayName.localeCompare(b.displayName, undefined, {
+          sensitivity: "base",
+        }),
       );
     });
 
@@ -154,7 +162,8 @@ function TuningPackManagerModal({
         <header className="tv-modal__header">
           <h2>Manage custom tunings</h2>
           <p className="tv-modal__summary">
-            Review your saved packs, edit their details, or remove the ones you no longer need.
+            Review your saved packs, edit their details, or remove the ones you
+            no longer need.
           </p>
         </header>
         <div className="tv-modal__body">
@@ -168,7 +177,8 @@ function TuningPackManagerModal({
                       <span>{formatStringsCount(group.stringsCount)}</span>
                     </div>
                     <span className="tv-modal__manager-group-count">
-                      {group.packs.length} {group.packs.length === 1 ? "pack" : "packs"}
+                      {group.packs.length}{" "}
+                      {group.packs.length === 1 ? "pack" : "packs"}
                     </span>
                   </header>
                   <ul className="tv-modal__manager-list">
@@ -183,24 +193,32 @@ function TuningPackManagerModal({
                           className="tv-modal__manager-item"
                         >
                           <div className="tv-modal__manager-pack">
-                            <span className="tv-modal__manager-pack-name">{pack.displayName}</span>
+                            <span className="tv-modal__manager-pack-name">
+                              {pack.displayName}
+                            </span>
                             {preview ? (
-                              <span className="tv-modal__manager-pack-preview">{preview}</span>
+                              <span className="tv-modal__manager-pack-preview">
+                                {preview}
+                              </span>
                             ) : null}
                           </div>
                           <div className="tv-modal__manager-actions">
                             <button
                               type="button"
-                              className="tv-button"
+                              className="tv-button tv-button--icon tv-button--ghost tv-button--accent"
                               onClick={() => handleEdit(pack.raw)}
+                              aria-label={`Edit ${pack.displayName}`}
+                              title="Edit"
                             >
                               <FiEdit2 aria-hidden="true" focusable="false" />
                               <span className="tv-button__label">Edit</span>
                             </button>
                             <button
                               type="button"
-                              className="tv-button"
+                              className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
                               onClick={() => handleDelete(pack.rawName)}
+                              aria-label={`Remove ${pack.displayName}`}
+                              title="Remove"
                             >
                               <FiTrash2 aria-hidden="true" focusable="false" />
                               <span className="tv-button__label">Remove</span>

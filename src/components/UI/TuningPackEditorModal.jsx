@@ -230,7 +230,7 @@ function TuningPackEditorModal({
 
   const icons = useMemo(() => {
     const base = {
-      size: 14,
+      size: 18,
       style: { verticalAlign: "middle" },
     };
 
@@ -245,9 +245,7 @@ function TuningPackEditorModal({
       copy: <FiClipboard {...base} style={{ ...base.style, ...accent }} />,
       ok: <FiCheck {...base} style={{ ...base.style, ...accent }} />,
       cancel: <FiX {...base} style={{ ...base.style, ...muted }} />,
-      chevron: (
-        <FiChevronRight {...base} style={{ ...base.style, ...muted }} />
-      ),
+      chevron: <FiChevronRight {...base} style={{ ...base.style, ...muted }} />,
     };
   }, [isDark]);
 

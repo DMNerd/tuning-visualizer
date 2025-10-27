@@ -181,6 +181,7 @@ function pick(p) {
     exportAll: p.exportAll,
     importFromJson: p.importFromJson,
     onClearCustom: p.onClearCustom,
+    onManageCustom: p.onManageCustom,
   };
 }
 

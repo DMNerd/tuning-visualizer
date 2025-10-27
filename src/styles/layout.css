@@ -319,6 +319,43 @@ html.is-fs {
   border-color: var(--line);
 }
 
+.tv-button--ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: color-mix(in oklab, var(--line) 80%, transparent);
+}
+
+.tv-button--ghost:hover,
+.tv-button--ghost:focus-visible {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  color: var(--fg);
+  outline: none;
+}
+
+.tv-button--accent {
+  color: var(--accent);
+}
+.tv-button--danger {
+  color: var(--root);
+}
+
+.tv-button--icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  justify-content: center;
+}
+
+.tv-button--icon .tv-button__label {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .tv-field {
   display: flex;
   flex-direction: column;
@@ -1056,6 +1093,122 @@ svg {
 .tv-modal__error {
   color: var(--root);
   font-weight: 600;
+}
+
+.tv-modal__manager {
+  display: grid;
+  gap: 16px;
+}
+
+.tv-modal__manager-group {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  border-radius: calc(var(--card-radius) - 6px);
+  background: color-mix(in oklab, var(--panel) 88%, transparent);
+}
+
+.tv-modal__manager-group-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tv-modal__manager-group-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tv-modal__manager-group-title h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tv-modal__manager-group-title span {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.tv-modal__manager-group-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.tv-modal__manager-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.tv-modal__manager-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  background: color-mix(in oklab, var(--panel) 96%, transparent);
+}
+
+.tv-modal__manager-pack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tv-modal__manager-pack-name {
+  font-weight: 600;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.tv-modal__manager-pack-preview {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tv-modal__manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tv-modal__manager-actions .tv-button {
+  min-width: 88px;
+}
+
+.tv-modal__empty {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+  padding: 48px 16px;
+  border: 1px dashed color-mix(in oklab, var(--line) 70%, transparent);
+  border-radius: calc(var(--card-radius) - 6px);
+  background: color-mix(in oklab, var(--panel) 90%, transparent);
+  color: var(--muted);
+}
+
+.tv-modal__empty h3 {
+  margin: 0;
+  color: var(--fg);
+}
+
+.tv-modal__empty p {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .tv-modal__footer {
