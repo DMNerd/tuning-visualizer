@@ -9,6 +9,7 @@ import { getDegreeColor } from "@/utils/degreeColors";
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { memoWithPick } from "@/utils/memo";
+import { toStringMetaMap } from "@/lib/meta/meta";
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -103,8 +104,7 @@ const Fretboard = forwardRef(function Fretboard(
     accidental,
   });
 
-  const getMetaFor = (s) =>
-    Array.isArray(stringMeta) ? stringMeta.find((m) => m.index === s) : null;
+  const metaByIndex = useMemo(() => toStringMetaMap(stringMeta), [stringMeta]);
 
   const microLabelOpts = useMemo(
     () => ({
@@ -251,7 +251,7 @@ const Fretboard = forwardRef(function Fretboard(
         {Array.from({ length: strings }).map((_, s) => {
           const y = yForString(s);
           const startX = stringStartX(s);
-          const meta = getMetaFor(s);
+          const meta = metaByIndex.get(s);
           const hasGreyStub = !!meta?.greyBefore && startFretFor(s) > 0;
 
           return (

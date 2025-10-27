@@ -12,10 +12,12 @@ import {
   FiExternalLink,
   FiTrash2,
 } from "react-icons/fi";
+import { useConfirm } from "@/hooks/useConfirm";
 
 export default function ErrorFallback({ error, resetErrorBoundary }) {
   const [open, toggleOpen] = useToggle(false);
   const [, copy] = useCopyToClipboard();
+  const { confirm } = useConfirm();
 
   const summary = useMemo(() => {
     const name = error?.name || "Error";
@@ -55,10 +57,15 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
     window.location.reload();
   };
 
-  const factoryReset = () => {
-    const ok = window.confirm(
-      "This will clear saved settings and custom tunings in this browser for this app. Continue?",
-    );
+  const factoryReset = async () => {
+    const ok = await confirm({
+      title: "Clear saved settings?",
+      message:
+        "This will clear saved settings and custom tunings for this app in this browser.",
+      confirmText: "Clear saved settings",
+      cancelText: "Cancel",
+      toastId: "confirm-clear-storage",
+    });
     if (!ok) return;
     try {
       localStorage.clear();
@@ -146,7 +153,9 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
         <button
           type="button"
           className="tv-button tv-button--block"
-          onClick={factoryReset}
+          onClick={() => {
+            void factoryReset();
+          }}
           title="Clear saved settings and custom tunings"
         >
           <FiTrash2 size={16} />
