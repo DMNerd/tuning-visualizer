@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
 import * as v from "valibot";
@@ -26,7 +26,7 @@ function ensurePack(pack) {
   };
 }
 
-export default function TuningPackEditorModal({
+function TuningPackEditorModal({
   isOpen,
   mode = "create",
   initialPack,
@@ -304,3 +304,17 @@ export default function TuningPackEditorModal({
     document.body,
   );
 }
+
+function areEqual(prevProps, nextProps) {
+  return (
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.mode === nextProps.mode &&
+    prevProps.initialPack === nextProps.initialPack &&
+    prevProps.originalName === nextProps.originalName &&
+    prevProps.onCancel === nextProps.onCancel &&
+    prevProps.onSubmit === nextProps.onSubmit &&
+    prevProps.themeMode === nextProps.themeMode
+  );
+}
+
+export default memo(TuningPackEditorModal, areEqual);

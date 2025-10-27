@@ -5,7 +5,7 @@ import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { toast } from "react-hot-toast";
 import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
-import { buildTuningPack } from "@/lib/export/tuningIO";
+import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 
 /* =========================
    Hook
@@ -135,14 +135,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
           const pack = getCurrentTuningPack(tuning, stringMeta);
           if (!pack)
             throw new Error("Nothing to export for the current tuning.");
-          const blob = new Blob([JSON.stringify(pack, null, 2)], {
-            type: "application/json",
-          });
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = `current-tuning.json`;
-          a.click();
-          URL.revokeObjectURL(a.href);
+          downloadJsonFile(pack, "current-tuning.json");
         }),
         {
           loading: "Preparing current tuning…",
@@ -160,14 +153,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       Promise.resolve().then(() => {
         const packs = getAllCustomTunings() || [];
         if (!packs.length) throw new Error("No custom tunings to export.");
-        const blob = new Blob([JSON.stringify(packs, null, 2)], {
-          type: "application/json",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `custom-tunings.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
+        downloadJsonFile(packs, "custom-tunings.json");
       }),
       {
         loading: "Collecting custom tunings…",

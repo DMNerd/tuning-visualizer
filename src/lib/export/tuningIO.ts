@@ -20,6 +20,27 @@ export type TuningPack = {
   meta?: { stringMeta?: StringMeta[]; [k: string]: unknown };
 };
 
+export function downloadJsonFile(payload: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const href = URL.createObjectURL(blob);
+
+  try {
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = filename;
+
+    const body = document.body;
+    if (body) body.appendChild(anchor);
+
+    anchor.click();
+    anchor.remove();
+  } finally {
+    URL.revokeObjectURL(href);
+  }
+}
+
 export function buildTuningPack(params: {
   systemDivisions: number; // e.g. 24 for 24-TET
   systemId: string; // e.g. "24-TET"
@@ -57,15 +78,5 @@ export function buildTuningPack(params: {
 }
 
 export function downloadTuningPack(pack: TuningPack, filename?: string) {
-  const blob = new Blob([JSON.stringify(pack, null, 2)], {
-    type: "application/json",
-  });
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = href;
-  a.download = `${filename || pack.name}.tuning.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(href);
+  downloadJsonFile(pack, `${filename || pack.name}.tuning.json`);
 }
