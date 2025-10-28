@@ -70,3 +70,25 @@
   --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
   --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
 }
+
+:root[data-theme="dark"] .tv-modal__editor {
+  --jer-select-border: color-mix(in oklab, var(--line) 70%, transparent);
+  --jer-select-focus: color-mix(in oklab, var(--accent) 55%, var(--fg) 45%);
+  --jer-select-arrow: color-mix(in oklab, var(--fg) 85%, var(--accent) 15%);
+  --jer-select-bg: color-mix(in oklab, var(--panel) 85%, var(--bg) 15%);
+  --jer-form-border: 1px solid color-mix(in oklab, var(--line) 75%, transparent);
+  --jer-form-border-focus: 1px solid
+    color-mix(in oklab, var(--accent) 60%, var(--fg) 40%);
+  --jer-icon-copy-color: color-mix(in oklab, var(--accent) 45%, var(--fg) 55%);
+  --jer-highlight-color: color-mix(in oklab, var(--accent) 30%, transparent);
+  --jer-input-color: var(--fg);
+}
+
+:root[data-theme="dark"] .tv-modal__editor .jer-drag-n-drop-padding {
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--line) 50%);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+:root[data-theme="dark"] .tv-modal__editor .jer-drop-target-bottom {
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+}

@@ -1049,6 +1049,43 @@ svg {
   border-radius: calc(var(--card-radius) - 6px);
   padding: 12px;
   background: color-mix(in oklab, var(--panel) 88%, var(--bg) 12%);
+  --jer-select-border: var(--line);
+  --jer-select-focus: color-mix(in oklab, var(--accent) 60%, var(--line) 40%);
+  --jer-select-arrow: var(--muted);
+  --jer-select-bg: color-mix(in oklab, var(--panel) 92%, var(--bg) 8%);
+  --jer-form-border: 1px solid var(--line);
+  --jer-form-border-focus: 1px solid
+    color-mix(in oklab, var(--accent) 65%, var(--line) 35%);
+  --jer-icon-copy-color: color-mix(in oklab, var(--accent) 65%, transparent);
+  --jer-highlight-color: color-mix(in oklab, var(--accent) 25%, transparent);
+  --jer-input-color: var(--fg);
+}
+
+.tv-modal__editor .jer-select,
+.tv-modal__editor .jer-select-types {
+  background: var(--jer-select-bg);
+  background-image: none !important;
+  background-color: var(--jer-select-bg) !important;
+  color: var(--jer-input-color);
+}
+
+.tv-modal__editor .jer-drag-n-drop-padding {
+  border: 1px dashed color-mix(in oklab, var(--accent) 45%, var(--line) 55%);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  border-radius: 0.3em;
+}
+
+.tv-modal__editor .jer-drop-target-bottom {
+  background: color-mix(in oklab, var(--accent) 15%, transparent);
+}
+
+.tv-modal__editor .jer-collection-item-count,
+.tv-modal__editor .jer-error-slug {
+  color: var(--muted);
+}
+
+.tv-modal__editor .jer-copy-pulse:hover {
+  opacity: 0.92;
 }
 
 .tv-modal__editor > div {
