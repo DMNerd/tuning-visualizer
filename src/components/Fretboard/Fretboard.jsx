@@ -11,6 +11,15 @@ import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { memoWithPick } from "@/utils/memo";
 import { toStringMetaMap } from "@/lib/meta/meta";
 
+const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
+const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
+const CHORD_ROOT_STROKE_WIDTH = 2.4;
+const CHORD_NOTE_STROKE_WIDTH = 1.8;
+const PANEL_CORNER_RADIUS = 14;
+const INLAY_RADIUS = 6.5;
+const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
+const NUT_VERTICAL_PADDING = 8;
+
 const Fretboard = forwardRef(function Fretboard(
   {
     strings,
@@ -154,8 +163,8 @@ const Fretboard = forwardRef(function Fretboard(
         const isStandard = (f * 12) % N === 0;
         const isMicro = !isStandard;
 
-        const rBase = (isRoot ? 1.1 : 1) * dotSize;
-        const r = inChord ? rBase * 1.05 : rBase;
+        const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * dotSize;
+        const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
 
         let fill;
         if (colorByDegree) {
@@ -235,16 +244,16 @@ const Fretboard = forwardRef(function Fretboard(
           y="0"
           width={width}
           height={height}
-          rx="14"
+          rx={PANEL_CORNER_RADIUS}
           fill="var(--panel)"
         />
 
         <rect
           className="tv-fretboard__nut"
           x={wireX(capoFret)}
-          y={padTop - 8}
+          y={padTop - NUT_VERTICAL_PADDING}
           width={nutW}
-          height={height - padTop - padBottom + 16}
+          height={height - padTop - padBottom + NUT_VERTICAL_PADDING * 2}
           rx="2"
         />
 
@@ -309,7 +318,7 @@ const Fretboard = forwardRef(function Fretboard(
               className="tv-fretboard__inlay"
               cx={cx}
               cy={cy}
-              r="6.5"
+              r={INLAY_RADIUS}
             />
           );
         })}
@@ -318,21 +327,27 @@ const Fretboard = forwardRef(function Fretboard(
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
           const cx = padLeft + nutW + (prev + curr) / 2;
-          const cy1 = padTop + (height - padTop - padBottom) / 2 - 14;
-          const cy2 = padTop + (height - padTop - padBottom) / 2 + 14;
+          const cy1 =
+            padTop +
+            (height - padTop - padBottom) / 2 -
+            DOUBLE_INLAY_VERTICAL_OFFSET;
+          const cy2 =
+            padTop +
+            (height - padTop - padBottom) / 2 +
+            DOUBLE_INLAY_VERTICAL_OFFSET;
           return (
             <g key={`inlay-d-${f}`}>
               <circle
                 className="tv-fretboard__inlay"
                 cx={cx}
                 cy={cy1}
-                r="6.5"
+                r={INLAY_RADIUS}
               />
               <circle
                 className="tv-fretboard__inlay"
                 cx={cx}
                 cy={cy2}
-                r="6.5"
+                r={INLAY_RADIUS}
               />
             </g>
           );
@@ -346,7 +361,13 @@ const Fretboard = forwardRef(function Fretboard(
             r={n.r}
             fill={n.fill}
             stroke={n.inChord ? "var(--fg)" : "none"}
-            strokeWidth={n.isChordRoot ? 2.4 : n.inChord ? 1.8 : 0}
+            strokeWidth={
+              n.isChordRoot
+                ? CHORD_ROOT_STROKE_WIDTH
+                : n.inChord
+                  ? CHORD_NOTE_STROKE_WIDTH
+                  : 0
+            }
             onClick={(event) => {
               if (!onSelectNote) return;
               const noteName = nameForPc(n.pc);

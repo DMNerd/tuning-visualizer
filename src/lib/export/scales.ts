@@ -1,3 +1,6 @@
+export const PNG_EXPORT_SCALE = 3;
+export const EXPORT_PADDING = 16;
+
 export type ExportHeader = {
   system?: string;
   tuning?: string | string[];
@@ -125,7 +128,7 @@ function inlineComputedStyles(src: Element, dest: Element) {
 
 function withPaddingAndHeader(
   svg: SVGSVGElement,
-  padding = 16,
+  padding = EXPORT_PADDING,
   header: ExportHeader | null = null,
 ): SVGSVGElement {
   const source = cloneSvg(svg, { forceTheme: "light" });
@@ -227,7 +230,7 @@ export function downloadSVG(
   svgEl: SVGSVGElement,
   filename = "fretboard.svg",
   header: ExportHeader | null = null,
-  padding = 16,
+  padding = EXPORT_PADDING,
 ) {
   const svg = withPaddingAndHeader(svgEl, padding, header);
   const xml = new XMLSerializer().serializeToString(svg);
@@ -240,8 +243,8 @@ export function downloadSVG(
 export async function downloadPNG(
   svgEl: SVGSVGElement,
   filename = "fretboard.png",
-  scale = 3,
-  padding = 16,
+  scale = PNG_EXPORT_SCALE,
+  padding = EXPORT_PADDING,
   header: ExportHeader | null = null,
 ) {
   const svg = withPaddingAndHeader(svgEl, padding, header);
@@ -276,7 +279,7 @@ export async function downloadPNG(
 export function printFretboard(
   svgEl: SVGSVGElement,
   header: ExportHeader | null = null,
-  padding = 16,
+  padding = EXPORT_PADDING,
 ) {
   const svg = withPaddingAndHeader(svgEl, padding, header);
   const xml = new XMLSerializer().serializeToString(svg);

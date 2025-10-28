@@ -3,6 +3,8 @@ import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { withToastPromise } from "@/utils/toast";
 import { memoWithPick } from "@/utils/memo";
+import { PNG_EXPORT_SCALE, EXPORT_PADDING } from "@/lib/export/scales";
+
 
 function ExportControls({
   boardRef,
@@ -23,7 +25,13 @@ function ExportControls({
   const doDownloadPNG = () =>
     withToastPromise(
       () =>
-        downloadPNG?.(boardRef?.current, safeFileBase, 3, 16, buildHeader?.()),
+                downloadPNG?.(
+          boardRef?.current,
+          safeFileBase,
+          PNG_EXPORT_SCALE,
+          EXPORT_PADDING,
+          buildHeader?.(),
+        ),
       {
         loading: "Rendering PNG…",
         success: "PNG saved.",
