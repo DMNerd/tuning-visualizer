@@ -2,25 +2,7 @@
   Theme tokens
 ========================= */
 :root {
-  /* colors */
-  --fg: #1b1f23;
-  --muted: #6b7280;
-  --line: #d8dbe0;
-  --bg: #f7f8fa;
-  --accent: #ffb400;
-  --root: #ff6a00;
-  --fret: #c9cdd3;
-  --fret-micro: color-mix(in oklab, var(--fret) 85%, var(--fg) 15%);
-  --fret-w: 1.6px;
-  --fret-w-strong: 2px;
-  --fret-w-micro: 1.3px;
-  --board: #f2f3f6;
-  --panel: #ffffff;
-  --degree-boost: 12%;
-
-  --nut: #fffbe6;
-  --note: var(--accent);
-  --note-micro: #6fa8dc;
+  color-scheme: light dark;
 
   /* layout rhythm */
   --gap: 12px;
@@ -30,6 +12,10 @@
   --space-xs: 6px;
   --space-sm: 10px;
   --icon-size: 1rem;
+  --fret-w: 1.6px;
+  --fret-w-strong: 2px;
+  --fret-w-micro: 1.3px;
+  --degree-boost: 12%;
 
   /* shared card sizing */
   --card-h-sm: clamp(120px, 28vh, 160px);
@@ -43,10 +29,56 @@
   /* motion */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --speed: 220ms;
+}
+
+:root:not([data-theme]),
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* colors */
+  --fg: #1b1f23;
+  --muted: #6b7280;
+  --line: #d8dbe0;
+  --bg: #f7f8fa;
+  --accent: #ffb400;
+  --root: #ff6a00;
+  --fret: #c9cdd3;
+  --fret-micro: color-mix(in oklab, var(--fret) 85%, var(--fg) 15%);
+  --board: #f2f3f6;
+  --panel: #ffffff;
+
+  --nut: #fffbe6;
+  --note: var(--accent);
+  --note-micro: #6fa8dc;
 
   --card-bg: color-mix(in oklab, var(--panel) 95%, var(--fg) 5%);
   --card-border: color-mix(in oklab, var(--line) 92%, var(--fg) 8%);
   --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --line: #3a3f46;
+    --bg: #101214;
+    --panel: #15171a;
+    --board: #1a1d21;
+    --fret: #5b626a;
+    --fret-micro: #7c8a97;
+    --accent: #ffc24b;
+    --root: #ff7a3d;
+
+    --nut: #dcdcdc;
+    --note: var(--accent);
+    --note-micro: #89c2ff;
+
+    --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
+    --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
+    --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
+  }
 }
 
 :root[data-theme="dark"] {
