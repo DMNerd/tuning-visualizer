@@ -1080,6 +1080,40 @@ svg {
   opacity: 0.92;
 }
 
+.tv-modal__editor .jer-collection-text-area {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: var(--jer-form-border);
+  background: color-mix(in oklab, var(--panel) 94%, var(--bg) 6%) !important;
+  color: var(--jer-input-color);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-family: inherit;
+  transition:
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    background-color var(--speed) var(--ease);
+  resize: vertical;
+}
+
+.tv-modal__editor .jer-collection-text-area:focus-visible {
+  outline: none;
+  border: var(--jer-form-border-focus);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+.tv-modal__editor .jer-collection-text-area::placeholder {
+  color: color-mix(in oklab, var(--muted) 75%, transparent);
+  opacity: 1;
+}
+
+.tv-modal__editor .jer-collection-text-area:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .tv-modal__editor > div {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
