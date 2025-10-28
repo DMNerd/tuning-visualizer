@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useKey } from "react-use";
 
 export default function ConfirmDialog({
@@ -10,18 +10,24 @@ export default function ConfirmDialog({
   onCancel,
   onDismiss,
 }) {
+  const dismissRef = useRef(onDismiss);
+
+  useEffect(() => {
+    dismissRef.current = onDismiss;
+  }, [onDismiss]);
+
   useEffect(
     () => () => {
-      if (typeof onDismiss === "function") {
-        onDismiss();
+      if (typeof dismissRef.current === "function") {
+        dismissRef.current();
       }
     },
-    [onDismiss],
+    [],
   );
 
   const handleCancel = useCallback(
     (event) => {
-      event.preventDefault();
+      event?.preventDefault?.();
       if (typeof onCancel === "function") {
         onCancel();
       }
@@ -31,7 +37,7 @@ export default function ConfirmDialog({
 
   const handleConfirm = useCallback(
     (event) => {
-      event.preventDefault();
+      event?.preventDefault?.();
       if (typeof onConfirm === "function") {
         onConfirm();
       }
@@ -69,7 +75,7 @@ export default function ConfirmDialog({
       <div className="tv-overlay__actions">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancel}
           autoFocus
           className="tv-overlay__button tv-overlay__button--muted"
         >
@@ -77,7 +83,7 @@ export default function ConfirmDialog({
         </button>
         <button
           type="button"
-          onClick={onConfirm}
+          onClick={handleConfirm}
           className="tv-overlay__button tv-overlay__button--accent"
         >
           {confirmText}
