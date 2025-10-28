@@ -2,6 +2,10 @@ import { useCallback, useMemo } from "react";
 import { useKey } from "react-use";
 import { clamp } from "@/utils/math";
 import {
+  FRETS_MAX,
+  FRETS_MIN,
+  STR_MAX,
+  STR_MIN,
   DOT_SIZE_DEFAULT,
   DOT_SIZE_MAX,
   DOT_SIZE_MIN,
@@ -154,10 +158,10 @@ export function useHotkeys(options) {
     strings,
     frets,
     onShowCheatsheet,
-    minStrings = 4,
-    maxStrings = 8,
-    minFrets = 12,
-    maxFrets = 30,
+    minStrings = STR_MIN,
+    maxStrings = STR_MAX,
+    minFrets = FRETS_MIN,
+    maxFrets = FRETS_MAX,
     minDot = DOT_SIZE_MIN,
     maxDot = DOT_SIZE_MAX,
     onRandomizeScale,
