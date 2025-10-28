@@ -10,6 +10,7 @@ export default function ConfirmDialog({
   onCancel,
   onDismiss,
 }) {
+  const skipFirstCleanup = useRef(true);
   const dismissRef = useRef(onDismiss);
 
   useEffect(() => {
@@ -18,6 +19,11 @@ export default function ConfirmDialog({
 
   useEffect(
     () => () => {
+      if (skipFirstCleanup.current) {
+        skipFirstCleanup.current = false;
+        return;
+      }
+
       if (typeof dismissRef.current === "function") {
         dismissRef.current();
       }
