@@ -1,4 +1,3 @@
-// eslint.config.js
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -12,19 +11,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(["dist", "build"]),
 
-  // JavaScript / JSX
   {
     files: ["**/*.{js,jsx}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        ecmaFeatures: { jsx: true },
-      },
+      parserOptions: { ecmaFeatures: { jsx: true } },
       globals: globals.browser,
     },
     extends: [
@@ -35,6 +29,9 @@ export default defineConfig([
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
     },
+    settings: {
+      react: { version: "detect" },
+    },
   },
 
   // TypeScript / TSX (type-aware)
@@ -43,17 +40,18 @@ export default defineConfig([
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
         projectService: true,
         tsconfigRootDir: __dirname,
+        // Point ESLint’s type-aware rules at our project
+        project: ["./tsconfig.eslint.json"],
+        ecmaFeatures: { jsx: true },
       },
       globals: globals.browser,
     },
     plugins: { "@typescript-eslint": tseslint.plugin },
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.recommendedTypeChecked, // strong TS rules that need type info
       reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
     ],
@@ -64,6 +62,14 @@ export default defineConfig([
         { varsIgnorePattern: "^[A-Z_]" },
       ],
       "no-undef": "off",
+
+      // A few helpful TS additions (tweak to taste)
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+    },
+    settings: {
+      react: { version: "detect" },
     },
   },
 ]);
