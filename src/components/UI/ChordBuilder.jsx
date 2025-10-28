@@ -9,6 +9,7 @@ import {
 import { FiRotateCcw } from "react-icons/fi";
 import { memoWithPick } from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
+import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 
 function ChordBuilder({
   root,
@@ -21,8 +22,8 @@ function ChordBuilder({
   setShowChord,
   hideNonChord,
   setHideNonChord,
-  defaultRoot = "C",
-  defaultType = "maj",
+  defaultRoot = ROOT_DEFAULT,
+  defaultType = CHORD_DEFAULT,
   supportsMicrotonal = false,
   system,
   rootIx,

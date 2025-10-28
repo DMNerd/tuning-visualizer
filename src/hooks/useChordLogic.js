@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useToggle } from "react-use";
+import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import {
   buildChordPCsFromPc,
   isMicrotonalChordType,
 } from "@/lib/theory/chords";
 
 export function useChordLogic(system, pcFromName) {
-  const [chordRoot, setChordRoot] = useState("C");
-  const [chordType, setChordType] = useState("maj");
+  const [chordRoot, setChordRoot] = useState(ROOT_DEFAULT);
+  const [chordType, setChordType] = useState(CHORD_DEFAULT);
   const [showChord, toggleShowChord] = useToggle(false);
   const [hideNonChord, toggleHideNonChord] = useToggle(false);
 
@@ -27,7 +28,7 @@ export function useChordLogic(system, pcFromName) {
   useEffect(() => {
     if (system.divisions === 24) return;
     if (!isMicrotonalChordType(chordType)) return;
-    setChordType("maj");
+    setChordType(CHORD_DEFAULT);
   }, [system.divisions, chordType, setChordType]);
 
   return useMemo(

@@ -293,13 +293,6 @@ html.is-fs {
   font-size: 0.75rem;
 }
 
-.tv-button--icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  justify-content: center;
-}
-
 .tv-button--fullscreen.is-active {
   background: color-mix(in oklab, var(--fg) 16%, transparent);
 }
@@ -972,7 +965,6 @@ svg {
   display: flex;
   justify-content: center;
   align-items: center;
-  place-items: center;
   padding-block: clamp(16px, 4vw, 48px);
   padding-inline: clamp(12px, 4vw, 48px);
   overflow-y: auto;
