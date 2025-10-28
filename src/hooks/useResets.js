@@ -6,6 +6,8 @@ import {
   ROOT_DEFAULT,
   SYSTEM_DEFAULT,
   getFactoryFrets,
+  SCALE_DEFAULT,
+  CHORD_DEFAULT,
 } from "@/lib/config/appDefaults";
 
 export function useResets({
@@ -46,9 +48,9 @@ export function useResets({
 
   const resetMusicalState = useCallback(() => {
     setRoot(ROOT_DEFAULT);
-    setScale("Major (Ionian)");
+    setScale(SCALE_DEFAULT);
     setChordRoot(ROOT_DEFAULT);
-    setChordType("maj");
+    setChordType(CHORD_DEFAULT);
     setShowChord(false);
     setHideNonChord(false);
     setPreset?.("Factory default");

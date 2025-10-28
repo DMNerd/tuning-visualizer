@@ -2,6 +2,7 @@ import { clamp } from "@/utils/math";
 
 export type SystemId = `${number}-TET`;
 export const SCALE_DEFAULT = "Major (Ionian)";
+export const CHORD_DEFAULT = "maj";
 
 /* =========================
    Instrument bounds & factories
