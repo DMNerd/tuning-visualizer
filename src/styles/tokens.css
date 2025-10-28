@@ -50,6 +50,10 @@
   --nut: #fffbe6;
   --note: var(--accent);
   --note-micro: #6fa8dc;
+  --fretboard-string: #8b929a;
+  --fretboard-inlay: #cfd5dd;
+  --fretboard-note-fill: #111111;
+  --fretboard-nut-stroke: #000000;
 
   --card-bg: color-mix(in oklab, var(--panel) 95%, var(--fg) 5%);
   --card-border: color-mix(in oklab, var(--line) 92%, var(--fg) 8%);
@@ -74,6 +78,10 @@
     --nut: #dcdcdc;
     --note: var(--accent);
     --note-micro: #89c2ff;
+    --fretboard-string: #8b929a;
+    --fretboard-inlay: #3b4149;
+    --fretboard-note-fill: #0b0b0b;
+    --fretboard-nut-stroke: #000000;
 
     --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
     --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
@@ -97,6 +105,10 @@
   --nut: #dcdcdc;
   --note: var(--accent);
   --note-micro: #89c2ff;
+  --fretboard-string: #8b929a;
+  --fretboard-inlay: #3b4149;
+  --fretboard-note-fill: #0b0b0b;
+  --fretboard-nut-stroke: #000000;
 
   --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
   --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
