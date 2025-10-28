@@ -594,7 +594,7 @@ svg {
 }
 
 .tv-fretboard__string {
-  stroke: #8b929a;
+  stroke: var(--fretboard-string);
   stroke-width: 1.5;
 }
 
@@ -647,16 +647,12 @@ svg {
 }
 
 .tv-fretboard__inlay {
-  fill: #cfd5dd;
-}
-
-:root[data-theme="dark"] .tv-fretboard__inlay {
-  fill: #3b4149;
+  fill: var(--fretboard-inlay);
 }
 
 .tv-fretboard__nut {
   fill: var(--nut);
-  stroke: #000;
+  stroke: var(--fretboard-nut-stroke);
   stroke-width: 2.3;
 }
 
@@ -664,15 +660,11 @@ svg {
   font-size: 10.5px;
   font-weight: 700;
   pointer-events: none;
-  fill: #111;
+  fill: var(--fretboard-note-fill);
 }
 
 .tv-fretboard__note--root {
   font-size: 11.5px;
-}
-
-:root[data-theme="dark"] .tv-fretboard__note {
-  fill: #0b0b0b;
 }
 
 .tv-theme {
