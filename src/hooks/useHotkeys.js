@@ -1,6 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { useKey } from "react-use";
 import { clamp } from "@/utils/math";
+import {
+  DOT_SIZE_DEFAULT,
+  DOT_SIZE_MAX,
+  DOT_SIZE_MIN,
+} from "@/lib/config/appDefaults";
 
 const isTypingTarget = (el) => {
   if (!el) return false;
@@ -153,8 +158,8 @@ export function useHotkeys(options) {
     maxStrings = 8,
     minFrets = 12,
     maxFrets = 30,
-    minDot = 8,
-    maxDot = 24,
+    minDot = DOT_SIZE_MIN,
+    maxDot = DOT_SIZE_MAX,
     onRandomizeScale,
     onCreateCustomPack,
   } = options;
@@ -238,12 +243,12 @@ export function useHotkeys(options) {
   // Dot size +/-
   useShortcut(",", () =>
     setDisplayPrefs?.((d) => {
-      d.dotSize = clamp((d.dotSize ?? 14) - 1, minDot, maxDot);
+      d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) - 1, minDot, maxDot);
     }),
   );
   useShortcut(".", () =>
     setDisplayPrefs?.((d) => {
-      d.dotSize = clamp((d.dotSize ?? 14) + 1, minDot, maxDot);
+      d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) + 1, minDot, maxDot);
     }),
   );
 

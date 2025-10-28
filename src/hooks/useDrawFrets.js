@@ -1,5 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { usePrevious } from "react-use";
+import { FRETS_MIN, FRETS_MAX } from "@/lib/config/appDefaults";
+import { clamp } from "@/utils/math";
 
 /**
  * Normalize drawn fret count across temperaments.
@@ -26,13 +28,13 @@ export function useDrawFrets({
     }
 
     if (!fretsTouched) {
-      // Preserve drawn wires: nextSelected ≈ baseFrets * (prevDivisions / divisions)
-      const nextSelected = Math.max(
-        12,
-        Math.min(30, Math.round(baseFrets * (prevDivisions / divisions))),
+      const nextSelected = clamp(
+        Math.round(baseFrets * (prevDivisions / divisions)),
+        FRETS_MIN,
+        FRETS_MAX,
       );
       if (nextSelected !== baseFrets) {
-        setFretsRaw(nextSelected); // use raw setter to avoid marking as "touched"
+        setFretsRaw(nextSelected);
       }
     }
   }, [divisions, prevDivisions, baseFrets, fretsTouched, setFretsRaw]);

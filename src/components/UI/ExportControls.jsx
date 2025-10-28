@@ -5,7 +5,6 @@ import { withToastPromise } from "@/utils/toast";
 import { memoWithPick } from "@/utils/memo";
 import { PNG_EXPORT_SCALE, EXPORT_PADDING } from "@/lib/export/scales";
 
-
 function ExportControls({
   boardRef,
   fileBase,
@@ -25,7 +24,7 @@ function ExportControls({
   const doDownloadPNG = () =>
     withToastPromise(
       () =>
-                downloadPNG?.(
+        downloadPNG?.(
           boardRef?.current,
           safeFileBase,
           PNG_EXPORT_SCALE,

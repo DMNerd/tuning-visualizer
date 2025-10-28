@@ -1,9 +1,5 @@
 import { clamp } from "@/utils/math";
 
-export type SystemId = `${number}-TET`;
-export const SCALE_DEFAULT = "Major (Ionian)";
-export const CHORD_DEFAULT = "maj";
-
 /* =========================
    Instrument bounds & factories
 ========================= */
@@ -28,10 +24,16 @@ export function getFactoryFrets(edo: number): number {
 /* =========================
    App-wide defaults
 ========================= */
-
+export type SystemId = `${number}-TET`;
+export const SCALE_DEFAULT = "Major (Ionian)";
+export const CHORD_DEFAULT = "maj";
 export const SYSTEM_DEFAULT: SystemId = "12-TET";
 export const ROOT_DEFAULT = "C";
 export const CAPO_DEFAULT = 0;
+
+export const DOT_SIZE_MIN = 8;
+export const DOT_SIZE_MAX = 24;
+export const DOT_SIZE_DEFAULT = 14;
 
 export const DISPLAY_DEFAULTS = {
   show: "names" as "names" | "degrees" | "intervals" | "fret" | "off",

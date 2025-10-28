@@ -6,6 +6,7 @@ import { getDegreeColor } from "@/utils/degreeColors";
 import { Tooltip } from "react-tooltip";
 import { FiInfo } from "react-icons/fi";
 import { memoWithPick } from "@/utils/memo";
+import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
 
 function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
@@ -230,8 +231,8 @@ function DisplayControls({
               id="dotSize"
               name="dotSize"
               type="range"
-              min="8"
-              max="24"
+              min={DOT_SIZE_MIN}
+              max={DOT_SIZE_MAX}
               value={dotSize}
               onChange={(e) => setDotSize(parseInt(e.target.value, 10))}
             />
