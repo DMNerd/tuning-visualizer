@@ -446,10 +446,13 @@ const Fretboard = forwardRef(function Fretboard(
             }),
           };
 
+          const xForFretNum =
+            notePlacementMode === "onFret" ? wireX(f) : betweenFretsX(f);
+
           return (
             <text
               key={`num-${f}`}
-              x={displayX(betweenFretsX(f))}
+              x={displayX(xForFretNum)}
               y={isStandard ? bottomY : topY}
               textAnchor="middle"
               {...commonProps}
