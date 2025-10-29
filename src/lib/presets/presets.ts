@@ -367,4 +367,11 @@ export const PRESET_TUNING_META = {
       },
     },
   },
+  "24-TET": {
+    4: {
+      "Violin (GDAE)": {
+        board: { fretStyle: "dotted", notePlacement: "onFret" },
+      },
+    },
+  },
 } as const satisfies PresetMetaMap;
