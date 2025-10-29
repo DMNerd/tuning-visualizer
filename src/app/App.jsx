@@ -208,6 +208,10 @@ export default function App() {
   const [stringMeta, setStringMeta] = useState(null);
   const [boardMeta, setBoardMeta] = useState(null);
 
+  const handleSaveDefault = useCallback(() => {
+    saveDefault(stringMeta, boardMeta);
+  }, [saveDefault, stringMeta, boardMeta]);
+
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
     accidental,
@@ -709,7 +713,7 @@ export default function App() {
             customPresetNames={customPresetNames}
             selectedPreset={selectedPreset}
             setSelectedPreset={setPreset}
-            handleSaveDefault={saveDefault}
+            handleSaveDefault={handleSaveDefault}
             handleResetFactoryDefault={resetInstrumentFactory}
             systemId={systemId}
             onCreateCustomPack={handleCreateCustomPack}

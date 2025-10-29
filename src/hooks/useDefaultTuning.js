@@ -7,6 +7,41 @@ function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizePresetMeta(meta) {
+  if (Array.isArray(meta)) {
+    return { stringMeta: meta };
+  }
+  if (isPlainObject(meta)) {
+    const stringMeta = Array.isArray(meta.stringMeta) ? meta.stringMeta : null;
+    const board = isPlainObject(meta.board) ? meta.board : null;
+    if (stringMeta || board) {
+      return {
+        ...(stringMeta ? { stringMeta } : {}),
+        ...(board ? { board } : {}),
+      };
+    }
+  }
+  return null;
+}
+
+function normalizeSavedEntry(raw) {
+  if (Array.isArray(raw)) {
+    return { tuning: raw, meta: null };
+  }
+  if (isPlainObject(raw)) {
+    const tuning = Array.isArray(raw.tuning) ? raw.tuning : null;
+    const meta = normalizePresetMeta(raw.meta);
+    if (Array.isArray(tuning) && tuning.length) {
+      return { tuning, meta };
+    }
+  }
+  return { tuning: null, meta: null };
+}
+
 export function useDefaultTuning({
   systemId,
   strings,
@@ -21,7 +56,12 @@ export function useDefaultTuning({
     {},
   );
 
-  const saved = savedMap?.[storeKey];
+  const savedEntry = useMemo(
+    () => normalizeSavedEntry(savedMap?.[storeKey]),
+    [savedMap, storeKey],
+  );
+  const saved = savedEntry.tuning;
+  const savedMeta = savedEntry.meta;
   const savedExists = Array.isArray(saved) && saved.length > 0;
 
   const factory = useMemo(() => {
@@ -57,7 +97,7 @@ export function useDefaultTuning({
 
   const presetMap = useMemo(() => {
     const m = { "Factory default": factory };
-    if (savedExists) m["Saved default"] = saved;
+    if (savedExists) m["Saved default"] = saved.slice();
 
     const catalog = PRESET_TUNINGS?.[systemId]?.[strings] || {};
     for (const [name, arr] of Object.entries(catalog)) {
@@ -69,57 +109,59 @@ export function useDefaultTuning({
   const presetMetaMap = useMemo(() => {
     const metaForGroup = PRESET_TUNING_META?.[systemId]?.[strings] || {};
     const out = Object.create(null);
-    const normalize = (meta) => {
-      if (Array.isArray(meta)) {
-        return { stringMeta: meta };
-      }
-      if (meta && typeof meta === "object") {
-        const stringMeta = Array.isArray(meta.stringMeta)
-          ? meta.stringMeta
-          : null;
-        const board =
-          meta.board && typeof meta.board === "object" ? meta.board : null;
-        if (stringMeta || board) {
-          return {
-            ...(stringMeta ? { stringMeta } : {}),
-            ...(board ? { board } : {}),
-          };
-        }
-      }
-      return null;
-    };
     out["Factory default"] = null;
-    if (presetMap["Saved default"]) out["Saved default"] = null;
+    if (presetMap["Saved default"]) {
+      out["Saved default"] = savedMeta ? { ...savedMeta } : null;
+    }
 
     for (const name of Object.keys(presetMap)) {
       if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = normalize(metaForGroup[name]);
+      out[name] = normalizePresetMeta(metaForGroup[name]);
     }
     return out;
-  }, [PRESET_TUNING_META, systemId, strings, presetMap]);
+  }, [PRESET_TUNING_META, systemId, strings, presetMap, savedMeta]);
 
   const getPresetMeta = useCallback(
     (name) => (name in presetMetaMap ? presetMetaMap[name] : null),
     [presetMetaMap],
   );
 
-  const saveDefault = useCallback(() => {
-    const isFactory =
-      Array.isArray(factory) &&
-      tuning.length === factory.length &&
-      tuning.every((v, i) => v === factory[i]);
+  const saveDefault = useCallback(
+    (stringMeta, boardMeta) => {
+      const isFactory =
+        Array.isArray(factory) &&
+        tuning.length === factory.length &&
+        tuning.every((v, i) => v === factory[i]);
 
-    setSavedMap((prev) => {
-      const next = { ...(prev || {}) };
-      if (isFactory) delete next[storeKey];
-      else next[storeKey] = tuning;
-      return next;
-    });
-  }, [factory, tuning, storeKey, setSavedMap]);
+      setSavedMap((prev) => {
+        const next = { ...(prev || {}) };
+        if (isFactory) delete next[storeKey];
+        else {
+          const metaInput = {
+            ...(Array.isArray(stringMeta) && stringMeta.length
+              ? { stringMeta }
+              : {}),
+            ...(isPlainObject(boardMeta) ? { board: boardMeta } : {}),
+          };
+          const meta = normalizePresetMeta(metaInput);
+          next[storeKey] = {
+            tuning: tuning.slice(),
+            ...(meta ? { meta } : {}),
+          };
+        }
+        return next;
+      });
+    },
+    [factory, tuning, storeKey, setSavedMap],
+  );
 
   const loadSavedDefault = useCallback(() => {
-    if (Array.isArray(saved) && saved.length) setTuning(saved);
-  }, [saved, setTuning]);
+    if (Array.isArray(saved) && saved.length) {
+      setTuning(saved.slice());
+      return savedMeta || null;
+    }
+    return null;
+  }, [saved, savedMeta, setTuning]);
 
   const resetFactoryDefault = useCallback(() => {
     setTuning(factory);
@@ -128,9 +170,9 @@ export function useDefaultTuning({
   const defaultForCount = useCallback(
     (count) => {
       const key = keyOf(systemId, count);
-      const savedForCount = savedMap?.[key];
-      if (Array.isArray(savedForCount) && savedForCount.length) {
-        return savedForCount.slice();
+      const savedForCount = normalizeSavedEntry(savedMap?.[key]);
+      if (Array.isArray(savedForCount.tuning) && savedForCount.tuning.length) {
+        return savedForCount.tuning.slice();
       }
 
       const systemDefaults = DEFAULT_TUNINGS?.[systemId]?.[count];
