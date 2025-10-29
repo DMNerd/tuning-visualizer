@@ -92,7 +92,6 @@ import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useFullscreen, useToggle, useThrottleFn } from "react-use";
 
-import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { pickRandomScale } from "@/utils/random";
 import { withToastPromise } from "@/utils/toast";
 
@@ -126,8 +125,8 @@ export default function App() {
     });
 
   // Display options
-  const [displayPrefs, setDisplayPrefs] = useDisplayPrefs(DISPLAY_DEFAULTS);
-
+  const [displayPrefs, setDisplayPrefs, displaySetters] =
+    useDisplayPrefs(DISPLAY_DEFAULTS);
   const {
     show,
     showOpen,
@@ -150,21 +149,7 @@ export default function App() {
     setOpenOnlyInScale,
     setColorByDegree,
     setLefty,
-  } = useMemo(
-    () =>
-      makeImmerSetters(setDisplayPrefs, [
-        "show",
-        "showOpen",
-        "showFretNums",
-        "dotSize",
-        "accidental",
-        "microLabelStyle",
-        "openOnlyInScale",
-        "colorByDegree",
-        "lefty",
-      ]),
-    [setDisplayPrefs],
-  );
+  } = displaySetters;
 
   const [theme, setTheme, themeMode] = useTheme();
 
