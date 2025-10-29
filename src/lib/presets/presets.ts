@@ -338,12 +338,16 @@ export const getDefaultTuning = (system: SystemId, strings: StringCount) =>
 
 /* =========================
    Optional per-preset meta
-========================= */
+ ========================= */
 
-type PresetMetaMap = Readonly<
+type CommonPresetMeta = Readonly<
+  Partial<Record<StringCount, Readonly<Record<string, TuningPresetMeta>>>>
+>;
+
+type SystemPresetMetaOverrides<SystemKey extends string> = Readonly<
   Partial<
     Record<
-      SystemId,
+      SystemKey,
       Readonly<
         Partial<
           Record<StringCount, Readonly<Record<string, TuningPresetMeta | null>>>
@@ -353,25 +357,89 @@ type PresetMetaMap = Readonly<
   >
 >;
 
-// Updated meta with new shape and literal typing
-export const PRESET_TUNING_META = {
-  "12-TET": {
-    4: {
-      "Violin (GDAE)": {
-        board: { fretStyle: "dotted", notePlacement: "onFret" },
-      },
-    },
-    5: {
-      "Banjo — 5-string (g D G B D)": {
-        stringMeta: [{ index: 4, startFret: 5, greyBefore: true }],
-      },
+type PresetMetaMap<SystemKey extends string = SystemId> = Readonly<
+  Partial<
+    Record<
+      SystemKey,
+      Readonly<
+        Partial<
+          Record<StringCount, Readonly<Record<string, TuningPresetMeta | null>>>
+        >
+      >
+    >
+  >
+>;
+
+function buildPresetMetaMap<SystemKey extends string>(
+  systems: readonly SystemKey[],
+  common: CommonPresetMeta,
+  overrides: SystemPresetMetaOverrides<SystemKey>,
+): PresetMetaMap<SystemKey> {
+  const out: {
+    [K in SystemKey]?: Partial<
+      Record<StringCount, Record<string, TuningPresetMeta | null>>
+    >;
+  } = {};
+
+  for (const system of systems) {
+    const sysOverrides = overrides[system] ?? {};
+    const metaByCount: Partial<
+      Record<StringCount, Record<string, TuningPresetMeta | null>>
+    > = {};
+
+    for (const count of [4, 5, 6, 7, 8] as const) {
+      const baseGroup = common[count] ?? {};
+      const merged: Record<string, TuningPresetMeta | null> = {
+        ...baseGroup,
+      };
+
+      const overrideGroup = sysOverrides[count];
+      if (overrideGroup) {
+        for (const [name, meta] of Object.entries(overrideGroup)) {
+          if (meta === null) {
+            delete merged[name];
+          } else {
+            merged[name] = meta;
+          }
+        }
+      }
+
+      if (Object.keys(merged).length > 0) {
+        metaByCount[count] = merged;
+      }
+    }
+
+    if (Object.keys(metaByCount).length > 0) {
+      out[system] = metaByCount;
+    }
+  }
+
+  return freezeDeep(out) as PresetMetaMap<SystemKey>;
+}
+
+const COMMON_PRESET_META: CommonPresetMeta = {
+  4: {
+    "Violin (GDAE)": {
+      board: { fretStyle: "dotted", notePlacement: "onFret" },
     },
   },
-  "24-TET": {
-    4: {
-      "Violin (GDAE)": {
-        board: { fretStyle: "dotted", notePlacement: "onFret" },
-      },
+  5: {
+    "Banjo — 5-string (g D G B D)": {
+      stringMeta: [{ index: 4, startFret: 5, greyBefore: true }],
     },
   },
-} as const satisfies PresetMetaMap;
+} as const;
+
+const SYSTEM_PRESET_META_OVERRIDES =
+  {} as const satisfies SystemPresetMetaOverrides<SystemId>;
+
+export function buildPresetMetaStateForSystems(systems: readonly SystemId[]) {
+  return buildPresetMetaMap(
+    systems,
+    COMMON_PRESET_META,
+    SYSTEM_PRESET_META_OVERRIDES,
+  );
+}
+
+export const PRESET_TUNING_META =
+  buildPresetMetaStateForSystems(FALLBACK_SYSTEMS);
