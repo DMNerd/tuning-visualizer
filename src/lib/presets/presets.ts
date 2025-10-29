@@ -54,7 +54,8 @@ const COMMON_PRESETS: CommonPresets = {
     "Bass 4 Drop C (CGCF)": ["F", "C", "G", "C"],
     "Bass 4 Drop B (BF#BE)": ["E", "B", "F#", "B"],
 
-    "Mandolin / Violin (GDAE)": ["E", "A", "D", "G"],
+    "Violin (GDAE)": ["E", "A", "D", "G"],
+    "Mandolin (GDAE)": ["E", "A", "D", "G"],
     "Mandolin — GDAD (modal D)": ["D", "A", "D", "G"],
     "Mandolin — ADAD": ["D", "A", "D", "A"],
     "Mandolin — AEAE (cross-tune)": ["E", "A", "E", "A"],
@@ -356,7 +357,7 @@ type PresetMetaMap = Readonly<
 export const PRESET_TUNING_META = {
   "12-TET": {
     4: {
-      "Mandolin / Violin (GDAE)": {
+      "Violin (GDAE)": {
         board: { fretStyle: "dotted", notePlacement: "onFret" },
       },
     },
