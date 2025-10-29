@@ -206,6 +206,7 @@ export default function App() {
   });
 
   const [stringMeta, setStringMeta] = useState(null);
+  const [boardMeta, setBoardMeta] = useState(null);
 
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
@@ -284,6 +285,7 @@ export default function App() {
     customTunings,
     setTuning,
     setStringMeta,
+    setBoardMeta,
     currentEdo: system.divisions,
     currentStrings: strings,
   });
@@ -294,6 +296,7 @@ export default function App() {
 
   useEffect(() => {
     setStringMeta(null);
+    setBoardMeta(null);
     resetSelection();
   }, [systemId, strings, resetSelection]);
 
@@ -394,13 +397,13 @@ export default function App() {
   }, [systemId, strings, savedExists, setPreset]);
 
   const handleCreateCustomPack = useCallback(() => {
-    const pack = getCurrentTuningPack(tuning, stringMeta);
+    const pack = getCurrentTuningPack(tuning, stringMeta, boardMeta);
     setEditorState({
       mode: "create",
       initialPack: pack,
       originalName: null,
     });
-  }, [getCurrentTuningPack, tuning, stringMeta]);
+  }, [getCurrentTuningPack, tuning, stringMeta, boardMeta]);
 
   const handleEditCustomPack = useCallback(() => {
     if (!selectedPreset) return;
@@ -625,6 +628,7 @@ export default function App() {
                 colorByDegree={colorByDegree}
                 hideNonChord={hideNonChord}
                 stringMeta={effectiveStringMeta}
+                boardMeta={boardMeta}
                 onSelectNote={handleSelectNote}
                 capoFret={capoFret}
                 onSetCapo={toggleCapoAt}
@@ -752,7 +756,7 @@ export default function App() {
             downloadSVG={downloadSVG}
             printFretboard={printFretboard}
             buildHeader={buildHeader}
-            exportCurrent={() => exportCurrent(tuning, stringMeta)}
+            exportCurrent={() => exportCurrent(tuning, stringMeta, boardMeta)}
             exportAll={exportAll}
             importFromJson={importFromJson}
             onClearCustom={handleClearCustomTunings}

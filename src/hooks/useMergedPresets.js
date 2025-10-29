@@ -1,6 +1,27 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { toStringMetaMap } from "@/lib/meta/meta";
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizePresetMeta(meta) {
+  if (Array.isArray(meta)) {
+    return { stringMeta: meta };
+  }
+  if (isPlainObject(meta)) {
+    const stringMeta = Array.isArray(meta.stringMeta) ? meta.stringMeta : null;
+    const board = isPlainObject(meta.board) ? meta.board : null;
+    if (stringMeta || board) {
+      return {
+        ...(stringMeta ? { stringMeta } : {}),
+        ...(board ? { board } : {}),
+      };
+    }
+  }
+  return null;
+}
+
 export function useMergedPresets({
   presetMap,
   presetMetaMap,
@@ -8,6 +29,7 @@ export function useMergedPresets({
   customTunings,
   setTuning,
   setStringMeta,
+  setBoardMeta,
   currentEdo,
   currentStrings,
 }) {
@@ -38,7 +60,7 @@ export function useMergedPresets({
     return obj;
   }, [compatibleCustoms]);
 
-  // Build per-string meta from compatible customs
+  // Build per-string and board meta from compatible customs
   const customPresetMetaMap = useMemo(() => {
     if (!compatibleCustoms.length) return {};
     const obj = {};
@@ -62,8 +84,13 @@ export function useMergedPresets({
         const prev = byIx.get(m.index) || { index: m.index };
         byIx.set(m.index, { ...m, ...prev });
       }
-      const merged = Array.from(byIx.values());
-      if (merged.length) obj[p.name] = merged;
+      const mergedStrings = Array.from(byIx.values());
+      const boardMeta = isPlainObject(p?.meta?.board) ? p.meta.board : null;
+      const normalized = normalizePresetMeta({
+        stringMeta: mergedStrings.length ? mergedStrings : undefined,
+        board: boardMeta || undefined,
+      });
+      if (normalized) obj[p.name] = normalized;
     }
     return obj;
   }, [compatibleCustoms]);
@@ -102,10 +129,19 @@ export function useMergedPresets({
       const arr = mergedPresetMap[name];
       if (Array.isArray(arr) && arr.length) setTuning(arr);
 
-      const meta = mergedPresetMetaMap?.[name] ?? null;
-      setStringMeta(meta);
+      const meta = normalizePresetMeta(mergedPresetMetaMap?.[name]);
+      if (meta?.stringMeta) setStringMeta(meta.stringMeta);
+      else setStringMeta(null);
+      if (meta?.board) setBoardMeta(meta.board);
+      else setBoardMeta(null);
     },
-    [mergedPresetMap, mergedPresetMetaMap, setTuning, setStringMeta],
+    [
+      mergedPresetMap,
+      mergedPresetMetaMap,
+      setTuning,
+      setStringMeta,
+      setBoardMeta,
+    ],
   );
 
   const resetSelection = useCallback(() => {

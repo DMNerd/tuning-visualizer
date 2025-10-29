@@ -22,21 +22,35 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
-    (tuning, stringMeta = null) => {
+    (tuning, stringMeta = null, boardMeta = null) => {
       const sys = TUNINGS[systemId];
+      const cleanStringMeta = Array.isArray(stringMeta) ? stringMeta : null;
+      const cleanBoardMeta =
+        boardMeta && typeof boardMeta === "object" && !Array.isArray(boardMeta)
+          ? boardMeta
+          : null;
+
       const pack = buildTuningPack({
         systemDivisions: sys.divisions,
         systemId,
         stringsCount: strings,
         tuning,
-        stringMeta: stringMeta ?? undefined,
+        stringMeta: cleanStringMeta ?? undefined,
       });
+
+      const meta = { ...(pack.meta || {}) };
+      if (cleanStringMeta && cleanStringMeta.length) {
+        meta.stringMeta = cleanStringMeta;
+      }
+      if (cleanBoardMeta && Object.keys(cleanBoardMeta).length) {
+        meta.board = { ...cleanBoardMeta };
+      }
+
+      const hasMeta = Object.keys(meta).length > 0;
 
       return {
         ...pack,
-        meta: stringMeta
-          ? { ...(pack.meta || {}), stringMeta }
-          : { ...(pack.meta || {}) },
+        ...(hasMeta ? { meta } : { meta: undefined }),
       };
     },
     [systemId, strings, TUNINGS],
@@ -129,10 +143,10 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   );
 
   const exportCurrent = useCallback(
-    (tuning, stringMeta) => {
+    (tuning, stringMeta, boardMeta) => {
       return withToastPromise(
         () => {
-          const pack = getCurrentTuningPack(tuning, stringMeta);
+          const pack = getCurrentTuningPack(tuning, stringMeta, boardMeta);
           if (!pack)
             throw new Error("Nothing to export for the current tuning.");
           downloadJsonFile(pack, "current-tuning.json");

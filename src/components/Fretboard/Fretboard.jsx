@@ -41,6 +41,8 @@ const Fretboard = forwardRef(function Fretboard(
     colorByDegree,
     hideNonChord,
     stringMeta,
+    boardMeta,
+
     onSelectNote,
     capoFret,
     onSetCapo = () => {},
@@ -80,6 +82,9 @@ const Fretboard = forwardRef(function Fretboard(
 
   const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental);
   const pcForName = pcFromName;
+  const notePlacementMode =
+    boardMeta?.notePlacement === "onFret" ? "onFret" : "between";
+  const fretStyle = boardMeta?.fretStyle ?? "solid";
 
   const chromaticIntervals = useMemo(
     () => Array.from({ length: Math.max(1, system.divisions) }, (_, i) => i),
@@ -157,7 +162,11 @@ const Fretboard = forwardRef(function Fretboard(
         }
         if (!visible) continue;
 
-        const cx = isOpen ? openXForString(s) : noteX(f, s);
+        const cx = isOpen
+          ? openXForString(s)
+          : notePlacementMode === "onFret"
+            ? wireX(f)
+            : noteX(f, s);
 
         const isRoot = pc === rootIx;
         const isStandard = (f * 12) % N === 0;
@@ -234,6 +243,8 @@ const Fretboard = forwardRef(function Fretboard(
     labelFor,
     show,
     microLabelOpts,
+    notePlacementMode,
+    wireX,
   ]);
 
   return (
@@ -302,6 +313,7 @@ const Fretboard = forwardRef(function Fretboard(
               className={clsx("tv-fretboard__fret", {
                 "tv-fretboard__fret--strong": isOctave,
                 "tv-fretboard__fret--micro": isMicro,
+                "tv-fretboard__fret--dotted": fretStyle === "dotted" && f > 0,
               })}
             />
           );
@@ -488,6 +500,7 @@ function pickRenderProps(p) {
     chordPCs: p.chordPCs,
     chordRootPc: p.chordRootPc,
     stringMeta: p.stringMeta,
+    boardMeta: p.boardMeta,
     onSelectNote: p.onSelectNote,
   };
 }

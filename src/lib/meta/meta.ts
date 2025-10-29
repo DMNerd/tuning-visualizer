@@ -2,12 +2,25 @@ export type StringMeta = {
   index: number;
   startFret?: number;
   greyBefore?: boolean;
+  notePlacement?: "between" | "onFret";
+  fretStyle?: "solid" | "dotted";
+};
+
+export type BoardMeta = {
+  fretStyle?: "solid" | "dotted";
+  notePlacement?: "between" | "onFret";
+};
+
+export type TuningPresetMeta = {
+  stringMeta?: StringMeta[] | null;
+  board?: BoardMeta | null;
 };
 
 export function normalizeStringMeta(arr: unknown[]): StringMeta[] {
   return (Array.isArray(arr) ? arr : []).map((m) => {
-    const meta = m as Partial<StringMeta>;
+    const meta = (m ?? {}) as Partial<StringMeta>;
     return {
+      ...meta,
       index: meta.index ?? 0,
       startFret: meta.startFret ?? 0,
       greyBefore: meta.greyBefore ?? true,

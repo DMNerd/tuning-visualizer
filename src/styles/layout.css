@@ -660,6 +660,10 @@ svg {
   font-size: 11.5px;
 }
 
+.tv-fretboard__fret--dotted {
+  stroke-dasharray: 6 10;
+}
+
 .tv-theme {
   display: inline-flex;
   background: color-mix(in oklab, var(--panel) 70%, var(--fg) 5%);

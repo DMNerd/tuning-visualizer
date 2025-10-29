@@ -69,13 +69,31 @@ export function useDefaultTuning({
   const presetMetaMap = useMemo(() => {
     const metaForGroup = PRESET_TUNING_META?.[systemId]?.[strings] || {};
     const out = Object.create(null);
+    const normalize = (meta) => {
+      if (Array.isArray(meta)) {
+        return { stringMeta: meta };
+      }
+      if (meta && typeof meta === "object") {
+        const stringMeta = Array.isArray(meta.stringMeta)
+          ? meta.stringMeta
+          : null;
+        const board =
+          meta.board && typeof meta.board === "object" ? meta.board : null;
+        if (stringMeta || board) {
+          return {
+            ...(stringMeta ? { stringMeta } : {}),
+            ...(board ? { board } : {}),
+          };
+        }
+      }
+      return null;
+    };
     out["Factory default"] = null;
     if (presetMap["Saved default"]) out["Saved default"] = null;
 
     for (const name of Object.keys(presetMap)) {
       if (name === "Factory default" || name === "Saved default") continue;
-      const meta = metaForGroup[name];
-      out[name] = Array.isArray(meta) ? meta : null;
+      out[name] = normalize(metaForGroup[name]);
     }
     return out;
   }, [PRESET_TUNING_META, systemId, strings, presetMap]);

@@ -1,3 +1,6 @@
+// Top of file (added import)
+import type { TuningPresetMeta } from "@/lib/meta/meta";
+
 /* =========================
    Types
 ========================= */
@@ -336,21 +339,31 @@ export const getDefaultTuning = (system: SystemId, strings: StringCount) =>
    Optional per-preset meta
 ========================= */
 
-export const PRESET_TUNING_META: Record<
-  string,
-  Record<
-    number,
+type PresetMetaMap = Readonly<
+  Partial<
     Record<
-      string,
-      { index: number; startFret?: number; greyBefore?: boolean }[]
+      SystemId,
+      Readonly<
+        Partial<
+          Record<StringCount, Readonly<Record<string, TuningPresetMeta | null>>>
+        >
+      >
     >
   >
-> = {
+>;
+
+// Updated meta with new shape and literal typing
+export const PRESET_TUNING_META = {
   "12-TET": {
+    4: {
+      "Mandolin / Violin (GDAE)": {
+        board: { fretStyle: "dotted", notePlacement: "onFret" },
+      },
+    },
     5: {
-      "Banjo — 5-string (g D G B D)": [
-        { index: 4, startFret: 5, greyBefore: true },
-      ],
+      "Banjo — 5-string (g D G B D)": {
+        stringMeta: [{ index: 4, startFret: 5, greyBefore: true }],
+      },
     },
   },
-};
+} as const satisfies PresetMetaMap;
