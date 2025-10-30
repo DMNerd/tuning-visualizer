@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useImmer } from "use-immer";
-import { useLocalStorage } from "react-use";
+import {
+  useLocalStorage,
+  useUpdateEffect,
+  usePreviousDistinct,
+} from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 function keyOf(systemId, strings) {
@@ -91,7 +95,10 @@ export function useDefaultTuning({
 
   const [tuning, setTuning] = useImmer(() => getPreferredDefault());
 
-  useEffect(() => {
+  const systemStringsKey = `${systemId}|${strings}`;
+  usePreviousDistinct(systemStringsKey);
+
+  useUpdateEffect(() => {
     setTuning(getPreferredDefault());
   }, [getPreferredDefault, setTuning]);
 

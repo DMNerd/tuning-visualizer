@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useLatest } from "react-use";
 
 export const LABEL_OPTIONS = [
   { value: "names", label: "Note names" },
@@ -10,7 +11,6 @@ export const LABEL_OPTIONS = [
 
 export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);
 
-// 12-TET interval names by semitone distance up from root
 const INTERVAL_12 = [
   "P1",
   "m2",
@@ -42,46 +42,33 @@ function roundToInt(x) {
  *  d=1 (≈50¢): sharp => P1+ ; flat => m2−
  *  d=3 (≈150¢): sharp => M2− ; flat => m3− (depends on anchor)
  */
+
 function formatIntervalGenericN(d, N, accidental) {
   const exactSemis = (d * 12) / N;
-
-  // pick directional anchor based on accidental context
   const baseSemis =
     accidental === "flat" ? Math.ceil(exactSemis) : Math.floor(exactSemis);
-
   const name = INTERVAL_12[((baseSemis % 12) + 12) % 12];
-
-  // Convert the anchored semitone back to N-steps and compare
-  const baseSteps = (baseSemis * N) / 12; // may be non-integer in exotic N, ok
-  const offsetSteps = d - baseSteps; // + above anchor, - below anchor
-  const offset = roundToInt(offsetSteps);
-
+  const baseSteps = (baseSemis * N) / 12;
+  const offset = roundToInt(d - baseSteps);
   if (offset === 0) return name;
-
-  // Signs now follow absolute direction from the chosen anchor
   const sign = offset > 0 ? "+" : "−";
   return name + sign.repeat(Math.abs(offset));
 }
 
 function makeIntervalFormatter(system, rootIx, accidental) {
   const N = system.divisions;
-
   if (N === 12) {
     return (pc) => {
       const d = (pc - rootIx + 12) % 12;
       return INTERVAL_12[d];
     };
   }
-
   return (pc) => {
-    const d = (pc - rootIx + N) % N; // steps from root in N-TET
+    const d = (pc - rootIx + N) % N;
     return formatIntervalGenericN(d, N, accidental);
   };
 }
 
-/**
- * useLabels — centralized label generator.
- */
 export function useLabels({
   mode,
   system,
@@ -92,8 +79,11 @@ export function useLabels({
 }) {
   const intervalOf = useMemo(
     () => makeIntervalFormatter(system, rootIx, accidental),
-    [system, rootIx, accidental], // fixed deps
+    [system, rootIx, accidental],
   );
+
+  const degreeForPcRef = useLatest(degreeForPc);
+  const nameForPcRef = useLatest(nameForPc);
 
   const labelFor = useCallback(
     (pc, fret) => {
@@ -101,20 +91,20 @@ export function useLabels({
         case "off":
           return "";
         case "degrees": {
-          const d = degreeForPc(pc);
+          const d = degreeForPcRef.current(pc);
           return d == null ? "" : String(d);
         }
         case "intervals":
           return intervalOf(pc);
         case "names":
-          return nameForPc(pc);
+          return nameForPcRef.current(pc);
         case "fret":
           return String(fret);
         default:
           return "";
       }
     },
-    [mode, degreeForPc, nameForPc, intervalOf],
+    [mode, intervalOf, degreeForPcRef, nameForPcRef],
   );
 
   return useMemo(

@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useCallback } from "react";
-import { useDebounce, useLocalStorage } from "react-use";
+import { useMemo, useCallback } from "react";
+import {
+  useDebounce,
+  useLocalStorage,
+  useEffectOnce,
+  useUpdateEffect,
+} from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { clamp } from "@/utils/math";
@@ -9,22 +14,17 @@ const makeNumberStorageOptions = ({ min, max, fallback }) => {
     if (typeof value === "number" && Number.isFinite(value)) {
       return clamp(value, min, max);
     }
-
     if (typeof value === "string") {
       const parsed = Number(value);
       if (Number.isFinite(parsed)) {
         return clamp(parsed, min, max);
       }
     }
-
     return fallback;
   };
 
   return {
-    serializer: (value) => {
-      const coerced = coerce(value);
-      return JSON.stringify(coerced);
-    },
+    serializer: (value) => JSON.stringify(coerce(value)),
     deserializer: (value) => {
       try {
         return coerce(JSON.parse(value));
@@ -35,12 +35,6 @@ const makeNumberStorageOptions = ({ min, max, fallback }) => {
   };
 };
 
-/**
- * Manages instrument-level persisted prefs (strings/frets).
- * - strings: persisted immediately via localStorage
- * - frets: hydrated from storage on mount (if present) but persisted only after user "touches"
- *   using the fretsTouched flag provided by the caller.
- */
 export function useInstrumentPrefs({
   frets,
   fretsTouched,
@@ -85,15 +79,20 @@ export function useInstrumentPrefs({
     fretsStorageOptions,
   );
 
-  // Hydrate frets from storage (one-time) if user hasn't touched frets yet.
-  useEffect(() => {
+  useEffectOnce(() => {
     if (typeof savedFrets === "number" && !fretsTouched) {
       const fixed = clamp(savedFrets, FRETS_MIN, FRETS_MAX);
       setFretsUI(fixed);
     }
-  }, [savedFrets, fretsTouched, setFretsUI, FRETS_MIN, FRETS_MAX]);
+  });
 
-  // Debounced persistence once user has interacted with frets.
+  useUpdateEffect(() => {
+    if (typeof frets === "number" && fretsTouched) {
+      const fixed = clamp(frets, FRETS_MIN, FRETS_MAX);
+      if (fixed !== frets) setFretsUI(fixed);
+    }
+  }, [FRETS_MIN, FRETS_MAX]);
+
   useDebounce(
     () => {
       if (fretsTouched && typeof frets === "number" && Number.isFinite(frets)) {
@@ -125,7 +124,6 @@ export function useInstrumentPrefs({
       }
 
       if (draft.frets !== prev.frets) {
-        // Update UI and mark as touched so debounced persistence will run.
         setFretsUI(draft.frets);
         setFretsTouched?.(true);
       }
