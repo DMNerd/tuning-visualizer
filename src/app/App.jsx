@@ -19,12 +19,7 @@ import {
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 
 // exporters
-import {
-  downloadPNG,
-  downloadSVG,
-  printFretboard,
-  slug,
-} from "@/lib/export/scales";
+import { downloadPNG, downloadSVG, printFretboard } from "@/lib/export/scales";
 
 // fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
@@ -90,10 +85,10 @@ import { useCapo } from "@/hooks/useCapo";
 import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
+import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
 import { useFullscreen, useToggle, useThrottleFn } from "react-use";
 
 import { pickRandomScale } from "@/utils/random";
-import { withToastPromise } from "@/utils/toast";
 
 export default function App() {
   // System selection
@@ -281,9 +276,6 @@ export default function App() {
     savedExists,
   });
 
-  const [editorState, setEditorState] = useState(null);
-  const [isManagerOpen, setIsManagerOpen] = useState(false);
-
   const randomizeScale = useCallback(() => {
     const result = pickRandomScale({ sysNames, scaleOptions });
     if (!result) return;
@@ -327,35 +319,6 @@ export default function App() {
     [nameForPc, sysNames, setChordRoot, setRoot],
   );
 
-  const handleClearCustomTunings = useCallback(async () => {
-    if (typeof clearCustomTunings !== "function") return false;
-
-    if (typeof confirm === "function") {
-      const ok = await confirm({
-        title: "Clear all custom tunings?",
-        message:
-          "This will permanently remove every saved custom tuning pack. This action cannot be undone.",
-        confirmText: "Clear custom tunings",
-        cancelText: "Cancel",
-        toastId: "confirm-clear-custom",
-      });
-
-      if (!ok) return false;
-    }
-
-    return withToastPromise(
-      async () => {
-        await Promise.resolve(clearCustomTunings());
-      },
-      {
-        loading: "Clearing custom tunings…",
-        success: "Custom tunings cleared.",
-        error: "Unable to clear custom tunings.",
-      },
-      "clear-custom-tunings",
-    ).then(() => true);
-  }, [clearCustomTunings, confirm]);
-
   const handleRandomizeHotkey = useCallback(() => {
     setRandomizeHotkeyTick((count) => count + 1);
   }, []);
@@ -367,117 +330,36 @@ export default function App() {
     });
   }, []);
 
-  const handleCreateCustomPack = useCallback(() => {
-    const pack = getCurrentTuningPack(tuning, stringMeta, boardMeta);
-    setEditorState({
-      mode: "create",
-      initialPack: pack,
-      originalName: null,
-    });
-  }, [getCurrentTuningPack, tuning, stringMeta, boardMeta]);
-
-  const handleEditCustomPack = useCallback(() => {
-    if (!selectedPreset) return;
-    if (!Array.isArray(customPresetNames)) return;
-    if (!customPresetNames.includes(selectedPreset)) return;
-    const existing = customTunings?.find((p) => p?.name === selectedPreset);
-    if (!existing) return;
-    setEditorState({
-      mode: "edit",
-      initialPack: existing,
-      originalName: existing.name,
-    });
-  }, [selectedPreset, customPresetNames, customTunings]);
-
-  const handleOpenManage = useCallback(() => {
-    setIsManagerOpen(true);
-  }, [setIsManagerOpen]);
-
-  const handleCloseManage = useCallback(() => {
-    setIsManagerOpen(false);
-  }, [setIsManagerOpen]);
-
-  const handleEditFromManager = useCallback(
-    (pack) => {
-      if (!pack) return;
-      const name = typeof pack?.name === "string" ? pack.name : null;
-      setEditorState({
-        mode: "edit",
-        initialPack: pack,
-        originalName: name,
-      });
-      setIsManagerOpen(false);
-    },
-    [setEditorState, setIsManagerOpen],
-  );
-
-  const handleDeleteCustom = useCallback(
-    async (name) => {
-      if (typeof deleteCustomTuning !== "function") return false;
-      if (typeof name !== "string" || !name.trim()) return false;
-
-      let ok = true;
-      if (typeof confirm === "function") {
-        ok = await confirm({
-          title: "Remove custom tuning?",
-          message:
-            "This will permanently delete the selected custom tuning pack.",
-          confirmText: "Remove pack",
-          cancelText: "Cancel",
-          toastId: `confirm-delete-${slug(name)}`,
-        });
-      }
-
-      if (!ok) return false;
-
-      return withToastPromise(
-        () => Promise.resolve(deleteCustomTuning(name)),
-        {
-          loading: "Removing custom tuning…",
-          success: "Custom tuning removed.",
-          error: "Unable to remove custom tuning.",
-        },
-        `delete-custom-${slug(name)}`,
-      ).then(() => {
-        queuePresetByName(null);
-        return true;
-      });
-    },
-    [deleteCustomTuning, confirm, queuePresetByName],
-  );
-
-  const handleEditorCancel = useCallback(() => {
-    setEditorState(null);
-  }, []);
-
-  const handleEditorSubmit = useCallback(
-    (pack, options = {}) => {
-      const replaceName =
-        options?.replaceName ?? editorState?.originalName ?? undefined;
-      const mode = editorState?.mode === "edit" ? "edit" : "create";
-
-      return withToastPromise(
-        () => saveCustomTuning(pack, { replaceName }),
-        {
-          loading:
-            mode === "edit" ? "Updating custom pack…" : "Saving custom pack…",
-          success:
-            mode === "edit" ? "Custom pack updated." : "Custom pack created.",
-          error: "Unable to save tuning pack.",
-        },
-        "save-custom-pack",
-      ).then((saved) => {
-        queuePresetByName(saved?.name ?? pack?.name ?? null);
-        setEditorState(null);
-        return saved;
-      });
-    },
-    [editorState, saveCustomTuning, queuePresetByName, setEditorState],
-  );
-
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
     strings,
     stringMeta,
+  });
+
+  const {
+    editorState,
+    isManagerOpen,
+    openCreate,
+    openEditSelected,
+    openManager,
+    closeManager,
+    editFromManager,
+    deletePack,
+    clearAllPacks,
+    submitEditor,
+    cancelEditor,
+  } = useCustomTuningPacks({
+    confirm,
+    getCurrentTuningPack,
+    saveCustomTuning,
+    deleteCustomTuning,
+    clearCustomTunings,
+    tuning,
+    stringMeta,
+    boardMeta,
+    customTunings,
+    customPresetNames,
+    selectedPreset,
+    queuePresetByName,
   });
 
   useHotkeys({
@@ -489,7 +371,7 @@ export default function App() {
     setHideNonChord,
     onShowCheatsheet: showCheatsheet,
     onRandomizeScale: handleRandomizeHotkey,
-    onCreateCustomPack: handleCreateCustomPack,
+    onCreateCustomPack: openCreate,
     strings,
     frets,
     LABEL_VALUES,
@@ -676,8 +558,8 @@ export default function App() {
             handleSaveDefault={handleSaveDefault}
             handleResetFactoryDefault={resetInstrumentFactory}
             systemId={systemId}
-            onCreateCustomPack={handleCreateCustomPack}
-            onEditCustomPack={handleEditCustomPack}
+            onCreateCustomPack={openCreate}
+            onEditCustomPack={openEditSelected}
           />
         </ErrorBoundary>
         <ErrorBoundary
@@ -720,8 +602,8 @@ export default function App() {
             exportCurrent={() => exportCurrent(tuning, stringMeta, boardMeta)}
             exportAll={exportAll}
             importFromJson={importFromJson}
-            onClearCustom={handleClearCustomTunings}
-            onManageCustom={handleOpenManage}
+            onClearCustom={clearAllPacks}
+            onManageCustom={openManager}
           />
         </ErrorBoundary>
       </footer>
@@ -738,8 +620,8 @@ export default function App() {
             mode={editorState?.mode ?? "create"}
             initialPack={editorState?.initialPack}
             originalName={editorState?.originalName ?? undefined}
-            onCancel={handleEditorCancel}
-            onSubmit={handleEditorSubmit}
+            onCancel={cancelEditor}
+            onSubmit={submitEditor}
             themeMode={themeMode}
           />
         </React.Suspense>
@@ -757,9 +639,9 @@ export default function App() {
             tunings={customTunings}
             systems={TUNINGS}
             themeMode={themeMode}
-            onClose={handleCloseManage}
-            onEdit={handleEditFromManager}
-            onDelete={handleDeleteCustom}
+            onClose={closeManager}
+            onEdit={editFromManager}
+            onDelete={deletePack}
           />
         </React.Suspense>
       ) : null}
