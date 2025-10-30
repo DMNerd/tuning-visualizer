@@ -15,6 +15,7 @@ export function useResets({
   resetInstrumentPrefs,
   setCapoFret,
   setStringMeta,
+  setBoardMeta,
   setDisplayPrefs,
   setSystemId,
   setRoot,
@@ -34,8 +35,15 @@ export function useResets({
       resetInstrumentPrefs(STR_FACTORY, factoryFrets);
       setCapoFret(CAPO_DEFAULT);
       setStringMeta(null);
+      setBoardMeta?.(null);
     },
-    [system.divisions, resetInstrumentPrefs, setCapoFret, setStringMeta],
+    [
+      system.divisions,
+      resetInstrumentPrefs,
+      setCapoFret,
+      setStringMeta,
+      setBoardMeta,
+    ],
   );
 
   const resetDisplay = useCallback(() => {

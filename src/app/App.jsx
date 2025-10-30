@@ -369,6 +369,7 @@ export default function App() {
       resetInstrumentPrefs,
       setCapoFret,
       setStringMeta,
+      setBoardMeta,
       setDisplayPrefs,
       setSystemId,
       setRoot,
