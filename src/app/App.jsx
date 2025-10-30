@@ -234,7 +234,6 @@ export default function App() {
   });
 
   const fileBase = useFileBase({ root, scale, accidental, strings });
-  const fileBaseSlug = useMemo(() => slug(fileBase), [fileBase]);
 
   useAccidentalRespell({
     system,
@@ -517,7 +516,7 @@ export default function App() {
     maxFrets: FRETS_MAX,
   });
 
-  const { resetInstrumentFactory, resetAll } = useResets({
+  const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } = useResets({
     system,
     resetInstrumentPrefs,
     setCapoFret,
@@ -635,9 +634,7 @@ export default function App() {
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[systemId, root, scale]}
-          onReset={() => {
-            setRoot(ROOT_DEFAULT);
-          }}
+          onReset={resetMusicalState}
         >
           <ScaleControls
             root={root}
@@ -652,11 +649,7 @@ export default function App() {
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
-          onReset={() => {
-            setChordRoot(ROOT_DEFAULT);
-            setShowChord(false);
-            setHideNonChord(false);
-          }}
+          onReset={resetMusicalState}
         >
           <ChordBuilder
             root={chordRoot}
@@ -681,8 +674,7 @@ export default function App() {
           FallbackComponent={ErrorFallback}
           resetKeys={[strings, frets, systemId]}
           onReset={() => {
-            setStrings(STR_FACTORY);
-            setFretsPref(getFactoryFrets(system.divisions));
+            resetInstrumentFactory(system.divisions);
           }}
         >
           <InstrumentControls
@@ -709,7 +701,7 @@ export default function App() {
           FallbackComponent={ErrorFallback}
           resetKeys={[displayPrefs]}
           onReset={() => {
-            setDisplayPrefs(DISPLAY_DEFAULTS);
+            resetDisplay();
           }}
         >
           <DisplayControls
@@ -736,11 +728,11 @@ export default function App() {
         </ErrorBoundary>
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          resetKeys={[fileBaseSlug]}
+          resetKeys={[fileBase]}
         >
           <ExportControls
             boardRef={boardRef}
-            fileBase={fileBaseSlug}
+            fileBase={fileBase}
             downloadPNG={downloadPNG}
             downloadSVG={downloadSVG}
             printFretboard={printFretboard}
