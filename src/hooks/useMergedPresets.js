@@ -5,17 +5,86 @@ import {
   useLatest,
   useMountedState,
 } from "react-use";
+import { toStringMetaMap } from "@/lib/meta/meta";
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function flattenOnce(arr) {
+  if (!Array.isArray(arr)) return arr;
+  let flat = [];
+  let nested = false;
+  for (const v of arr) {
+    if (Array.isArray(v)) {
+      nested = true;
+      flat.push(...v);
+    } else {
+      flat.push(v);
+    }
+  }
+  return nested ? flat : arr;
+}
+
+function coerceTuningArray(arr) {
+  const a = flattenOnce(arr);
+  if (!Array.isArray(a)) return null;
+  const out = a
+    .map((v) => {
+      if (typeof v === "string") return v.trim();
+      if (typeof v === "number" && Number.isFinite(v)) return String(v);
+      if (isPlainObject(v)) {
+        if (typeof v.token === "string") return v.token;
+        if (typeof v.note === "string") return v.note;
+        if (typeof v.pitch === "string") return v.pitch;
+        if (typeof v.value === "string") return v.value;
+      }
+      return null;
+    })
+    .filter(Boolean);
+  return out.length ? out : null;
+}
+
+function pickFirstArray(obj, keys) {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (Array.isArray(v)) return v;
+  }
+  return null;
+}
+
+function coerceAnyTuning(input) {
+  if (!input) return null;
+  if (Array.isArray(input)) return coerceTuningArray(input);
+  if (isPlainObject(input)) {
+    const direct = pickFirstArray(input, [
+      "tuning",
+      "strings",
+      "notes",
+      "tokens",
+      "pitches",
+      "values",
+    ]);
+    if (direct) return coerceTuningArray(direct);
+    const nested = pickFirstArray(input, ["data", "payload"]);
+    if (nested) return coerceTuningArray(nested);
+  }
+  return null;
+}
+
 function normalizePresetMeta(meta) {
+  if (!meta) return null;
   if (Array.isArray(meta)) {
-    return { stringMeta: meta };
+    const mapped = toStringMetaMap(meta);
+    return mapped ? { stringMeta: mapped } : null;
   }
   if (isPlainObject(meta)) {
-    const stringMeta = Array.isArray(meta.stringMeta) ? meta.stringMeta : null;
+    let stringMeta = null;
+    if (Array.isArray(meta.stringMeta)) {
+      stringMeta = toStringMetaMap(meta.stringMeta) || null;
+    } else if (isPlainObject(meta.stringMeta)) {
+      stringMeta = meta.stringMeta;
+    }
     const board = isPlainObject(meta.board) ? meta.board : null;
     if (stringMeta || board) {
       return { stringMeta, board };
@@ -48,15 +117,18 @@ export function useMergedPresets({
     const sc = Number(currentStrings);
     return customTunings.filter((t) => {
       const tEdo = Number(t?.system?.edo ?? t?.edo);
-      const tStrings = Array.isArray(t?.tuning) ? t.tuning.length : null;
-      return (
-        Number.isFinite(tEdo) &&
-        Number.isFinite(edo) &&
-        tEdo === edo &&
-        Number.isFinite(tStrings) &&
-        Number.isFinite(sc) &&
-        tStrings === sc
-      );
+      const tStrings = Array.isArray(t?.tuning)
+        ? t.tuning.length
+        : Array.isArray(t?.strings)
+          ? t.strings.length
+          : null;
+      const stringsMatch =
+        Number.isFinite(sc) && Number.isFinite(tStrings)
+          ? tStrings === sc
+          : true;
+      const edoMatch =
+        Number.isFinite(edo) && Number.isFinite(tEdo) ? tEdo === edo : true;
+      return stringsMatch && edoMatch;
     });
   }, [customTunings, currentEdo, currentStrings]);
 
@@ -73,7 +145,10 @@ export function useMergedPresets({
     const out = {};
     for (const pack of compatibleCustoms) {
       const name = typeof pack?.name === "string" ? pack.name : null;
-      const arr = Array.isArray(pack?.tuning) ? pack.tuning : null;
+      const arr =
+        coerceAnyTuning(pack?.tuning) ||
+        coerceAnyTuning(pack?.strings) ||
+        coerceAnyTuning(pack);
       if (!name || !arr?.length) continue;
       out[name] = arr;
     }
@@ -122,28 +197,53 @@ export function useMergedPresets({
     defaultPresetName || "Factory default",
   );
 
+  const queuedPresetRef = useRef(null);
+
+  const resolveTuningByName = useCallback(
+    (name) => {
+      if (!name) return null;
+      const fromMerged = coerceAnyTuning(mergedPresetMap?.[name]);
+      if (fromMerged?.length) return fromMerged;
+      const fromPack = Array.isArray(compatibleCustoms)
+        ? compatibleCustoms.find((p) => p?.name === name)
+        : null;
+      if (!fromPack) return null;
+      return (
+        coerceAnyTuning(fromPack?.tuning) ||
+        coerceAnyTuning(fromPack?.strings) ||
+        coerceAnyTuning(fromPack)
+      );
+    },
+    [mergedPresetMap, compatibleCustoms],
+  );
+
   const setPreset = useCallback(
     (name) => {
       if (typeof name !== "string" || !name) return;
       if (!isMounted()) return;
-
       setSelectedPreset(name);
-
-      const arr = mergedPresetMap?.[name];
-      if (Array.isArray(arr) && arr.length) setTuning(arr);
-
-      const meta = normalizePresetMeta(mergedPresetMetaMap?.[name]);
-
+      const coerced = resolveTuningByName(name);
+      if (!coerced?.length) {
+        queuedPresetRef.current = name;
+        return;
+      }
+      setTuning(coerced);
+      const meta =
+        normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
+        normalizePresetMeta(
+          (compatibleCustoms.find((p) => p?.name === name) || {})?.meta,
+        );
       if (meta?.stringMeta) setStringMeta(meta.stringMeta);
       else setStringMeta(null);
-
       if (meta?.board) setBoardMeta(meta.board);
       else setBoardMeta(null);
+      queuedPresetRef.current = null;
     },
     [
       isMounted,
-      mergedPresetMap,
+      resolveTuningByName,
       mergedPresetMetaMap,
+      compatibleCustoms,
       setTuning,
       setStringMeta,
       setBoardMeta,
@@ -154,50 +254,45 @@ export function useMergedPresets({
     setSelectedPreset(defaultPresetName || "Factory default");
   }, [defaultPresetName]);
 
-  const queuedPresetRef = useRef(null);
-
   const queuePresetByName = useCallback(
     (name) => {
       if (typeof name !== "string" || !name) return;
-
-      if (mergedPresetNames.includes(name) && mergedPresetMap?.[name]) {
+      const resolved = resolveTuningByName(name);
+      if (resolved?.length) {
         setPreset(name);
-        queuedPresetRef.current = null;
         return;
       }
       queuedPresetRef.current = name;
     },
-    [mergedPresetNames, mergedPresetMap, setPreset],
+    [resolveTuningByName, setPreset],
   );
 
-  // Apply selected preset on mount (initial default) and whenever its data first becomes available.
   useEffect(() => {
     if (!selectedPreset) return;
-    if (mergedPresetMap[selectedPreset]) {
+    const resolved = resolveTuningByName(selectedPreset);
+    if (resolved?.length) {
       setPreset(selectedPreset);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedPresetMap]); // run on mount + when maps become available
+  }, [mergedPresetMap]);
 
-  // After mount, if selectedPreset changes or its data changes, apply it.
   useUpdateEffect(() => {
     if (!selectedPreset) return;
-    if (mergedPresetMap[selectedPreset]) {
+    const resolved = resolveTuningByName(selectedPreset);
+    if (resolved?.length) {
       setPreset(selectedPreset);
     }
   }, [mergedPresetMap, selectedPreset]);
 
-  // If a queued preset becomes available, apply it.
   useUpdateEffect(() => {
     const pending = queuedPresetRef.current;
     if (!pending) return;
-    if (mergedPresetNames.includes(pending) && mergedPresetMap[pending]) {
+    const resolved = resolveTuningByName(pending);
+    if (resolved?.length) {
       setPreset(pending);
       queuedPresetRef.current = null;
     }
   }, [mergedPresetNames, mergedPresetMap]);
 
-  // Instrument-change handling (react only to real instrument changes).
   const prevSystemId = usePrevious(systemId);
   const prevStrings = usePrevious(strings);
 
@@ -205,10 +300,8 @@ export function useMergedPresets({
     const instrumentChanged =
       prevSystemId !== systemId || prevStrings !== strings;
     if (!instrumentChanged) return;
-
     setStringMeta(null);
     setBoardMeta(null);
-
     if (typeof onInstrumentChangeRef.current === "function") {
       onInstrumentChangeRef.current({
         queuePresetByName,
@@ -217,7 +310,6 @@ export function useMergedPresets({
       });
       return;
     }
-
     resetSelection();
     if (defaultPresetName) {
       queuePresetByName(defaultPresetName);
