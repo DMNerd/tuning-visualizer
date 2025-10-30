@@ -273,7 +273,7 @@ export function useMergedPresets({
     if (resolved?.length) {
       setPreset(selectedPreset);
     }
-  }, [mergedPresetMap]);
+  }, [mergedPresetMap, resolveTuningByName, selectedPreset, setPreset]);
 
   useUpdateEffect(() => {
     if (!selectedPreset) return;
