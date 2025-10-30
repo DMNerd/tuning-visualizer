@@ -265,7 +265,7 @@ export default function App() {
     customPresetNames,
     selectedPreset,
     setPreset,
-    resetSelection,
+    queuePresetByName,
   } = useMergedPresets({
     presetMap,
     presetMetaMap,
@@ -276,25 +276,13 @@ export default function App() {
     setBoardMeta,
     currentEdo: system.divisions,
     currentStrings: strings,
+    systemId,
+    strings,
+    savedExists,
   });
 
   const [editorState, setEditorState] = useState(null);
-  const [pendingPresetName, setPendingPresetName] = useState(null);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
-
-  useEffect(() => {
-    setStringMeta(null);
-    setBoardMeta(null);
-    resetSelection();
-  }, [systemId, strings, resetSelection]);
-
-  useEffect(() => {
-    if (!pendingPresetName) return;
-    if (mergedPresetNames.includes(pendingPresetName)) {
-      setPreset(pendingPresetName);
-      setPendingPresetName(null);
-    }
-  }, [pendingPresetName, mergedPresetNames, setPreset]);
 
   const randomizeScale = useCallback(() => {
     const result = pickRandomScale({ sysNames, scaleOptions });
@@ -379,11 +367,6 @@ export default function App() {
     });
   }, []);
 
-  useEffect(() => {
-    if (savedExists) setPreset("Saved default");
-    else setPreset("Factory default");
-  }, [systemId, strings, savedExists, setPreset]);
-
   const handleCreateCustomPack = useCallback(() => {
     const pack = getCurrentTuningPack(tuning, stringMeta, boardMeta);
     setEditorState({
@@ -456,11 +439,11 @@ export default function App() {
         },
         `delete-custom-${slug(name)}`,
       ).then(() => {
-        setPendingPresetName((prev) => (prev === name ? null : prev));
+        queuePresetByName(null);
         return true;
       });
     },
-    [deleteCustomTuning, confirm, setPendingPresetName],
+    [deleteCustomTuning, confirm, queuePresetByName],
   );
 
   const handleEditorCancel = useCallback(() => {
@@ -484,12 +467,12 @@ export default function App() {
         },
         "save-custom-pack",
       ).then((saved) => {
-        setPendingPresetName(saved?.name ?? pack?.name ?? null);
+        queuePresetByName(saved?.name ?? pack?.name ?? null);
         setEditorState(null);
         return saved;
       });
     },
-    [editorState, saveCustomTuning, setPendingPresetName, setEditorState],
+    [editorState, saveCustomTuning, queuePresetByName, setEditorState],
   );
 
   const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({

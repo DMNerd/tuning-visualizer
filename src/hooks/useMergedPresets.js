@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { toStringMetaMap } from "@/lib/meta/meta";
 
 function isPlainObject(value) {
@@ -32,6 +32,10 @@ export function useMergedPresets({
   setBoardMeta,
   currentEdo,
   currentStrings,
+  systemId,
+  strings,
+  savedExists,
+  onInstrumentChange,
 }) {
   const compatibleCustoms = useMemo(() => {
     if (!Array.isArray(customTunings)) return [];
@@ -122,6 +126,16 @@ export function useMergedPresets({
   // Selection state + applier
   const [selectedPreset, setSelectedPreset] = useState("Factory default");
 
+  const defaultPresetName = useMemo(() => {
+    if (savedExists && mergedPresetNames.includes("Saved default")) {
+      return "Saved default";
+    }
+    if (mergedPresetNames.includes("Factory default")) {
+      return "Factory default";
+    }
+    return mergedPresetNames[0] ?? null;
+  }, [savedExists, mergedPresetNames]);
+
   const setPreset = useCallback(
     (name) => {
       setSelectedPreset(name);
@@ -145,8 +159,28 @@ export function useMergedPresets({
   );
 
   const resetSelection = useCallback(() => {
-    setSelectedPreset("Factory default");
-  }, []);
+    setSelectedPreset(defaultPresetName || "Factory default");
+  }, [defaultPresetName]);
+
+  const queuedPresetRef = useRef(null);
+
+  const queuePresetByName = useCallback(
+    (name) => {
+      if (typeof name !== "string" || !name.trim()) {
+        queuedPresetRef.current = null;
+        return;
+      }
+
+      if (mergedPresetNames.includes(name) && mergedPresetMap[name]) {
+        setPreset(name);
+        queuedPresetRef.current = null;
+        return;
+      }
+
+      queuedPresetRef.current = name;
+    },
+    [mergedPresetNames, mergedPresetMap, setPreset],
+  );
 
   useEffect(() => {
     if (!selectedPreset) return;
@@ -154,6 +188,51 @@ export function useMergedPresets({
       setPreset(selectedPreset);
     }
   }, [mergedPresetMap, selectedPreset, setPreset]);
+
+  useEffect(() => {
+    const pending = queuedPresetRef.current;
+    if (!pending) return;
+    if (mergedPresetNames.includes(pending) && mergedPresetMap[pending]) {
+      setPreset(pending);
+      queuedPresetRef.current = null;
+    }
+  }, [mergedPresetNames, mergedPresetMap, setPreset]);
+
+  useEffect(() => {
+    if (!defaultPresetName) return;
+    queuePresetByName(defaultPresetName);
+  }, [defaultPresetName, queuePresetByName]);
+
+  useEffect(() => {
+    if (systemId === undefined && strings === undefined && !onInstrumentChange)
+      return;
+
+    setStringMeta(null);
+    setBoardMeta(null);
+
+    if (typeof onInstrumentChange === "function") {
+      onInstrumentChange({
+        queuePresetByName,
+        resetSelection,
+        defaultPresetName,
+      });
+      return;
+    }
+
+    resetSelection();
+    if (defaultPresetName) {
+      queuePresetByName(defaultPresetName);
+    }
+  }, [
+    systemId,
+    strings,
+    onInstrumentChange,
+    queuePresetByName,
+    resetSelection,
+    defaultPresetName,
+    setStringMeta,
+    setBoardMeta,
+  ]);
 
   return useMemo(
     () => ({
@@ -164,6 +243,7 @@ export function useMergedPresets({
       selectedPreset,
       setPreset,
       resetSelection,
+      queuePresetByName,
     }),
     [
       mergedPresetMap,
@@ -173,6 +253,7 @@ export function useMergedPresets({
       selectedPreset,
       setPreset,
       resetSelection,
+      queuePresetByName,
     ],
   );
 }
