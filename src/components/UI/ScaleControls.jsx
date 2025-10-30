@@ -3,7 +3,6 @@ import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 import { memoWithPick } from "@/utils/memo";
-import { pickRandomScale } from "@/utils/random";
 
 function ScaleControls({
   root,
@@ -14,6 +13,7 @@ function ScaleControls({
   scaleOptions,
   defaultRoot = "C",
   defaultScale,
+  onRandomize = () => {},
 }) {
   const resolvedDefaultScale = React.useMemo(() => {
     if (
@@ -26,15 +26,6 @@ function ScaleControls({
 
     return scaleOptions?.[0]?.label ?? "";
   }, [defaultScale, scaleOptions]);
-
-  const pickRandom = () => {
-    const result = pickRandomScale({ sysNames, scaleOptions });
-    if (!result) return;
-    const { root: nextRoot, scale: nextScale } = result;
-
-    setRoot(nextRoot);
-    setScale(nextScale);
-  };
 
   const resetDefaults = () => {
     setRoot(defaultRoot);
@@ -78,7 +69,7 @@ function ScaleControls({
               className="tv-button tv-button--icon"
               aria-label="Pick a random root and scale"
               title="Random root & scale"
-              onClick={pickRandom}
+              onClick={onRandomize}
             >
               <FiShuffle size={16} aria-hidden />
             </button>

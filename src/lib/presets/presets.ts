@@ -53,6 +53,7 @@ const COMMON_PRESETS: CommonPresets = {
     "Bass 4 BEAD (no G)": ["D", "A", "E", "B"],
     "Bass 4 Drop C (CGCF)": ["F", "C", "G", "C"],
     "Bass 4 Drop B (BF#BE)": ["E", "B", "F#", "B"],
+    "Fretless Bass (EADG)": ["G", "D", "A", "E"],
 
     "Violin (GDAE)": ["E", "A", "D", "G"],
     "Mandolin (GDAE)": ["E", "A", "D", "G"],
@@ -118,6 +119,7 @@ const COMMON_PRESETS: CommonPresets = {
 
     "Bass 6 Standard (BEADGC)": ["C", "G", "D", "A", "E", "B"],
     "Bass 6 Low F# (F#BEADG)": ["G", "D", "A", "E", "B", "F#"],
+    "Fretless Guitar (EADGBE)": ["E", "B", "G", "D", "A", "E"],
   },
 
   7: {
@@ -422,10 +424,18 @@ const COMMON_PRESET_META: CommonPresetMeta = {
     "Violin (GDAE)": {
       board: { fretStyle: "dotted", notePlacement: "onFret" },
     },
+    "Fretless Bass (EADG)": {
+      board: { fretStyle: "dotted", notePlacement: "onFret" },
+    },
   },
   5: {
     "Banjo — 5-string (g D G B D)": {
       stringMeta: [{ index: 4, startFret: 5, greyBefore: true }],
+    },
+  },
+  6: {
+    "Fretless Guitar (EADGBE)": {
+      board: { fretStyle: "dotted", notePlacement: "onFret" },
     },
   },
 } as const;

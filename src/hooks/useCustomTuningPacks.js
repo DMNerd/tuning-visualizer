@@ -180,12 +180,7 @@ export function useCustomTuningPacks({
 
     queuePresetByName(pendingPresetName);
     setPendingPresetName(null);
-  }, [
-    customPresetNames,
-    pendingPresetName,
-    queuePresetByName,
-    selectedPreset,
-  ]);
+  }, [customPresetNames, pendingPresetName, queuePresetByName, selectedPreset]);
 
   return {
     editorState,

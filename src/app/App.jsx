@@ -86,9 +86,8 @@ import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
-import { useFullscreen, useToggle, useThrottleFn } from "react-use";
-
-import { pickRandomScale } from "@/utils/random";
+import { useRandomScale } from "@/hooks/useRandomScale";
+import { useFullscreen, useToggle } from "react-use";
 
 export default function App() {
   // System selection
@@ -276,29 +275,16 @@ export default function App() {
     savedExists,
   });
 
-  const randomizeScale = useCallback(() => {
-    const result = pickRandomScale({ sysNames, scaleOptions });
-    if (!result) return;
-    const { root: nextRoot, scale: nextScale } = result;
-    setRoot(nextRoot);
-    setScale(nextScale);
-  }, [sysNames, scaleOptions, setRoot, setScale]);
-
-  const randomizeScaleRef = useRef(randomizeScale);
-  useEffect(() => {
-    randomizeScaleRef.current = randomizeScale;
-  }, [randomizeScale]);
-
-  const [randomizeHotkeyTick, setRandomizeHotkeyTick] = useState(-1);
-
-  useThrottleFn(
-    (tick) => {
-      if (tick < 0) return;
-      randomizeScaleRef.current();
-    },
-    150,
-    [randomizeHotkeyTick],
-  );
+  const {
+    randomize: randomizeScale,
+    triggerFromHotkey: triggerRandomizeScale,
+  } = useRandomScale({
+    sysNames,
+    scaleOptions,
+    setRoot,
+    setScale,
+    throttleMs: 150,
+  });
 
   const handleSelectNote = useCallback(
     (pc, providedName, event) => {
@@ -318,10 +304,6 @@ export default function App() {
     },
     [nameForPc, sysNames, setChordRoot, setRoot],
   );
-
-  const handleRandomizeHotkey = useCallback(() => {
-    setRandomizeHotkeyTick((count) => count + 1);
-  }, []);
 
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
@@ -370,7 +352,7 @@ export default function App() {
     setShowChord,
     setHideNonChord,
     onShowCheatsheet: showCheatsheet,
-    onRandomizeScale: handleRandomizeHotkey,
+    onRandomizeScale: triggerRandomizeScale,
     onCreateCustomPack: openCreate,
     strings,
     frets,
@@ -509,6 +491,7 @@ export default function App() {
             sysNames={sysNames}
             scaleOptions={scaleOptions}
             defaultScale={SCALE_DEFAULT}
+            onRandomize={randomizeScale}
           />
         </ErrorBoundary>
         <ErrorBoundary
