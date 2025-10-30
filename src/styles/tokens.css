@@ -15,6 +15,7 @@
   --fret-w: 1.6px;
   --fret-w-strong: 2px;
   --fret-w-micro: 1.3px;
+  --fret-dotted: color-mix(in oklab, var(--fret) 55%, var(--board) 45%);
   --degree-boost: 12%;
 
   /* shared card sizing */
@@ -44,6 +45,7 @@
   --root: #ff6a00;
   --fret: #c9cdd3;
   --fret-micro: color-mix(in oklab, var(--fret) 85%, var(--fg) 15%);
+  --fret-dotted: color-mix(in oklab, var(--fret) 55%, var(--board) 45%);
   --board: #f2f3f6;
   --panel: #ffffff;
 
@@ -72,6 +74,8 @@
     --board: #1a1d21;
     --fret: #5b626a;
     --fret-micro: #7c8a97;
+    --fret-dotted: color-mix(in oklab, var(--fret) 55%, var(--fg) 45%);
+
     --accent: #ffc24b;
     --root: #ff7a3d;
 
@@ -99,6 +103,8 @@
   --board: #1a1d21;
   --fret: #5b626a;
   --fret-micro: #7c8a97;
+  --fret-dotted: color-mix(in oklab, var(--fret) 55%, var(--fg) 45%);
+
   --accent: #ffc24b;
   --root: #ff7a3d;
 

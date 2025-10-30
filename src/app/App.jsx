@@ -516,23 +516,24 @@ export default function App() {
     maxFrets: FRETS_MAX,
   });
 
-  const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } = useResets({
-    system,
-    resetInstrumentPrefs,
-    setCapoFret,
-    setStringMeta,
-    setDisplayPrefs,
-    setSystemId,
-    setRoot,
-    setScale,
-    setChordRoot,
-    setChordType,
-    setShowChord,
-    setHideNonChord,
-    setPreset,
-    toast,
-    confirm,
-  });
+  const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } =
+    useResets({
+      system,
+      resetInstrumentPrefs,
+      setCapoFret,
+      setStringMeta,
+      setDisplayPrefs,
+      setSystemId,
+      setRoot,
+      setScale,
+      setChordRoot,
+      setChordType,
+      setShowChord,
+      setHideNonChord,
+      setPreset,
+      toast,
+      confirm,
+    });
 
   const buildHeader = useCallback(
     () => ({
@@ -592,7 +593,6 @@ export default function App() {
               FallbackComponent={ErrorFallback}
               onReset={() => {
                 setCapoFret(CAPO_DEFAULT);
-                setRoot(ROOT_DEFAULT);
               }}
             >
               <Fretboard
@@ -726,10 +726,7 @@ export default function App() {
             degreeCount={intervals.length}
           />
         </ErrorBoundary>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          resetKeys={[fileBase]}
-        >
+        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[fileBase]}>
           <ExportControls
             boardRef={boardRef}
             fileBase={fileBase}

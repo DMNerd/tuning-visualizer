@@ -661,7 +661,12 @@ svg {
 }
 
 .tv-fretboard__fret--dotted {
+  stroke: var(--fret-dotted);
   stroke-dasharray: 6 10;
+}
+
+.tv-fretboard__fret--dotted.tv-fretboard__fret--micro {
+  stroke: var(--fret-micro);
 }
 
 .tv-theme {
