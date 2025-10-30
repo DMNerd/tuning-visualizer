@@ -1,7 +1,21 @@
-import { useCallback, useEffect, useMemo, useState, useId } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useId,
+  useRef,
+} from "react";
 import { createPortal } from "react-dom";
 import { JsonEditor } from "json-edit-react";
-import { useKey, useLockBodyScroll } from "react-use";
+import {
+  useKey,
+  useLockBodyScroll,
+  useLatest,
+  useDebounce,
+  useWindowSize,
+  useClickAway,
+} from "react-use";
 import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
@@ -25,14 +39,47 @@ function clonePack(pack) {
   return JSON.parse(JSON.stringify(pack));
 }
 
+function isPlainObject(x) {
+  return x !== null && typeof x === "object" && !Array.isArray(x);
+}
+
 function ensurePack(pack) {
-  if (pack && typeof pack === "object") return pack;
-  return {
+  // Start from safe defaults
+  const base = {
     version: 2,
     name: "",
     system: { edo: 12 },
     tuning: { strings: [] },
     meta: {},
+  };
+
+  if (!isPlainObject(pack)) {
+    return base;
+  }
+
+  const version =
+    typeof pack.version === "number" || typeof pack.version === "string"
+      ? pack.version
+      : 2;
+
+  const name = typeof pack.name === "string" ? pack.name : "";
+
+  const edo = Number(pack?.system?.edo);
+  const system = Number.isFinite(edo) && edo > 0 ? { edo } : { edo: 12 };
+
+  const strings = Array.isArray(pack?.tuning?.strings)
+    ? pack.tuning.strings
+    : [];
+
+  // Critical: always ensure meta is an object so it’s editable
+  const meta = isPlainObject(pack.meta) ? pack.meta : {};
+
+  return {
+    version,
+    name,
+    system,
+    tuning: { strings },
+    meta,
   };
 }
 
@@ -211,13 +258,27 @@ function TuningPackEditorModal({
   const [draft, setDraft] = useState(() => ensurePack(initialPack));
   const [error, setError] = useState("");
   const [pointer, setPointer] = useState(null);
+
   const [baselineSnapshotString, setBaselineSnapshotString] = useState(() =>
     JSON.stringify(ensurePack(initialPack)),
   );
+
   const [draftString, setDraftString] = useState(() =>
     JSON.stringify(ensurePack(initialPack)),
   );
+  const [pendingDraftString, setPendingDraftString] = useState(draftString);
+
+  useDebounce(() => setDraftString(pendingDraftString), 120, [
+    pendingDraftString,
+  ]);
+
   const { confirm } = useConfirm();
+
+  const onCancelRef = useLatest(onCancel);
+  const onSubmitRef = useLatest(onSubmit);
+  const confirmRef = useLatest(confirm);
+
+  const cardRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -226,6 +287,7 @@ function TuningPackEditorModal({
       setDraft(snapshot);
       setBaselineSnapshotString(snapshotString);
       setDraftString(snapshotString);
+      setPendingDraftString(snapshotString);
       setError("");
       setPointer(null);
     }
@@ -242,7 +304,7 @@ function TuningPackEditorModal({
     if (!isOpen) return;
 
     if (hasUnsavedChanges) {
-      const shouldDiscard = await confirm({
+      const shouldDiscard = await confirmRef.current?.({
         title: "Discard unsaved changes?",
         message:
           "You have unsaved edits to this tuning pack. Close the editor without saving?",
@@ -262,8 +324,8 @@ function TuningPackEditorModal({
       }
     }
 
-    onCancel?.();
-  }, [confirm, hasUnsavedChanges, isOpen, onCancel]);
+    onCancelRef.current?.();
+  }, [confirmRef, hasUnsavedChanges, isOpen, onCancelRef]);
 
   useKey(
     "Escape",
@@ -276,6 +338,33 @@ function TuningPackEditorModal({
     [isOpen, handleCancel],
   );
 
+  useKey(
+    (event) =>
+      (event.key === "s" || event.key === "S") &&
+      (event.metaKey || event.ctrlKey),
+    (event) => {
+      if (!isOpen) return;
+      event.preventDefault();
+      try {
+        const normalized = parseTuningPack(draft);
+        onSubmitRef.current?.(normalized, {
+          replaceName: mode === "edit" ? originalName : undefined,
+        });
+      } catch (e) {
+        setError(e?.message || "Unable to save pack.");
+      }
+    },
+    { event: "keydown" },
+    [isOpen, draft, mode, originalName, onSubmitRef],
+  );
+
+  useClickAway(cardRef, (e) => {
+    if (!isOpen) return;
+    const el = e?.target;
+    if (el && el.closest?.(".tv-modal__card")) return;
+    handleCancel();
+  });
+
   const title = useMemo(
     () =>
       mode === "edit"
@@ -285,9 +374,9 @@ function TuningPackEditorModal({
   );
 
   const handleDataChange = useCallback((nextData) => {
-    setDraft(nextData);
+    setDraft(ensurePack(nextData));
     try {
-      setDraftString(JSON.stringify(nextData));
+      setPendingDraftString(JSON.stringify(ensurePack(nextData)));
     } catch (serializationError) {
       const message =
         serializationError?.message ||
@@ -341,29 +430,17 @@ function TuningPackEditorModal({
           fontFamily:
             'var(--font-mono, "JetBrains Mono", "Fira Code", "IBM Plex Mono", "ui-monospace", monospace)',
         },
-        collection: {
-          backgroundColor: "transparent",
-        },
-        collectionInner: {
-          backgroundColor: "transparent",
-        },
-        collectionElement: {
-          borderRadius: "6px",
-          paddingBlock: "2px",
-        },
-        property: {
-          color: "var(--muted)",
-        },
+        collection: { backgroundColor: "transparent" },
+        collectionInner: { backgroundColor: "transparent" },
+        collectionElement: { borderRadius: "6px", paddingBlock: "2px" },
+        property: { color: "var(--muted)" },
         bracket: {
           color: isDark
             ? "rgba(226, 232, 240, 0.85)"
             : "rgba(17, 24, 39, 0.75)",
           fontWeight: 600,
         },
-        itemCount: {
-          color: "var(--muted)",
-          fontStyle: "italic",
-        },
+        itemCount: { color: "var(--muted)", fontStyle: "italic" },
         string: "var(--accent)",
         number: isDark ? baseNumberDark : baseNumber,
         boolean: isDark ? baseBooleanDark : baseBoolean,
@@ -435,14 +512,16 @@ function TuningPackEditorModal({
   const handleSave = useCallback(() => {
     try {
       const normalized = parseTuningPack(draft);
-
-      onSubmit?.(normalized, {
+      onSubmitRef.current?.(normalized, {
         replaceName: mode === "edit" ? originalName : undefined,
       });
     } catch (e) {
       setError(e?.message || "Unable to save pack.");
     }
-  }, [draft, mode, onSubmit, originalName]);
+  }, [draft, mode, originalName, onSubmitRef]);
+
+  const { height: winH } = useWindowSize();
+  const editorMaxH = Math.max(240, winH - 280);
 
   if (!isOpen) return null;
 
@@ -450,6 +529,7 @@ function TuningPackEditorModal({
     <div className="tv-modal" role="presentation">
       <div className="tv-modal__backdrop" aria-hidden onClick={handleCancel} />
       <div
+        ref={cardRef}
         className="tv-modal__card"
         role="dialog"
         aria-modal="true"
@@ -463,7 +543,10 @@ function TuningPackEditorModal({
           </p>
         </header>
         <div className="tv-modal__body">
-          <div className="tv-modal__editor">
+          <div
+            className="tv-modal__editor"
+            style={{ maxHeight: editorMaxH, overflow: "auto" }}
+          >
             <JsonEditor
               data={draft}
               setData={handleDataChange}

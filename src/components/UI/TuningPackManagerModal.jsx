@@ -1,7 +1,13 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
-import { useKey, useLockBodyScroll } from "react-use";
+import {
+  useKey,
+  useLockBodyScroll,
+  useLatest,
+  useWindowSize,
+  useClickAway,
+} from "react-use";
 import { memoWithPick } from "@/utils/memo";
 
 function getSystemIdByEdo(systems, edo) {
@@ -53,12 +59,19 @@ function TuningPackManagerModal({
   onEdit,
   onDelete,
 }) {
+  const onCloseRef = useLatest(onClose);
+  const onEditRef = useLatest(onEdit);
+  const onDeleteRef = useLatest(onDelete);
+
+  const cardRef = useRef(null);
+
   const handleClose = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
+    onCloseRef.current?.();
+  }, [onCloseRef]);
 
   useLockBodyScroll(isOpen);
 
+  // ESC to close (existing behavior)
   useKey(
     "Escape",
     (event) => {
@@ -69,6 +82,28 @@ function TuningPackManagerModal({
     { event: "keydown" },
     [isOpen, handleClose],
   );
+
+  // Cmd/Ctrl + W to close (editor-like convenience)
+  useKey(
+    (event) =>
+      (event.key === "w" || event.key === "W") &&
+      (event.metaKey || event.ctrlKey),
+    (event) => {
+      if (!isOpen) return;
+      event.preventDefault();
+      handleClose();
+    },
+    { event: "keydown" },
+    [isOpen, handleClose],
+  );
+
+  // Click outside the card to close
+  useClickAway(cardRef, (e) => {
+    if (!isOpen) return;
+    const target = e?.target;
+    if (target && target.closest?.(".tv-modal__card")) return;
+    handleClose();
+  });
 
   // Group by system only (e.g., "12-TET", "24-TET"), not by string count.
   const groups = useMemo(() => {
@@ -127,19 +162,22 @@ function TuningPackManagerModal({
   const handleEdit = useCallback(
     (pack) => {
       if (!pack) return;
-      onEdit?.(pack);
+      onEditRef.current?.(pack);
       handleClose();
     },
-    [onEdit, handleClose],
+    [onEditRef, handleClose],
   );
 
   const handleDelete = useCallback(
     (name) => {
       if (typeof name !== "string") return;
-      onDelete?.(name);
+      onDeleteRef.current?.(name);
     },
-    [onDelete],
+    [onDeleteRef],
   );
+
+  const { height: winH } = useWindowSize();
+  const listMaxH = Math.max(240, winH - 320);
 
   if (!isOpen) return null;
 
@@ -147,6 +185,7 @@ function TuningPackManagerModal({
     <div className="tv-modal" role="presentation">
       <div className="tv-modal__backdrop" aria-hidden onClick={handleClose} />
       <div
+        ref={cardRef}
         className="tv-modal__card"
         role="dialog"
         aria-modal="true"
@@ -161,7 +200,10 @@ function TuningPackManagerModal({
         </header>
         <div className="tv-modal__body">
           {groups.length ? (
-            <div className="tv-modal__manager">
+            <div
+              className="tv-modal__manager"
+              style={{ maxHeight: listMaxH, overflow: "auto" }}
+            >
               {groups.map((group) => (
                 <section
                   key={group.systemLabel}
