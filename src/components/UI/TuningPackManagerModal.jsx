@@ -70,6 +70,7 @@ function TuningPackManagerModal({
     [isOpen, handleClose],
   );
 
+  // Group by system only (e.g., "12-TET", "24-TET"), not by string count.
   const groups = useMemo(() => {
     if (!Array.isArray(tunings) || tunings.length === 0) return [];
 
@@ -79,7 +80,7 @@ function TuningPackManagerModal({
       const normalized = normalizePack(entry);
       if (!normalized) return;
 
-      const { edo, stringsCount } = normalized;
+      const { edo } = normalized;
       const systemId = Number.isFinite(edo)
         ? getSystemIdByEdo(systems, edo)
         : null;
@@ -88,44 +89,36 @@ function TuningPackManagerModal({
         : Number.isFinite(edo)
           ? `${edo}-TET`
           : "Unknown system";
-      const normalizedStringsCount = Number.isFinite(stringsCount)
-        ? stringsCount
-        : null;
-      const key = `${systemLabel}__${normalizedStringsCount ?? "unknown"}`;
 
-      if (!grouped.has(key)) {
-        grouped.set(key, {
-          key,
+      if (!grouped.has(systemLabel)) {
+        grouped.set(systemLabel, {
           edo: Number.isFinite(edo) ? edo : Number.POSITIVE_INFINITY,
-          stringsCount: normalizedStringsCount,
           systemLabel,
           packs: [],
         });
       }
 
-      grouped.get(key).packs.push(normalized);
+      grouped.get(systemLabel).packs.push(normalized);
     });
 
     const result = Array.from(grouped.values());
 
+    // Sort groups by ascending EDO, then label
     result.sort((a, b) => {
       if (a.edo !== b.edo) return a.edo - b.edo;
-      const stringsA = Number.isFinite(a.stringsCount)
-        ? a.stringsCount
-        : Number.POSITIVE_INFINITY;
-      const stringsB = Number.isFinite(b.stringsCount)
-        ? b.stringsCount
-        : Number.POSITIVE_INFINITY;
-      if (stringsA !== stringsB) return stringsA - stringsB;
       return a.systemLabel.localeCompare(b.systemLabel);
     });
 
+    // Within each group, sort packs by string count, then name
     result.forEach((group) => {
-      group.packs.sort((a, b) =>
-        a.displayName.localeCompare(b.displayName, undefined, {
+      group.packs.sort((a, b) => {
+        if (a.stringsCount !== b.stringsCount) {
+          return a.stringsCount - b.stringsCount;
+        }
+        return a.displayName.localeCompare(b.displayName, undefined, {
           sensitivity: "base",
-        }),
-      );
+        });
+      });
     });
 
     return result;
@@ -170,11 +163,13 @@ function TuningPackManagerModal({
           {groups.length ? (
             <div className="tv-modal__manager">
               {groups.map((group) => (
-                <section key={group.key} className="tv-modal__manager-group">
+                <section
+                  key={group.systemLabel}
+                  className="tv-modal__manager-group"
+                >
                   <header className="tv-modal__manager-group-header">
                     <div className="tv-modal__manager-group-title">
                       <h3>{group.systemLabel}</h3>
-                      <span>{formatStringsCount(group.stringsCount)}</span>
                     </div>
                     <span className="tv-modal__manager-group-count">
                       {group.packs.length}{" "}
@@ -196,11 +191,10 @@ function TuningPackManagerModal({
                             <span className="tv-modal__manager-pack-name">
                               {pack.displayName}
                             </span>
-                            {preview ? (
-                              <span className="tv-modal__manager-pack-preview">
-                                {preview}
-                              </span>
-                            ) : null}
+                            <span className="tv-modal__manager-pack-preview">
+                              {formatStringsCount(pack.stringsCount)}
+                              {preview ? ` · ${preview}` : ""}
+                            </span>
                           </div>
                           <div className="tv-modal__manager-actions">
                             <button

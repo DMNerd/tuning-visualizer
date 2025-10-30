@@ -12,7 +12,6 @@ import { withToastPromise } from "@/utils/toast";
 ========================= */
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
-  // Persist array of custom packs directly
   const [customTunings, setCustomTunings] = useLocalStorage(
     STORAGE_KEYS.CUSTOM_TUNINGS,
     [],
@@ -20,7 +19,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const parsePack = useCallback(parseTuningPack, []);
 
-  // ----- Export current tuning as a pack (pure) -----
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null, boardMeta = null) => {
       const sys = TUNINGS[systemId];
@@ -56,7 +54,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [systemId, strings, TUNINGS],
   );
 
-  // ----- Export all custom tunings (pure) -----
   const getAllCustomTunings = useCallback(
     () => customTunings || [],
     [customTunings],
@@ -65,17 +62,25 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const saveCustomTuning = useCallback(
     (pack, options = {}) => {
       const parsed = parsePack(pack);
-      const replaceName =
+
+      const newName =
+        typeof parsed?.name === "string" ? parsed.name.trim() : "";
+      parsed.name = newName;
+
+      const replaceNameRaw =
         typeof options?.replaceName === "string"
           ? options.replaceName
           : undefined;
+      const replaceName =
+        typeof replaceNameRaw === "string" ? replaceNameRaw.trim() : undefined;
 
       setCustomTunings((prev) => {
         const existing = Array.isArray(prev) ? prev : [];
         const filtered = existing.filter((item) => {
-          if (!item || typeof item.name !== "string") return true;
-          if (replaceName && item.name === replaceName) return false;
-          return item.name !== parsed.name;
+          const itemName =
+            typeof item?.name === "string" ? item.name.trim() : "";
+          if (replaceName && itemName === replaceName) return false;
+          return itemName !== newName;
         });
         return [...filtered, parsed];
       });
@@ -87,17 +92,21 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const deleteCustomTuning = useCallback(
     (name) => {
-      if (!name) return;
+      const target = typeof name === "string" ? name.trim() : name;
+      if (!target) return;
       setCustomTunings((prev) => {
         const existing = Array.isArray(prev) ? prev : [];
-        const filtered = existing.filter((item) => item?.name !== name);
+        const filtered = existing.filter((item) => {
+          const itemName =
+            typeof item?.name === "string" ? item.name.trim() : "";
+          return itemName !== target;
+        });
         return filtered;
       });
     },
     [setCustomTunings],
   );
 
-  // ----- Import one or more packs (pure) -----
   const onImportTunings = useCallback(
     (packsRaw, filenames = []) => {
       const res = v.safeParse(TuningPackArraySchema, packsRaw);
@@ -111,7 +120,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const parsed = res.output;
 
       const newTunings = parsed.map((p, i) => {
-        const label = p.name || filenames[i] || `Imported ${ordinal(i + 1)}`;
+        const candidate =
+          (typeof p.name === "string" ? p.name : "") ||
+          (typeof filenames[i] === "string" ? filenames[i] : "") ||
+          `Imported ${ordinal(i + 1)}`;
+        const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
         const { system, ...rest } = p;
         const cleanSystem = { edo: system.edo };
         return { ...rest, system: cleanSystem, name: label };
@@ -121,11 +134,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     },
     [setCustomTunings],
   );
-
-  /* =========================
-     Toast-wrapped helpers
-     (optional convenience)
-  ========================= */
 
   const importFromJson = useCallback(
     async (json, filenames = []) => {

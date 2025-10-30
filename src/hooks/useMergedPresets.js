@@ -185,8 +185,13 @@ export function useMergedPresets({
       ...(Array.isArray(presetNames) ? presetNames : []),
       ...customPresetNames,
     ]);
-    return Array.from(names);
-  }, [presetNames, customPresetNames]);
+    const sc = Number(currentStrings);
+    return Array.from(names).filter((name) => {
+      const arr = coerceAnyTuning(mergedPresetMap?.[name]);
+      if (!Number.isFinite(sc)) return true;
+      return Array.isArray(arr) ? arr.length === sc : false;
+    });
+  }, [presetNames, customPresetNames, mergedPresetMap, currentStrings]);
 
   const defaultPresetName = useMemo(
     () => (savedExists ? "Saved default" : "Factory default"),
@@ -227,6 +232,13 @@ export function useMergedPresets({
         queuedPresetRef.current = name;
         return;
       }
+      if (
+        Array.isArray(coerced) &&
+        Number.isFinite(currentStrings) &&
+        coerced.length !== currentStrings
+      ) {
+        return;
+      }
       setTuning(coerced);
       const meta =
         normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
@@ -247,6 +259,7 @@ export function useMergedPresets({
       setTuning,
       setStringMeta,
       setBoardMeta,
+      currentStrings,
     ],
   );
 
@@ -281,7 +294,7 @@ export function useMergedPresets({
     if (resolved?.length) {
       setPreset(selectedPreset);
     }
-  }, [mergedPresetMap, selectedPreset]);
+  }, [mergedPresetMap, selectedPreset, resolveTuningByName, setPreset]);
 
   useUpdateEffect(() => {
     const pending = queuedPresetRef.current;
@@ -291,7 +304,7 @@ export function useMergedPresets({
       setPreset(pending);
       queuedPresetRef.current = null;
     }
-  }, [mergedPresetNames, mergedPresetMap]);
+  }, [mergedPresetNames, mergedPresetMap, resolveTuningByName, setPreset]);
 
   const prevSystemId = usePrevious(systemId);
   const prevStrings = usePrevious(strings);
