@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useLocalStorage } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
@@ -41,6 +41,17 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [],
   );
 
+  const latestCustomTuningsRef = useRef(customTunings);
+
+  useEffect(() => {
+    latestCustomTuningsRef.current = customTunings;
+  }, [customTunings]);
+
+  const getExistingCustomTunings = useCallback(() => {
+    const existing = latestCustomTuningsRef.current;
+    return Array.isArray(existing) ? existing : [];
+  }, []);
+
   const parsePack = useCallback(parseTuningPack, []);
 
   const getCurrentTuningPack = useCallback(
@@ -78,10 +89,10 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [systemId, strings, TUNINGS],
   );
 
-  const getAllCustomTunings = useCallback(
-    () => customTunings || [],
-    [customTunings],
-  );
+  const getAllCustomTunings = useCallback(() => {
+    const existing = getExistingCustomTunings();
+    return existing;
+  }, [getExistingCustomTunings]);
 
   const saveCustomTuning = useCallback(
     (pack, options = {}) => {
@@ -92,47 +103,45 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
       let savedPack = null;
 
-      setCustomTunings((prev) => {
-        const existing = Array.isArray(prev) ? prev : [];
-        const takenNames = new Set(
-          existing
-            .map((item) => normalizePackName(item?.name))
-            .filter((name) => name && name !== replaceName),
-        );
+      const existing = getExistingCustomTunings();
+      const takenNames = new Set(
+        existing
+          .map((item) => normalizePackName(item?.name))
+          .filter((name) => name && name !== replaceName),
+      );
 
-        const finalName = ensureUniqueName(desiredName, takenNames);
-        const nextPack = { ...parsed, name: finalName };
-        savedPack = nextPack;
+      const finalName = ensureUniqueName(desiredName, takenNames);
+      const nextPack = { ...parsed, name: finalName };
+      savedPack = nextPack;
 
-        const filtered = existing.filter((item) => {
-          const itemName = normalizePackName(item?.name);
-          if (replaceName && itemName === replaceName) return false;
-          return itemName !== finalName;
-        });
-
-        return [...filtered, nextPack];
+      const filtered = existing.filter((item) => {
+        const itemName = normalizePackName(item?.name);
+        if (replaceName && itemName === replaceName) return false;
+        return itemName !== finalName;
       });
+
+      const nextTunings = [...filtered, nextPack];
+      latestCustomTuningsRef.current = nextTunings;
+      setCustomTunings(nextTunings);
 
       return savedPack ?? { ...parsed, name: desiredName };
     },
-    [parsePack, setCustomTunings],
+    [getExistingCustomTunings, parsePack, setCustomTunings],
   );
 
   const deleteCustomTuning = useCallback(
     (name) => {
       const target = typeof name === "string" ? name.trim() : name;
       if (!target) return;
-      setCustomTunings((prev) => {
-        const existing = Array.isArray(prev) ? prev : [];
-        const filtered = existing.filter((item) => {
-          const itemName =
-            typeof item?.name === "string" ? item.name.trim() : "";
-          return itemName !== target;
-        });
-        return filtered;
+      const existing = getExistingCustomTunings();
+      const filtered = existing.filter((item) => {
+        const itemName = typeof item?.name === "string" ? item.name.trim() : "";
+        return itemName !== target;
       });
+      latestCustomTuningsRef.current = filtered;
+      setCustomTunings(filtered);
     },
-    [setCustomTunings],
+    [getExistingCustomTunings, setCustomTunings],
   );
 
   const onImportTunings = useCallback(
@@ -147,30 +156,30 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
       const parsed = res.output;
 
-      setCustomTunings((prev) => {
-        const existing = Array.isArray(prev) ? prev : [];
-        const takenNames = new Set(
-          existing
-            .map((item) => normalizePackName(item?.name))
-            .filter(Boolean),
-        );
+      const existing = getExistingCustomTunings();
+      const takenNames = new Set(
+        existing
+          .map((item) => normalizePackName(item?.name))
+          .filter(Boolean),
+      );
 
-        const newTunings = parsed.map((p, i) => {
-          const candidate =
-            (typeof p.name === "string" ? p.name : "") ||
-            (typeof filenames[i] === "string" ? filenames[i] : "") ||
-            `Imported ${ordinal(i + 1)}`;
-          const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
-          const uniqueName = ensureUniqueName(label, takenNames);
-          const { system, ...rest } = p;
-          const cleanSystem = { edo: system.edo };
-          return { ...rest, system: cleanSystem, name: uniqueName };
-        });
-
-        return [...existing, ...newTunings];
+      const newTunings = parsed.map((p, i) => {
+        const candidate =
+          (typeof p.name === "string" ? p.name : "") ||
+          (typeof filenames[i] === "string" ? filenames[i] : "") ||
+          `Imported ${ordinal(i + 1)}`;
+        const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
+        const uniqueName = ensureUniqueName(label, takenNames);
+        const { system, ...rest } = p;
+        const cleanSystem = { edo: system.edo };
+        return { ...rest, system: cleanSystem, name: uniqueName };
       });
+
+      const nextTunings = [...existing, ...newTunings];
+      latestCustomTuningsRef.current = nextTunings;
+      setCustomTunings(nextTunings);
     },
-    [setCustomTunings],
+    [getExistingCustomTunings, setCustomTunings],
   );
 
   const importFromJson = useCallback(
