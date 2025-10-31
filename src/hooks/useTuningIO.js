@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useLocalStorage } from "react-use";
+import { useCallback } from "react";
+import { useLocalStorage, useLatest } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
@@ -41,16 +41,12 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [],
   );
 
-  const latestCustomTuningsRef = useRef(customTunings);
-
-  useEffect(() => {
-    latestCustomTuningsRef.current = customTunings;
-  }, [customTunings]);
+  const latestCustomTuningsRef = useLatest(customTunings);
 
   const getExistingCustomTunings = useCallback(() => {
     const existing = latestCustomTuningsRef.current;
     return Array.isArray(existing) ? existing : [];
-  }, []);
+  }, [latestCustomTuningsRef]);
 
   const parsePack = useCallback(parseTuningPack, []);
 
@@ -121,7 +117,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       });
 
       const nextTunings = [...filtered, nextPack];
-      latestCustomTuningsRef.current = nextTunings;
       setCustomTunings(nextTunings);
 
       return savedPack ?? { ...parsed, name: desiredName };
@@ -138,7 +133,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         const itemName = typeof item?.name === "string" ? item.name.trim() : "";
         return itemName !== target;
       });
-      latestCustomTuningsRef.current = filtered;
       setCustomTunings(filtered);
     },
     [getExistingCustomTunings, setCustomTunings],
@@ -176,7 +170,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       });
 
       const nextTunings = [...existing, ...newTunings];
-      latestCustomTuningsRef.current = nextTunings;
       setCustomTunings(nextTunings);
     },
     [getExistingCustomTunings, setCustomTunings],
