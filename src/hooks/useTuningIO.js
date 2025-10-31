@@ -7,6 +7,30 @@ import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 import { withToastPromise } from "@/utils/toast";
 
+function normalizePackName(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function ensureUniqueName(desiredName, takenNames) {
+  const base = normalizePackName(desiredName);
+  if (!base) return "";
+
+  if (!takenNames.has(base)) {
+    takenNames.add(base);
+    return base;
+  }
+
+  let suffix = 2;
+  let candidate = `${base} (${suffix})`;
+  while (takenNames.has(candidate)) {
+    suffix += 1;
+    candidate = `${base} (${suffix})`;
+  }
+
+  takenNames.add(candidate);
+  return candidate;
+}
+
 /* =========================
    Hook
 ========================= */
@@ -63,29 +87,33 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     (pack, options = {}) => {
       const parsed = parsePack(pack);
 
-      const newName =
-        typeof parsed?.name === "string" ? parsed.name.trim() : "";
-      parsed.name = newName;
+      const desiredName = normalizePackName(parsed?.name);
+      const replaceName = normalizePackName(options?.replaceName);
 
-      const replaceNameRaw =
-        typeof options?.replaceName === "string"
-          ? options.replaceName
-          : undefined;
-      const replaceName =
-        typeof replaceNameRaw === "string" ? replaceNameRaw.trim() : undefined;
+      let savedPack = null;
 
       setCustomTunings((prev) => {
         const existing = Array.isArray(prev) ? prev : [];
+        const takenNames = new Set(
+          existing
+            .map((item) => normalizePackName(item?.name))
+            .filter((name) => name && name !== replaceName),
+        );
+
+        const finalName = ensureUniqueName(desiredName, takenNames);
+        const nextPack = { ...parsed, name: finalName };
+        savedPack = nextPack;
+
         const filtered = existing.filter((item) => {
-          const itemName =
-            typeof item?.name === "string" ? item.name.trim() : "";
+          const itemName = normalizePackName(item?.name);
           if (replaceName && itemName === replaceName) return false;
-          return itemName !== newName;
+          return itemName !== finalName;
         });
-        return [...filtered, parsed];
+
+        return [...filtered, nextPack];
       });
 
-      return parsed;
+      return savedPack ?? { ...parsed, name: desiredName };
     },
     [parsePack, setCustomTunings],
   );
@@ -119,18 +147,28 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
       const parsed = res.output;
 
-      const newTunings = parsed.map((p, i) => {
-        const candidate =
-          (typeof p.name === "string" ? p.name : "") ||
-          (typeof filenames[i] === "string" ? filenames[i] : "") ||
-          `Imported ${ordinal(i + 1)}`;
-        const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
-        const { system, ...rest } = p;
-        const cleanSystem = { edo: system.edo };
-        return { ...rest, system: cleanSystem, name: label };
-      });
+      setCustomTunings((prev) => {
+        const existing = Array.isArray(prev) ? prev : [];
+        const takenNames = new Set(
+          existing
+            .map((item) => normalizePackName(item?.name))
+            .filter(Boolean),
+        );
 
-      setCustomTunings((prev) => [...(prev || []), ...newTunings]);
+        const newTunings = parsed.map((p, i) => {
+          const candidate =
+            (typeof p.name === "string" ? p.name : "") ||
+            (typeof filenames[i] === "string" ? filenames[i] : "") ||
+            `Imported ${ordinal(i + 1)}`;
+          const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
+          const uniqueName = ensureUniqueName(label, takenNames);
+          const { system, ...rest } = p;
+          const cleanSystem = { edo: system.edo };
+          return { ...rest, system: cleanSystem, name: uniqueName };
+        });
+
+        return [...existing, ...newTunings];
+      });
     },
     [setCustomTunings],
   );
