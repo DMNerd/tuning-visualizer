@@ -1,18 +1,8 @@
-import { useMemo, useState } from "react";
-import { useDeepCompareEffect } from "react-use";
+import { useMemo, useState, useEffect } from "react";
 import { toStringMetaMap } from "@/lib/meta/meta";
 
 /**
  * Geometry/layout for the fretboard SVG.
- *
- * - Visual spacing consistent across systems (linear per-fret width).
- * - Fret width adapts smoothly to total fret count (fewer frets => wider).
- * - Layout is independent of dot size (no zoom), except:
- *   open-note X uses dotSize to sit nicely *behind the nut*.
- *
- * Per-string metadata:
- * - stringMeta: [{ index, startFret?, greyBefore? }]
- *   When provided, helpers (stringStartX, noteX) respect per-string start frets.
  */
 export function useFretboardLayout({
   frets,
@@ -23,7 +13,8 @@ export function useFretboardLayout({
   const [metaByIndex, setMetaByIndex] = useState(() =>
     toStringMetaMap(stringMeta),
   );
-  useDeepCompareEffect(() => {
+
+  useEffect(() => {
     setMetaByIndex(toStringMetaMap(stringMeta));
   }, [stringMeta]);
 
