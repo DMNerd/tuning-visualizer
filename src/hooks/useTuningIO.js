@@ -152,9 +152,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
       const existing = getExistingCustomTunings();
       const takenNames = new Set(
-        existing
-          .map((item) => normalizePackName(item?.name))
-          .filter(Boolean),
+        existing.map((item) => normalizePackName(item?.name)).filter(Boolean),
       );
 
       const newTunings = parsed.map((p, i) => {

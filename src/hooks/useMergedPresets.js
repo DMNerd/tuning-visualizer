@@ -297,6 +297,29 @@ export function useMergedPresets({
   }, [mergedPresetMap, selectedPreset, resolveTuningByName, setPreset]);
 
   useUpdateEffect(() => {
+    if (!selectedPreset) return;
+    if (mergedPresetNames.includes(selectedPreset)) return;
+
+    resetSelection();
+
+    if (defaultPresetName && mergedPresetNames.includes(defaultPresetName)) {
+      queuePresetByName(defaultPresetName);
+      return;
+    }
+
+    const fallback = mergedPresetNames[0];
+    if (fallback) {
+      queuePresetByName(fallback);
+    }
+  }, [
+    mergedPresetNames,
+    selectedPreset,
+    defaultPresetName,
+    resetSelection,
+    queuePresetByName,
+  ]);
+
+  useUpdateEffect(() => {
     const pending = queuedPresetRef.current;
     if (!pending) return;
     const resolved = resolveTuningByName(pending);
