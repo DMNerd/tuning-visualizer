@@ -46,7 +46,6 @@ function isPlainObject(x) {
 function ensurePack(pack) {
   // Start from safe defaults
   const base = {
-    version: 2,
     name: "",
     system: { edo: 12 },
     tuning: { strings: [] },
@@ -56,11 +55,6 @@ function ensurePack(pack) {
   if (!isPlainObject(pack)) {
     return base;
   }
-
-  const version =
-    typeof pack.version === "number" || typeof pack.version === "string"
-      ? pack.version
-      : 2;
 
   const name = typeof pack.name === "string" ? pack.name : "";
 
@@ -75,7 +69,6 @@ function ensurePack(pack) {
   const meta = isPlainObject(pack.meta) ? pack.meta : {};
 
   return {
-    version,
     name,
     system,
     tuning: { strings },

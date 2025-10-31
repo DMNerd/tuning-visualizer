@@ -5,13 +5,20 @@ import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 import { parseTuningPack } from "@/lib/export/schema";
 
 const basePack = {
-  version: 2,
   name: "Example Tuning",
   system: { edo: 12 },
   tuning: {
     strings: Array.from({ length: STR_MIN }, () => ({ note: "E4" })),
   },
 };
+
+test("parseTuningPack accepts legacy packs with version", () => {
+  const legacy = { ...basePack, version: 2 };
+  const parsed = parseTuningPack(legacy);
+
+  assert.equal(Object.prototype.hasOwnProperty.call(parsed, "version"), false);
+  assert.equal(parsed.name, basePack.name);
+});
 
 test("parseTuningPack rejects packs with non-positive edo", () => {
   const invalid = {

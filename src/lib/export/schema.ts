@@ -16,7 +16,6 @@ export const TuningStringSchema = v.pipe(
 );
 
 export const TuningPackSchema = v.object({
-  version: v.literal(2),
   name: v.string(),
   system: v.object({
     edo: v.pipe(
@@ -47,8 +46,22 @@ export type TuningString = v.InferOutput<typeof TuningStringSchema>;
 export type TuningPack = v.InferOutput<typeof TuningPackSchema>;
 export type TuningPackArray = v.InferOutput<typeof TuningPackArraySchema>;
 
+export function stripVersionField(pack: unknown) {
+  if (pack === null || typeof pack !== "object" || Array.isArray(pack)) {
+    return pack;
+  }
+
+  if (!("version" in pack)) {
+    return pack;
+  }
+
+  const { version: _ignored, ...rest } = pack as Record<string, unknown>;
+  return rest;
+}
+
 export function parseTuningPack(pack: unknown): TuningPack {
-  const res = v.safeParse(TuningPackSchema, pack);
+  const sanitized = stripVersionField(pack);
+  const res = v.safeParse(TuningPackSchema, sanitized);
   if (!res.success) {
     const message =
       res.issues?.map((issue) => issue.message).join("; ") ||

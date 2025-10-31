@@ -1,9 +1,13 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useLocalStorage, useLatest } from "react-use";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
-import { parseTuningPack, TuningPackArraySchema } from "@/lib/export/schema";
+import {
+  parseTuningPack,
+  stripVersionField,
+  TuningPackArraySchema,
+} from "@/lib/export/schema";
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 import { withToastPromise } from "@/utils/toast";
 
@@ -31,6 +35,194 @@ function ensureUniqueName(desiredName, takenNames) {
   return candidate;
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function flattenOnce(arr) {
+  if (!Array.isArray(arr)) return arr;
+  let nested = false;
+  const flat = [];
+  for (const entry of arr) {
+    if (Array.isArray(entry)) {
+      nested = true;
+      flat.push(...entry);
+    } else {
+      flat.push(entry);
+    }
+  }
+  return nested ? flat : arr;
+}
+
+const LEGACY_STRING_KEYS = [
+  "strings",
+  "tuning",
+  "notes",
+  "tokens",
+  "pitches",
+  "values",
+];
+
+function findLegacyStringSource(value) {
+  if (Array.isArray(value)) {
+    return flattenOnce(value);
+  }
+
+  if (!isPlainObject(value)) {
+    return null;
+  }
+
+  const tuning = value.tuning;
+  if (Array.isArray(tuning)) {
+    return flattenOnce(tuning);
+  }
+  if (isPlainObject(tuning) && Array.isArray(tuning.strings)) {
+    return flattenOnce(tuning.strings);
+  }
+
+  for (const key of LEGACY_STRING_KEYS) {
+    const candidate = value[key];
+    if (Array.isArray(candidate)) {
+      return flattenOnce(candidate);
+    }
+  }
+
+  for (const wrapper of ["data", "payload"]) {
+    const nested = value[wrapper];
+    if (!nested) continue;
+    const resolved = findLegacyStringSource(nested);
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
+function normalizeLegacyStringEntry(entry) {
+  if (isPlainObject(entry)) {
+    const normalized = {};
+    if (typeof entry.label === "string") normalized.label = entry.label;
+    if (typeof entry.note === "string" && entry.note.trim()) {
+      normalized.note = entry.note.trim();
+    } else if (typeof entry.token === "string" && entry.token.trim()) {
+      normalized.note = entry.token.trim();
+    } else if (typeof entry.pitch === "string" && entry.pitch.trim()) {
+      normalized.note = entry.pitch.trim();
+    } else if (typeof entry.value === "string" && entry.value.trim()) {
+      normalized.note = entry.value.trim();
+    }
+    if (typeof entry.midi === "number" && Number.isFinite(entry.midi)) {
+      normalized.midi = entry.midi;
+    }
+    if (
+      typeof entry.startFret === "number" &&
+      Number.isFinite(entry.startFret)
+    ) {
+      normalized.startFret = entry.startFret;
+    }
+    if (typeof entry.greyBefore === "boolean") {
+      normalized.greyBefore = entry.greyBefore;
+    }
+
+    if (
+      typeof normalized.note === "string" ||
+      typeof normalized.midi === "number"
+    ) {
+      return normalized;
+    }
+  }
+
+  if (typeof entry === "string") {
+    const note = entry.trim();
+    if (note) {
+      return { note };
+    }
+  }
+
+  if (typeof entry === "number" && Number.isFinite(entry)) {
+    return { midi: entry };
+  }
+
+  return null;
+}
+
+function normalizeLegacyStrings(value) {
+  const source = findLegacyStringSource(value);
+  if (!Array.isArray(source) || !source.length) {
+    return null;
+  }
+
+  const normalized = source
+    .map(normalizeLegacyStringEntry)
+    .filter(
+      (entry) =>
+        entry &&
+        (typeof entry.note === "string" || typeof entry.midi === "number"),
+    );
+
+  if (!normalized.length) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function resolveLegacyEdo(pack) {
+  const current = Number(pack?.system?.edo);
+  if (Number.isFinite(current) && current > 0) {
+    return Math.trunc(current);
+  }
+
+  const legacy = Number(pack?.edo);
+  if (Number.isFinite(legacy) && legacy > 0) {
+    return Math.trunc(legacy);
+  }
+
+  return null;
+}
+
+function upgradeLegacyPack(pack) {
+  if (!isPlainObject(pack)) {
+    return pack;
+  }
+
+  let changed = false;
+  const next = { ...pack };
+
+  if ("version" in next) {
+    delete next.version;
+    changed = true;
+  }
+
+  const existingStrings = Array.isArray(next?.tuning?.strings)
+    ? next.tuning.strings
+    : null;
+
+  const needsStringUpgrade =
+    !existingStrings || existingStrings.some((entry) => !isPlainObject(entry));
+
+  if (needsStringUpgrade) {
+    const normalized = normalizeLegacyStrings(
+      existingStrings ? { strings: existingStrings } : next,
+    );
+    if (normalized) {
+      next.tuning = { strings: normalized };
+      changed = true;
+    }
+  }
+
+  const edo = resolveLegacyEdo(next);
+  if (Number.isFinite(edo) && edo > 0) {
+    if (!isPlainObject(next.system) || next.system.edo !== edo) {
+      next.system = { edo };
+      changed = true;
+    }
+  }
+
+  return changed ? next : pack;
+}
+
 /* =========================
    Hook
 ========================= */
@@ -40,6 +232,30 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     STORAGE_KEYS.CUSTOM_TUNINGS,
     [],
   );
+  const upgradeRef = useRef(false);
+
+  useEffect(() => {
+    if (upgradeRef.current) return;
+
+    if (!Array.isArray(customTunings) || !customTunings.length) {
+      upgradeRef.current = true;
+      return;
+    }
+
+    let changed = false;
+    const upgraded = customTunings.map((pack) => {
+      const next = upgradeLegacyPack(pack);
+      if (next !== pack) {
+        changed = true;
+      }
+      return next;
+    });
+
+    upgradeRef.current = true;
+    if (changed) {
+      setCustomTunings(upgraded);
+    }
+  }, [customTunings, setCustomTunings]);
 
   const latestCustomTuningsRef = useLatest(customTunings);
 
@@ -140,7 +356,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const onImportTunings = useCallback(
     (packsRaw, filenames = []) => {
-      const res = v.safeParse(TuningPackArraySchema, packsRaw);
+      const sanitizedInput = Array.isArray(packsRaw)
+        ? packsRaw.map(stripVersionField)
+        : packsRaw;
+
+      const res = v.safeParse(TuningPackArraySchema, sanitizedInput);
       if (!res.success) {
         const msg =
           res.issues?.map((i) => i.message).join("\n") ||

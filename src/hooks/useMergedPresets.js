@@ -11,33 +11,18 @@ function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function flattenOnce(arr) {
-  if (!Array.isArray(arr)) return arr;
-  let flat = [];
-  let nested = false;
-  for (const v of arr) {
-    if (Array.isArray(v)) {
-      nested = true;
-      flat.push(...v);
-    } else {
-      flat.push(v);
-    }
-  }
-  return nested ? flat : arr;
-}
-
-function coerceTuningArray(arr) {
-  const a = flattenOnce(arr);
-  if (!Array.isArray(a)) return null;
-  const out = a
-    .map((v) => {
-      if (typeof v === "string") return v.trim();
-      if (typeof v === "number" && Number.isFinite(v)) return String(v);
-      if (isPlainObject(v)) {
-        if (typeof v.token === "string") return v.token;
-        if (typeof v.note === "string") return v.note;
-        if (typeof v.pitch === "string") return v.pitch;
-        if (typeof v.value === "string") return v.value;
+function coerceTuningArray(strings) {
+  if (!Array.isArray(strings)) return null;
+  const out = strings
+    .map((entry) => {
+      if (typeof entry === "string") return entry.trim();
+      if (typeof entry === "number" && Number.isFinite(entry))
+        return String(entry);
+      if (isPlainObject(entry)) {
+        if (typeof entry.note === "string") return entry.note;
+        if (typeof entry.midi === "number" && Number.isFinite(entry.midi)) {
+          return String(entry.midi);
+        }
       }
       return null;
     })
@@ -45,29 +30,10 @@ function coerceTuningArray(arr) {
   return out.length ? out : null;
 }
 
-function pickFirstArray(obj, keys) {
-  for (const k of keys) {
-    const v = obj?.[k];
-    if (Array.isArray(v)) return v;
-  }
-  return null;
-}
-
-function coerceAnyTuning(input) {
-  if (!input) return null;
-  if (Array.isArray(input)) return coerceTuningArray(input);
-  if (isPlainObject(input)) {
-    const direct = pickFirstArray(input, [
-      "tuning",
-      "strings",
-      "notes",
-      "tokens",
-      "pitches",
-      "values",
-    ]);
-    if (direct) return coerceTuningArray(direct);
-    const nested = pickFirstArray(input, ["data", "payload"]);
-    if (nested) return coerceTuningArray(nested);
+function coerceAnyTuning(value) {
+  if (Array.isArray(value)) return coerceTuningArray(value);
+  if (isPlainObject(value)) {
+    return coerceTuningArray(value?.tuning?.strings);
   }
   return null;
 }
@@ -116,12 +82,12 @@ export function useMergedPresets({
     const edo = Number(currentEdo);
     const sc = Number(currentStrings);
     return customTunings.filter((t) => {
-      const tEdo = Number(t?.system?.edo ?? t?.edo);
-      const tStrings = Array.isArray(t?.tuning)
-        ? t.tuning.length
-        : Array.isArray(t?.strings)
-          ? t.strings.length
-          : null;
+      if (!isPlainObject(t) || !Array.isArray(t?.tuning?.strings)) {
+        return false;
+      }
+
+      const tEdo = Number(t?.system?.edo);
+      const tStrings = t.tuning.strings.length;
       const stringsMatch =
         Number.isFinite(sc) && Number.isFinite(tStrings)
           ? tStrings === sc
@@ -145,10 +111,7 @@ export function useMergedPresets({
     const out = {};
     for (const pack of compatibleCustoms) {
       const name = typeof pack?.name === "string" ? pack.name : null;
-      const arr =
-        coerceAnyTuning(pack?.tuning) ||
-        coerceAnyTuning(pack?.strings) ||
-        coerceAnyTuning(pack);
+      const arr = coerceAnyTuning(pack);
       if (!name || !arr?.length) continue;
       out[name] = arr;
     }
@@ -213,11 +176,7 @@ export function useMergedPresets({
         ? compatibleCustoms.find((p) => p?.name === name)
         : null;
       if (!fromPack) return null;
-      return (
-        coerceAnyTuning(fromPack?.tuning) ||
-        coerceAnyTuning(fromPack?.strings) ||
-        coerceAnyTuning(fromPack)
-      );
+      return coerceAnyTuning(fromPack);
     },
     [mergedPresetMap, compatibleCustoms],
   );

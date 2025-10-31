@@ -13,7 +13,6 @@ export type StringMeta = {
 };
 
 export type TuningPack = {
-  version: 2;
   name: string;
   system: { edo: number }; // accidentals removed
   tuning: { strings: TuningString[] };
@@ -64,7 +63,6 @@ export function buildTuningPack(params: {
   });
 
   const pack: TuningPack = {
-    version: 2,
     name: name ?? `${systemId} ${stringsCount}-string`,
     system: { edo: systemDivisions },
     tuning: { strings },
