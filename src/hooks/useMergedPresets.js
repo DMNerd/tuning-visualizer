@@ -5,7 +5,7 @@ import {
   useLatest,
   useMountedState,
 } from "react-use";
-import { toStringMetaMap } from "@/lib/meta/meta";
+import { normalizePresetMeta } from "@/lib/meta/meta";
 import { isPlainObject } from "@/utils/object";
 
 function coerceTuningArray(strings) {
@@ -31,27 +31,6 @@ function coerceAnyTuning(value) {
   if (Array.isArray(value)) return coerceTuningArray(value);
   if (isPlainObject(value)) {
     return coerceTuningArray(value?.tuning?.strings);
-  }
-  return null;
-}
-
-function normalizePresetMeta(meta) {
-  if (!meta) return null;
-  if (Array.isArray(meta)) {
-    const mapped = toStringMetaMap(meta);
-    return mapped ? { stringMeta: mapped } : null;
-  }
-  if (isPlainObject(meta)) {
-    let stringMeta = null;
-    if (Array.isArray(meta.stringMeta)) {
-      stringMeta = toStringMetaMap(meta.stringMeta) || null;
-    } else if (isPlainObject(meta.stringMeta)) {
-      stringMeta = meta.stringMeta;
-    }
-    const board = isPlainObject(meta.board) ? meta.board : null;
-    if (stringMeta || board) {
-      return { stringMeta, board };
-    }
   }
   return null;
 }
@@ -120,7 +99,7 @@ export function useMergedPresets({
     const out = {};
     for (const pack of compatibleCustoms) {
       const name = typeof pack?.name === "string" ? pack.name : null;
-      const meta = normalizePresetMeta(pack?.meta);
+      const meta = normalizePresetMeta(pack?.meta, { stringMetaFormat: "map" });
       if (!name || !meta) continue;
       out[name] = meta;
     }

@@ -7,26 +7,10 @@ import {
 } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { isPlainObject } from "@/utils/object";
+import { normalizePresetMeta } from "@/lib/meta/meta";
 
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
-}
-
-function normalizePresetMeta(meta) {
-  if (Array.isArray(meta)) {
-    return { stringMeta: meta };
-  }
-  if (isPlainObject(meta)) {
-    const stringMeta = Array.isArray(meta.stringMeta) ? meta.stringMeta : null;
-    const board = isPlainObject(meta.board) ? meta.board : null;
-    if (stringMeta || board) {
-      return {
-        ...(stringMeta ? { stringMeta } : {}),
-        ...(board ? { board } : {}),
-      };
-    }
-  }
-  return null;
 }
 
 function normalizeSavedEntry(raw) {
@@ -35,7 +19,7 @@ function normalizeSavedEntry(raw) {
   }
   if (isPlainObject(raw)) {
     const tuning = Array.isArray(raw.tuning) ? raw.tuning : null;
-    const meta = normalizePresetMeta(raw.meta);
+    const meta = normalizePresetMeta(raw.meta, { stringMetaFormat: "array" });
     if (Array.isArray(tuning) && tuning.length) {
       return { tuning, meta };
     }
@@ -120,7 +104,9 @@ export function useDefaultTuning({
 
     for (const name of Object.keys(presetMap)) {
       if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = normalizePresetMeta(metaForGroup[name]);
+      out[name] = normalizePresetMeta(metaForGroup[name], {
+        stringMetaFormat: "array",
+      });
     }
     return out;
   }, [PRESET_TUNING_META, systemId, strings, presetMap, savedMeta]);
@@ -147,7 +133,9 @@ export function useDefaultTuning({
               : {}),
             ...(isPlainObject(boardMeta) ? { board: boardMeta } : {}),
           };
-          const meta = normalizePresetMeta(metaInput);
+          const meta = normalizePresetMeta(metaInput, {
+            stringMetaFormat: "array",
+          });
           next[storeKey] = {
             tuning: tuning.slice(),
             ...(meta ? { meta } : {}),
