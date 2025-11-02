@@ -1,4 +1,10 @@
-import { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  forwardRef,
+  useLayoutEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import clsx from "clsx";
 import { useFretboardLayout } from "@/hooks/useFretboardLayout";
 import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
@@ -247,6 +253,18 @@ const Fretboard = forwardRef(function Fretboard(
     wireX,
   ]);
 
+  const handleNoteInteraction = useCallback(
+    (type, note) => (event) => {
+      if (!onSelectNote) return;
+      if (type === "contextmenu") {
+        event.preventDefault();
+      }
+      const noteName = nameForPc(note.pc);
+      onSelectNote(note.pc, noteName, event);
+    },
+    [nameForPc, onSelectNote],
+  );
+
   return (
     <svg ref={svgRef} width="100%" preserveAspectRatio="xMidYMid meet">
       <g transform={lefty ? `scale(-1,1) translate(-${width},0)` : undefined}>
@@ -380,17 +398,8 @@ const Fretboard = forwardRef(function Fretboard(
                   ? CHORD_NOTE_STROKE_WIDTH
                   : 0
             }
-            onClick={(event) => {
-              if (!onSelectNote) return;
-              const noteName = nameForPc(n.pc);
-              onSelectNote(n.pc, noteName, event);
-            }}
-            onContextMenu={(event) => {
-              if (!onSelectNote) return;
-              event.preventDefault();
-              const noteName = nameForPc(n.pc);
-              onSelectNote(n.pc, noteName, event);
-            }}
+            onClick={handleNoteInteraction("click", n)}
+            onContextMenu={handleNoteInteraction("contextmenu", n)}
           />
         ))}
       </g>
@@ -406,17 +415,8 @@ const Fretboard = forwardRef(function Fretboard(
             x={displayX(n.cx)}
             y={n.cy + 4}
             textAnchor="middle"
-            onClick={(event) => {
-              if (!onSelectNote) return;
-              const noteName = nameForPc(n.pc);
-              onSelectNote(n.pc, noteName, event);
-            }}
-            onContextMenu={(event) => {
-              if (!onSelectNote) return;
-              event.preventDefault();
-              const noteName = nameForPc(n.pc);
-              onSelectNote(n.pc, noteName, event);
-            }}
+            onClick={handleNoteInteraction("click", n)}
+            onContextMenu={handleNoteInteraction("contextmenu", n)}
           >
             {n.label}
           </text>

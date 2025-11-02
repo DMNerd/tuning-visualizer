@@ -331,7 +331,7 @@ function TuningPackEditorModal({
     [isOpen, handleCancel],
   );
 
-    const handleSave = useCallback(() => {
+  const handleSave = useCallback(() => {
     try {
       const normalized = parseTuningPack(draft);
       onSubmitRef.current?.(normalized, {
