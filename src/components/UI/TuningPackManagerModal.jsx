@@ -1,14 +1,8 @@
-import { useCallback, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useMemo } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
-import {
-  useKey,
-  useLockBodyScroll,
-  useLatest,
-  useWindowSize,
-  useClickAway,
-} from "react-use";
+import { useLatest, useWindowSize } from "react-use";
 import { memoWithPick } from "@/utils/memo";
+import ModalFrame from "./ModalFrame";
 
 function getSystemIdByEdo(systems, edo) {
   if (!systems || typeof systems !== "object") return null;
@@ -63,47 +57,9 @@ function TuningPackManagerModal({
   const onEditRef = useLatest(onEdit);
   const onDeleteRef = useLatest(onDelete);
 
-  const cardRef = useRef(null);
-
   const handleClose = useCallback(() => {
     onCloseRef.current?.();
   }, [onCloseRef]);
-
-  useLockBodyScroll(isOpen);
-
-  // ESC to close (existing behavior)
-  useKey(
-    "Escape",
-    (event) => {
-      if (!isOpen) return;
-      event.preventDefault();
-      handleClose();
-    },
-    { event: "keydown" },
-    [isOpen, handleClose],
-  );
-
-  // Cmd/Ctrl + W to close (editor-like convenience)
-  useKey(
-    (event) =>
-      (event.key === "w" || event.key === "W") &&
-      (event.metaKey || event.ctrlKey),
-    (event) => {
-      if (!isOpen) return;
-      event.preventDefault();
-      handleClose();
-    },
-    { event: "keydown" },
-    [isOpen, handleClose],
-  );
-
-  // Click outside the card to close
-  useClickAway(cardRef, (e) => {
-    if (!isOpen) return;
-    const target = e?.target;
-    if (target && target.closest?.(".tv-modal__card")) return;
-    handleClose();
-  });
 
   // Group by system only (e.g., "12-TET", "24-TET"), not by string count.
   const groups = useMemo(() => {
@@ -181,107 +137,106 @@ function TuningPackManagerModal({
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="tv-modal" role="presentation">
-      <div className="tv-modal__backdrop" aria-hidden onClick={handleClose} />
-      <div
-        ref={cardRef}
-        className="tv-modal__card"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Manage custom tunings"
-      >
-        <header className="tv-modal__header">
-          <h2>Manage custom tunings</h2>
-          <p className="tv-modal__summary">
-            Review your saved packs, edit their details, or remove the ones you
-            no longer need.
-          </p>
-        </header>
-        <div className="tv-modal__body">
-          {groups.length ? (
-            <div
-              className="tv-modal__manager"
-              style={{ maxHeight: listMaxH, overflow: "auto" }}
-            >
-              {groups.map((group) => (
-                <section
-                  key={group.systemLabel}
-                  className="tv-modal__manager-group"
-                >
-                  <header className="tv-modal__manager-group-header">
-                    <div className="tv-modal__manager-group-title">
-                      <h3>{group.systemLabel}</h3>
-                    </div>
-                    <span className="tv-modal__manager-group-count">
-                      {group.packs.length}{" "}
-                      {group.packs.length === 1 ? "pack" : "packs"}
-                    </span>
-                  </header>
-                  <ul className="tv-modal__manager-list">
-                    {group.packs.map((pack, index) => {
-                      const preview = pack.strings
-                        .map((string) => string?.note || string?.label || "•")
-                        .filter(Boolean)
-                        .join(" · ");
-                      return (
-                        <li
-                          key={`${pack.rawName || pack.displayName}__${index}`}
-                          className="tv-modal__manager-item"
-                        >
-                          <div className="tv-modal__manager-pack">
-                            <span className="tv-modal__manager-pack-name">
-                              {pack.displayName}
-                            </span>
-                            <span className="tv-modal__manager-pack-preview">
-                              {formatStringsCount(pack.stringsCount)}
-                              {preview ? ` · ${preview}` : ""}
-                            </span>
-                          </div>
-                          <div className="tv-modal__manager-actions">
-                            <button
-                              type="button"
-                              className="tv-button tv-button--icon tv-button--ghost tv-button--accent"
-                              onClick={() => handleEdit(pack.raw)}
-                              aria-label={`Edit ${pack.displayName}`}
-                              title="Edit"
-                            >
-                              <FiEdit2 aria-hidden="true" focusable="false" />
-                              <span className="tv-button__label">Edit</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
-                              onClick={() => handleDelete(pack.rawName)}
-                              aria-label={`Remove ${pack.displayName}`}
-                              title="Remove"
-                            >
-                              <FiTrash2 aria-hidden="true" focusable="false" />
-                              <span className="tv-button__label">Remove</span>
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <div className="tv-modal__empty">
-              <h3>No custom tunings yet</h3>
-              <p>Save a tuning pack to manage it here.</p>
-            </div>
-          )}
-        </div>
-        <footer className="tv-modal__footer">
-          <button type="button" className="tv-button" onClick={handleClose}>
-            Close
-          </button>
-        </footer>
+  return (
+    <ModalFrame
+      isOpen={isOpen}
+      onClose={handleClose}
+      ariaLabel="Manage custom tunings"
+      closeHotkeys={[
+        (event) =>
+          (event.key === "w" || event.key === "W") &&
+          (event.metaKey || event.ctrlKey),
+      ]}
+    >
+      <header className="tv-modal__header">
+        <h2>Manage custom tunings</h2>
+        <p className="tv-modal__summary">
+          Review your saved packs, edit their details, or remove the ones you no
+          longer need.
+        </p>
+      </header>
+      <div className="tv-modal__body">
+        {groups.length ? (
+          <div
+            className="tv-modal__manager"
+            style={{ maxHeight: listMaxH, overflow: "auto" }}
+          >
+            {groups.map((group) => (
+              <section
+                key={group.systemLabel}
+                className="tv-modal__manager-group"
+              >
+                <header className="tv-modal__manager-group-header">
+                  <div className="tv-modal__manager-group-title">
+                    <h3>{group.systemLabel}</h3>
+                  </div>
+                  <span className="tv-modal__manager-group-count">
+                    {group.packs.length}{" "}
+                    {group.packs.length === 1 ? "pack" : "packs"}
+                  </span>
+                </header>
+                <ul className="tv-modal__manager-list">
+                  {group.packs.map((pack, index) => {
+                    const preview = pack.strings
+                      .map((string) => string?.note || string?.label || "•")
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <li
+                        key={`${pack.rawName || pack.displayName}__${index}`}
+                        className="tv-modal__manager-item"
+                      >
+                        <div className="tv-modal__manager-pack">
+                          <span className="tv-modal__manager-pack-name">
+                            {pack.displayName}
+                          </span>
+                          <span className="tv-modal__manager-pack-preview">
+                            {formatStringsCount(pack.stringsCount)}
+                            {preview ? ` · ${preview}` : ""}
+                          </span>
+                        </div>
+                        <div className="tv-modal__manager-actions">
+                          <button
+                            type="button"
+                            className="tv-button tv-button--icon tv-button--ghost tv-button--accent"
+                            onClick={() => handleEdit(pack.raw)}
+                            aria-label={`Edit ${pack.displayName}`}
+                            title="Edit"
+                          >
+                            <FiEdit2 aria-hidden="true" focusable="false" />
+                            <span className="tv-button__label">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
+                            onClick={() => handleDelete(pack.rawName)}
+                            aria-label={`Remove ${pack.displayName}`}
+                            title="Remove"
+                          >
+                            <FiTrash2 aria-hidden="true" focusable="false" />
+                            <span className="tv-button__label">Remove</span>
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="tv-modal__empty">
+            <h3>No custom tunings yet</h3>
+            <p>Save a tuning pack to manage it here.</p>
+          </div>
+        )}
       </div>
-    </div>,
-    document.body,
+      <footer className="tv-modal__footer">
+        <button type="button" className="tv-button" onClick={handleClose}>
+          Close
+        </button>
+      </footer>
+    </ModalFrame>
   );
 }
 

@@ -1055,6 +1055,8 @@ svg {
 }
 
 .tv-modal__editor .jer-select,
+.tv-modal__editor .jer-input-text,
+.tv-modal__editor .jer-input-number,
 .tv-modal__editor .jer-select-types {
   background: var(--jer-select-bg);
   background-image: none !important;

@@ -1,21 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useId,
-  useRef,
-} from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useState, useId } from "react";
 import { JsonEditor } from "json-edit-react";
-import {
-  useKey,
-  useLockBodyScroll,
-  useLatest,
-  useDebounce,
-  useWindowSize,
-  useClickAway,
-} from "react-use";
+import { useKey, useLatest, useDebounce, useWindowSize } from "react-use";
 import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
@@ -29,8 +14,10 @@ import {
   FiCheck,
   FiX,
   FiChevronRight,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { isPlainObject } from "@/utils/object";
+import ModalFrame from "./ModalFrame";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -41,7 +28,6 @@ function clonePack(pack) {
 }
 
 function ensurePack(pack) {
-  // Start from safe defaults
   const base = {
     name: "",
     system: { edo: 12 },
@@ -268,8 +254,6 @@ function TuningPackEditorModal({
   const onSubmitRef = useLatest(onSubmit);
   const confirmRef = useLatest(confirm);
 
-  const cardRef = useRef(null);
-
   useEffect(() => {
     if (isOpen) {
       const snapshot = ensurePack(clonePack(initialPack));
@@ -282,8 +266,6 @@ function TuningPackEditorModal({
       setPointer(null);
     }
   }, [isOpen, initialPack]);
-
-  useLockBodyScroll(isOpen);
 
   const hasUnsavedChanges = useMemo(
     () => isOpen && baselineSnapshotString !== draftString,
@@ -308,7 +290,7 @@ function TuningPackEditorModal({
         toast("Continue editing to keep your changes.", {
           id: "warn-pack-editor-unsaved",
           duration: 4000,
-          icon: "⚠️",
+          icon: <FiAlertTriangle size={20} color="var(--accent)" />,
         });
         return;
       }
@@ -316,17 +298,6 @@ function TuningPackEditorModal({
 
     onCancelRef.current?.();
   }, [confirmRef, hasUnsavedChanges, isOpen, onCancelRef]);
-
-  useKey(
-    "Escape",
-    (event) => {
-      if (!isOpen) return;
-      event.preventDefault();
-      handleCancel();
-    },
-    { event: "keydown" },
-    [isOpen, handleCancel],
-  );
 
   const handleSave = useCallback(() => {
     try {
@@ -351,13 +322,6 @@ function TuningPackEditorModal({
     { event: "keydown" },
     [isOpen, handleSave],
   );
-
-  useClickAway(cardRef, (e) => {
-    if (!isOpen) return;
-    const el = e?.target;
-    if (el && el.closest?.(".tv-modal__card")) return;
-    handleCancel();
-  });
 
   const title = useMemo(
     () =>
@@ -508,58 +472,48 @@ function TuningPackEditorModal({
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="tv-modal" role="presentation">
-      <div className="tv-modal__backdrop" aria-hidden onClick={handleCancel} />
-      <div
-        ref={cardRef}
-        className="tv-modal__card"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <header className="tv-modal__header">
-          <h2>{title}</h2>
-          <p className="tv-modal__summary">
-            Edit the JSON to fine-tune your preset. Changes are applied using
-            JSON Patch operations.
-          </p>
-        </header>
-        <div className="tv-modal__body">
-          <div
-            className="tv-modal__editor"
-            style={{ maxHeight: editorMaxH, overflow: "auto" }}
-          >
-            <JsonEditor
-              data={draft}
-              setData={handleDataChange}
-              onError={handleError}
-              onEditEvent={handleEditEvent}
-              theme={editorTheme}
-              icons={icons}
-              customNodeDefinitions={noteNodeDefinitions}
-              className="tv-json-editor"
-              showStringQuotes={false}
-              enableClipboard
-              indent={2}
-            />
-          </div>
-          <div className="tv-modal__status" role="status" aria-live="polite">
-            {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}
-            {error ? <span className="tv-modal__error">{error}</span> : null}
-          </div>
+  return (
+    <ModalFrame isOpen={isOpen} onClose={handleCancel} ariaLabel={title}>
+      <header className="tv-modal__header">
+        <h2>{title}</h2>
+        <p className="tv-modal__summary">
+          Edit the JSON to fine-tune your preset. Changes are applied using JSON
+          Patch operations.
+        </p>
+      </header>
+      <div className="tv-modal__body">
+        <div
+          className="tv-modal__editor"
+          style={{ maxHeight: editorMaxH, overflow: "auto" }}
+        >
+          <JsonEditor
+            data={draft}
+            setData={handleDataChange}
+            onError={handleError}
+            onEditEvent={handleEditEvent}
+            theme={editorTheme}
+            icons={icons}
+            customNodeDefinitions={noteNodeDefinitions}
+            className="tv-json-editor"
+            showStringQuotes={false}
+            enableClipboard
+            indent={2}
+          />
         </div>
-        <footer className="tv-modal__footer">
-          <button type="button" className="tv-button" onClick={handleCancel}>
-            Cancel
-          </button>
-          <button type="button" className="tv-button" onClick={handleSave}>
-            Save pack
-          </button>
-        </footer>
+        <div className="tv-modal__status" role="status" aria-live="polite">
+          {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}
+          {error ? <span className="tv-modal__error">{error}</span> : null}
+        </div>
       </div>
-    </div>,
-    document.body,
+      <footer className="tv-modal__footer">
+        <button type="button" className="tv-button" onClick={handleCancel}>
+          Cancel
+        </button>
+        <button type="button" className="tv-button" onClick={handleSave}>
+          Save pack
+        </button>
+      </footer>
+    </ModalFrame>
   );
 }
 
