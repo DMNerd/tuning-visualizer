@@ -10,6 +10,9 @@ type TuningSystem = {
   nameForPc: (pc: number, accidental?: Accidental) => string; // name for pitch-class [0..N-1]
 };
 
+const TUNING_FALLBACK_REF_FREQ = 440;
+const TUNING_FALLBACK_REF_MIDI = 69;
+
 export const nameFallback = (pc: number) => `N${pc}`;
 
 /** 24-TET pitch-class names (C=0)
@@ -165,4 +168,87 @@ export function centsFromNearest(
   const centsPerStep = 1200 / sys.divisions;
   const cents = deltaSteps * centsPerStep;
   return { cents, nearestStep: nearest };
+}
+
+export type TuningLookupResult = {
+  id: string;
+  system: TuningSystem;
+};
+
+export function findSystemByEdo(
+  systems: Record<string, TuningSystem> | null | undefined,
+  edo: number,
+  metaSystemId?: string | null,
+): TuningLookupResult | null {
+  if (!Number.isFinite(edo) || edo <= 0) {
+    return null;
+  }
+
+  const metaId = typeof metaSystemId === "string" ? metaSystemId : null;
+
+  if (
+    metaId &&
+    systems &&
+    Object.prototype.hasOwnProperty.call(systems, metaId)
+  ) {
+    const system = systems[metaId];
+    if (system) {
+      return { id: metaId, system };
+    }
+  }
+
+  const key = `${edo}-TET`;
+  if (systems && Object.prototype.hasOwnProperty.call(systems, key)) {
+    const system = systems[key];
+    if (system) {
+      return { id: key, system };
+    }
+  }
+
+  if (systems) {
+    for (const [id, system] of Object.entries(systems)) {
+      if (!system) continue;
+      const divisions = Number(system.divisions);
+      if (Number.isFinite(divisions) && divisions === edo) {
+        return { id, system };
+      }
+    }
+  }
+
+  const fallbackId = `${edo}-TET`;
+  return {
+    id: fallbackId,
+    system: {
+      id: fallbackId,
+      divisions: edo,
+      refFreq: TUNING_FALLBACK_REF_FREQ,
+      refMidi: TUNING_FALLBACK_REF_MIDI,
+      nameForPc: nameFallback,
+    },
+  };
+}
+
+export function getSystemLabel({
+  match,
+  edo,
+  metaSystemId,
+}: {
+  match: TuningLookupResult | null;
+  edo: number;
+  metaSystemId?: string | null;
+}): string {
+  const metaLabel = typeof metaSystemId === "string" ? metaSystemId : null;
+  if (metaLabel !== null) {
+    return metaLabel;
+  }
+
+  if (match?.id) {
+    return match.id;
+  }
+
+  if (Number.isFinite(edo) && edo > 0) {
+    return `${edo}-TET`;
+  }
+
+  return "Unknown system";
 }

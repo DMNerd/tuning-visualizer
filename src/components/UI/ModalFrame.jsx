@@ -41,7 +41,10 @@ function ModalFrame({
   const onCloseRef = useLatest(onClose);
   const cardRef = useRef(null);
 
-  const shortcuts = useMemo(() => normalizeShortcuts(closeHotkeys), [closeHotkeys]);
+  const shortcuts = useMemo(
+    () => normalizeShortcuts(closeHotkeys),
+    [closeHotkeys],
+  );
 
   const close = useCallback(
     (event) => {
@@ -97,7 +100,8 @@ function ModalFrame({
   if (!isOpen || !target) return null;
 
   const mergedClassName = clsx(DEFAULT_CARD_CLASS, cardClassName);
-  const content = typeof children === "function" ? children({ close, cardRef }) : children;
+  const content =
+    typeof children === "function" ? children({ close, cardRef }) : children;
 
   return createPortal(
     <div className="tv-modal" role="presentation">

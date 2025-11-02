@@ -5,7 +5,12 @@ import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
 import { memoWithPick } from "@/utils/memo";
-import { TUNINGS, nameFallback } from "@/lib/theory/tuning";
+import {
+  TUNINGS,
+  nameFallback,
+  findSystemByEdo,
+  getSystemLabel,
+} from "@/lib/theory/tuning";
 import {
   FiPlus,
   FiEdit2,
@@ -17,7 +22,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { isPlainObject } from "@/utils/object";
-import ModalFrame from "./ModalFrame";
+import ModalFrame from "@/components/UI/ModalFrame";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -48,7 +53,6 @@ function ensurePack(pack) {
     ? pack.tuning.strings
     : [];
 
-  // Critical: always ensure meta is an object so it’s editable
   const meta = isPlainObject(pack.meta) ? pack.meta : {};
 
   return {
@@ -59,9 +63,6 @@ function ensurePack(pack) {
   };
 }
 
-const TUNING_FALLBACK_REF_FREQ = 440;
-const TUNING_FALLBACK_REF_MIDI = 69;
-
 function pushUnique(list, seen, value) {
   if (typeof value !== "string") return;
   const normalized = value.trim();
@@ -70,41 +71,15 @@ function pushUnique(list, seen, value) {
   list.push(normalized);
 }
 
-function resolveSystemForPack(pack) {
-  const edo = Number(pack?.system?.edo);
-  if (!Number.isFinite(edo) || edo <= 0) return null;
-
-  const metaSystemId =
-    typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
-
-  if (metaSystemId && TUNINGS[metaSystemId]) {
-    return TUNINGS[metaSystemId];
-  }
-
-  const byKey = TUNINGS[`${edo}-TET`];
-  if (byKey) return byKey;
-
-  for (const system of Object.values(TUNINGS)) {
-    if (Number.isFinite(system?.divisions) && system.divisions === edo) {
-      return system;
-    }
-  }
-
-  return {
-    id: `${edo}-TET`,
-    divisions: edo,
-    refFreq: TUNING_FALLBACK_REF_FREQ,
-    refMidi: TUNING_FALLBACK_REF_MIDI,
-    nameForPc: nameFallback,
-  };
-}
-
 function buildNoteNodeMetadata(pack) {
   const strings = Array.isArray(pack?.tuning?.strings)
     ? pack.tuning.strings
     : [];
   const edo = Number(pack?.system?.edo);
-  const system = resolveSystemForPack(pack);
+  const metaSystemId =
+    typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
+  const systemMatch = findSystemByEdo(TUNINGS, edo, metaSystemId);
+  const system = systemMatch?.system ?? null;
   const seen = new Set();
   const options = [];
 
@@ -123,10 +98,11 @@ function buildNoteNodeMetadata(pack) {
     pushUnique(options, seen, entry?.note);
   });
 
-  const systemLabel =
-    typeof pack?.meta?.systemId === "string"
-      ? pack.meta.systemId
-      : (system?.id ?? (Number.isFinite(edo) ? `${edo}-TET` : null));
+  const systemLabel = getSystemLabel({
+    match: systemMatch,
+    edo,
+    metaSystemId,
+  });
 
   return { noteOptions: options, systemLabel };
 }

@@ -10,7 +10,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import {
   FiMaximize,
   FiMinimize,
-  FiRefreshCw,
+  FiRotateCcw,
   FiCheckCircle,
   FiAlertTriangle,
   FiInfo,
@@ -414,7 +414,7 @@ export default function App() {
                 onClick={() => resetAll({ confirm: true })}
                 title="Reset all to defaults"
               >
-                <FiRefreshCw size={16} aria-hidden />
+                <FiRotateCcw size={16} aria-hidden />
               </button>
               <button
                 type="button"

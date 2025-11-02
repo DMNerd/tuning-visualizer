@@ -1,27 +1,15 @@
 import { useCallback, useMemo } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useLatest, useWindowSize } from "react-use";
+import { findSystemByEdo, getSystemLabel } from "@/lib/theory/tuning";
 import { memoWithPick } from "@/utils/memo";
-import ModalFrame from "./ModalFrame";
-
-function getSystemIdByEdo(systems, edo) {
-  if (!systems || typeof systems !== "object") return null;
-  const entries = Object.entries(systems);
-  for (const [id, value] of entries) {
-    if (!value) continue;
-    const divisions = Number(
-      value?.divisions ?? value?.edo ?? value?.system?.edo,
-    );
-    if (Number.isFinite(divisions) && divisions === edo) {
-      return id;
-    }
-  }
-  return null;
-}
+import ModalFrame from "@/components/UI/ModalFrame";
 
 function normalizePack(pack) {
   if (!pack || typeof pack !== "object") return null;
   const edo = Number(pack?.system?.edo);
+  const metaSystemId =
+    typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
   const rawName = typeof pack?.name === "string" ? pack.name : "";
   const displayName = rawName.trim().length ? rawName : "Untitled pack";
   const strings = Array.isArray(pack?.tuning?.strings)
@@ -33,6 +21,7 @@ function normalizePack(pack) {
     rawName,
     displayName,
     edo: Number.isFinite(edo) ? edo : null,
+    metaSystemId,
     strings,
     stringsCount,
   };
@@ -71,19 +60,23 @@ function TuningPackManagerModal({
       const normalized = normalizePack(entry);
       if (!normalized) return;
 
-      const { edo } = normalized;
-      const systemId = Number.isFinite(edo)
-        ? getSystemIdByEdo(systems, edo)
-        : null;
-      const systemLabel = systemId
-        ? systemId
-        : Number.isFinite(edo)
-          ? `${edo}-TET`
-          : "Unknown system";
+      const edoValue = Number.isFinite(normalized?.edo)
+        ? normalized.edo
+        : Number.NaN;
+      const systemMatch = findSystemByEdo(
+        systems,
+        edoValue,
+        normalized?.metaSystemId,
+      );
+      const systemLabel = getSystemLabel({
+        match: systemMatch,
+        edo: edoValue,
+        metaSystemId: normalized?.metaSystemId,
+      });
 
       if (!grouped.has(systemLabel)) {
         grouped.set(systemLabel, {
-          edo: Number.isFinite(edo) ? edo : Number.POSITIVE_INFINITY,
+          edo: Number.isFinite(edoValue) ? edoValue : Number.POSITIVE_INFINITY,
           systemLabel,
           packs: [],
         });
