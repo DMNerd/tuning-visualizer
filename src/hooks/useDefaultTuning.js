@@ -6,13 +6,10 @@ import {
   usePreviousDistinct,
 } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { isPlainObject } from "@/utils/object";
 
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
-}
-
-function isPlainObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function normalizePresetMeta(meta) {

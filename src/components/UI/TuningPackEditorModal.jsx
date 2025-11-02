@@ -30,6 +30,7 @@ import {
   FiX,
   FiChevronRight,
 } from "react-icons/fi";
+import { isPlainObject } from "@/utils/object";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -37,10 +38,6 @@ function clonePack(pack) {
     return structuredClone(pack);
   }
   return JSON.parse(JSON.stringify(pack));
-}
-
-function isPlainObject(x) {
-  return x !== null && typeof x === "object" && !Array.isArray(x);
 }
 
 function ensurePack(pack) {

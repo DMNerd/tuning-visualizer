@@ -6,10 +6,7 @@ import {
   useMountedState,
 } from "react-use";
 import { toStringMetaMap } from "@/lib/meta/meta";
-
-function isPlainObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
+import { isPlainObject } from "@/utils/object";
 
 function coerceTuningArray(strings) {
   if (!Array.isArray(strings)) return null;

@@ -10,6 +10,7 @@ import {
 } from "@/lib/export/schema";
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 import { withToastPromise } from "@/utils/toast";
+import { isPlainObject } from "@/utils/object";
 
 function normalizePackName(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -33,10 +34,6 @@ function ensureUniqueName(desiredName, takenNames) {
 
   takenNames.add(candidate);
   return candidate;
-}
-
-function isPlainObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function flattenOnce(arr) {
