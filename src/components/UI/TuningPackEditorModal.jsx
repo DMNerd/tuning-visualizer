@@ -331,6 +331,17 @@ function TuningPackEditorModal({
     [isOpen, handleCancel],
   );
 
+    const handleSave = useCallback(() => {
+    try {
+      const normalized = parseTuningPack(draft);
+      onSubmitRef.current?.(normalized, {
+        replaceName: mode === "edit" ? originalName : undefined,
+      });
+    } catch (e) {
+      setError(e?.message || "Unable to save pack.");
+    }
+  }, [draft, mode, originalName, onSubmitRef]);
+
   useKey(
     (event) =>
       (event.key === "s" || event.key === "S") &&
@@ -338,17 +349,10 @@ function TuningPackEditorModal({
     (event) => {
       if (!isOpen) return;
       event.preventDefault();
-      try {
-        const normalized = parseTuningPack(draft);
-        onSubmitRef.current?.(normalized, {
-          replaceName: mode === "edit" ? originalName : undefined,
-        });
-      } catch (e) {
-        setError(e?.message || "Unable to save pack.");
-      }
+      handleSave();
     },
     { event: "keydown" },
-    [isOpen, draft, mode, originalName, onSubmitRef],
+    [isOpen, handleSave],
   );
 
   useClickAway(cardRef, (e) => {
@@ -501,17 +505,6 @@ function TuningPackEditorModal({
       chevron: <FiChevronRight {...base} style={{ ...base.style, ...muted }} />,
     };
   }, [isDark]);
-
-  const handleSave = useCallback(() => {
-    try {
-      const normalized = parseTuningPack(draft);
-      onSubmitRef.current?.(normalized, {
-        replaceName: mode === "edit" ? originalName : undefined,
-      });
-    } catch (e) {
-      setError(e?.message || "Unable to save pack.");
-    }
-  }, [draft, mode, originalName, onSubmitRef]);
 
   const { height: winH } = useWindowSize();
   const editorMaxH = Math.max(240, winH - 280);
