@@ -30,12 +30,7 @@ export default function ScalePicker({
         return label.includes(query) || system.includes(query);
       }}
       renderOption={(opt) => (
-        <li
-          className={clsx(
-            "tv-combobox__option",
-            "tv-scale-picker__option",
-          )}
-        >
+        <li className={clsx("tv-combobox__option", "tv-scale-picker__option")}>
           <span className="tv-scale-picker__option-label">{opt.label}</span>
           {opt.systemId ? (
             <span className="tv-scale-picker__option-meta">{opt.systemId}</span>

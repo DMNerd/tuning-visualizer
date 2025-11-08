@@ -1418,6 +1418,27 @@ svg {
   left: 0;
   z-index: 30;
   pointer-events: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+.tv-floating-listbox > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tv-floating-listbox.is-interactive {
+  pointer-events: auto;
+}
+
+.tv-floating-listbox.is-interactive::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: auto;
+  background: transparent;
 }
 
 .tv-combobox__list {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import clsx from "clsx";
 import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
-import useFilteredOptions from "@/hooks/useFilteredOptions"; 
+import useFilteredOptions from "@/hooks/useFilteredOptions";
 
 export default function BaseCombobox({
   id,
@@ -21,10 +21,12 @@ export default function BaseCombobox({
 }) {
   const selectedOption = useMemo(() => {
     if (value == null) return null;
-    return options.find((opt) => {
-      const k = getOptionKey(opt);
-      return k === value || getOptionLabel(opt) === value;
-    }) ?? null;
+    return (
+      options.find((opt) => {
+        const k = getOptionKey(opt);
+        return k === value || getOptionLabel(opt) === value;
+      }) ?? null
+    );
   }, [options, value, getOptionKey, getOptionLabel]);
 
   const selectedLabel = selectedOption
@@ -87,7 +89,13 @@ export default function BaseCombobox({
       setInputValue(label);
       commitComboboxSelection({ inputValue: label });
     },
-    [onSelect, getOptionLabel, getOptionKey, setInputValue, commitComboboxSelection],
+    [
+      onSelect,
+      getOptionLabel,
+      getOptionKey,
+      setInputValue,
+      commitComboboxSelection,
+    ],
   );
 
   const inputProps = getInputProps({
@@ -168,7 +176,9 @@ export default function BaseCombobox({
                       )}
                     >
                       {typeof renderOption === "function"
-                        ? renderOption(option, { isActive: index === activeIndex })
+                        ? renderOption(option, {
+                            isActive: index === activeIndex,
+                          })
                         : getOptionLabel(option)}
                     </li>
                   );

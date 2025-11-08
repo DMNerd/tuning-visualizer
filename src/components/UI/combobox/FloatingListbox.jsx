@@ -80,9 +80,13 @@ export default function FloatingListbox({
     return null;
   }
 
-  const classes = className
-    ? `tv-floating-listbox ${className}`
-    : "tv-floating-listbox";
+  const classes = [
+    "tv-floating-listbox",
+    className,
+    isOpen ? "is-interactive" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return createPortal(
     <div
