@@ -2,13 +2,19 @@
 import type { TuningPresetMeta } from "@/lib/meta/meta";
 
 /* =========================
-   Types
+   Core shared constants
 ========================= */
 
+export const STRING_COUNTS = [4, 5, 6, 7, 8] as const;
+export type StringCount = (typeof STRING_COUNTS)[number];
+
 export type SystemId = `${number}-TET`;
-export type StringCount = 4 | 5 | 6 | 7 | 8;
 export type NoteToken = string;
 export type TuningArray = readonly NoteToken[];
+
+/* =========================
+   Public shape types
+========================= */
 
 export type PresetTunings = Readonly<
   Record<
@@ -56,6 +62,7 @@ const COMMON_PRESETS: CommonPresets = {
     "Fretless Bass (EADG)": ["G", "D", "A", "E"],
 
     "Violin (GDAE)": ["E", "A", "D", "G"],
+    "Viola (CGDA)": ["A", "D", "G", "C"],
     "Mandolin (GDAE)": ["E", "A", "D", "G"],
     "Mandolin — GDAD (modal D)": ["D", "A", "D", "G"],
     "Mandolin — ADAD": ["D", "A", "D", "A"],
@@ -162,7 +169,7 @@ const SYSTEM_OVERRIDES: SystemOverrides = {
     7: { "Std +Q middle (G↑)": ["E", "B", "G↑", "D", "A", "E", "B"] },
     8: { "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E", "B", "F#"] },
   },
-};
+} as const;
 
 /* =========================
    Internal utils
@@ -174,9 +181,10 @@ function isObjectRecord(x: unknown): x is Record<string, unknown> {
 
 function freezeDeep<T>(o: T): T {
   if (!isObjectRecord(o)) return o;
-  if (!Object.isFrozen(o)) Object.freeze(o);
+  if (Object.isFrozen(o)) return o; // early exit
+  Object.freeze(o);
   for (const v of Object.values(o)) {
-    if (isObjectRecord(v) && !Object.isFrozen(v)) {
+    if (isObjectRecord(v)) {
       freezeDeep(v);
     }
   }
@@ -192,16 +200,16 @@ function buildPresetTunings(
   common: CommonPresets,
   overrides: SystemOverrides,
 ): PresetTunings {
-  const result: {
-    [K in SystemId]?: Partial<Record<StringCount, Record<string, TuningArray>>>;
-  } = {};
+  const result: Partial<
+    Record<SystemId, Partial<Record<StringCount, Record<string, TuningArray>>>>
+  > = {};
 
   for (const system of systems) {
     const sysOverrides = overrides[system] ?? {};
     const byCount: Partial<Record<StringCount, Record<string, TuningArray>>> =
       {};
 
-    for (const n of [4, 5, 6, 7, 8] as const) {
+    for (const n of STRING_COUNTS) {
       const group: Record<string, TuningArray> = {
         ...(common[n] ?? {}),
         ...(sysOverrides[n] ?? {}),
@@ -225,13 +233,12 @@ function materializeDefaultNames(
   common: DefaultNamesCommon,
   perSystem: DefaultNamesBySystem,
 ): Readonly<Record<SystemId, Readonly<Record<StringCount, string>>>> {
-  const out: {
-    [K in SystemId]?: Partial<Record<StringCount, string>>;
-  } = {};
+  const out: Partial<Record<SystemId, Partial<Record<StringCount, string>>>> =
+    {};
 
   for (const system of systems) {
     const s: Partial<Record<StringCount, string>> = {};
-    for (const n of [4, 5, 6, 7, 8] as const) {
+    for (const n of STRING_COUNTS) {
       const pick = perSystem[system]?.[n] ?? common[n];
       if (pick) s[n] = pick;
     }
@@ -247,15 +254,13 @@ function makeDefaultsFromPresets(
   presets: PresetTunings,
   picks: Readonly<Record<SystemId, Readonly<Record<StringCount, string>>>>,
 ): DefaultTunings {
-  const out: {
-    [K in SystemId]?: Partial<Record<StringCount, TuningArray>>;
-  } = {};
-
-  const counts = [4, 5, 6, 7, 8] as const;
+  const out: Partial<
+    Record<SystemId, Partial<Record<StringCount, TuningArray>>>
+  > = {};
 
   for (const system of Object.keys(picks) as SystemId[]) {
     const s: Partial<Record<StringCount, TuningArray>> = {};
-    for (const n of counts) {
+    for (const n of STRING_COUNTS) {
       const name = picks[system][n];
       if (!name) continue;
       const group = presets[system]?.[n];
@@ -293,7 +298,7 @@ export function buildPresetStateForSystems(systems: readonly SystemId[]) {
   } as const;
 
   const DEFAULT_NAMES_BY_SYSTEM: DefaultNamesBySystem = {
-    // Example: "24-TET": { 6: "Std +Q B string (B↑)" },
+    // e.g. "24-TET": { 6: "Std +Q B string (B↑)" },
   } as const;
 
   const DEFAULT_PRESET_NAME = materializeDefaultNames(
@@ -316,27 +321,6 @@ export function systemsFromTuningMap<T extends Record<string, unknown>>(
 ) {
   return Object.freeze(Object.keys(tuningMap) as SystemId[]);
 }
-
-/* =========================
-   Back-compat fallback (12/24)
-========================= */
-
-const FALLBACK_SYSTEMS = [
-  "12-TET",
-  "24-TET",
-] as const satisfies readonly SystemId[];
-const {
-  PRESET_TUNINGS: PRESET_TUNINGS_FALLBACK,
-  DEFAULT_TUNINGS: DEFAULT_TUNINGS_FALLBACK,
-  DEFAULT_PRESET_NAME: DEFAULT_PRESET_NAME_FALLBACK,
-} = buildPresetStateForSystems(FALLBACK_SYSTEMS);
-
-export const PRESET_TUNINGS = PRESET_TUNINGS_FALLBACK;
-export const DEFAULT_TUNINGS = DEFAULT_TUNINGS_FALLBACK;
-export const DEFAULT_PRESET_NAME = DEFAULT_PRESET_NAME_FALLBACK;
-
-export const getDefaultTuning = (system: SystemId, strings: StringCount) =>
-  DEFAULT_TUNINGS[system][strings];
 
 /* =========================
    Optional per-preset meta
@@ -377,11 +361,12 @@ function buildPresetMetaMap<SystemKey extends string>(
   common: CommonPresetMeta,
   overrides: SystemPresetMetaOverrides<SystemKey>,
 ): PresetMetaMap<SystemKey> {
-  const out: {
-    [K in SystemKey]?: Partial<
-      Record<StringCount, Record<string, TuningPresetMeta | null>>
-    >;
-  } = {};
+  const out: Partial<
+    Record<
+      SystemKey,
+      Partial<Record<StringCount, Record<string, TuningPresetMeta | null>>>
+    >
+  > = {};
 
   for (const system of systems) {
     const sysOverrides = overrides[system] ?? {};
@@ -389,7 +374,7 @@ function buildPresetMetaMap<SystemKey extends string>(
       Record<StringCount, Record<string, TuningPresetMeta | null>>
     > = {};
 
-    for (const count of [4, 5, 6, 7, 8] as const) {
+    for (const count of STRING_COUNTS) {
       const baseGroup = common[count] ?? {};
       const merged: Record<string, TuningPresetMeta | null> = {
         ...baseGroup,
@@ -419,14 +404,19 @@ function buildPresetMetaMap<SystemKey extends string>(
   return freezeDeep(out) as PresetMetaMap<SystemKey>;
 }
 
+const FRETLESS_BOARD_META: TuningPresetMeta = {
+  board: { fretStyle: "dotted", notePlacement: "onFret" },
+};
+
+function fretlessMeta(): TuningPresetMeta {
+  return FRETLESS_BOARD_META;
+}
+
 const COMMON_PRESET_META: CommonPresetMeta = {
   4: {
-    "Violin (GDAE)": {
-      board: { fretStyle: "dotted", notePlacement: "onFret" },
-    },
-    "Fretless Bass (EADG)": {
-      board: { fretStyle: "dotted", notePlacement: "onFret" },
-    },
+    "Violin (GDAE)": fretlessMeta(),
+    "Viola (CGDA)": fretlessMeta(),
+    "Fretless Bass (EADG)": fretlessMeta(),
   },
   5: {
     "Banjo — 5-string (g D G B D)": {
@@ -434,9 +424,7 @@ const COMMON_PRESET_META: CommonPresetMeta = {
     },
   },
   6: {
-    "Fretless Guitar (EADGBE)": {
-      board: { fretStyle: "dotted", notePlacement: "onFret" },
-    },
+    "Fretless Guitar (EADGBE)": fretlessMeta(),
   },
 } as const;
 
@@ -451,5 +439,39 @@ export function buildPresetMetaStateForSystems(systems: readonly SystemId[]) {
   );
 }
 
+/* =========================
+   Back-compat fallback (12/24)
+========================= */
+
+const FALLBACK_SYSTEMS = [
+  "12-TET",
+  "24-TET",
+] as const satisfies readonly SystemId[];
+
+const {
+  PRESET_TUNINGS: PRESET_TUNINGS_FALLBACK,
+  DEFAULT_TUNINGS: DEFAULT_TUNINGS_FALLBACK,
+  DEFAULT_PRESET_NAME: DEFAULT_PRESET_NAME_FALLBACK,
+} = buildPresetStateForSystems(FALLBACK_SYSTEMS);
+
+export const PRESET_TUNINGS = PRESET_TUNINGS_FALLBACK;
+export const DEFAULT_TUNINGS = DEFAULT_TUNINGS_FALLBACK;
+export const DEFAULT_PRESET_NAME = DEFAULT_PRESET_NAME_FALLBACK;
+
 export const PRESET_TUNING_META =
   buildPresetMetaStateForSystems(FALLBACK_SYSTEMS);
+
+/* =========================
+   Safer getter
+========================= */
+
+export function getDefaultTuning(
+  system: SystemId,
+  strings: StringCount,
+): TuningArray {
+  const tuning = DEFAULT_TUNINGS[system][strings];
+  if (!tuning) {
+    throw new Error(`No default tuning for ${system} ${strings}-string.`);
+  }
+  return tuning;
+}
