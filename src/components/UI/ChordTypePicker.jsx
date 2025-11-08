@@ -9,6 +9,7 @@ import {
 } from "react";
 import clsx from "clsx";
 import { CHORD_LABELS, isMicrotonalChordType } from "@/lib/theory/chords";
+import FloatingListbox from "./FloatingListbox";
 
 function normalizeList(value) {
   if (!Array.isArray(value)) return [];
@@ -239,7 +240,10 @@ export default function ChordTypePicker({
       const root = containerRef.current;
       if (!root) return;
       const activeEl = document.activeElement;
-      if (!activeEl || !root.contains(activeEl)) {
+      const listEl = document.getElementById(listId);
+      const isFocusWithinRoot = activeEl && root.contains(activeEl);
+      const isFocusWithinList = activeEl && listEl?.contains(activeEl);
+      if (!isFocusWithinRoot && !isFocusWithinList) {
         closeList();
       }
     });
@@ -273,50 +277,52 @@ export default function ChordTypePicker({
         aria-labelledby={ariaLabelledBy}
       />
       {isOpen && (
-        <ul id={listId} role="listbox" className="tv-chord-type-picker__list">
-          {flattenedOptions.length === 0 ? (
-            <li className="tv-chord-type-picker__empty" role="presentation">
-              No chord types match.
-            </li>
-          ) : (
-            filteredSections.map((section) => (
-              <Fragment key={section.key}>
-                <li
-                  role="presentation"
-                  className="tv-chord-type-picker__section"
-                >
-                  <span className="tv-chord-type-picker__section-label">
-                    {section.label}
-                  </span>
-                </li>
-                {section.options.map((option) => {
-                  optionCursor += 1;
-                  const optionIndex = optionCursor;
-                  return (
-                    <li
-                      key={option.type}
-                      id={`${listId}-option-${optionIndex}`}
-                      role="option"
-                      aria-selected={option.type === selectedType}
-                      className={clsx("tv-chord-type-picker__option", {
-                        "is-active": optionIndex === activeIndex,
-                        "is-selected": option.type === selectedType,
-                        "is-microtonal": option.isMicrotonal,
-                      })}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onMouseEnter={() => setActiveIndex(optionIndex)}
-                      onClick={() => commitSelection(option)}
-                    >
-                      <span className="tv-chord-type-picker__option-title">
-                        {option.label}
-                      </span>
-                    </li>
-                  );
-                })}
-              </Fragment>
-            ))
-          )}
-        </ul>
+        <FloatingListbox anchorRef={containerRef} isOpen={isOpen}>
+          <ul id={listId} role="listbox" className="tv-chord-type-picker__list">
+            {flattenedOptions.length === 0 ? (
+              <li className="tv-chord-type-picker__empty" role="presentation">
+                No chord types match.
+              </li>
+            ) : (
+              filteredSections.map((section) => (
+                <Fragment key={section.key}>
+                  <li
+                    role="presentation"
+                    className="tv-chord-type-picker__section"
+                  >
+                    <span className="tv-chord-type-picker__section-label">
+                      {section.label}
+                    </span>
+                  </li>
+                  {section.options.map((option) => {
+                    optionCursor += 1;
+                    const optionIndex = optionCursor;
+                    return (
+                      <li
+                        key={option.type}
+                        id={`${listId}-option-${optionIndex}`}
+                        role="option"
+                        aria-selected={option.type === selectedType}
+                        className={clsx("tv-chord-type-picker__option", {
+                          "is-active": optionIndex === activeIndex,
+                          "is-selected": option.type === selectedType,
+                          "is-microtonal": option.isMicrotonal,
+                        })}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onMouseEnter={() => setActiveIndex(optionIndex)}
+                        onClick={() => commitSelection(option)}
+                      >
+                        <span className="tv-chord-type-picker__option-title">
+                          {option.label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </Fragment>
+              ))
+            )}
+          </ul>
+        </FloatingListbox>
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import clsx from "clsx";
+import FloatingListbox from "./FloatingListbox";
 
 function toBadges({ name, customPresetSet, presetMetaMap }) {
   const badges = [];
@@ -240,7 +241,10 @@ export default function PresetPicker({
       const root = containerRef.current;
       if (!root) return;
       const activeEl = document.activeElement;
-      if (!activeEl || !root.contains(activeEl)) {
+      const listEl = document.getElementById(listId);
+      const isFocusWithinRoot = activeEl && root.contains(activeEl);
+      const isFocusWithinList = activeEl && listEl?.contains(activeEl);
+      if (!isFocusWithinRoot && !isFocusWithinList) {
         closeList();
       }
     });
@@ -269,49 +273,51 @@ export default function PresetPicker({
         aria-labelledby={ariaLabelledBy}
       />
       {isOpen && (
-        <ul id={listId} role="listbox" className="tv-preset-picker__list">
-          {filteredOptions.length === 0 && (
-            <li className="tv-preset-picker__empty" role="presentation">
-              No presets match.
-            </li>
-          )}
-          {filteredOptions.map((name, index) => {
-            const badges = badgesByName.get(name) ?? [];
-            return (
-              <li
-                key={name}
-                id={`${listId}-option-${index}`}
-                role="option"
-                aria-selected={name === selectedPreset}
-                className={clsx("tv-preset-picker__option", {
-                  "is-active": index === activeIndex,
-                  "is-selected": name === selectedPreset,
-                  "is-custom": customPresetSet.has(name),
-                })}
-                onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => commitSelection(name)}
-              >
-                <span className="tv-preset-picker__option-title">{name}</span>
-                {badges.length > 0 && (
-                  <span className="tv-preset-picker__option-meta">
-                    {badges.map((badge) => (
-                      <span
-                        key={badge.key}
-                        className={clsx("tv-preset-picker__meta-badge", {
-                          "tv-preset-picker__meta-badge--accent":
-                            badge.variant === "accent",
-                        })}
-                      >
-                        {badge.label}
-                      </span>
-                    ))}
-                  </span>
-                )}
+        <FloatingListbox anchorRef={containerRef} isOpen={isOpen}>
+          <ul id={listId} role="listbox" className="tv-preset-picker__list">
+            {filteredOptions.length === 0 && (
+              <li className="tv-preset-picker__empty" role="presentation">
+                No presets match.
               </li>
-            );
-          })}
-        </ul>
+            )}
+            {filteredOptions.map((name, index) => {
+              const badges = badgesByName.get(name) ?? [];
+              return (
+                <li
+                  key={name}
+                  id={`${listId}-option-${index}`}
+                  role="option"
+                  aria-selected={name === selectedPreset}
+                  className={clsx("tv-preset-picker__option", {
+                    "is-active": index === activeIndex,
+                    "is-selected": name === selectedPreset,
+                    "is-custom": customPresetSet.has(name),
+                  })}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => commitSelection(name)}
+                >
+                  <span className="tv-preset-picker__option-title">{name}</span>
+                  {badges.length > 0 && (
+                    <span className="tv-preset-picker__option-meta">
+                      {badges.map((badge) => (
+                        <span
+                          key={badge.key}
+                          className={clsx("tv-preset-picker__meta-badge", {
+                            "tv-preset-picker__meta-badge--accent":
+                              badge.variant === "accent",
+                          })}
+                        >
+                          {badge.label}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </FloatingListbox>
       )}
     </div>
   );

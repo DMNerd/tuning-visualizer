@@ -1,5 +1,6 @@
 import React from "react";
 import clsx from "clsx";
+import FloatingListbox from "./FloatingListbox";
 
 function normalize(value) {
   return value?.toString().trim().toLowerCase() ?? "";
@@ -61,6 +62,8 @@ function ScalePicker({
 
     const handlePointerDown = (event) => {
       if (wrapperRef.current?.contains(event.target)) return;
+      const listEl = document.getElementById(listboxId);
+      if (listEl?.contains(event.target)) return;
       setIsOpen(false);
       setInputValue(selectedOption?.label ?? "");
       setIsFiltering(false);
@@ -68,7 +71,7 @@ function ScalePicker({
 
     window.addEventListener("pointerdown", handlePointerDown);
     return () => window.removeEventListener("pointerdown", handlePointerDown);
-  }, [isOpen, selectedOption]);
+  }, [isOpen, listboxId, selectedOption]);
 
   React.useEffect(() => {
     if (!filteredOptions.length) {
@@ -231,48 +234,50 @@ function ScalePicker({
         spellCheck="false"
       />
       {isOpen && (
-        <div className="tv-scale-picker__popover">
-          <ul
-            id={listboxId}
-            role="listbox"
-            className="tv-scale-picker__list"
-            aria-labelledby={ariaLabelledby}
-          >
-            {filteredOptions.length === 0 ? (
-              <li className="tv-scale-picker__empty" aria-live="polite">
-                No matching scales
-              </li>
-            ) : (
-              filteredOptions.map((option, index) => {
-                const optionId = `${listboxId}-option-${index}`;
-                const isActive = index === activeIndex;
-                const isSelected = option.label === selectedOption?.label;
+        <FloatingListbox anchorRef={wrapperRef} isOpen={isOpen}>
+          <div className="tv-scale-picker__popover">
+            <ul
+              id={listboxId}
+              role="listbox"
+              className="tv-scale-picker__list"
+              aria-labelledby={ariaLabelledby}
+            >
+              {filteredOptions.length === 0 ? (
+                <li className="tv-scale-picker__empty" aria-live="polite">
+                  No matching scales
+                </li>
+              ) : (
+                filteredOptions.map((option, index) => {
+                  const optionId = `${listboxId}-option-${index}`;
+                  const isActive = index === activeIndex;
+                  const isSelected = option.label === selectedOption?.label;
 
-                return (
-                  <li
-                    key={`${option.systemId}-${option.label}`}
-                    id={optionId}
-                    role="option"
-                    aria-selected={isSelected}
-                    data-active={isActive || undefined}
-                    className="tv-scale-picker__option"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => handleSelect(option)}
-                  >
-                    <span className="tv-scale-picker__option-label">
-                      {option.label}
-                    </span>
-                    {option.systemId ? (
-                      <span className="tv-scale-picker__option-meta">
-                        {option.systemId}
+                  return (
+                    <li
+                      key={`${option.systemId}-${option.label}`}
+                      id={optionId}
+                      role="option"
+                      aria-selected={isSelected}
+                      data-active={isActive || undefined}
+                      className="tv-scale-picker__option"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => handleSelect(option)}
+                    >
+                      <span className="tv-scale-picker__option-label">
+                        {option.label}
                       </span>
-                    ) : null}
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
+                      {option.systemId ? (
+                        <span className="tv-scale-picker__option-meta">
+                          {option.systemId}
+                        </span>
+                      ) : null}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
+        </FloatingListbox>
       )}
     </div>
   );
