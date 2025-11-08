@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useLatest, useWindowSize } from "react-use";
 import { findSystemByEdo, getSystemLabel } from "@/lib/theory/tuning";
@@ -42,6 +42,7 @@ function TuningPackManagerModal({
   onEdit,
   onDelete,
 }) {
+  const [query, setQuery] = useState("");
   const onCloseRef = useLatest(onClose);
   const onEditRef = useLatest(onEdit);
   const onDeleteRef = useLatest(onDelete);
@@ -50,10 +51,13 @@ function TuningPackManagerModal({
     onCloseRef.current?.();
   }, [onCloseRef]);
 
-  // Group by system only (e.g., "12-TET", "24-TET"), not by string count.
+  const trimmedQuery = query.trim();
+  const normalizedQuery = trimmedQuery.toLowerCase();
+
   const groups = useMemo(() => {
     if (!Array.isArray(tunings) || tunings.length === 0) return [];
 
+    const hasQuery = normalizedQuery.length > 0;
     const grouped = new Map();
 
     tunings.forEach((entry) => {
@@ -74,6 +78,26 @@ function TuningPackManagerModal({
         metaSystemId: normalized?.metaSystemId,
       });
 
+      const formattedStringsCount = formatStringsCount(normalized.stringsCount);
+
+      const matchesQuery = !hasQuery
+        ? true
+        : [
+            normalized.displayName,
+            normalized.rawName,
+            String(normalized.stringsCount ?? ""),
+            formattedStringsCount,
+            systemLabel,
+          ].some(
+            (value) =>
+              typeof value === "string" &&
+              value.toLowerCase().includes(normalizedQuery),
+          );
+
+      if (!matchesQuery) {
+        return;
+      }
+
       if (!grouped.has(systemLabel)) {
         grouped.set(systemLabel, {
           edo: Number.isFinite(edoValue) ? edoValue : Number.POSITIVE_INFINITY,
@@ -87,13 +111,11 @@ function TuningPackManagerModal({
 
     const result = Array.from(grouped.values());
 
-    // Sort groups by ascending EDO, then label
     result.sort((a, b) => {
       if (a.edo !== b.edo) return a.edo - b.edo;
       return a.systemLabel.localeCompare(b.systemLabel);
     });
 
-    // Within each group, sort packs by string count, then name
     result.forEach((group) => {
       group.packs.sort((a, b) => {
         if (a.stringsCount !== b.stringsCount) {
@@ -106,7 +128,7 @@ function TuningPackManagerModal({
     });
 
     return result;
-  }, [tunings, systems]);
+  }, [tunings, systems, normalizedQuery]);
 
   const handleEdit = useCallback(
     (pack) => {
@@ -128,6 +150,8 @@ function TuningPackManagerModal({
   const { height: winH } = useWindowSize();
   const listMaxH = Math.max(240, winH - 320);
 
+  const hasTunings = Array.isArray(tunings) && tunings.length > 0;
+
   if (!isOpen) return null;
 
   return (
@@ -147,10 +171,27 @@ function TuningPackManagerModal({
           Review your saved packs, edit their details, or remove the ones you no
           longer need.
         </p>
+        {hasTunings ? (
+          <div className="tv-modal__manager-toolbar">
+            <div className="tv-modal__manager-search">
+              <label htmlFor="tuning-pack-filter">Filter packs</label>
+              <input
+                id="tuning-pack-filter"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name, system, or string count"
+                aria-controls="tuning-pack-manager-sections"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        ) : null}
       </header>
       <div className="tv-modal__body">
         {groups.length ? (
           <div
+            id="tuning-pack-manager-sections"
             className="tv-modal__manager"
             style={{ maxHeight: listMaxH, overflow: "auto" }}
           >
@@ -217,8 +258,16 @@ function TuningPackManagerModal({
               </section>
             ))}
           </div>
+        ) : hasTunings ? (
+          <div
+            id="tuning-pack-manager-sections"
+            className="tv-modal__empty tv-modal__empty--muted"
+          >
+            <h3>No matches found</h3>
+            <p>Try a different filter to see your saved packs.</p>
+          </div>
         ) : (
-          <div className="tv-modal__empty">
+          <div id="tuning-pack-manager-sections" className="tv-modal__empty">
             <h3>No custom tunings yet</h3>
             <p>Save a tuning pack to manage it here.</p>
           </div>

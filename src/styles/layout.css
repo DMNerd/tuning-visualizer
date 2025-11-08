@@ -1292,6 +1292,55 @@ svg {
   min-width: 88px;
 }
 
+.tv-modal__manager-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tv-modal__manager-search {
+  display: grid;
+  gap: 4px;
+  min-width: min(320px, 100%);
+}
+
+.tv-modal__manager-search label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.tv-modal__manager-search input[type="search"] {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, var(--line) 88%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--panel) 94%, transparent);
+  color: var(--fg);
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.4;
+  width: 100%;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.tv-modal__manager-search input[type="search"]::placeholder {
+  color: color-mix(in oklab, var(--muted) 82%, transparent);
+}
+
+.tv-modal__manager-search input[type="search"]:focus-visible {
+  outline: none;
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line) 45%);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 35%, transparent);
+  background: color-mix(in oklab, var(--panel) 98%, transparent);
+}
+
 .tv-modal__empty {
   display: grid;
   gap: 8px;
