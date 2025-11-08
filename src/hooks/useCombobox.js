@@ -56,6 +56,16 @@ export default function useCombobox({
     [getOptionKeyRef],
   );
 
+  const getListBounds = useCallback(() => {
+    const total = Array.isArray(optionsRef.current)
+      ? optionsRef.current.length
+      : 0;
+    if (!total) {
+      return { min: -1, max: -1, total: 0 };
+    }
+    return { min: 0, max: total - 1, total };
+  }, []);
+
   const syncActiveIndex = useCallback(
     (options = optionsRef.current, selected = selectedKeyRef.current) => {
       const list = Array.isArray(options) ? options : [];
@@ -220,19 +230,18 @@ export default function useCombobox({
       event.preventDefault();
       setIsOpen(true);
       setActiveIndex((prev) => {
-        const options = optionsRef.current;
-        const total = options.length;
+        const { min, max, total } = getListBounds();
         if (!total) return -1;
-        if (prev < 0) return 0;
+        if (prev < min || prev > max) return min;
         const next = prev + 1;
-        if (next >= total) {
-          return allowCycleRef.current ? 0 : total - 1;
+        if (next > max) {
+          return allowCycleRef.current ? min : max;
         }
         return next;
       });
     },
     undefined,
-    [setIsOpen],
+    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -241,19 +250,18 @@ export default function useCombobox({
       event.preventDefault();
       setIsOpen(true);
       setActiveIndex((prev) => {
-        const options = optionsRef.current;
-        const total = options.length;
+        const { min, max, total } = getListBounds();
         if (!total) return -1;
-        if (prev < 0) return total - 1;
+        if (prev < min || prev > max) return max;
         const next = prev - 1;
-        if (next < 0) {
-          return allowCycleRef.current ? total - 1 : 0;
+        if (next < min) {
+          return allowCycleRef.current ? max : min;
         }
         return next;
       });
     },
     undefined,
-    [setIsOpen],
+    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -261,11 +269,11 @@ export default function useCombobox({
     (event) => {
       event.preventDefault();
       setIsOpen(true);
-      const options = optionsRef.current;
-      setActiveIndex(options.length ? 0 : -1);
+      const { min, total } = getListBounds();
+      setActiveIndex(total ? min : -1);
     },
     undefined,
-    [setIsOpen],
+    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -273,25 +281,30 @@ export default function useCombobox({
     (event) => {
       event.preventDefault();
       setIsOpen(true);
-      const options = optionsRef.current;
-      setActiveIndex(options.length ? options.length - 1 : -1);
+      const { max, total } = getListBounds();
+      setActiveIndex(total ? max : -1);
     },
     undefined,
-    [setIsOpen],
+    [setIsOpen, getListBounds],
   );
 
   useKey(
     (event) => event.key === "Enter" && event.target === inputRef.current,
     (event) => {
       const options = optionsRef.current;
-      const total = options.length;
+      const { min, max, total } = getListBounds();
       if (!isOpen) {
         event.preventDefault();
         setIsOpen(true);
         syncActiveIndex(options, selectedKeyRef.current);
         return;
       }
-      const index = activeIndex >= 0 ? activeIndex : total === 1 ? 0 : -1;
+      const index =
+        activeIndex >= min && activeIndex <= max
+          ? activeIndex
+          : total === 1
+            ? 0
+            : -1;
       if (index >= 0) {
         const option = options[index];
         if (option) {
@@ -301,7 +314,7 @@ export default function useCombobox({
       }
     },
     undefined,
-    [activeIndex, isOpen, setIsOpen, syncActiveIndex],
+    [activeIndex, isOpen, setIsOpen, syncActiveIndex, getListBounds],
   );
 
   useKey(
