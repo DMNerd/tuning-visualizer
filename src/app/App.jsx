@@ -257,6 +257,7 @@ export default function App() {
   const {
     mergedPresetNames,
     customPresetNames,
+    mergedPresetMetaMap,
     selectedPreset,
     setPreset,
     queuePresetByName,
@@ -537,6 +538,7 @@ export default function App() {
             handleStringsChange={handleStringsChange}
             presetNames={mergedPresetNames}
             customPresetNames={customPresetNames}
+            presetMetaMap={mergedPresetMetaMap}
             selectedPreset={selectedPreset}
             setSelectedPreset={setPreset}
             handleSaveDefault={handleSaveDefault}

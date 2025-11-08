@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
+import PresetPicker from "@/components/UI/PresetPicker";
 import {
   STR_MIN,
   STR_MAX,
@@ -49,6 +50,7 @@ function InstrumentControls({
   handleStringsChange,
   presetNames,
   customPresetNames,
+  presetMetaMap,
   selectedPreset,
   setSelectedPreset,
   handleSaveDefault,
@@ -231,18 +233,14 @@ function InstrumentControls({
 
         <div className="tv-field tv-field--spaced">
           <label htmlFor="preset">Preset</label>
-          <select
+          <PresetPicker
             id="preset"
-            name="preset"
-            value={selectedPreset}
-            onChange={(e) => setSelectedPreset(e.target.value)}
-          >
-            {presetNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+            presetNames={presetNames}
+            selectedPreset={selectedPreset}
+            onSelect={setSelectedPreset}
+            customPresetNames={customPresetNames}
+            presetMetaMap={presetMetaMap}
+          />
         </div>
 
         <div className="tv-controls__preset-actions">
@@ -292,6 +290,7 @@ function pick(p) {
     setTuning: p.setTuning,
     presetNames: p.presetNames,
     customPresetNames: p.customPresetNames,
+    presetMetaMap: p.presetMetaMap,
     selectedPreset: p.selectedPreset,
     setSelectedPreset: p.setSelectedPreset,
     handleStringsChange: p.handleStringsChange,

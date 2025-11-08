@@ -276,3 +276,13 @@
     }
   }
 }
+
+@media (max-width: 640px) {
+  .tv-preset-picker__option {
+    padding: 8px;
+  }
+
+  .tv-preset-picker__list {
+    max-height: min(220px, 55vh);
+  }
+}

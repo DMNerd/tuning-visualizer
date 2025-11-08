@@ -1336,3 +1336,87 @@ svg {
 .tv-stage__surface::-webkit-scrollbar-track {
   background: transparent;
 }
+
+.tv-preset-picker {
+  position: relative;
+}
+
+.tv-preset-picker__input {
+  width: 100%;
+}
+
+.tv-preset-picker__list {
+  position: absolute;
+  inset: calc(100% + 4px) 0 auto;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  max-height: min(260px, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tv-preset-picker__empty {
+  padding: 10px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.tv-preset-picker__option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background var(--speed) var(--ease),
+    color var(--speed) var(--ease);
+}
+
+.tv-preset-picker__option:hover,
+.tv-preset-picker__option.is-active {
+  background: color-mix(in oklab, var(--fg) 12%, transparent);
+}
+
+.tv-preset-picker__option.is-selected .tv-preset-picker__option-title {
+  font-weight: 600;
+}
+
+.tv-preset-picker__option-title {
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+
+.tv-preset-picker__option-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tv-preset-picker__meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--fg) 10%, transparent);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tv-preset-picker__meta-badge--accent {
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}
