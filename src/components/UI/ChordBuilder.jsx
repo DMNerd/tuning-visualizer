@@ -10,7 +10,7 @@ import { FiRotateCcw } from "react-icons/fi";
 import { memoWithPick } from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
-import ChordTypePicker from "@/components/UI/ChordTypePicker";
+import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
 
 function ChordBuilder({
   root,

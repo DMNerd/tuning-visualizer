@@ -22,7 +22,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { isPlainObject } from "@/utils/object";
-import ModalFrame from "@/components/UI/ModalFrame";
+import ModalFrame from "@/components/UI/modals/ModalFrame";
 
 function clonePack(pack) {
   if (!pack) return null;

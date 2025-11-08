@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import clsx from "clsx";
-import FloatingListbox from "@/components/UI/FloatingListbox";
+import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
 
 function normalize(value) {
@@ -147,13 +147,21 @@ function ScalePicker({
                     option,
                     onSelect: () => commitSelection(option),
                   });
+                  const { className: optionClassName, ...restOptionProps } =
+                    optionProps;
                   return (
                     <li
-                      {...optionProps}
+                      {...restOptionProps}
                       key={`${option.systemId}-${option.label}`}
                       aria-selected={isSelected}
-                      data-active={index === activeIndex || undefined}
-                      className="tv-combobox__option tv-scale-picker__option"
+                      className={clsx(
+                        "tv-combobox__option",
+                        "tv-scale-picker__option",
+                        optionClassName,
+                        {
+                          "is-active": index === activeIndex,
+                        },
+                      )}
                     >
                       <span className="tv-scale-picker__option-label">
                         {option.label}

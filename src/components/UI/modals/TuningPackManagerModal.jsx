@@ -3,7 +3,7 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useLatest, useWindowSize } from "react-use";
 import { findSystemByEdo, getSystemLabel } from "@/lib/theory/tuning";
 import { memoWithPick } from "@/utils/memo";
-import ModalFrame from "@/components/UI/ModalFrame";
+import ModalFrame from "@/components/UI/modals/ModalFrame";
 
 function normalizePack(pack) {
   if (!pack || typeof pack !== "object") return null;

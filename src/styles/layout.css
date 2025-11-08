@@ -249,10 +249,14 @@ html.is-fs {
   min-width: 0;
 }
 
-.tv-controls__input-row {
+.tv-controls__input-row,
+.tv-toast-bar {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.tv-controls__input-row {
   min-width: 0;
 }
 
@@ -563,12 +567,6 @@ input[type="text"] {
   padding: 8px 10px !important;
   font-size: 0.8125rem !important;
   border-radius: 10px !important;
-}
-
-.tv-toast-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .tv-toast-icon {
@@ -954,10 +952,14 @@ svg {
   overflow: auto;
 }
 
-.tv-fallback__actions {
+.tv-fallback__actions,
+.tv-modal__manager-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.tv-fallback__actions {
   margin-top: 4px;
 }
 
@@ -1282,12 +1284,6 @@ svg {
   text-overflow: ellipsis;
 }
 
-.tv-modal__manager-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .tv-modal__manager-actions .tv-button {
   min-width: 88px;
 }
@@ -1533,13 +1529,6 @@ svg {
   gap: 4px;
   max-height: 220px;
   padding: 6px;
-  margin: 0;
-  list-style: none;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  box-shadow: var(--card-shadow);
-  overflow-y: auto;
 }
 
 .tv-scale-picker__option {
@@ -1555,10 +1544,6 @@ svg {
 
 .tv-scale-picker__option[aria-selected="true"] .tv-scale-picker__option-label {
   font-weight: 600;
-}
-
-.tv-scale-picker__option[data-active="true"] {
-  background: color-mix(in oklab, var(--fg) 12%, transparent);
 }
 
 .tv-scale-picker__option:hover,

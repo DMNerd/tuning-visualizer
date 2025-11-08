@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import clsx from "clsx";
-import FloatingListbox from "@/components/UI/FloatingListbox";
+import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
 
 function toBadges({ name, customPresetSet, presetMetaMap }) {

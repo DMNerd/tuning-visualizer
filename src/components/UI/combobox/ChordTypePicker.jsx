@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo } from "react";
 import clsx from "clsx";
 import { CHORD_LABELS, isMicrotonalChordType } from "@/lib/theory/chords";
-import FloatingListbox from "@/components/UI/FloatingListbox";
+import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
 
 function normalizeList(value) {

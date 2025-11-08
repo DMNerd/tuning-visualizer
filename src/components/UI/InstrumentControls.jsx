@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
-import PresetPicker from "@/components/UI/PresetPicker";
+import PresetPicker from "@/components/UI/combobox/PresetPicker";
 import {
   STR_MIN,
   STR_MAX,

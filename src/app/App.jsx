@@ -52,10 +52,10 @@ import ExportControls from "@/components/UI/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
 import ErrorFallback from "@/components/UI/ErrorFallback";
 const TuningPackEditorModal = React.lazy(
-  () => import("@/components/UI/TuningPackEditorModal"),
+  () => import("@/components/UI/modals/TuningPackEditorModal"),
 );
 const TuningPackManagerModal = React.lazy(
-  () => import("@/components/UI/TuningPackManagerModal"),
+  () => import("@/components/UI/modals/TuningPackManagerModal"),
 );
 
 // hooks

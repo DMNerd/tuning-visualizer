@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 import { memoWithPick } from "@/utils/memo";
-import ScalePicker from "@/components/UI/ScalePicker";
+import ScalePicker from "@/components/UI/combobox/ScalePicker";
 
 function ScaleControls({
   root,
