@@ -33,13 +33,16 @@ export default function useCombobox({
   const fallbackId = useId();
   const inputId = id ?? `combobox-${fallbackId}`;
   const listId = `${inputId}-list`;
+
   const rootRef = useRef(null);
   const listRef = useRef(null);
   const inputRef = useRef(null);
+
   const optionsRef = useRef([]);
   const allowCycleRef = useRef(true);
   const onCommitRef = useRef(null);
   const onKeyDownPropRef = useRef(null);
+
   const getOptionKeyRef = useLatest(getOptionKey);
   const selectedKeyRef = useLatest(selectedKey ?? null);
   const selectedTextRef = useLatest(selectedText ?? "");
@@ -56,26 +59,41 @@ export default function useCombobox({
     [getOptionKeyRef],
   );
 
-  const getListBounds = useCallback(() => {
-    const total = Array.isArray(optionsRef.current)
-      ? optionsRef.current.length
-      : 0;
-    if (!total) {
-      return { min: -1, max: -1, total: 0 };
-    }
-    return { min: 0, max: total - 1, total };
+  const getListElement = useCallback(() => {
+    return listRef.current ?? document.getElementById(listId) ?? null;
+  }, [listId]);
+
+  const scrollActiveIntoView = useCallback(
+    (index) => {
+      if (index < 0) return;
+      const listEl = getListElement();
+      if (!listEl) return;
+      const optionEl = listEl.querySelector(`#${listId}-option-${index}`);
+      if (optionEl && typeof optionEl.scrollIntoView === "function") {
+        optionEl.scrollIntoView({ block: "nearest" });
+      }
+    },
+    [getListElement, listId],
+  );
+
+  const clampIndex = useCallback((index) => {
+    const total = optionsRef.current.length;
+    if (!total) return -1;
+    if (index < 0) return 0;
+    if (index >= total) return total - 1;
+    return index;
   }, []);
 
   const syncActiveIndex = useCallback(
     (options = optionsRef.current, selected = selectedKeyRef.current) => {
       const list = Array.isArray(options) ? options : [];
-      const selectedValue = selected;
+      const total = list.length;
       setActiveIndex((prev) => {
-        if (!list.length) return -1;
-        if (prev >= 0 && prev < list.length) return prev;
-        if (selectedValue != null) {
+        if (!total) return -1;
+        if (prev >= 0 && prev < total) return prev;
+        if (selected != null) {
           const selectedIdx = list.findIndex(
-            (option) => getKey(option) === selectedValue,
+            (option) => getKey(option) === selected,
           );
           if (selectedIdx >= 0) return selectedIdx;
         }
@@ -103,12 +121,13 @@ export default function useCombobox({
 
   const setOptions = useCallback(
     (options, { selected: nextSelected } = {}) => {
-      optionsRef.current = Array.isArray(options) ? options : [];
+      const safe = Array.isArray(options) ? options : [];
+      optionsRef.current = safe;
       if (typeof nextSelected !== "undefined") {
         selectedKeyRef.current = nextSelected ?? null;
       }
       if (isOpen) {
-        syncActiveIndex(optionsRef.current, selectedKeyRef.current);
+        syncActiveIndex(safe, selectedKeyRef.current);
       }
     },
     [isOpen, selectedKeyRef, syncActiveIndex],
@@ -122,17 +141,23 @@ export default function useCombobox({
     syncActiveIndex(optionsRef.current, selectedKeyRef.current);
   }, [isOpen, selectedKeyRef, syncActiveIndex]);
 
+  useEffect(() => {
+    if (isOpen && activeIndex >= 0) {
+      scrollActiveIntoView(activeIndex);
+    }
+  }, [isOpen, activeIndex, scrollActiveIntoView]);
+
   const handleClickAway = useCallback(
     (event) => {
       if (!isOpen) return;
       const target = event.target;
       const root = rootRef.current;
       if (root?.contains(target)) return;
-      const listEl = listRef.current ?? document.getElementById(listId);
+      const listEl = getListElement();
       if (listEl?.contains(target)) return;
       closeList();
     },
-    [closeList, isOpen, listId],
+    [closeList, isOpen, getListElement],
   );
 
   useClickAway(rootRef, handleClickAway, ["pointerdown"]);
@@ -142,14 +167,14 @@ export default function useCombobox({
       const root = rootRef.current;
       if (!root) return;
       const activeEl = document.activeElement;
-      const listEl = listRef.current ?? document.getElementById(listId);
+      const listEl = getListElement();
       const isFocusWithinRoot = activeEl && root.contains(activeEl);
       const isFocusWithinList = activeEl && listEl?.contains(activeEl);
       if (!isFocusWithinRoot && !isFocusWithinList) {
         closeList();
       }
     });
-  }, [closeList, listId]);
+  }, [closeList, getListElement]);
 
   const getOptionId = useCallback(
     (index) => `${listId}-option-${index}`,
@@ -165,7 +190,8 @@ export default function useCombobox({
       onMouseDown: (event) => event.preventDefault(),
       onMouseEnter: (event) => {
         if (!disabled) {
-          setActiveIndex(index);
+          const clamped = clampIndex(index);
+          setActiveIndex(clamped);
         }
         onMouseEnter?.(event);
       },
@@ -174,7 +200,7 @@ export default function useCombobox({
         onSelect?.(option, index, event);
       },
     }),
-    [getOptionId],
+    [getOptionId, clampIndex],
   );
 
   const commitSelection = useCallback(
@@ -187,10 +213,11 @@ export default function useCombobox({
         setIsOpen(false);
         setActiveIndex(-1);
       } else if (typeof optionIndex === "number") {
-        setActiveIndex(optionIndex);
+        const clamped = clampIndex(optionIndex);
+        setActiveIndex(clamped);
       }
     },
-    [],
+    [clampIndex],
   );
 
   const handleInputRef = useCallback((node) => {
@@ -221,7 +248,7 @@ export default function useCombobox({
         },
       };
     },
-    [handleInputRef, setInputValue, setIsFiltering, setIsOpen],
+    [handleInputRef],
   );
 
   useKey(
@@ -230,18 +257,16 @@ export default function useCombobox({
       event.preventDefault();
       setIsOpen(true);
       setActiveIndex((prev) => {
-        const { min, max, total } = getListBounds();
+        const total = optionsRef.current.length;
         if (!total) return -1;
-        if (prev < min || prev > max) return min;
-        const next = prev + 1;
-        if (next > max) {
-          return allowCycleRef.current ? min : max;
+        const inRange = prev >= 0 && prev < total;
+        const next = inRange ? prev + 1 : 0;
+        if (next >= total) {
+          return allowCycleRef.current ? 0 : total - 1;
         }
         return next;
       });
     },
-    undefined,
-    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -250,18 +275,16 @@ export default function useCombobox({
       event.preventDefault();
       setIsOpen(true);
       setActiveIndex((prev) => {
-        const { min, max, total } = getListBounds();
+        const total = optionsRef.current.length;
         if (!total) return -1;
-        if (prev < min || prev > max) return max;
-        const next = prev - 1;
-        if (next < min) {
-          return allowCycleRef.current ? max : min;
+        const inRange = prev >= 0 && prev < total;
+        const next = inRange ? prev - 1 : total - 1;
+        if (next < 0) {
+          return allowCycleRef.current ? total - 1 : 0;
         }
         return next;
       });
     },
-    undefined,
-    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -269,11 +292,9 @@ export default function useCombobox({
     (event) => {
       event.preventDefault();
       setIsOpen(true);
-      const { min, total } = getListBounds();
-      setActiveIndex(total ? min : -1);
+      const total = optionsRef.current.length;
+      setActiveIndex(total ? 0 : -1);
     },
-    undefined,
-    [setIsOpen, getListBounds],
   );
 
   useKey(
@@ -281,26 +302,24 @@ export default function useCombobox({
     (event) => {
       event.preventDefault();
       setIsOpen(true);
-      const { max, total } = getListBounds();
-      setActiveIndex(total ? max : -1);
+      const total = optionsRef.current.length;
+      setActiveIndex(total ? total - 1 : -1);
     },
-    undefined,
-    [setIsOpen, getListBounds],
   );
 
   useKey(
     (event) => event.key === "Enter" && event.target === inputRef.current,
     (event) => {
       const options = optionsRef.current;
-      const { min, max, total } = getListBounds();
       if (!isOpen) {
         event.preventDefault();
         setIsOpen(true);
         syncActiveIndex(options, selectedKeyRef.current);
         return;
       }
+      const total = options.length;
       const index =
-        activeIndex >= min && activeIndex <= max
+        activeIndex >= 0 && activeIndex < total
           ? activeIndex
           : total === 1
             ? 0
@@ -313,8 +332,6 @@ export default function useCombobox({
         }
       }
     },
-    undefined,
-    [activeIndex, isOpen, setIsOpen, syncActiveIndex, getListBounds],
   );
 
   useKey(
@@ -328,8 +345,6 @@ export default function useCombobox({
         setIsFiltering(false);
       }
     },
-    undefined,
-    [closeList, isOpen, setInputValue, setIsFiltering],
   );
 
   const listProps = useMemo(
