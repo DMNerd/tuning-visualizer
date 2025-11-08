@@ -159,6 +159,7 @@
       font-size: 0.875rem;
     }
 
+    .tv-combobox__badge,
     .tv-preset-picker__meta-badge {
       font-size: 0.75rem;
     }

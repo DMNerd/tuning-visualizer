@@ -33,7 +33,11 @@ export default function ScalePicker({
         <li className={clsx("tv-combobox__option", "tv-scale-picker__option")}>
           <span className="tv-scale-picker__option-label">{opt.label}</span>
           {opt.systemId ? (
-            <span className="tv-scale-picker__option-meta">{opt.systemId}</span>
+            <span className="tv-scale-picker__option-meta">
+              <span className="tv-combobox__badge tv-combobox__badge--accent">
+                {opt.systemId}
+              </span>
+            </span>
           ) : null}
         </li>
       )}
@@ -75,7 +79,9 @@ export default function ScalePicker({
                     </span>
                     {option.systemId ? (
                       <span className="tv-scale-picker__option-meta">
-                        {option.systemId}
+                        <span className="tv-combobox__badge tv-combobox__badge--accent">
+                          {option.systemId}
+                        </span>
                       </span>
                     ) : null}
                   </li>
