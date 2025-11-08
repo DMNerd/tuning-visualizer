@@ -108,6 +108,11 @@ function pick(p) {
     scale: p.scale,
     sysNames: p.sysNames,
     scaleOptions: p.scaleOptions,
+    defaultRoot: p.defaultRoot,
+    defaultScale: p.defaultScale,
+    onRandomize: p.onRandomize,
+    setRoot: p.setRoot,
+    setScale: p.setScale,
   };
 }
 

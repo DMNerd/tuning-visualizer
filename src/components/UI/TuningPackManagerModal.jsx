@@ -287,6 +287,9 @@ function pick(p) {
     isOpen: p.isOpen,
     tunings: p.tunings,
     systems: p.systems,
+    onClose: p.onClose,
+    onEdit: p.onEdit,
+    onDelete: p.onDelete,
   };
 }
 

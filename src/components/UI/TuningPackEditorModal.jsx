@@ -500,6 +500,8 @@ function pick(p) {
     initialPack: p.initialPack,
     originalName: p.originalName,
     themeMode: p.themeMode,
+    onCancel: p.onCancel,
+    onSubmit: p.onSubmit,
   };
 }
 

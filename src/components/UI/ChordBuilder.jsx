@@ -228,6 +228,12 @@ function pick(p) {
     intervals: p.intervals,
     chordPCs: p.chordPCs,
     chordRootPc: p.chordRootPc,
+    defaultRoot: p.defaultRoot,
+    defaultType: p.defaultType,
+    onRootChange: p.onRootChange,
+    onTypeChange: p.onTypeChange,
+    setShowChord: p.setShowChord,
+    setHideNonChord: p.setHideNonChord,
   };
 }
 

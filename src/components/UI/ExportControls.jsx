@@ -178,7 +178,7 @@ function ExportControls({
 
 function pick(p) {
   return {
-    boardRef: !!p.boardRef,
+    boardRef: p.boardRef,
     fileBase: p.fileBase,
     downloadPNG: p.downloadPNG,
     downloadSVG: p.downloadSVG,
