@@ -1376,21 +1376,38 @@ svg {
   min-width: 120px;
 }
 
-/* =========================
-  Scrollbars
-========================= */
-.tv-stage__surface::-webkit-scrollbar {
-  height: 10px;
-  width: 10px;
-}
-.tv-stage__surface::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--fg) 15%, transparent);
-  border-radius: 10px;
-}
-.tv-stage__surface::-webkit-scrollbar-track {
-  background: transparent;
+.tv-modal-suspense {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 42;
+  display: grid;
+  place-items: center;
+  gap: var(--space-sm);
+  padding-block: clamp(16px, 3vw, 24px);
+  padding-inline: clamp(20px, 4vw, 32px);
+  width: min(420px, 92vw);
+  min-width: min(280px, 92vw);
+  text-align: center;
+  font-size: clamp(0.95rem, 2.3vw, 1.1rem);
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--panel);
+  border-radius: var(--card-radius);
+  border: 1px solid color-mix(in oklab, var(--line) 88%, transparent);
+  box-shadow: var(--card-shadow);
+  isolation: isolate;
 }
 
+.tv-modal-suspense::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in oklab, var(--fg) 18%, transparent);
+  backdrop-filter: blur(6px);
+}
 .tv-combobox {
   position: relative;
 }
@@ -1399,10 +1416,16 @@ svg {
   width: 100%;
 }
 
-.tv-combobox__list {
+.tv-floating-listbox {
   position: absolute;
-  inset: calc(100% + 4px) 0 auto;
-  z-index: 25;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.tv-combobox__list {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1416,6 +1439,7 @@ svg {
   max-height: min(260px, 50vh);
   overflow-y: auto;
   overscroll-behavior: contain;
+  pointer-events: auto;
 }
 
 .tv-combobox__empty {
@@ -1547,4 +1571,19 @@ svg {
   cursor: default;
   color: var(--muted);
   font-style: italic;
+}
+
+/* =========================
+  Scrollbars
+========================= */
+.tv-stage__surface::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.tv-stage__surface::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--fg) 15%, transparent);
+  border-radius: 10px;
+}
+.tv-stage__surface::-webkit-scrollbar-track {
+  background: transparent;
 }
