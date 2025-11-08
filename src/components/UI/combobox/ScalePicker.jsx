@@ -57,6 +57,7 @@ export default function ScalePicker({
             {options.length === 0 ? (
               <li
                 className="tv-combobox__empty tv-scale-picker__empty"
+                role="presentation"
                 aria-live="polite"
               >
                 No matching scales
@@ -69,15 +70,20 @@ export default function ScalePicker({
                 });
                 const { className: optClass, ...rest } = optionProps;
                 const isActive = index === activeIndex;
+                const isSelected = option.label === scale;
                 return (
                   <li
                     key={`${option.systemId}-${option.label}`}
+                    aria-selected={isSelected}
                     {...rest}
                     className={clsx(
                       "tv-combobox__option",
                       "tv-scale-picker__option",
                       optClass,
-                      { "is-active": isActive },
+                      {
+                        "is-active": isActive,
+                        "is-selected": isSelected,
+                      },
                     )}
                   >
                     <span className="tv-scale-picker__option-label">

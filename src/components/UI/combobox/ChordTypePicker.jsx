@@ -88,11 +88,15 @@ export default function ChordTypePicker({
         activeIndex,
         getOptionProps,
         commitSelection,
+        listProps,
       }) => {
         const available = new Set(options.map((opt) => opt.type));
         let cursor = -1;
         return (
-          <ul className="tv-combobox__list">
+          <ul
+            {...listProps}
+            className={clsx("tv-combobox__list", listProps?.className)}
+          >
             {sections
               .map((section) => {
                 const sectionOptions = section.options.filter((opt) =>
