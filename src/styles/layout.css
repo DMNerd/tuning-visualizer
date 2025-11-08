@@ -1500,3 +1500,70 @@ svg {
   color: var(--accent);
   background: color-mix(in oklab, var(--accent) 16%, transparent);
 }
+
+.tv-scale-picker {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.tv-scale-picker__input {
+  width: 100%;
+}
+
+.tv-scale-picker__popover {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + 4px);
+  z-index: 4;
+}
+
+.tv-scale-picker__list {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  padding: 6px;
+  margin: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: var(--card-shadow);
+  overflow-y: auto;
+}
+
+.tv-scale-picker__option,
+.tv-scale-picker__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+}
+
+.tv-scale-picker__option-meta {
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+.tv-scale-picker__option[aria-selected="true"] .tv-scale-picker__option-label {
+  font-weight: 600;
+}
+
+.tv-scale-picker__option[data-active="true"] {
+  background: color-mix(in oklab, var(--fg) 12%, transparent);
+}
+
+.tv-scale-picker__option:hover,
+.tv-scale-picker__option:focus-visible {
+  background: color-mix(in oklab, var(--fg) 18%, transparent);
+  outline: none;
+}
+
+.tv-scale-picker__empty {
+  cursor: default;
+  color: var(--muted);
+  font-style: italic;
+}

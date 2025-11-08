@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 import { memoWithPick } from "@/utils/memo";
+import ScalePicker from "@/components/UI/ScalePicker";
 
 function ScaleControls({
   root,
@@ -32,13 +33,24 @@ function ScaleControls({
     if (resolvedDefaultScale) setScale(resolvedDefaultScale);
   };
 
+  const rootInputId = React.useId();
+  const rootLabelId = React.useId();
+  const scaleInputId = React.useId();
+  const scaleLabelId = React.useId();
+
   return (
     <Section title="Scale" size="sm" className="tv-panel--scale-controls">
       <div className={clsx("tv-controls", "tv-controls--scale")}>
         <div className="tv-field">
-          <span className="tv-field__label">Root</span>
+          <label
+            className="tv-field__label"
+            htmlFor={rootInputId}
+            id={rootLabelId}
+          >
+            Root
+          </label>
           <select
-            id="root"
+            id={rootInputId}
             name="root"
             value={root}
             onChange={(e) => setRoot(e.target.value)}
@@ -50,20 +62,21 @@ function ScaleControls({
         </div>
 
         <div className="tv-field">
-          <span className="tv-field__label">Scale</span>
+          <label
+            className="tv-field__label"
+            htmlFor={scaleInputId}
+            id={scaleLabelId}
+          >
+            Scale
+          </label>
           <div className="tv-controls__input-row">
-            <select
-              id="scale"
-              name="scale"
-              value={scale}
-              onChange={(e) => setScale(e.target.value)}
-            >
-              {scaleOptions.map((s) => (
-                <option key={s.label} value={s.label}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+            <ScalePicker
+              id={scaleInputId}
+              aria-labelledby={scaleLabelId}
+              scale={scale}
+              setScale={setScale}
+              scaleOptions={scaleOptions}
+            />
             <button
               type="button"
               className="tv-button tv-button--icon"
