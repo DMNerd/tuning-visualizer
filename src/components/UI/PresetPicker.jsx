@@ -1,13 +1,7 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import clsx from "clsx";
-import FloatingListbox from "./FloatingListbox";
+import FloatingListbox from "@/components/UI/FloatingListbox";
+import useCombobox from "@/hooks/useCombobox";
 
 function toBadges({ name, customPresetSet, presetMetaMap }) {
   const badges = [];
@@ -71,16 +65,6 @@ export default function PresetPicker({
   placeholder = "Search presets…",
   ariaLabelledBy,
 }) {
-  const fallbackId = useId();
-  const inputId = id ?? `preset-picker-${fallbackId}`;
-  const listId = `${inputId}-list`;
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
-  const [inputValue, setInputValue] = useState(selectedPreset ?? "");
-  const [isOpen, setIsOpen] = useState(false);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-
   const allPresetNames = useMemo(
     () => normalizeList(presetNames),
     [presetNames],
@@ -105,10 +89,37 @@ export default function PresetPicker({
     return map;
   }, [allPresetNames, customPresetSet, presetMetaMap]);
 
+  const selectedLabel = selectedPreset ?? "";
+
+  const {
+    rootRef,
+    rootProps,
+    inputId,
+    listId,
+    inputValue,
+    setInputValue,
+    isOpen,
+    isFiltering,
+    setIsFiltering,
+    activeIndex,
+    getInputProps,
+    getOptionId,
+    getOptionProps,
+    commitSelection: commitComboboxSelection,
+    setOptions,
+    listProps,
+  } = useCombobox({
+    id,
+    selectedKey: selectedPreset,
+    getOptionKey: (option) => option,
+    selectedText: selectedLabel,
+    initialInputValue: selectedLabel,
+  });
+
   useEffect(() => {
-    setInputValue(selectedPreset ?? "");
+    setInputValue(selectedLabel);
     setIsFiltering(false);
-  }, [selectedPreset]);
+  }, [selectedLabel, setInputValue, setIsFiltering]);
 
   const normalizedQuery = useMemo(() => {
     if (!isFiltering) return "";
@@ -123,148 +134,41 @@ export default function PresetPicker({
   }, [allPresetNames, normalizedQuery]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setActiveIndex(-1);
-      return;
-    }
-
-    setActiveIndex((prev) => {
-      if (!filteredOptions.length) return -1;
-      if (prev >= 0 && prev < filteredOptions.length) return prev;
-      const selectedIdx = filteredOptions.findIndex(
-        (name) => name === selectedPreset,
-      );
-      if (selectedIdx >= 0) return selectedIdx;
-      return 0;
-    });
-  }, [filteredOptions, isOpen, selectedPreset]);
+    setOptions(filteredOptions);
+  }, [filteredOptions, setOptions]);
 
   const activeOptionId =
-    isOpen && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined;
-
-  const closeList = useCallback(() => {
-    setIsOpen(false);
-    setActiveIndex(-1);
-    setIsFiltering(false);
-    setInputValue(selectedPreset ?? "");
-  }, [selectedPreset]);
+    isOpen && activeIndex >= 0 ? getOptionId(activeIndex) : undefined;
 
   const commitSelection = useCallback(
     (name) => {
       if (typeof name !== "string" || !name) return;
       onSelect?.(name);
       setInputValue(name);
-      setIsFiltering(false);
-      setIsOpen(false);
-      setActiveIndex(-1);
+      commitComboboxSelection({ inputValue: name });
     },
-    [onSelect],
+    [commitComboboxSelection, onSelect, setInputValue],
   );
 
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-    setIsFiltering(true);
-    setIsOpen(true);
-  };
-
-  const handleInputFocus = () => {
-    setIsOpen(true);
-  };
-
-  const handleInputKeyDown = (event) => {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((prev) => {
-        const next = prev + 1;
-        if (next >= filteredOptions.length)
-          return filteredOptions.length ? 0 : -1;
-        return next;
-      });
-      return;
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((prev) => {
-        if (!filteredOptions.length) return -1;
-        const next = prev <= 0 ? filteredOptions.length - 1 : prev - 1;
-        return next;
-      });
-      return;
-    }
-
-    if (event.key === "Home") {
-      event.preventDefault();
-      setIsOpen(true);
-      if (filteredOptions.length) {
-        setActiveIndex(0);
-      }
-      return;
-    }
-
-    if (event.key === "End") {
-      event.preventDefault();
-      setIsOpen(true);
-      if (filteredOptions.length) {
-        setActiveIndex(filteredOptions.length - 1);
-      }
-      return;
-    }
-
-    if (event.key === "Enter") {
-      if (!isOpen) return;
-      event.preventDefault();
-      const option =
-        (activeIndex >= 0 && filteredOptions[activeIndex]) ||
-        (filteredOptions.length === 1 ? filteredOptions[0] : null);
-      if (option) {
-        commitSelection(option);
-      }
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      if (isOpen) {
-        closeList();
-      } else {
-        setInputValue(selectedPreset ?? "");
-        setIsFiltering(false);
-      }
-    }
-  };
-
-  const handleBlur = () => {
-    requestAnimationFrame(() => {
-      const root = containerRef.current;
-      if (!root) return;
-      const activeEl = document.activeElement;
-      const listEl = document.getElementById(listId);
-      const isFocusWithinRoot = activeEl && root.contains(activeEl);
-      const isFocusWithinList = activeEl && listEl?.contains(activeEl);
-      if (!isFocusWithinRoot && !isFocusWithinList) {
-        closeList();
-      }
-    });
-  };
+  const inputProps = getInputProps({
+    onCommit: (option) => commitSelection(option),
+  });
 
   return (
-    <div ref={containerRef} className="tv-preset-picker" onBlur={handleBlur}>
+    <div {...rootProps} ref={rootRef} className="tv-combobox tv-preset-picker">
       <input
-        ref={inputRef}
         id={inputId}
         type="text"
         role="combobox"
-        className="tv-preset-picker__input"
+        className="tv-combobox__input"
         autoComplete="off"
         spellCheck={false}
         placeholder={placeholder}
         value={inputValue}
-        onChange={handleInputChange}
-        onFocus={handleInputFocus}
-        onKeyDown={handleInputKeyDown}
+        ref={inputProps.ref}
+        onChange={inputProps.onChange}
+        onFocus={inputProps.onFocus}
+        onKeyDown={inputProps.onKeyDown}
         aria-autocomplete="list"
         aria-expanded={isOpen && filteredOptions.length > 0}
         aria-controls={isOpen ? listId : undefined}
@@ -273,31 +177,35 @@ export default function PresetPicker({
         aria-labelledby={ariaLabelledBy}
       />
       {isOpen && (
-        <FloatingListbox anchorRef={containerRef} isOpen={isOpen}>
-          <ul id={listId} role="listbox" className="tv-preset-picker__list">
+        <FloatingListbox anchorRef={rootRef} isOpen={isOpen}>
+          <ul {...listProps} className="tv-combobox__list">
             {filteredOptions.length === 0 && (
-              <li className="tv-preset-picker__empty" role="presentation">
+              <li className="tv-combobox__empty" role="presentation">
                 No presets match.
               </li>
             )}
             {filteredOptions.map((name, index) => {
               const badges = badgesByName.get(name) ?? [];
+              const optionProps = getOptionProps(index, {
+                option: name,
+                onSelect: () => commitSelection(name),
+              });
               return (
                 <li
+                  {...optionProps}
                   key={name}
-                  id={`${listId}-option-${index}`}
-                  role="option"
                   aria-selected={name === selectedPreset}
-                  className={clsx("tv-preset-picker__option", {
-                    "is-active": index === activeIndex,
-                    "is-selected": name === selectedPreset,
-                    "is-custom": customPresetSet.has(name),
-                  })}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => commitSelection(name)}
+                  className={clsx(
+                    "tv-combobox__option",
+                    "tv-preset-picker__option",
+                    {
+                      "is-active": index === activeIndex,
+                      "is-selected": name === selectedPreset,
+                      "is-custom": customPresetSet.has(name),
+                    },
+                  )}
                 >
-                  <span className="tv-preset-picker__option-title">{name}</span>
+                  <span className="tv-combobox__option-title">{name}</span>
                   {badges.length > 0 && (
                     <span className="tv-preset-picker__option-meta">
                       {badges.map((badge) => (

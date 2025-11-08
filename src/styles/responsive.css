@@ -63,10 +63,12 @@
     }
   }
 
+  /* consolidated small-screen rules */
   @media (--bp-sm) {
     .tv-stage__surface {
       padding-block-start: clamp(48px, 12vw, 64px);
     }
+
     select,
     input[type="number"],
     input[type="range"],
@@ -85,6 +87,26 @@
 
     .tv-panel__body {
       grid-template-rows: auto;
+    }
+
+    .tv-modal {
+      padding-block: clamp(12px, 6vw, 28px);
+      padding-inline: clamp(8px, 5vw, 20px);
+    }
+
+    .tv-modal__card {
+      width: min(100%, 540px);
+      max-width: min(540px, 100%);
+    }
+
+    .tv-preset-picker__option,
+    .tv-chord-type-picker__option {
+      padding: 8px;
+    }
+
+    .tv-preset-picker__list,
+    .tv-chord-type-picker__list {
+      max-height: min(220px, 55vh);
     }
   }
 
@@ -161,18 +183,7 @@
     }
   }
 
-  @media (--bp-sm) {
-    .tv-modal {
-      padding-block: clamp(12px, 6vw, 28px);
-      padding-inline: clamp(8px, 5vw, 20px);
-    }
-
-    .tv-modal__card {
-      width: min(100%, 540px);
-      max-width: min(540px, 100%);
-    }
-  }
-
+  /* modal height breakpoints */
   @media (--bp-modal-h-md) {
     .tv-modal {
       padding-block: clamp(8px, 5vh, 16px);
@@ -256,17 +267,17 @@
 
     .tv-shell {
       min-height: auto;
+    }
 
-      .tv-shell__header,
-      .tv-shell__controls {
-        display: none !important;
-      }
+    .tv-shell .tv-shell__header,
+    .tv-shell .tv-shell__controls {
+      display: none !important;
+    }
 
-      .tv-shell__main {
-        padding: 0;
-        max-width: none;
-        margin: 0;
-      }
+    .tv-shell .tv-shell__main {
+      padding: 0;
+      max-width: none;
+      margin: 0;
     }
   }
 
@@ -274,17 +285,5 @@
     .tv-button--fullscreen {
       display: none !important;
     }
-  }
-}
-
-@media (max-width: 640px) {
-  .tv-preset-picker__option,
-  .tv-chord-type-picker__option {
-    padding: 8px;
-  }
-
-  .tv-preset-picker__list,
-  .tv-chord-type-picker__list {
-    max-height: min(220px, 55vh);
   }
 }
