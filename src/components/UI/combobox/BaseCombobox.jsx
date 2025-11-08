@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import clsx from "clsx";
 import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
@@ -29,11 +29,24 @@ export default function BaseCombobox({
     );
   }, [options, value, getOptionKey, getOptionLabel]);
 
+  const selectedKey = useMemo(() => {
+    if (selectedOption) {
+      return getOptionKey(selectedOption);
+    }
+
+    return value ?? null;
+  }, [selectedOption, getOptionKey, value]);
+
   const selectedLabel = selectedOption
     ? getOptionLabel(selectedOption)
     : value
       ? String(value)
       : "";
+
+  const previousSelectionRef = useRef({
+    key: selectedKey ?? null,
+    label: selectedLabel,
+  });
 
   const {
     rootRef,
@@ -49,11 +62,12 @@ export default function BaseCombobox({
     getOptionId,
     getOptionProps,
     commitSelection: commitComboboxSelection,
+    closeList,
     setOptions,
     listProps,
   } = useCombobox({
     id,
-    selectedKey: selectedLabel,
+    selectedKey,
     getOptionKey: (opt) => getOptionKey(opt),
     selectedText: selectedLabel,
     initialInputValue: selectedLabel,
@@ -80,6 +94,32 @@ export default function BaseCombobox({
   useEffect(() => {
     setOptions(filteredOptions);
   }, [filteredOptions, setOptions]);
+
+  useEffect(() => {
+    const nextSelection = {
+      key: selectedKey ?? null,
+      label: selectedLabel,
+    };
+
+    const previousSelection = previousSelectionRef.current;
+    const hasSelectionChanged =
+      previousSelection.key !== nextSelection.key ||
+      previousSelection.label !== nextSelection.label;
+
+    if (!hasSelectionChanged) {
+      return;
+    }
+
+    previousSelectionRef.current = nextSelection;
+
+    if (nextSelection.key == null) {
+      closeList({ restoreInputValue: "" });
+      setInputValue("");
+      return;
+    }
+
+    setInputValue(nextSelection.label ?? "");
+  }, [selectedKey, selectedLabel, closeList, setInputValue]);
 
   const commitSelection = useCallback(
     (option) => {
@@ -128,7 +168,7 @@ export default function BaseCombobox({
         onFocus={inputProps.onFocus}
         onKeyDown={inputProps.onKeyDown}
         aria-autocomplete="list"
-        aria-expanded={isOpen && filteredOptions.length > 0}
+        aria-expanded={isOpen}
         aria-controls={isOpen ? listId : undefined}
         aria-activedescendant={activeOptionId}
         aria-haspopup="listbox"
@@ -145,6 +185,8 @@ export default function BaseCombobox({
               listId,
               listProps,
               normalizedQuery,
+              commitSelection,
+              closeList,
             })
           ) : (
             <ul
@@ -170,8 +212,7 @@ export default function BaseCombobox({
                         optionProps.className,
                         {
                           "is-active": index === activeIndex,
-                          "is-selected":
-                            getOptionLabel(option) === selectedLabel,
+                          "is-selected": getOptionKey(option) === selectedKey,
                         },
                       )}
                     >

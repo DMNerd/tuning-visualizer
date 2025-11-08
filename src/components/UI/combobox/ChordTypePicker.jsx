@@ -18,7 +18,7 @@ export default function ChordTypePicker({
   chordTypes,
   labels = CHORD_LABELS,
   selectedType,
-  onSelect,
+  onSelect: handleSelect,
   supportsMicrotonal = true,
   placeholder = "Search chord types…",
   ariaLabelledBy,
@@ -75,7 +75,7 @@ export default function ChordTypePicker({
       value={selectedType}
       onSelect={(option) => {
         if (!option) return;
-        onSelect?.(option.type);
+        handleSelect?.(option.type);
       }}
       options={normalizedOptions}
       getOptionKey={(opt) => opt.type}
@@ -83,7 +83,12 @@ export default function ChordTypePicker({
       filterOption={(opt, query) =>
         opt.labelLower.includes(query) || opt.typeLower.includes(query)
       }
-      renderList={({ options, activeIndex, getOptionProps }) => {
+      renderList={({
+        options,
+        activeIndex,
+        getOptionProps,
+        commitSelection,
+      }) => {
         const available = new Set(options.map((opt) => opt.type));
         let cursor = -1;
         return (
@@ -108,7 +113,7 @@ export default function ChordTypePicker({
                       cursor += 1;
                       const optionProps = getOptionProps(cursor, {
                         option,
-                        onSelect: () => onSelect?.(option.type),
+                        onSelect: () => commitSelection(option),
                       });
                       return (
                         <li

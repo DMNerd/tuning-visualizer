@@ -41,7 +41,13 @@ export default function ScalePicker({
           ) : null}
         </li>
       )}
-      renderList={({ options, activeIndex, getOptionProps, listProps }) => (
+      renderList={({
+        options,
+        activeIndex,
+        getOptionProps,
+        listProps,
+        commitSelection,
+      }) => (
         <div className="tv-scale-picker__popover">
           <ul
             {...listProps}
@@ -59,7 +65,7 @@ export default function ScalePicker({
               options.map((option, index) => {
                 const optionProps = getOptionProps(index, {
                   option,
-                  onSelect: () => setScale(option.label),
+                  onSelect: () => commitSelection(option),
                 });
                 const { className: optClass, ...rest } = optionProps;
                 const isActive = index === activeIndex;
