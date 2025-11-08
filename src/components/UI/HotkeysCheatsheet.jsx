@@ -1,27 +1,24 @@
-import React, { useMemo } from "react";
+import React from "react";
+
+const HOTKEY_ROWS = [
+  ["F1", "show this help"],
+  ["f", "fullscreen"],
+  ["l", "cycle labels"],
+  ["o", "toggle open notes"],
+  ["n", "toggle fret numbers"],
+  ["d", "color by degree"],
+  ["a", "sharps ↔ flats"],
+  ["g", "left-handed layout"],
+  ["c", "chord overlay"],
+  ["h", "hide non-chord tones"],
+  ["r", "randomise scale and root"],
+  ["[ / ]", "strings - / +"],
+  ["- / =", "frets - / +"],
+  [", / .", "dot size - / +"],
+  ["Ctrl+N", "create new tuning pack"],
+];
 
 function HotkeysCheatsheet({ onClose }) {
-  const rows = useMemo(
-    () => [
-      ["F1", "show this help"],
-      ["f", "fullscreen"],
-      ["l", "cycle labels"],
-      ["o", "toggle open notes"],
-      ["n", "toggle fret numbers"],
-      ["d", "color by degree"],
-      ["a", "sharps ↔ flats"],
-      ["g", "left-handed layout"],
-      ["c", "chord overlay"],
-      ["h", "hide non-chord tones"],
-      ["r", "randomise scale and root"],
-      ["[ / ]", "strings - / +"],
-      ["- / =", "frets - / +"],
-      [", / .", "dot size - / +"],
-      ["Ctrl+N", "create new tuning pack"],
-    ],
-    [],
-  );
-
   const renderKeys = (text) => {
     const alts = text
       .split("•")
@@ -96,7 +93,7 @@ function HotkeysCheatsheet({ onClose }) {
         ) : null}
       </div>
       <ul className="tv-hotkeys__list">
-        {rows.map(([keys, desc]) => (
+        {HOTKEY_ROWS.map(([keys, desc]) => (
           <li className="tv-hotkeys__row" key={keys}>
             <span className="tv-hotkeys__keys">{renderKeys(keys)}</span>
             <span className="tv-hotkeys__desc">{desc}</span>

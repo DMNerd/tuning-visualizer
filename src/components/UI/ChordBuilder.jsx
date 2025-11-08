@@ -10,6 +10,7 @@ import { FiRotateCcw } from "react-icons/fi";
 import { memoWithPick } from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
+import ChordTypePicker from "@/components/UI/ChordTypePicker";
 
 function ChordBuilder({
   root,
@@ -38,7 +39,11 @@ function ChordBuilder({
     setHideNonChord(false);
   };
 
-  const chordTypes = supportsMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
+  const divisions = Number(system?.divisions);
+  const allowMicrotonal =
+    Boolean(supportsMicrotonal) && Number.isFinite(divisions) && divisions > 12;
+
+  const chordTypes = allowMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
 
   const safeIntervals = Array.isArray(intervals) ? intervals : [];
 
@@ -137,20 +142,19 @@ function ChordBuilder({
           </div>
 
           <div className="tv-field">
-            <span className="tv-field__label">Type</span>
+            <span className="tv-field__label" id="chord-type-label">
+              Type
+            </span>
             <div className="tv-controls__input-row">
-              <select
+              <ChordTypePicker
                 id="chord-type"
-                name="chord-type"
-                value={type}
-                onChange={(e) => onTypeChange(e.target.value)}
-              >
-                {chordTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {CHORD_LABELS[t]}
-                  </option>
-                ))}
-              </select>
+                chordTypes={chordTypes}
+                labels={CHORD_LABELS}
+                selectedType={type}
+                onSelect={onTypeChange}
+                supportsMicrotonal={supportsMicrotonal}
+                ariaLabelledBy="chord-type-label"
+              />
               <button
                 type="button"
                 className="tv-button tv-button--icon"

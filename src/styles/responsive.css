@@ -278,11 +278,13 @@
 }
 
 @media (max-width: 640px) {
-  .tv-preset-picker__option {
+  .tv-preset-picker__option,
+  .tv-chord-type-picker__option {
     padding: 8px;
   }
 
-  .tv-preset-picker__list {
+  .tv-preset-picker__list,
+  .tv-chord-type-picker__list {
     max-height: min(220px, 55vh);
   }
 }

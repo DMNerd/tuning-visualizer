@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import { ErrorBoundary } from "react-error-boundary";
 import {
@@ -199,7 +193,7 @@ export default function App() {
     ensureValidRoot(sysNames);
   }, [ensureValidRoot, sysNames]);
 
-  const rootIx = useMemo(() => pcFromName(root), [root, pcFromName]);
+  const rootIx = pcFromName(root);
 
   const {
     chordRoot,
@@ -512,7 +506,7 @@ export default function App() {
             setShowChord={setShowChord}
             hideNonChord={hideNonChord}
             setHideNonChord={setHideNonChord}
-            supportsMicrotonal={system.divisions === 24}
+            supportsMicrotonal={Number(system?.divisions) > 12}
             system={system}
             rootIx={rootIx}
             intervals={intervals}
