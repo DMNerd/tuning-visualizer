@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import clsx from "clsx";
-import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
-import useCombobox from "@/hooks/useCombobox";
+import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
+
+function normalizeList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string" && item.length > 0);
+}
 
 function toBadges({ name, customPresetSet, presetMetaMap }) {
   const badges = [];
@@ -50,11 +54,6 @@ function toBadges({ name, customPresetSet, presetMetaMap }) {
   return badges;
 }
 
-function normalizeList(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string" && item.length > 0);
-}
-
 export default function PresetPicker({
   id,
   presetNames,
@@ -89,144 +88,54 @@ export default function PresetPicker({
     return map;
   }, [allPresetNames, customPresetSet, presetMetaMap]);
 
-  const selectedLabel = selectedPreset ?? "";
-
-  const {
-    rootRef,
-    rootProps,
-    inputId,
-    listId,
-    inputValue,
-    setInputValue,
-    isOpen,
-    isFiltering,
-    setIsFiltering,
-    activeIndex,
-    getInputProps,
-    getOptionId,
-    getOptionProps,
-    commitSelection: commitComboboxSelection,
-    setOptions,
-    listProps,
-  } = useCombobox({
-    id,
-    selectedKey: selectedPreset,
-    getOptionKey: (option) => option,
-    selectedText: selectedLabel,
-    initialInputValue: selectedLabel,
-  });
-
-  useEffect(() => {
-    setInputValue(selectedLabel);
-    setIsFiltering(false);
-  }, [selectedLabel, setInputValue, setIsFiltering]);
-
-  const normalizedQuery = useMemo(() => {
-    if (!isFiltering) return "";
-    return inputValue.trim().toLowerCase();
-  }, [inputValue, isFiltering]);
-
-  const filteredOptions = useMemo(() => {
-    if (!normalizedQuery) return allPresetNames;
-    return allPresetNames.filter((name) =>
-      name.toLowerCase().includes(normalizedQuery),
-    );
-  }, [allPresetNames, normalizedQuery]);
-
-  useEffect(() => {
-    setOptions(filteredOptions);
-  }, [filteredOptions, setOptions]);
-
-  const activeOptionId =
-    isOpen && activeIndex >= 0 ? getOptionId(activeIndex) : undefined;
-
-  const commitSelection = useCallback(
-    (name) => {
-      if (typeof name !== "string" || !name) return;
-      onSelect?.(name);
-      setInputValue(name);
-      commitComboboxSelection({ inputValue: name });
-    },
-    [commitComboboxSelection, onSelect, setInputValue],
-  );
-
-  const inputProps = getInputProps({
-    onCommit: (option) => commitSelection(option),
-  });
-
   return (
-    <div {...rootProps} ref={rootRef} className="tv-combobox tv-preset-picker">
-      <input
-        id={inputId}
-        type="text"
-        role="combobox"
-        className="tv-combobox__input"
-        autoComplete="off"
-        spellCheck={false}
-        placeholder={placeholder}
-        value={inputValue}
-        ref={inputProps.ref}
-        onChange={inputProps.onChange}
-        onFocus={inputProps.onFocus}
-        onKeyDown={inputProps.onKeyDown}
-        aria-autocomplete="list"
-        aria-expanded={isOpen && filteredOptions.length > 0}
-        aria-controls={isOpen ? listId : undefined}
-        aria-activedescendant={activeOptionId}
-        aria-haspopup="listbox"
-        aria-labelledby={ariaLabelledBy}
-      />
-      {isOpen && (
-        <FloatingListbox anchorRef={rootRef} isOpen={isOpen}>
-          <ul {...listProps} className="tv-combobox__list">
-            {filteredOptions.length === 0 && (
-              <li className="tv-combobox__empty" role="presentation">
-                No presets match.
-              </li>
-            )}
-            {filteredOptions.map((name, index) => {
-              const badges = badgesByName.get(name) ?? [];
-              const optionProps = getOptionProps(index, {
-                option: name,
-                onSelect: () => commitSelection(name),
-              });
-              return (
-                <li
-                  {...optionProps}
-                  key={name}
-                  aria-selected={name === selectedPreset}
-                  className={clsx(
-                    "tv-combobox__option",
-                    "tv-preset-picker__option",
-                    {
-                      "is-active": index === activeIndex,
-                      "is-selected": name === selectedPreset,
-                      "is-custom": customPresetSet.has(name),
-                    },
-                  )}
-                >
-                  <span className="tv-combobox__option-title">{name}</span>
-                  {badges.length > 0 && (
-                    <span className="tv-preset-picker__option-meta">
-                      {badges.map((badge) => (
-                        <span
-                          key={badge.key}
-                          className={clsx("tv-preset-picker__meta-badge", {
-                            "tv-preset-picker__meta-badge--accent":
-                              badge.variant === "accent",
-                          })}
-                        >
-                          {badge.label}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-                </li>
-              );
+    <BaseCombobox
+      id={id}
+      value={selectedPreset ?? ""}
+      onSelect={(option) => {
+        if (typeof option?.value !== "string") return;
+        onSelect?.(option.value);
+      }}
+      options={allPresetNames.map((name) => ({
+        value: name,
+        label: name,
+      }))}
+      getOptionKey={(opt) => opt.value}
+      getOptionLabel={(opt) => opt.label}
+      filterOption={(opt, query) =>
+        opt.label.toLowerCase().includes(query.toLowerCase())
+      }
+      renderOption={(opt, { isActive }) => {
+        const badges = badgesByName.get(opt.value) ?? [];
+        return (
+          <div
+            className={clsx("tv-preset-picker__option", {
+              "is-active": isActive,
+              "is-custom": customPresetSet.has(opt.value),
             })}
-          </ul>
-        </FloatingListbox>
-      )}
-    </div>
+          >
+            <span className="tv-combobox__option-title">{opt.label}</span>
+            {badges.length > 0 && (
+              <span className="tv-preset-picker__option-meta">
+                {badges.map((badge) => (
+                  <span
+                    key={badge.key}
+                    className={clsx("tv-preset-picker__meta-badge", {
+                      "tv-preset-picker__meta-badge--accent":
+                        badge.variant === "accent",
+                    })}
+                  >
+                    {badge.label}
+                  </span>
+                ))}
+              </span>
+            )}
+          </div>
+        );
+      }}
+      placeholder={placeholder}
+      aria-labelledby={ariaLabelledBy}
+      className="tv-preset-picker"
+    />
   );
 }
