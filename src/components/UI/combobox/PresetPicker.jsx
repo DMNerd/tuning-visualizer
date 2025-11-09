@@ -1,11 +1,7 @@
 import { useMemo } from "react";
 import clsx from "clsx";
+import { normalizeStringList } from "@/utils/normalizeStringList";
 import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
-
-function normalizeList(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string" && item.length > 0);
-}
 
 function toBadges({ name, customPresetSet, presetMetaMap }) {
   const badges = [];
@@ -65,11 +61,11 @@ export default function PresetPicker({
   ariaLabelledBy,
 }) {
   const allPresetNames = useMemo(
-    () => normalizeList(presetNames),
+    () => normalizeStringList(presetNames),
     [presetNames],
   );
   const customPresetSet = useMemo(
-    () => new Set(normalizeList(customPresetNames)),
+    () => new Set(normalizeStringList(customPresetNames)),
     [customPresetNames],
   );
 

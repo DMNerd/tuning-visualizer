@@ -1,17 +1,13 @@
 import { Fragment, useMemo } from "react";
 import clsx from "clsx";
 import { CHORD_LABELS, isMicrotonalChordType } from "@/lib/theory/chords";
+import { normalizeStringList } from "@/utils/normalizeStringList";
 import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
 
 const SECTION_LABELS = {
   standard: "Standard triads & sevenths",
   microtonal: "Microtonal",
 };
-
-function normalizeList(value) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string" && item.length > 0);
-}
 
 export default function ChordTypePicker({
   id,
@@ -25,7 +21,7 @@ export default function ChordTypePicker({
 }) {
   const normalizedOptions = useMemo(() => {
     const seen = new Set();
-    return normalizeList(chordTypes).reduce((acc, type) => {
+    return normalizeStringList(chordTypes).reduce((acc, type) => {
       if (seen.has(type)) return acc;
       seen.add(type);
       const label = labels?.[type] ?? type;
