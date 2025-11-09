@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import PresetPicker from "@/components/UI/combobox/PresetPicker";
@@ -40,6 +40,96 @@ function commitNumberField({
   return true;
 }
 
+function useNumberField({ value, min, max, onSubmit }) {
+  const [text, setText] = useState(String(value));
+  const [error, setError] = useState("");
+
+  useEffect(() => setText(String(value)), [value]);
+
+  const commit = useCallback(
+    (rawOverride) =>
+      commitNumberField({
+        rawOverride,
+        textValue: text,
+        min,
+        max,
+        setError,
+        setText,
+        onSubmit,
+      }),
+    [text, min, max, onSubmit],
+  );
+
+  const revert = useCallback(() => {
+    setText(String(value));
+  }, [value]);
+
+  const onBlur = useCallback(() => {
+    if (!commit()) revert();
+  }, [commit, revert]);
+
+  const onKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") commit();
+      if (e.key === "Escape") {
+        revert();
+        setError("");
+        e.currentTarget.blur();
+      }
+    },
+    [commit, revert],
+  );
+
+  const onChange = useCallback((e) => {
+    setText(e.target.value);
+  }, []);
+
+  return {
+    text,
+    error,
+    onChange,
+    onBlur,
+    onKeyDown,
+    placeholder: `${min}–${max}`,
+    helpText: error || `Allowed range: ${min}–${max}`,
+  };
+}
+
+function NumberField({ id, label, value, min, max, onSubmit }) {
+  const { text, error, onChange, onBlur, onKeyDown, placeholder, helpText } =
+    useNumberField({ value, min, max, onSubmit });
+  const helpId = `${id}-help`;
+
+  return (
+    <div className="tv-field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        name={id}
+        type="number"
+        min={min}
+        max={max}
+        step={1}
+        value={text}
+        onChange={onChange}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        aria-invalid={Boolean(error)}
+        aria-describedby={helpId}
+        placeholder={placeholder}
+      />
+      <small
+        id={helpId}
+        className={clsx("tv-field__help", {
+          "tv-field__help--error": error,
+        })}
+      >
+        {helpText}
+      </small>
+    </div>
+  );
+}
+
 function InstrumentControls({
   strings,
   frets,
@@ -59,63 +149,6 @@ function InstrumentControls({
   onCreateCustomPack,
   onEditCustomPack,
 }) {
-  const [stringsText, setStringsText] = useState(String(strings));
-  const [fretsText, setFretsText] = useState(String(frets));
-  const [stringsErr, setStringsErr] = useState("");
-  const [fretsErr, setFretsErr] = useState("");
-
-  useEffect(() => setStringsText(String(strings)), [strings]);
-  useEffect(() => setFretsText(String(frets)), [frets]);
-
-  function commitStrings(rawOverride) {
-    return commitNumberField({
-      rawOverride,
-      textValue: stringsText,
-      min: STR_MIN,
-      max: STR_MAX,
-      setError: setStringsErr,
-      setText: setStringsText,
-      onSubmit: handleStringsChange,
-    });
-  }
-
-  function commitFrets(rawOverride) {
-    return commitNumberField({
-      rawOverride,
-      textValue: fretsText,
-      min: FRETS_MIN,
-      max: FRETS_MAX,
-      setError: setFretsErr,
-      setText: setFretsText,
-      onSubmit: setFrets,
-    });
-  }
-
-  const onStringsBlur = () => {
-    if (!commitStrings()) setStringsText(String(strings));
-  };
-  const onFretsBlur = () => {
-    if (!commitFrets()) setFretsText(String(frets));
-  };
-
-  const onStringsKeyDown = (e) => {
-    if (e.key === "Enter") commitStrings();
-    if (e.key === "Escape") {
-      setStringsText(String(strings));
-      setStringsErr("");
-      e.currentTarget.blur();
-    }
-  };
-
-  const onFretsKeyDown = (e) => {
-    if (e.key === "Enter") commitFrets();
-    if (e.key === "Escape") {
-      setFretsText(String(frets));
-      setFretsErr("");
-      e.currentTarget.blur();
-    }
-  };
-
   const onSaveDefault = () =>
     withToastPromise(
       () => handleSaveDefault?.(),
@@ -146,59 +179,23 @@ function InstrumentControls({
     <Section title="Instrument">
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
         <div className="tv-controls__row--two">
-          <div className="tv-field">
-            <label htmlFor="strings">Strings</label>
-            <input
-              id="strings"
-              name="strings"
-              type="number"
-              min={STR_MIN}
-              max={STR_MAX}
-              step={1}
-              value={stringsText}
-              onChange={(e) => setStringsText(e.target.value)}
-              onBlur={onStringsBlur}
-              onKeyDown={onStringsKeyDown}
-              aria-invalid={Boolean(stringsErr)}
-              aria-describedby="strings-help"
-              placeholder={`${STR_MIN}–${STR_MAX}`}
-            />
-            <small
-              id="strings-help"
-              className={clsx("tv-field__help", {
-                "tv-field__help--error": stringsErr,
-              })}
-            >
-              {stringsErr || `Allowed range: ${STR_MIN}–${STR_MAX}`}
-            </small>
-          </div>
+          <NumberField
+            id="strings"
+            label="Strings"
+            value={strings}
+            min={STR_MIN}
+            max={STR_MAX}
+            onSubmit={handleStringsChange}
+          />
 
-          <div className="tv-field">
-            <label htmlFor="frets">Frets</label>
-            <input
-              id="frets"
-              name="frets"
-              type="number"
-              min={FRETS_MIN}
-              max={FRETS_MAX}
-              step={1}
-              value={fretsText}
-              onChange={(e) => setFretsText(e.target.value)}
-              onBlur={onFretsBlur}
-              onKeyDown={onFretsKeyDown}
-              aria-invalid={Boolean(fretsErr)}
-              aria-describedby="frets-help"
-              placeholder={`${FRETS_MIN}–${FRETS_MAX}`}
-            />
-            <small
-              id="frets-help"
-              className={clsx("tv-field__help", {
-                "tv-field__help--error": fretsErr,
-              })}
-            >
-              {fretsErr || `Allowed range: ${FRETS_MIN}–${FRETS_MAX}`}
-            </small>
-          </div>
+          <NumberField
+            id="frets"
+            label="Frets"
+            value={frets}
+            min={FRETS_MIN}
+            max={FRETS_MAX}
+            onSubmit={setFrets}
+          />
         </div>
 
         <div className="tv-controls__strings-grid">

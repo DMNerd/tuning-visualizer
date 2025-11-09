@@ -79,6 +79,21 @@ export function useCustomTuningPacks({
     [toggleManager],
   );
 
+  const runWithCleanup = useCallback(
+    (operation, toastConfig, toastId) =>
+      withToastPromise(
+        () => Promise.resolve(operation?.()),
+        toastConfig,
+        toastId,
+      ).then((result) => {
+        if (!isMounted()) return result;
+        queuePresetByNameRef.current?.(null);
+        setPendingPresetName(null);
+        return result;
+      }),
+    [isMounted, queuePresetByNameRef],
+  );
+
   const deletePack = useCallback(
     async (name) => {
       if (typeof deleteCustomTuningRef.current !== "function") return false;
@@ -97,22 +112,17 @@ export function useCustomTuningPacks({
       }
       if (!ok) return false;
 
-      return withToastPromise(
-        () => Promise.resolve(deleteCustomTuningRef.current(name)),
+      return runWithCleanup(
+        () => deleteCustomTuningRef.current(name),
         {
           loading: "Removing custom tuning…",
           success: "Custom tuning removed.",
           error: "Unable to remove custom tuning.",
         },
         `delete-custom-${slug(name)}`,
-      ).then(() => {
-        if (!isMounted()) return true;
-        queuePresetByNameRef.current?.(null);
-        setPendingPresetName(null);
-        return true;
-      });
+      );
     },
-    [confirmRef, deleteCustomTuningRef, isMounted, queuePresetByNameRef],
+    [confirmRef, deleteCustomTuningRef, runWithCleanup],
   );
 
   const cancelEditor = useCallback(() => {
@@ -163,21 +173,16 @@ export function useCustomTuningPacks({
       if (!ok) return false;
     }
 
-    return withToastPromise(
-      () => Promise.resolve(clearCustomTuningsRef.current()),
+    return runWithCleanup(
+      () => clearCustomTuningsRef.current(),
       {
         loading: "Clearing custom tunings…",
         success: "Custom tunings cleared.",
         error: "Unable to clear custom tunings.",
       },
       "clear-custom-tunings",
-    ).then(() => {
-      if (!isMounted()) return true;
-      queuePresetByNameRef.current?.(null);
-      setPendingPresetName(null);
-      return true;
-    });
-  }, [confirmRef, clearCustomTuningsRef, isMounted, queuePresetByNameRef]);
+    );
+  }, [confirmRef, clearCustomTuningsRef, runWithCleanup]);
 
   useEffect(() => {
     if (!pendingPresetName) return;
