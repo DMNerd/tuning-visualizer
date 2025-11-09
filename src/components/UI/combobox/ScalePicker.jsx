@@ -1,10 +1,6 @@
 import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
 import clsx from "clsx";
 
-function normalize(value) {
-  return value?.toString().trim().toLowerCase() ?? "";
-}
-
 export default function ScalePicker({
   id,
   className,
@@ -24,11 +20,7 @@ export default function ScalePicker({
       options={scaleOptions}
       getOptionKey={(opt) => `${opt.systemId ?? "sys"}-${opt.label}`}
       getOptionLabel={(opt) => opt.label}
-      filterOption={(opt, query) => {
-        const label = normalize(opt.label);
-        const system = normalize(opt.systemId);
-        return label.includes(query) || system.includes(query);
-      }}
+      getFilterTerms={(opt) => [opt.label, opt.systemId]}
       renderOption={(opt) => (
         <li className={clsx("tv-combobox__option", "tv-scale-picker__option")}>
           <span className="tv-scale-picker__option-label">{opt.label}</span>

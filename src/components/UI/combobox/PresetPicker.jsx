@@ -102,9 +102,10 @@ export default function PresetPicker({
       }))}
       getOptionKey={(opt) => opt.value}
       getOptionLabel={(opt) => opt.label}
-      filterOption={(opt, query) =>
-        opt.label.toLowerCase().includes(query.toLowerCase())
-      }
+      getFilterTerms={(opt) => {
+        const badges = badgesByName.get(opt.value) ?? [];
+        return [opt.label, opt.value, ...badges.map((badge) => badge.label)];
+      }}
       renderOption={(opt, { isActive }) => {
         const badges = badgesByName.get(opt.value) ?? [];
         return (

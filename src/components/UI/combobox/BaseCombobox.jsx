@@ -11,7 +11,7 @@ export default function BaseCombobox({
   options = [],
   getOptionKey = (option) => option?.value ?? option?.label ?? option,
   getOptionLabel = (option) => option?.label ?? String(option ?? ""),
-  filterOption,
+  getFilterTerms,
   renderOption,
   renderList,
   placeholder = "",
@@ -73,22 +73,11 @@ export default function BaseCombobox({
     initialInputValue: selectedLabel,
   });
 
-  // Use new hook here
   const { filteredOptions, normalizedQuery } = useFilteredOptions({
     options,
     inputValue,
     isFiltering,
-    getQuery: (text) => text.trim().toLowerCase(),
-    filter: (opts, query) => {
-      if (!query) return opts;
-      if (typeof filterOption === "function") {
-        return opts.filter((opt) => filterOption(opt, query));
-      }
-      return opts.filter((opt) => {
-        const label = getOptionLabel(opt);
-        return label.toLowerCase().includes(query);
-      });
-    },
+    getFilterTerms,
   });
 
   useEffect(() => {

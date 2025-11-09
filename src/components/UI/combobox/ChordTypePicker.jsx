@@ -32,8 +32,6 @@ export default function ChordTypePicker({
       acc.push({
         type,
         label,
-        labelLower: label.toLowerCase(),
-        typeLower: type.toLowerCase(),
         isMicrotonal: isMicrotonalChordType(type),
       });
       return acc;
@@ -80,9 +78,7 @@ export default function ChordTypePicker({
       options={normalizedOptions}
       getOptionKey={(opt) => opt.type}
       getOptionLabel={(opt) => opt.label}
-      filterOption={(opt, query) =>
-        opt.labelLower.includes(query) || opt.typeLower.includes(query)
-      }
+      getFilterTerms={(opt) => [opt.label, opt.type]}
       renderList={({
         options,
         activeIndex,
