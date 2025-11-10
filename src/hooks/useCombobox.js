@@ -42,6 +42,7 @@ export default function useCombobox({
   const allowCycleRef = useRef(true);
   const onCommitRef = useRef(null);
   const onKeyDownPropRef = useRef(null);
+  const isOpenRef = useRef(false);
 
   const getOptionKeyRef = useLatest(getOptionKey);
   const selectedKeyRef = useLatest(selectedKey ?? null);
@@ -53,6 +54,10 @@ export default function useCombobox({
   const [isOpen, setIsOpen] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   const getKey = useCallback(
     (option) => getOptionKeyRef.current(option),
@@ -126,11 +131,11 @@ export default function useCombobox({
       if (typeof nextSelected !== "undefined") {
         selectedKeyRef.current = nextSelected ?? null;
       }
-      if (isOpen) {
+      if (isOpenRef.current) {
         syncActiveIndex(safe, selectedKeyRef.current);
       }
     },
-    [isOpen, selectedKeyRef, syncActiveIndex],
+    [selectedKeyRef, syncActiveIndex],
   );
 
   useEffect(() => {
@@ -149,18 +154,26 @@ export default function useCombobox({
 
   const handleClickAway = useCallback(
     (event) => {
-      if (!isOpen) return;
+      if (!isOpenRef.current) return;
       const target = event.target;
       const root = rootRef.current;
       if (root?.contains(target)) return;
       const listEl = getListElement();
       if (listEl?.contains(target)) return;
+
+      if (typeof event.composedPath === "function") {
+        const path = event.composedPath();
+        if (Array.isArray(path)) {
+          if (root && path.includes(root)) return;
+          if (listEl && path.includes(listEl)) return;
+        }
+      }
       closeList();
     },
-    [closeList, isOpen, getListElement],
+    [closeList, getListElement],
   );
 
-  useClickAway(rootRef, handleClickAway, ["pointerdown"]);
+  useClickAway(rootRef, handleClickAway);
 
   const handleBlur = useCallback(() => {
     requestAnimationFrame(() => {
@@ -238,8 +251,16 @@ export default function useCombobox({
           onChange?.(event);
         },
         onFocus: (event) => {
+          setIsFiltering(true);
           setIsOpen(true);
           onFocus?.(event);
+        },
+        onMouseDown: () => {
+          setIsFiltering(true);
+          if (!isOpenRef.current) {
+            setIsOpen(true);
+            syncActiveIndex(optionsRef.current, selectedKeyRef.current);
+          }
         },
         onKeyDown: (event) => {
           if (!event.defaultPrevented) {
@@ -248,7 +269,7 @@ export default function useCombobox({
         },
       };
     },
-    [handleInputRef],
+    [handleInputRef, syncActiveIndex, selectedKeyRef],
   );
 
   useKey(
@@ -311,9 +332,10 @@ export default function useCombobox({
     (event) => event.key === "Enter" && event.target === inputRef.current,
     (event) => {
       const options = optionsRef.current;
-      if (!isOpen) {
+      if (!isOpenRef.current) {
         event.preventDefault();
         setIsOpen(true);
+        setIsFiltering(true);
         syncActiveIndex(options, selectedKeyRef.current);
         return;
       }
@@ -338,7 +360,7 @@ export default function useCombobox({
     (event) => event.key === "Escape" && event.target === inputRef.current,
     (event) => {
       event.preventDefault();
-      if (isOpen) {
+      if (isOpenRef.current) {
         closeList();
       } else {
         setInputValue(selectedTextRef.current);
