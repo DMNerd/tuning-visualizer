@@ -194,13 +194,20 @@ export default function useCombobox({
     [listId],
   );
 
+  const preventBlur = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
   const getOptionProps = useCallback(
     (index, { option, disabled, onSelect, onMouseEnter } = {}) => ({
       id: getOptionId(index),
       role: "option",
       tabIndex: -1,
       "aria-disabled": disabled ? true : undefined,
-      onMouseDown: (event) => event.preventDefault(),
+      onMouseDown: preventBlur,
+      onPointerDown: preventBlur,
+      onTouchStart: preventBlur,
       onMouseEnter: (event) => {
         if (!disabled) {
           const clamped = clampIndex(index);
@@ -213,7 +220,7 @@ export default function useCombobox({
         onSelect?.(option, index, event);
       },
     }),
-    [getOptionId, clampIndex],
+    [getOptionId, clampIndex, preventBlur],
   );
 
   const commitSelection = useCallback(
@@ -237,6 +244,14 @@ export default function useCombobox({
     inputRef.current = node ?? null;
   }, []);
 
+  const handleInputPress = useCallback(() => {
+    setIsFiltering(true);
+    if (!isOpenRef.current) {
+      setIsOpen(true);
+      syncActiveIndex(optionsRef.current, selectedKeyRef.current);
+    }
+  }, [syncActiveIndex, selectedKeyRef]);
+
   const getInputProps = useCallback(
     ({ onCommit, allowCycle = true, onChange, onFocus, onKeyDown } = {}) => {
       allowCycleRef.current = allowCycle !== false;
@@ -255,12 +270,14 @@ export default function useCombobox({
           setIsOpen(true);
           onFocus?.(event);
         },
+        onPointerDown: () => {
+          handleInputPress();
+        },
+        onTouchStart: () => {
+          handleInputPress();
+        },
         onMouseDown: () => {
-          setIsFiltering(true);
-          if (!isOpenRef.current) {
-            setIsOpen(true);
-            syncActiveIndex(optionsRef.current, selectedKeyRef.current);
-          }
+          handleInputPress();
         },
         onKeyDown: (event) => {
           if (!event.defaultPrevented) {
@@ -269,7 +286,7 @@ export default function useCombobox({
         },
       };
     },
-    [handleInputRef, syncActiveIndex, selectedKeyRef],
+    [handleInputRef, handleInputPress],
   );
 
   useKey(

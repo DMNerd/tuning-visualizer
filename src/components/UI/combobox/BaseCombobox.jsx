@@ -188,20 +188,23 @@ export default function BaseCombobox({
                 </li>
               ) : (
                 filteredOptions.map((option, index) => {
+                  const optionKey = getOptionKey(option);
+                  const isSelected = optionKey === selectedKey;
                   const optionProps = getOptionProps(index, {
                     option,
                     onSelect: () => commitSelection(option),
                   });
                   return (
                     <li
-                      key={getOptionKey(option)}
+                      key={optionKey}
+                      aria-selected={isSelected}
                       {...optionProps}
                       className={clsx(
                         "tv-combobox__option",
                         optionProps.className,
                         {
                           "is-active": index === activeIndex,
-                          "is-selected": getOptionKey(option) === selectedKey,
+                          "is-selected": isSelected,
                         },
                       )}
                     >
