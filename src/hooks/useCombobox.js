@@ -244,13 +244,25 @@ export default function useCombobox({
     inputRef.current = node ?? null;
   }, []);
 
+  const shouldFilterBasedOnInput = useCallback(() => {
+    const currentValue = inputRef.current?.value ?? inputValue ?? "";
+    const selectedText = selectedTextRef.current ?? "";
+    return Boolean(currentValue) && currentValue !== selectedText;
+  }, [inputValue, selectedTextRef]);
+
+  const syncFilteringStateFromInput = useCallback(() => {
+    setIsFiltering(shouldFilterBasedOnInput());
+  }, [shouldFilterBasedOnInput]);
+
   const handleInputPress = useCallback(() => {
-    setIsFiltering(true);
+    syncFilteringStateFromInput();
     if (!isOpenRef.current) {
       setIsOpen(true);
       syncActiveIndex(optionsRef.current, selectedKeyRef.current);
+    } else {
+      setIsOpen(true);
     }
-  }, [syncActiveIndex, selectedKeyRef]);
+  }, [syncFilteringStateFromInput, syncActiveIndex, selectedKeyRef]);
 
   const getInputProps = useCallback(
     ({ onCommit, allowCycle = true, onChange, onFocus, onKeyDown } = {}) => {
@@ -266,8 +278,7 @@ export default function useCombobox({
           onChange?.(event);
         },
         onFocus: (event) => {
-          setIsFiltering(true);
-          setIsOpen(true);
+          handleInputPress();
           onFocus?.(event);
         },
         onPointerDown: () => {
@@ -352,7 +363,7 @@ export default function useCombobox({
       if (!isOpenRef.current) {
         event.preventDefault();
         setIsOpen(true);
-        setIsFiltering(true);
+        syncFilteringStateFromInput();
         syncActiveIndex(options, selectedKeyRef.current);
         return;
       }
