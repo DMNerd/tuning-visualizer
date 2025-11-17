@@ -134,6 +134,8 @@ export default function BaseCombobox({
     },
   });
 
+  const { className: inputClassName, ...restInputProps } = inputProps;
+
   const activeOptionId =
     isOpen && activeIndex >= 0 ? getOptionId(activeIndex) : undefined;
 
@@ -144,18 +146,15 @@ export default function BaseCombobox({
       className={clsx("tv-combobox", className)}
     >
       <input
+        {...restInputProps}
         id={inputId}
         type="text"
         role="combobox"
-        className="tv-combobox__input"
+        className={clsx("tv-combobox__input", inputClassName)}
         autoComplete="off"
         spellCheck={false}
         placeholder={placeholder}
         value={inputValue}
-        ref={inputProps.ref}
-        onChange={inputProps.onChange}
-        onFocus={inputProps.onFocus}
-        onKeyDown={inputProps.onKeyDown}
         aria-autocomplete="list"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listId : undefined}
