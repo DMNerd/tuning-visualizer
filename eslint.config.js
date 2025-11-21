@@ -42,8 +42,6 @@ export default defineConfig([
       parserOptions: {
         projectService: true,
         tsconfigRootDir: __dirname,
-        // Point ESLint’s type-aware rules at our project
-        project: ["./tsconfig.eslint.json"],
         ecmaFeatures: { jsx: true },
       },
       globals: globals.browser,
