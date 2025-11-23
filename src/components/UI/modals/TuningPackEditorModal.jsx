@@ -219,6 +219,7 @@ function TuningPackEditorModal({
     JSON.stringify(ensurePack(initialPack)),
   );
   const [pendingDraftString, setPendingDraftString] = useState(draftString);
+  const [validationMessage, setValidationMessage] = useState("");
 
   useDebounce(() => setDraftString(pendingDraftString), 120, [
     pendingDraftString,
@@ -240,12 +241,26 @@ function TuningPackEditorModal({
       setPendingDraftString(snapshotString);
       setError("");
       setPointer(null);
+      setValidationMessage("");
     }
   }, [isOpen, initialPack]);
 
   const hasUnsavedChanges = useMemo(
     () => isOpen && baselineSnapshotString !== draftString,
     [baselineSnapshotString, draftString, isOpen],
+  );
+
+  useDebounce(
+    () => {
+      try {
+        parseTuningPack(draft);
+        setValidationMessage("");
+      } catch (e) {
+        setValidationMessage(e?.message || "Invalid tuning pack.");
+      }
+    },
+    150,
+    [draft, draftString],
   );
 
   const handleCancel = useCallback(async () => {
@@ -276,6 +291,15 @@ function TuningPackEditorModal({
   }, [confirmRef, hasUnsavedChanges, isOpen, onCancelRef]);
 
   const handleSave = useCallback(() => {
+    if (validationMessage) {
+      toast(validationMessage, {
+        id: "warn-pack-editor-invalid",
+        duration: 4000,
+        icon: <FiAlertTriangle size={20} color="var(--accent)" />,
+      });
+      return;
+    }
+
     try {
       const normalized = parseTuningPack(draft);
       onSubmitRef.current?.(normalized, {
@@ -284,7 +308,7 @@ function TuningPackEditorModal({
     } catch (e) {
       setError(e?.message || "Unable to save pack.");
     }
-  }, [draft, mode, originalName, onSubmitRef]);
+  }, [draft, mode, onSubmitRef, originalName, validationMessage]);
 
   useKey(
     (event) =>
@@ -296,7 +320,7 @@ function TuningPackEditorModal({
       handleSave();
     },
     { event: "keydown" },
-    [isOpen, handleSave],
+    [handleSave, isOpen],
   );
 
   const title = useMemo(
@@ -445,6 +469,7 @@ function TuningPackEditorModal({
 
   const { height: winH } = useWindowSize();
   const editorMaxH = Math.max(240, winH - 280);
+  const isSaveDisabled = Boolean(validationMessage);
 
   if (!isOpen) return null;
 
@@ -478,6 +503,9 @@ function TuningPackEditorModal({
         </div>
         <div className="tv-modal__status" role="status" aria-live="polite">
           {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}
+          {validationMessage ? (
+            <span className="tv-modal__error">{validationMessage}</span>
+          ) : null}
           {error ? <span className="tv-modal__error">{error}</span> : null}
         </div>
       </div>
@@ -485,7 +513,14 @@ function TuningPackEditorModal({
         <button type="button" className="tv-button" onClick={handleCancel}>
           Cancel
         </button>
-        <button type="button" className="tv-button" onClick={handleSave}>
+        <button
+          type="button"
+          className="tv-button"
+          onClick={handleSave}
+          disabled={isSaveDisabled}
+          aria-disabled={isSaveDisabled}
+          title={isSaveDisabled ? validationMessage : undefined}
+        >
           Save pack
         </button>
       </footer>
