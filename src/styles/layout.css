@@ -1048,6 +1048,16 @@ svg {
   min-height: 0;
 }
 
+.tv-modal__content-grid.is-helper-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tv-pack-helper__toggle-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .tv-pack-helper {
   border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
   border-radius: calc(var(--card-radius) - 6px);
@@ -1059,6 +1069,100 @@ svg {
   gap: 10px;
   min-height: 0;
   outline: none;
+}
+
+.tv-pack-helper.is-hidden {
+  display: none;
+}
+
+.tv-pack-helper__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tv-pack-helper__header-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tv-pack-helper__toggle {
+  align-self: center;
+  border: 1px solid color-mix(in oklab, var(--line) 90%, transparent);
+  background: color-mix(in oklab, var(--panel) 95%, var(--bg) 5%);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tv-pack-helper__toggle:hover {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg) 10%);
+}
+
+.tv-pack-helper__toggle:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.tv-pack-helper__chevron svg {
+  transition: transform 0.16s ease;
+}
+
+.tv-pack-helper__chevron.is-rotated svg {
+  transform: rotate(90deg);
+}
+
+.tv-pack-helper__toggle-label {
+  font-size: 0.9rem;
+}
+
+.tv-pack-helper__content {
+  display: grid;
+  gap: 10px;
+}
+
+.tv-pack-helper__content.is-collapsed {
+  display: none;
+}
+
+.tv-pack-helper__meta {
+  display: grid;
+  gap: 8px;
+  border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: color-mix(in oklab, var(--panel) 95%, var(--bg) 5%);
+}
+
+.tv-pack-helper__meta-section {
+  display: grid;
+  gap: 4px;
+}
+
+.tv-pack-helper__meta-title {
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.tv-pack-helper__meta-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.tv-pack-helper__meta-list {
+  margin: 0;
+  padding-inline-start: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.93rem;
 }
 
 .tv-pack-helper:focus-visible {

@@ -5,7 +5,6 @@ export type StringMeta = {
   startFret?: number;
   greyBefore?: boolean;
   notePlacement?: "between" | "onFret";
-  fretStyle?: "solid" | "dotted";
 };
 
 export type BoardMeta = {

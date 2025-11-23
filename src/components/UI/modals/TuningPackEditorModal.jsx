@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, useId } from "react";
 import { JsonEditor } from "json-edit-react";
-import { useKey, useLatest, useDebounce, useWindowSize } from "react-use";
+import {
+  useDebounce,
+  useKey,
+  useLatest,
+  useToggle,
+  useWindowSize,
+} from "react-use";
 import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
@@ -20,6 +26,7 @@ import {
   FiX,
   FiChevronRight,
   FiAlertTriangle,
+  FiRefreshCcw,
 } from "react-icons/fi";
 import { isPlainObject } from "@/utils/object";
 import ModalFrame from "@/components/UI/modals/ModalFrame";
@@ -244,6 +251,7 @@ function TuningPackEditorModal({
   const [draft, setDraft] = useState(() => getSeedSnapshot(initialPack, mode));
   const [error, setError] = useState("");
   const [pointer, setPointer] = useState(null);
+  const [isHelperCollapsed, toggleHelper] = useToggle(false);
 
   const [baselineSnapshotString, setBaselineSnapshotString] = useState(() =>
     JSON.stringify(getSeedSnapshot(initialPack, mode)),
@@ -498,6 +506,7 @@ function TuningPackEditorModal({
       ok: <FiCheck {...base} style={{ ...base.style, ...accent }} />,
       cancel: <FiX {...base} style={{ ...base.style, ...muted }} />,
       chevron: <FiChevronRight {...base} style={{ ...base.style, ...muted }} />,
+      reset: <FiRefreshCcw {...base} style={{ ...base.style, ...accent }} />,
     };
   }, [isDark]);
 
@@ -535,6 +544,10 @@ function TuningPackEditorModal({
     setPointer(null);
   }, [draft, handleDataChange]);
 
+  const handleToggleHelper = useCallback(() => {
+    toggleHelper();
+  }, [toggleHelper]);
+
   const exampleSnippet = useMemo(
     () =>
       JSON.stringify(
@@ -548,6 +561,10 @@ function TuningPackEditorModal({
               { label: "String 3", midi: 55 },
               { label: "String 4", note: "D3" },
             ],
+          },
+          meta: {
+            stringMeta: [{ index: 0, startFret: 2, greyBefore: true }],
+            board: { fretStyle: "dotted", notePlacement: "onFret" },
           },
         },
         null,
@@ -568,62 +585,137 @@ function TuningPackEditorModal({
         </p>
       </header>
       <div className="tv-modal__body">
-        <div className="tv-modal__content-grid">
+        <div
+          className={`tv-modal__content-grid${
+            isHelperCollapsed ? " is-helper-collapsed" : ""
+          }`}
+        >
+          <div className="tv-pack-helper__toggle-row">
+            <button
+              type="button"
+              className="tv-pack-helper__toggle"
+              onClick={handleToggleHelper}
+              aria-expanded={!isHelperCollapsed}
+              aria-controls="pack-helper-content"
+              aria-label={`${
+                isHelperCollapsed ? "Show" : "Hide"
+              } pack helper details`}
+            >
+              <span
+                className={`tv-pack-helper__chevron${
+                  isHelperCollapsed ? " is-rotated" : ""
+                }`}
+                aria-hidden
+              >
+                {icons.chevron}
+              </span>
+              <span className="tv-pack-helper__toggle-label">
+                {isHelperCollapsed ? "Show helper" : "Hide helper"}
+              </span>
+            </button>
+          </div>
           <aside
-            className="tv-pack-helper"
-            tabIndex={0}
+            id="pack-helper-content"
+            className={`tv-pack-helper${
+              isHelperCollapsed ? " is-hidden" : ""
+            }`}
+            tabIndex={isHelperCollapsed ? -1 : 0}
             aria-label="Tuning pack requirements and quick actions"
+            aria-expanded={!isHelperCollapsed}
+            aria-hidden={isHelperCollapsed}
           >
             <div className="tv-pack-helper__header">
-              <h3>Pack requirements</h3>
-              <p>
-                Ensure your pack stays valid while you edit. Keep these rules in
-                mind:
-              </p>
-            </div>
-            <ul className="tv-pack-helper__list">
-              <li>
-                <strong>Name:</strong> required text label.
-              </li>
-              <li>
-                <strong>system.edo:</strong> integer {"\u2265"} 12.
-              </li>
-              <li>
-                <strong>Strings:</strong> between {STR_MIN} and {STR_MAX}{" "}
-                entries.
-              </li>
-              <li>
-                <strong>Each string:</strong> include a <code>note</code> or{" "}
-                <code>midi</code> value (labels optional).
-              </li>
-            </ul>
-            <div
-              className="tv-pack-helper__actions"
-              role="group"
-              aria-label="Pack shortcuts"
-            >
-              <button
-                type="button"
-                className="tv-button tv-button--ghost"
-                onClick={handleInsertString}
-              >
-                {icons.add} Add string
-              </button>
-              <button
-                type="button"
-                className="tv-button tv-button--ghost"
-                onClick={handleResetTemplate}
-              >
-                {icons.copy} Load starter template
-              </button>
-            </div>
-            <div className="tv-pack-helper__example">
-              <div className="tv-pack-helper__example-header">
-                Example snippet
+              <div className="tv-pack-helper__header-text">
+                <h3>Pack requirements</h3>
+                <p>
+                  Ensure your pack stays valid while you edit. Keep these rules
+                  in mind:
+                </p>
               </div>
-              <pre>
-                <code>{exampleSnippet}</code>
-              </pre>
+            </div>
+            <div className="tv-pack-helper__content">
+              <ul className="tv-pack-helper__list">
+                <li>
+                  <strong>Name:</strong> required text label.
+                </li>
+                <li>
+                  <strong>system.edo:</strong> integer {"\u2265"} 12.
+                </li>
+                <li>
+                  <strong>Strings:</strong> between {STR_MIN} and {STR_MAX}{" "}
+                  entries.
+                </li>
+                <li>
+                  <strong>Each string:</strong> include a <code>note</code> or{" "}
+                  <code>midi</code> value (labels optional).
+                </li>
+              </ul>
+              <div className="tv-pack-helper__meta">
+                <div className="tv-pack-helper__meta-section">
+                  <div className="tv-pack-helper__meta-title">String meta</div>
+                  <p className="tv-pack-helper__meta-copy">
+                    Optional <code>meta.stringMeta</code> entries let you set
+                    per-string visuals.
+                  </p>
+                  <ul className="tv-pack-helper__meta-list">
+                    <li>
+                      <code>index</code>: the string number to target (required).
+                    </li>
+                    <li>
+                      <code>startFret</code>: first fret to render (default 0).
+                    </li>
+                    <li>
+                      <code>greyBefore</code>: hide frets before start (default
+                      true).
+                    </li>
+                  </ul>
+                </div>
+                <div className="tv-pack-helper__meta-section">
+                  <div className="tv-pack-helper__meta-title">Board meta</div>
+                  <p className="tv-pack-helper__meta-copy">
+                    Configure <code>meta.board</code> to control fretboard
+                    defaults.
+                  </p>
+                  <ul className="tv-pack-helper__meta-list">
+                    <li>
+                      <code>fretStyle</code>: <code>"solid"</code> or{" "}
+                      <code>"dotted"</code>.
+                    </li>
+                    <li>
+                      <code>notePlacement</code>: <code>"between"</code> or{" "}
+                      <code>"onFret"</code>.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div
+                className="tv-pack-helper__actions"
+                role="group"
+                aria-label="Pack shortcuts"
+              >
+                <button
+                  type="button"
+                  className="tv-button tv-button--ghost"
+                  onClick={handleInsertString}
+                >
+                  {icons.add} Add string
+                </button>
+                <button
+                  type="button"
+                  className="tv-button tv-button--ghost"
+                  onClick={handleResetTemplate}
+                >
+                  {icons.reset} Reload template
+                </button>
+              </div>
+              <div className="tv-pack-helper__example">
+                <div className="tv-pack-helper__example-header">
+                  Example snippet
+                </div>
+                <pre>
+                  <code>{exampleSnippet}</code>
+                </pre>
+              </div>
             </div>
           </aside>
           <div
