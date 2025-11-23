@@ -5,7 +5,7 @@ import {
   useLatest,
   useMountedState,
 } from "react-use";
-import { normalizePresetMeta } from "@/lib/meta/meta";
+import { usePresetMeta } from "@/hooks/usePresetMeta";
 import { isPlainObject } from "@/utils/object";
 
 function coerceTuningArray(strings) {
@@ -37,8 +37,9 @@ function coerceAnyTuning(value) {
 
 export function useMergedPresets({
   presetMap,
-  presetMetaMap,
   presetNames,
+  presetMetaSource,
+  savedMeta,
   customTunings,
   setTuning,
   setStringMeta,
@@ -94,30 +95,22 @@ export function useMergedPresets({
     return out;
   }, [compatibleCustoms]);
 
-  const customPresetMetaMap = useMemo(() => {
-    if (!compatibleCustoms.length) return {};
-    const out = {};
-    for (const pack of compatibleCustoms) {
-      const name = typeof pack?.name === "string" ? pack.name : null;
-      const meta = normalizePresetMeta(pack?.meta, { stringMetaFormat: "map" });
-      if (!name || !meta) continue;
-      out[name] = meta;
-    }
-    return out;
-  }, [compatibleCustoms]);
-
   const mergedPresetMap = useMemo(
     () => ({ ...presetMap, ...customPresetMap }),
     [presetMap, customPresetMap],
   );
 
-  const mergedPresetMetaMap = useMemo(() => {
-    const merged = { ...presetMetaMap };
-    for (const [k, v] of Object.entries(customPresetMetaMap)) {
-      merged[k] = v;
-    }
-    return merged;
-  }, [presetMetaMap, customPresetMetaMap]);
+  const { mergedPresetMetaMap, applyPresetMeta, resetMetaForInstrumentChange } =
+    usePresetMeta({
+      presetNames,
+      presetMetaSource,
+      savedMeta,
+      customTunings: compatibleCustoms,
+      systemId,
+      strings,
+      setStringMeta,
+      setBoardMeta,
+    });
 
   const mergedPresetNames = useMemo(() => {
     const names = new Set([
@@ -175,26 +168,15 @@ export function useMergedPresets({
         return;
       }
       setTuning(coerced);
-      const meta =
-        normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
-        normalizePresetMeta(
-          (compatibleCustoms.find((p) => p?.name === name) || {})?.meta,
-        );
-      if (meta?.stringMeta) setStringMeta(meta.stringMeta);
-      else setStringMeta(null);
-      if (meta?.board) setBoardMeta(meta.board);
-      else setBoardMeta(null);
+      applyPresetMeta(name);
       queuedPresetRef.current = null;
     },
     [
       isMounted,
       resolveTuningByName,
-      mergedPresetMetaMap,
-      compatibleCustoms,
       setTuning,
-      setStringMeta,
-      setBoardMeta,
       currentStrings,
+      applyPresetMeta,
     ],
   );
 
@@ -271,8 +253,7 @@ export function useMergedPresets({
     const instrumentChanged =
       prevSystemId !== systemId || prevStrings !== strings;
     if (!instrumentChanged) return;
-    setStringMeta(null);
-    setBoardMeta(null);
+    resetMetaForInstrumentChange();
     if (typeof onInstrumentChangeRef.current === "function") {
       onInstrumentChangeRef.current({
         queuePresetByName,
@@ -293,8 +274,7 @@ export function useMergedPresets({
     queuePresetByName,
     resetSelection,
     defaultPresetName,
-    setStringMeta,
-    setBoardMeta,
+    resetMetaForInstrumentChange,
     onInstrumentChangeRef,
   ]);
 

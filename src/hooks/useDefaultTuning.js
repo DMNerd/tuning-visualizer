@@ -32,7 +32,6 @@ export function useDefaultTuning({
   strings,
   DEFAULT_TUNINGS,
   PRESET_TUNINGS,
-  PRESET_TUNING_META = {},
 }) {
   const storeKey = keyOf(systemId, strings);
 
@@ -93,28 +92,6 @@ export function useDefaultTuning({
     }
     return m;
   }, [factory, savedExists, saved, systemId, strings, PRESET_TUNINGS]);
-
-  const presetMetaMap = useMemo(() => {
-    const metaForGroup = PRESET_TUNING_META?.[systemId]?.[strings] || {};
-    const out = Object.create(null);
-    out["Factory default"] = null;
-    if (presetMap["Saved default"]) {
-      out["Saved default"] = savedMeta ? { ...savedMeta } : null;
-    }
-
-    for (const name of Object.keys(presetMap)) {
-      if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = normalizePresetMeta(metaForGroup[name], {
-        stringMetaFormat: "array",
-      });
-    }
-    return out;
-  }, [PRESET_TUNING_META, systemId, strings, presetMap, savedMeta]);
-
-  const getPresetMeta = useCallback(
-    (name) => (name in presetMetaMap ? presetMetaMap[name] : null),
-    [presetMetaMap],
-  );
 
   const saveDefault = useCallback(
     (stringMeta, boardMeta) => {
@@ -191,10 +168,9 @@ export function useDefaultTuning({
       tuning,
       setTuning,
       presetMap,
-      presetMetaMap,
-      getPresetMeta,
       presetNames: Object.keys(presetMap),
       savedExists,
+      savedMeta,
       saveDefault,
       loadSavedDefault,
       resetFactoryDefault,
@@ -204,9 +180,8 @@ export function useDefaultTuning({
       tuning,
       setTuning,
       presetMap,
-      presetMetaMap,
-      getPresetMeta,
       savedExists,
+      savedMeta,
       saveDefault,
       loadSavedDefault,
       resetFactoryDefault,

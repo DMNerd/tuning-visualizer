@@ -165,17 +165,16 @@ export default function App() {
     tuning,
     setTuning,
     presetMap,
-    presetMetaMap,
     presetNames,
     saveDefault,
     savedExists,
+    savedMeta,
     defaultForCount,
   } = useDefaultTuning({
     systemId,
     strings,
     DEFAULT_TUNINGS,
     PRESET_TUNINGS,
-    PRESET_TUNING_META,
   });
 
   const [stringMeta, setStringMeta] = useState(null);
@@ -257,8 +256,9 @@ export default function App() {
     queuePresetByName,
   } = useMergedPresets({
     presetMap,
-    presetMetaMap,
     presetNames,
+    presetMetaSource: PRESET_TUNING_META,
+    savedMeta,
     customTunings,
     setTuning,
     setStringMeta,

@@ -121,6 +121,49 @@ function toStringMetaArrayFromUnknown(value: unknown): StringMeta[] | null {
   return null;
 }
 
+function stripStringFretStyle(
+  stringMeta: NormalizedStringMeta | null,
+): { stringMeta: NormalizedStringMeta | null; fretStyle: BoardMeta["fretStyle"] } {
+  if (!stringMeta) return { stringMeta, fretStyle: undefined };
+
+  let fretStyle: BoardMeta["fretStyle"];
+
+  if (stringMeta instanceof Map) {
+    let changed = false;
+    const next = new Map<number, StringMeta>();
+
+    for (const [index, meta] of stringMeta.entries()) {
+      if (isPlainObject(meta) && "fretStyle" in meta) {
+        const { fretStyle: stringFretStyle, ...rest } = meta;
+        if (!fretStyle && typeof stringFretStyle === "string") {
+          fretStyle = stringFretStyle as BoardMeta["fretStyle"];
+        }
+        next.set(index, rest as StringMeta);
+        changed = true;
+      } else {
+        next.set(index, meta);
+      }
+    }
+
+    return { stringMeta: changed ? next : stringMeta, fretStyle };
+  }
+
+  let changed = false;
+  const normalized = stringMeta.map((meta) => {
+    if (isPlainObject(meta) && "fretStyle" in meta) {
+      const { fretStyle: stringFretStyle, ...rest } = meta;
+      if (!fretStyle && typeof stringFretStyle === "string") {
+        fretStyle = stringFretStyle as BoardMeta["fretStyle"];
+      }
+      changed = true;
+      return rest as StringMeta;
+    }
+    return meta;
+  });
+
+  return { stringMeta: changed ? normalized : stringMeta, fretStyle };
+}
+
 export function normalizePresetMeta(
   meta: unknown,
   options: NormalizePresetMetaOptions = {},
@@ -141,22 +184,31 @@ export function normalizePresetMeta(
     return null;
   }
 
-  const board = isPlainObject(boardSource) ? (boardSource as BoardMeta) : null;
+  const board = isPlainObject(boardSource) ? { ...(boardSource as BoardMeta) } : null;
   const stringMeta =
     format === "map"
       ? toStringMetaMapFromUnknown(stringMetaSource)
       : toStringMetaArrayFromUnknown(stringMetaSource);
+  const { stringMeta: cleanedStringMeta, fretStyle } = stripStringFretStyle(stringMeta);
 
-  if (!stringMeta && !board) {
+  const mergedBoard =
+    board || fretStyle
+      ? ({
+          ...(board ?? {}),
+          ...(fretStyle && !board?.fretStyle ? { fretStyle } : {}),
+        } satisfies BoardMeta)
+      : null;
+
+  if (!cleanedStringMeta && !mergedBoard) {
     return null;
   }
 
   const result: Record<string, unknown> = {};
-  if (stringMeta) {
-    result.stringMeta = stringMeta;
+  if (cleanedStringMeta) {
+    result.stringMeta = cleanedStringMeta;
   }
-  if (board) {
-    result.board = board;
+  if (mergedBoard) {
+    result.board = mergedBoard;
   }
 
   return result as TuningPresetMeta & {

@@ -11,6 +11,7 @@ import {
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 import { withToastPromise } from "@/utils/toast";
 import { isPlainObject } from "@/utils/object";
+import { normalizePresetMeta } from "@/lib/meta/meta";
 
 function normalizePackName(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -266,33 +267,37 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null, boardMeta = null) => {
       const sys = TUNINGS[systemId];
-      const cleanStringMeta = Array.isArray(stringMeta) ? stringMeta : null;
-      const cleanBoardMeta =
-        boardMeta && typeof boardMeta === "object" && !Array.isArray(boardMeta)
-          ? boardMeta
-          : null;
+
+      const normalizedMeta = normalizePresetMeta(
+        { stringMeta, board: boardMeta },
+        { stringMetaFormat: "map" },
+      );
+
+      const metaStringArray =
+        normalizedMeta?.stringMeta instanceof Map
+          ? Array.from(normalizedMeta.stringMeta.values())
+          : Array.isArray(normalizedMeta?.stringMeta)
+            ? normalizedMeta.stringMeta
+            : null;
 
       const pack = buildTuningPack({
         systemDivisions: sys.divisions,
         systemId,
         stringsCount: strings,
         tuning,
-        stringMeta: cleanStringMeta ?? undefined,
+        stringMeta: metaStringArray ?? undefined,
       });
 
-      const meta = { ...(pack.meta || {}) };
-      if (cleanStringMeta && cleanStringMeta.length) {
-        meta.stringMeta = cleanStringMeta;
-      }
-      if (cleanBoardMeta && Object.keys(cleanBoardMeta).length) {
-        meta.board = { ...cleanBoardMeta };
-      }
-
-      const hasMeta = Object.keys(meta).length > 0;
+      const meta = normalizedMeta
+        ? {
+            ...(metaStringArray?.length ? { stringMeta: metaStringArray } : {}),
+            ...(normalizedMeta?.board ? { board: normalizedMeta.board } : {}),
+          }
+        : undefined;
 
       return {
         ...pack,
-        ...(hasMeta ? { meta } : { meta: undefined }),
+        ...(meta ? { meta } : {}),
       };
     },
     [systemId, strings, TUNINGS],
@@ -381,7 +386,23 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         const uniqueName = ensureUniqueName(label, takenNames);
         const { system, ...rest } = p;
         const cleanSystem = { edo: system.edo };
-        return { ...rest, system: cleanSystem, name: uniqueName };
+        const normalizedMeta = normalizePresetMeta(rest?.meta, {
+          stringMetaFormat: "array",
+        });
+        const meta = normalizedMeta
+          ? {
+              ...(normalizedMeta?.stringMeta?.length
+                ? { stringMeta: normalizedMeta.stringMeta }
+                : {}),
+              ...(normalizedMeta?.board ? { board: normalizedMeta.board } : {}),
+            }
+          : undefined;
+        return {
+          ...rest,
+          ...(meta ? { meta } : {}),
+          system: cleanSystem,
+          name: uniqueName,
+        };
       });
 
       const nextTunings = [...existing, ...newTunings];
