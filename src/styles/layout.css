@@ -1040,6 +1040,81 @@ svg {
   -webkit-overflow-scrolling: touch;
 }
 
+.tv-modal__content-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(0, 1.35fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 0;
+}
+
+.tv-pack-helper {
+  border: 1px solid color-mix(in oklab, var(--line) 92%, transparent);
+  border-radius: calc(var(--card-radius) - 6px);
+  padding: 12px;
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg) 10%);
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  outline: none;
+}
+
+.tv-pack-helper:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+.tv-pack-helper__header h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.tv-pack-helper__header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tv-pack-helper__list {
+  margin: 0;
+  padding-inline-start: 18px;
+  display: grid;
+  gap: 6px;
+  color: var(--fg);
+  font-size: 0.95rem;
+}
+
+.tv-pack-helper__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tv-pack-helper__example {
+  border: 1px solid color-mix(in oklab, var(--line) 90%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--panel) 94%, var(--bg) 6%);
+}
+
+.tv-pack-helper__example-header {
+  padding: 8px 10px;
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 88%, transparent);
+}
+
+.tv-pack-helper__example pre {
+  margin: 0;
+  padding: 10px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--fg);
+  background: transparent;
+  overflow: auto;
+}
+
 .tv-modal__editor {
   display: grid;
   grid-template-rows: minmax(0, 1fr);

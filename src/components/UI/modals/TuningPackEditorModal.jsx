@@ -23,6 +23,7 @@ import {
 } from "react-icons/fi";
 import { isPlainObject } from "@/utils/object";
 import ModalFrame from "@/components/UI/modals/ModalFrame";
+import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -61,6 +62,39 @@ function ensurePack(pack) {
     tuning: { strings },
     meta,
   };
+}
+
+const TEMPLATE_STRINGS = [
+  { label: "String 1", note: "E4" },
+  { label: "String 2", note: "B3" },
+  { label: "String 3", note: "G3" },
+  { label: "String 4", note: "D3" },
+];
+
+function buildTemplatePack(pack) {
+  const base = ensurePack(pack);
+  const edo = Number(base?.system?.edo);
+  const normalizedEdo = Number.isFinite(edo) ? Math.max(12, edo) : 12;
+
+  const strings = Array.isArray(base?.tuning?.strings)
+    ? base.tuning.strings.slice(0, STR_MAX)
+    : [];
+
+  const seededStrings = strings.length >= STR_MIN ? strings : TEMPLATE_STRINGS;
+
+  const meta = isPlainObject(base?.meta) ? base.meta : {};
+
+  return {
+    name: base?.name?.trim?.() || "New tuning pack",
+    system: { edo: normalizedEdo },
+    tuning: { strings: seededStrings },
+    meta,
+  };
+}
+
+function getSeedSnapshot(pack, mode) {
+  const source = clonePack(pack);
+  return mode === "create" ? buildTemplatePack(source) : ensurePack(source);
 }
 
 function pushUnique(list, seen, value) {
@@ -207,16 +241,16 @@ function TuningPackEditorModal({
   onSubmit,
   themeMode = "light",
 }) {
-  const [draft, setDraft] = useState(() => ensurePack(initialPack));
+  const [draft, setDraft] = useState(() => getSeedSnapshot(initialPack, mode));
   const [error, setError] = useState("");
   const [pointer, setPointer] = useState(null);
 
   const [baselineSnapshotString, setBaselineSnapshotString] = useState(() =>
-    JSON.stringify(ensurePack(initialPack)),
+    JSON.stringify(getSeedSnapshot(initialPack, mode)),
   );
 
   const [draftString, setDraftString] = useState(() =>
-    JSON.stringify(ensurePack(initialPack)),
+    JSON.stringify(getSeedSnapshot(initialPack, mode)),
   );
   const [pendingDraftString, setPendingDraftString] = useState(draftString);
   const [validationMessage, setValidationMessage] = useState("");
@@ -233,7 +267,7 @@ function TuningPackEditorModal({
 
   useEffect(() => {
     if (isOpen) {
-      const snapshot = ensurePack(clonePack(initialPack));
+      const snapshot = getSeedSnapshot(initialPack, mode);
       const snapshotString = JSON.stringify(snapshot);
       setDraft(snapshot);
       setBaselineSnapshotString(snapshotString);
@@ -243,7 +277,7 @@ function TuningPackEditorModal({
       setPointer(null);
       setValidationMessage("");
     }
-  }, [isOpen, initialPack]);
+  }, [isOpen, initialPack, mode]);
 
   const hasUnsavedChanges = useMemo(
     () => isOpen && baselineSnapshotString !== draftString,
@@ -471,6 +505,57 @@ function TuningPackEditorModal({
   const editorMaxH = Math.max(240, winH - 280);
   const isSaveDisabled = Boolean(validationMessage);
 
+  const handleInsertString = useCallback(() => {
+    const pack = ensurePack(draft);
+    const strings = Array.isArray(pack?.tuning?.strings)
+      ? [...pack.tuning.strings]
+      : [];
+
+    if (strings.length >= STR_MAX) {
+      toast(`You can include up to ${STR_MAX} strings in a pack.`, {
+        id: "pack-editor-string-max",
+      });
+      return;
+    }
+
+    const nextIndex = strings.length + 1;
+    strings.push({ label: `String ${nextIndex}`, note: "C4" });
+
+    const nextPack = {
+      ...pack,
+      tuning: { ...pack.tuning, strings },
+    };
+
+    handleDataChange(nextPack);
+  }, [draft, handleDataChange]);
+
+  const handleResetTemplate = useCallback(() => {
+    const nextPack = buildTemplatePack(draft);
+    handleDataChange(nextPack);
+    setPointer(null);
+  }, [draft, handleDataChange]);
+
+  const exampleSnippet = useMemo(
+    () =>
+      JSON.stringify(
+        {
+          name: "Custom pack example",
+          system: { edo: 12 },
+          tuning: {
+            strings: [
+              { label: "String 1", note: "E4" },
+              { label: "String 2", note: "B3" },
+              { label: "String 3", midi: 55 },
+              { label: "String 4", note: "D3" },
+            ],
+          },
+        },
+        null,
+        2,
+      ),
+    [],
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -483,23 +568,82 @@ function TuningPackEditorModal({
         </p>
       </header>
       <div className="tv-modal__body">
-        <div
-          className="tv-modal__editor"
-          style={{ maxHeight: editorMaxH, overflow: "auto" }}
-        >
-          <JsonEditor
-            data={draft}
-            setData={handleDataChange}
-            onError={handleError}
-            onEditEvent={handleEditEvent}
-            theme={editorTheme}
-            icons={icons}
-            customNodeDefinitions={noteNodeDefinitions}
-            className="tv-json-editor"
-            showStringQuotes={false}
-            enableClipboard
-            indent={2}
-          />
+        <div className="tv-modal__content-grid">
+          <aside
+            className="tv-pack-helper"
+            tabIndex={0}
+            aria-label="Tuning pack requirements and quick actions"
+          >
+            <div className="tv-pack-helper__header">
+              <h3>Pack requirements</h3>
+              <p>
+                Ensure your pack stays valid while you edit. Keep these rules in
+                mind:
+              </p>
+            </div>
+            <ul className="tv-pack-helper__list">
+              <li>
+                <strong>Name:</strong> required text label.
+              </li>
+              <li>
+                <strong>system.edo:</strong> integer {"\u2265"} 12.
+              </li>
+              <li>
+                <strong>Strings:</strong> between {STR_MIN} and {STR_MAX}{" "}
+                entries.
+              </li>
+              <li>
+                <strong>Each string:</strong> include a <code>note</code> or{" "}
+                <code>midi</code> value (labels optional).
+              </li>
+            </ul>
+            <div
+              className="tv-pack-helper__actions"
+              role="group"
+              aria-label="Pack shortcuts"
+            >
+              <button
+                type="button"
+                className="tv-button tv-button--ghost"
+                onClick={handleInsertString}
+              >
+                {icons.add} Add string
+              </button>
+              <button
+                type="button"
+                className="tv-button tv-button--ghost"
+                onClick={handleResetTemplate}
+              >
+                {icons.copy} Load starter template
+              </button>
+            </div>
+            <div className="tv-pack-helper__example">
+              <div className="tv-pack-helper__example-header">
+                Example snippet
+              </div>
+              <pre>
+                <code>{exampleSnippet}</code>
+              </pre>
+            </div>
+          </aside>
+          <div
+            className="tv-modal__editor"
+            style={{ maxHeight: editorMaxH, overflow: "auto" }}
+          >
+            <JsonEditor
+              data={draft}
+              setData={handleDataChange}
+              onError={handleError}
+              onEditEvent={handleEditEvent}
+              theme={editorTheme}
+              icons={icons}
+              customNodeDefinitions={noteNodeDefinitions}
+              className="tv-json-editor"
+              showStringQuotes={false}
+              enableClipboard
+              indent={2}
+            />
+          </div>
         </div>
         <div className="tv-modal__status" role="status" aria-live="polite">
           {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}
