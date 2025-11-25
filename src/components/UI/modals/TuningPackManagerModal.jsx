@@ -4,35 +4,11 @@ import { useLatest, useWindowSize } from "react-use";
 import { findSystemByEdo, getSystemLabel } from "@/lib/theory/tuning";
 import { memoWithPick } from "@/utils/memo";
 import ModalFrame from "@/components/UI/modals/ModalFrame";
-
-function normalizePack(pack) {
-  if (!pack || typeof pack !== "object") return null;
-  const edo = Number(pack?.system?.edo);
-  const metaSystemId =
-    typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
-  const rawName = typeof pack?.name === "string" ? pack.name : "";
-  const displayName = rawName.trim().length ? rawName : "Untitled pack";
-  const strings = Array.isArray(pack?.tuning?.strings)
-    ? pack.tuning.strings
-    : [];
-  const stringsCount = strings.length;
-  return {
-    raw: pack,
-    rawName,
-    displayName,
-    edo: Number.isFinite(edo) ? edo : null,
-    metaSystemId,
-    strings,
-    stringsCount,
-  };
-}
-
-function formatStringsCount(stringsCount) {
-  if (!Number.isFinite(stringsCount) || stringsCount <= 0) {
-    return "Unknown string count";
-  }
-  return `${stringsCount} string${stringsCount === 1 ? "" : "s"}`;
-}
+import {
+  formatStringsCount,
+  normalizePack,
+  packMatchesQuery,
+} from "@/components/UI/modals/tuningPackSearch";
 
 function TuningPackManagerModal({
   isOpen,
@@ -57,7 +33,6 @@ function TuningPackManagerModal({
   const groups = useMemo(() => {
     if (!Array.isArray(tunings) || tunings.length === 0) return [];
 
-    const hasQuery = normalizedQuery.length > 0;
     const grouped = new Map();
 
     tunings.forEach((entry) => {
@@ -80,20 +55,12 @@ function TuningPackManagerModal({
 
       const formattedStringsCount = formatStringsCount(normalized.stringsCount);
 
-      const matchesQuery = !hasQuery
-        ? true
-        : [
-            normalized.displayName,
-            normalized.rawName,
-            String(normalized.stringsCount ?? ""),
-            formattedStringsCount,
-            systemLabel,
-          ].some(
-            (value) =>
-              typeof value === "string" &&
-              value.toLowerCase().includes(normalizedQuery),
-          );
-
+      const matchesQuery = packMatchesQuery({
+        normalizedPack: normalized,
+        systemLabel,
+        normalizedQuery,
+        formattedStringsCount,
+      });
       if (!matchesQuery) {
         return;
       }
@@ -180,7 +147,7 @@ function TuningPackManagerModal({
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name, system, or string count"
+                placeholder="Search by name, system, string count, or notes"
                 aria-controls="tuning-pack-manager-sections"
                 autoComplete="off"
               />
@@ -211,10 +178,6 @@ function TuningPackManagerModal({
                 </header>
                 <ul className="tv-modal__manager-list">
                   {group.packs.map((pack, index) => {
-                    const preview = pack.strings
-                      .map((string) => string?.note || string?.label || "•")
-                      .filter(Boolean)
-                      .join(" · ");
                     return (
                       <li
                         key={`${pack.rawName || pack.displayName}__${index}`}
@@ -226,7 +189,9 @@ function TuningPackManagerModal({
                           </span>
                           <span className="tv-modal__manager-pack-preview">
                             {formatStringsCount(pack.stringsCount)}
-                            {preview ? ` · ${preview}` : ""}
+                            {pack.stringPreview
+                              ? ` · ${pack.stringPreview}`
+                              : ""}
                           </span>
                         </div>
                         <div className="tv-modal__manager-actions">
