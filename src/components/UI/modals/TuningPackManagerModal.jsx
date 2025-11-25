@@ -38,6 +38,11 @@ function formatStringsCount(stringsCount) {
   }
   return `${stringsCount} string${stringsCount === 1 ? "" : "s"}`;
 }
+import {
+  formatStringsCount,
+  normalizePack,
+  packMatchesQuery,
+} from "@/components/UI/modals/tuningPackSearch";
 
 function TuningPackManagerModal({
   isOpen,
@@ -62,7 +67,6 @@ function TuningPackManagerModal({
   const groups = useMemo(() => {
     if (!Array.isArray(tunings) || tunings.length === 0) return [];
 
-    const hasQuery = normalizedQuery.length > 0;
     const grouped = new Map();
 
     tunings.forEach((entry) => {
@@ -88,20 +92,12 @@ function TuningPackManagerModal({
 
       const formattedStringsCount = formatStringsCount(normalized.stringsCount);
 
-      const matchesQuery = !hasQuery
-        ? true
-        : [
-            normalized.displayName,
-            normalized.rawName,
-            String(normalized.stringsCount ?? ""),
-            formattedStringsCount,
-            systemLabel,
-          ].some(
-            (value) =>
-              typeof value === "string" &&
-              value.toLowerCase().includes(normalizedQuery),
-          );
-
+      const matchesQuery = packMatchesQuery({
+        normalizedPack: normalized,
+        systemLabel,
+        normalizedQuery,
+        formattedStringsCount,
+      });
       if (!matchesQuery) {
         return;
       }
@@ -148,9 +144,9 @@ function TuningPackManagerModal({
   );
 
   const handleDelete = useCallback(
-    (name) => {
-      if (typeof name !== "string") return;
-      onDeleteRef.current?.(name);
+    (pack) => {
+      if (!pack) return;
+      onDeleteRef.current?.(pack);
     },
     [onDeleteRef],
   );
@@ -188,7 +184,7 @@ function TuningPackManagerModal({
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name, system, or string count"
+                placeholder="Search by name, system, string count, or notes"
                 aria-controls="tuning-pack-manager-sections"
                 autoComplete="off"
               />
@@ -219,10 +215,6 @@ function TuningPackManagerModal({
                 </header>
                 <ul className="tv-modal__manager-list">
                   {group.packs.map((pack, index) => {
-                    const preview = pack.strings
-                      .map((string) => string?.note || string?.label || "•")
-                      .filter(Boolean)
-                      .join(" · ");
                     return (
                       <li
                         key={`${pack.rawName || pack.displayName}__${index}`}
@@ -234,7 +226,9 @@ function TuningPackManagerModal({
                           </span>
                           <span className="tv-modal__manager-pack-preview">
                             {formatStringsCount(pack.stringsCount)}
-                            {preview ? ` · ${preview}` : ""}
+                            {pack.stringPreview
+                              ? ` · ${pack.stringPreview}`
+                              : ""}
                           </span>
                         </div>
                         <div className="tv-modal__manager-actions">
@@ -251,7 +245,7 @@ function TuningPackManagerModal({
                           <button
                             type="button"
                             className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
-                            onClick={() => handleDelete(pack.rawName)}
+                            onClick={() => handleDelete(pack.raw)}
                             aria-label={`Remove ${pack.displayName}`}
                             title="Remove"
                           >

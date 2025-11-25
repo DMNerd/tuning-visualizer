@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 import { parseTuningPack } from "@/lib/export/schema";
+import { removePackByIdentifier } from "@/lib/export/tuningIO";
 
 const basePack = {
   name: "Example Tuning",
@@ -138,5 +139,30 @@ test("parseTuningPack rejects mismatched system tables", () => {
   assert.throws(
     () => parseTuningPack(invalid),
     /System tables must include an entry for each division\./,
+test("removePackByIdentifier removes packs with empty names using meta id", () => {
+  const packs = [
+    { name: "", meta: { id: "pack-a" } },
+    { name: "", meta: { id: "pack-b" } },
+  ];
+
+  const result = removePackByIdentifier(packs, { meta: { id: "pack-a" } });
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].meta.id, "pack-b");
+});
+
+test("removePackByIdentifier removes only the targeted duplicate-named pack", () => {
+  const packs = [
+    { name: "Duplicate", meta: { id: "pack-1" } },
+    { name: "Duplicate", meta: { id: "pack-2" } },
+    { name: "Duplicate", meta: { id: "pack-3" } },
+  ];
+
+  const result = removePackByIdentifier(packs, { meta: { id: "pack-2" } });
+
+  assert.equal(result.length, 2);
+  assert.deepEqual(
+    result.map((pack) => pack.meta.id),
+    ["pack-1", "pack-3"],
   );
 });

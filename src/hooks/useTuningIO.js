@@ -11,10 +11,11 @@ import {
 import { buildTuningPack, downloadJsonFile } from "@/lib/export/tuningIO";
 import { withToastPromise } from "@/utils/toast";
 import { isPlainObject } from "@/utils/object";
-
-function normalizePackName(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
+import {
+  ensurePackHasId,
+  normalizePackName,
+  removePackByIdentifier,
+} from "@/lib/export/tuningIO";
 
 function ensureUniqueName(desiredName, takenNames) {
   const base = normalizePackName(desiredName);
@@ -241,11 +242,12 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
     let changed = false;
     const upgraded = customTunings.map((pack) => {
-      const next = upgradeLegacyPack(pack);
-      if (next !== pack) {
+      const upgradedPack = upgradeLegacyPack(pack);
+      const withId = ensurePackHasId(upgradedPack);
+      if (withId !== pack) {
         changed = true;
       }
-      return next;
+      return withId;
     });
 
     upgradeRef.current = true;
@@ -310,14 +312,14 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
   const saveCustomTuning = useCallback(
     (pack, options = {}) => {
-      const parsed = parsePack(pack);
+      const parsed = ensurePackHasId(parsePack(pack));
 
       const desiredName = normalizePackName(parsed?.name);
       const replaceName = normalizePackName(options?.replaceName);
 
       let savedPack = null;
 
-      const existing = getExistingCustomTunings();
+      const existing = getExistingCustomTunings().map(ensurePackHasId);
       const takenNames = new Set(
         existing
           .map((item) => normalizePackName(item?.name))
@@ -325,7 +327,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       );
 
       const finalName = ensureUniqueName(desiredName, takenNames);
-      const nextPack = { ...parsed, name: finalName };
+      const nextPack = ensurePackHasId({ ...parsed, name: finalName });
       savedPack = nextPack;
 
       const filtered = existing.filter((item) => {
@@ -343,14 +345,10 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
   );
 
   const deleteCustomTuning = useCallback(
-    (name) => {
-      const target = typeof name === "string" ? name.trim() : name;
-      if (!target) return;
+    (identifier) => {
+      if (!identifier) return;
       const existing = getExistingCustomTunings();
-      const filtered = existing.filter((item) => {
-        const itemName = typeof item?.name === "string" ? item.name.trim() : "";
-        return itemName !== target;
-      });
+      const filtered = removePackByIdentifier(existing, identifier);
       setCustomTunings(filtered);
     },
     [getExistingCustomTunings, setCustomTunings],
@@ -386,7 +384,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         const uniqueName = ensureUniqueName(label, takenNames);
         const { system, ...rest } = p;
         const cleanSystem = { edo: system.edo };
-        return { ...rest, system: cleanSystem, name: uniqueName };
+        return ensurePackHasId({
+          ...rest,
+          system: cleanSystem,
+          name: uniqueName,
+        });
       });
 
       const nextTunings = [...existing, ...newTunings];

@@ -708,9 +708,7 @@ function TuningPackEditorModal({
           </div>
           <aside
             id="pack-helper-content"
-            className={`tv-pack-helper${
-              isHelperCollapsed ? " is-hidden" : ""
-            }`}
+            className={`tv-pack-helper${isHelperCollapsed ? " is-hidden" : ""}`}
             tabIndex={isHelperCollapsed ? -1 : 0}
             aria-label="Tuning pack requirements and quick actions"
             aria-expanded={!isHelperCollapsed}
@@ -751,7 +749,8 @@ function TuningPackEditorModal({
                   </p>
                   <ul className="tv-pack-helper__meta-list">
                     <li>
-                      <code>index</code>: the string number to target (required).
+                      <code>index</code>: the string number to target
+                      (required).
                     </li>
                     <li>
                       <code>startFret</code>: first fret to render (default 0).
