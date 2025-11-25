@@ -3,6 +3,36 @@ import { useToggle, useLatest, useMountedState } from "react-use";
 import { slug } from "@/lib/export/scales";
 import { withToastPromise } from "@/utils/toast";
 
+function resolvePackLabel(target) {
+  if (target && typeof target === "object") {
+    const name = typeof target?.name === "string" ? target.name.trim() : "";
+    const displayName =
+      typeof target?.displayName === "string"
+        ? target.displayName.trim()
+        : name
+          ? ""
+          : "Untitled pack";
+    return name || displayName;
+  }
+
+  if (typeof target === "string") {
+    return target.trim();
+  }
+
+  return "";
+}
+
+function resolvePackKey(target) {
+  if (target && typeof target === "object") {
+    const id =
+      typeof target?.meta?.id === "string" ? target.meta.id.trim() : "";
+    if (id) return id;
+  }
+
+  const label = resolvePackLabel(target);
+  return label || "custom-tuning";
+}
+
 export function useCustomTuningPacks({
   confirm,
   getCurrentTuningPack,
@@ -95,9 +125,13 @@ export function useCustomTuningPacks({
   );
 
   const deletePack = useCallback(
-    async (name) => {
+    async (target) => {
       if (typeof deleteCustomTuningRef.current !== "function") return false;
-      if (typeof name !== "string" || !name.trim()) return false;
+      if (typeof target === "string" && !target.trim()) return false;
+      if (!target) return false;
+
+      const label = resolvePackLabel(target) || "this tuning pack";
+      const key = slug(resolvePackKey(target));
 
       let ok = true;
       if (typeof confirmRef.current === "function") {
@@ -107,19 +141,19 @@ export function useCustomTuningPacks({
             "This will permanently delete the selected custom tuning pack.",
           confirmText: "Remove pack",
           cancelText: "Cancel",
-          toastId: `confirm-delete-${slug(name)}`,
+          toastId: `confirm-delete-${key}`,
         });
       }
       if (!ok) return false;
 
       return runWithCleanup(
-        () => deleteCustomTuningRef.current(name),
+        () => deleteCustomTuningRef.current(target),
         {
-          loading: "Removing custom tuning…",
+          loading: `Removing ${label}…`,
           success: "Custom tuning removed.",
           error: "Unable to remove custom tuning.",
         },
-        `delete-custom-${slug(name)}`,
+        `delete-custom-${key}`,
       );
     },
     [confirmRef, deleteCustomTuningRef, runWithCleanup],

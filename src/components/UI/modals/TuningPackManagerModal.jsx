@@ -140,9 +140,9 @@ function TuningPackManagerModal({
   );
 
   const handleDelete = useCallback(
-    (name) => {
-      if (typeof name !== "string") return;
-      onDeleteRef.current?.(name);
+    (pack) => {
+      if (!pack) return;
+      onDeleteRef.current?.(pack);
     },
     [onDeleteRef],
   );
@@ -243,7 +243,7 @@ function TuningPackManagerModal({
                           <button
                             type="button"
                             className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
-                            onClick={() => handleDelete(pack.rawName)}
+                            onClick={() => handleDelete(pack.raw)}
                             aria-label={`Remove ${pack.displayName}`}
                             title="Remove"
                           >
