@@ -67,6 +67,12 @@
 - `version` (number, optional for parsing, exporter writes `2`): tag for your own bookkeeping.
 - `name` (string, required): shown in the UI.
 - `system.edo` (number, required): equal divisions of the octave (12 for 12‑TET, 19 for 19‑TET, etc.).
+- `system.id` (string, optional): internal system key (e.g., `12-TET`, `19-TET`). When provided, the UI will label the system with this identifier instead of the raw `edo` value.
+- `system.name` (string, optional): human-friendly name shown in editors and exports (e.g., "Pelog (7-step)").
+- `system.steps` (number[], optional): per-step cent offsets for each division. Must contain exactly `edo` entries. Frequency, MIDI, and cents conversions honor this table instead of assuming equal spacing.
+- `system.ratios` (number[], optional): per-step frequency ratios. Must contain exactly `edo` entries. Overrides `system.steps` and uniform EDO spacing when present.
+- `system.refFreq` (number, optional): reference frequency (Hz) for the system.
+- `system.refMidi` (number, optional): MIDI note index that corresponds to `refFreq`.
 
 **Strings (array, required, ≥1)**
 
@@ -111,10 +117,54 @@ This example models the short 5th string starting at fret 5 and showing a grey s
     "systemId": "12-TET",
     "strings": 5,
     "frets": 22,
-    "stringMeta": [{ "index": 0, "startFret": 5, "greyBefore": true }]
+"stringMeta": [{ "index": 0, "startFret": 5, "greyBefore": true }]
   }
 }
 ```
+
+---
+
+## Non-TET systems with explicit steps/ratios
+
+You can describe tunings for systems that are **not evenly divided** by providing per-step cents (`system.steps`) or ratios (`system.ratios`). When either table is present, the app:
+
+- Uses the table for **frequency ↔ step ↔ MIDI** conversions instead of assuming uniform EDO spacing.
+- Derives cents deviation from the table, making the visualizer match your exact temperaments.
+- Prefers your provided `system.name`/`system.id` in labels instead of `${edo}-TET`.
+
+All tables must include **exactly** `edo` entries.
+
+### Example: 7-note just system
+
+```json
+{
+  "version": 2,
+  "name": "7-limit (just) lyre",
+  "system": {
+    "edo": 7,
+    "id": "7-limit-just",
+    "name": "7-limit just",
+    "ratios": [1, 1.125, 1.25, 1.333333, 1.5, 1.666667, 1.75],
+    "refFreq": 440,
+    "refMidi": 69
+  },
+  "tuning": {
+    "strings": [
+      { "note": "A" },
+      { "note": "E" },
+      { "note": "A" },
+      { "note": "B" }
+    ]
+  },
+  "meta": {
+    "systemId": "7-limit-just",
+    "strings": 4,
+    "frets": 18
+  }
+}
+```
+
+If you prefer cent tables, replace `ratios` with `steps` such as `[0, 204, 386, 498, 702, 884, 969]`.
 
 ---
 

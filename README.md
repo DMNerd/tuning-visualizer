@@ -28,6 +28,7 @@ This app will be free and open source forever and is completely self-hostable
   - Standard **12-TET** library (Major, Natural/Harmonic Minor, etc.)
   - **24-TET** microtonal scales with distinct coloring for microtonal notes
   - Theoretical support for any TET/EDO system
+  - Custom pack-defined systems with **per-step cent or ratio tables** (non-TET) and named/ID’d metadata
 
 - **Scales & Chords**
   - Scale picker filtered by tuning system
