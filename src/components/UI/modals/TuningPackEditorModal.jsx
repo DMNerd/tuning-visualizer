@@ -192,10 +192,14 @@ function buildNoteNodeMetadata(pack) {
     return Number.isFinite(edo) && edo > 0 ? edo : null;
   })();
 
+  const nameFromPc =
+    typeof system?.nameForPc === "function"
+      ? (pc) => [system.nameForPc(pc, "sharp"), system.nameForPc(pc, "flat")]
+      : (pc) => [nameFallback(pc)];
+
   if (Number.isFinite(divisionCount) && divisionCount > 0) {
     for (let pc = 0; pc < divisionCount; pc += 1) {
-      pushUnique(options, seen, system.nameForPc(pc, "sharp"));
-      pushUnique(options, seen, system.nameForPc(pc, "flat"));
+      nameFromPc(pc).forEach((label) => pushUnique(options, seen, label));
     }
   } else if (Number.isFinite(edo) && edo > 0) {
     for (let pc = 0; pc < edo; pc += 1) {
