@@ -275,6 +275,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const pack = buildTuningPack({
         systemDivisions: sys.divisions,
         systemId,
+        systemName: sys?.name,
+        stepCents: sys?.stepCents,
+        stepRatios: sys?.stepRatios,
+        refFreq: sys?.refFreq,
+        refMidi: sys?.refMidi,
         stringsCount: strings,
         tuning,
         stringMeta: cleanStringMeta ?? undefined,

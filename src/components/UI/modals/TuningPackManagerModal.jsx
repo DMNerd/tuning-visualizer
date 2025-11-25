@@ -10,6 +10,9 @@ function normalizePack(pack) {
   const edo = Number(pack?.system?.edo);
   const metaSystemId =
     typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
+  const systemId = typeof pack?.system?.id === "string" ? pack.system.id : null;
+  const systemName =
+    typeof pack?.system?.name === "string" ? pack.system.name : null;
   const rawName = typeof pack?.name === "string" ? pack.name : "";
   const displayName = rawName.trim().length ? rawName : "Untitled pack";
   const strings = Array.isArray(pack?.tuning?.strings)
@@ -22,6 +25,8 @@ function normalizePack(pack) {
     displayName,
     edo: Number.isFinite(edo) ? edo : null,
     metaSystemId,
+    systemId,
+    systemName,
     strings,
     stringsCount,
   };
@@ -71,11 +76,14 @@ function TuningPackManagerModal({
         systems,
         edoValue,
         normalized?.metaSystemId,
+        normalized?.systemId,
       );
       const systemLabel = getSystemLabel({
         match: systemMatch,
         edo: edoValue,
         metaSystemId: normalized?.metaSystemId,
+        systemId: normalized?.systemId,
+        systemName: normalized?.systemName,
       });
 
       const formattedStringsCount = formatStringsCount(normalized.stringsCount);

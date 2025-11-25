@@ -17,13 +17,46 @@ export const TuningStringSchema = v.pipe(
 
 export const TuningPackSchema = v.object({
   name: v.string(),
-  system: v.object({
-    edo: v.pipe(
-      v.number(),
-      v.integer("System edo must be an integer value."),
-      v.minValue(12, "System edo must be at least 12."),
+  system: v.pipe(
+    v.object({
+      edo: v.pipe(
+        v.number(),
+        v.integer("System edo must be an integer value."),
+        v.minValue(1, "System edo must be at least 1."),
+      ),
+      id: v.optional(v.string()),
+      name: v.optional(v.string()),
+      steps: v.optional(
+        v.pipe(
+          v.array(v.number()),
+          v.minLength(1, "System steps must include at least one value."),
+        ),
+      ),
+      ratios: v.optional(
+        v.pipe(
+          v.array(v.number()),
+          v.minLength(1, "System ratios must include at least one value."),
+        ),
+      ),
+      refFreq: v.optional(v.number()),
+      refMidi: v.optional(v.number()),
+    }),
+    v.check(
+      (value) => {
+        const edo = Number(value.edo);
+        if (!Number.isFinite(edo) || edo <= 0) return false;
+
+        if (Array.isArray(value.steps) && value.steps.length !== edo) {
+          return false;
+        }
+        if (Array.isArray(value.ratios) && value.ratios.length !== edo) {
+          return false;
+        }
+        return true;
+      },
+      "System tables must include an entry for each division.",
     ),
-  }),
+  ),
   tuning: v.object({
     strings: v.pipe(
       v.array(TuningStringSchema),
@@ -77,5 +110,14 @@ export function parseTuningPack(pack: unknown): TuningPack {
   return {
     ...res.output,
     name: normalizedName,
+    system: {
+      ...res.output.system,
+      ...(typeof res.output.system.id === "string"
+        ? { id: res.output.system.id.trim() }
+        : {}),
+      ...(typeof res.output.system.name === "string"
+        ? { name: res.output.system.name.trim() }
+        : {}),
+    },
   };
 }

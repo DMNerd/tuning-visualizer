@@ -7,6 +7,9 @@ type TuningSystem = {
   divisions: number; // N: divisions per octave
   refFreq: number; // A4 reference
   refMidi: number; // A4 midi (69)
+  name?: string; // human-friendly label
+  stepCents?: number[]; // cents offset for each step from reference (length should match divisions)
+  stepRatios?: number[]; // ratio offset for each step from reference (length should match divisions)
   nameForPc: (pc: number, accidental?: Accidental) => string; // name for pitch-class [0..N-1]
 };
 
@@ -86,6 +89,7 @@ export const TUNINGS: Record<string, TuningSystem> = {
     divisions: 12,
     refFreq: 440,
     refMidi: 69,
+    name: "12-TET",
     nameForPc: (pc, accidental = "sharp") => {
       const SHARP = [
         "C",
@@ -124,6 +128,7 @@ export const TUNINGS: Record<string, TuningSystem> = {
     divisions: 24,
     refFreq: 440,
     refMidi: 69,
+    name: "24-TET",
     nameForPc: (pc, accidental = "sharp") => {
       const idx = ((pc % 24) + 24) % 24;
       const arr = accidental === "flat" ? N24_NAMES_FLAT : N24_NAMES_SHARP;
@@ -132,29 +137,101 @@ export const TUNINGS: Record<string, TuningSystem> = {
   },
 };
 
+function getStepCount(sys: TuningSystem): number {
+  const ratioCount = sys.stepRatios?.length;
+  if (Number.isFinite(ratioCount) && ratioCount && ratioCount > 0) {
+    return ratioCount;
+  }
+
+  const centsCount = sys.stepCents?.length;
+  if (Number.isFinite(centsCount) && centsCount && centsCount > 0) {
+    return centsCount;
+  }
+
+  if (Number.isFinite(sys.divisions) && sys.divisions > 0) {
+    return sys.divisions;
+  }
+
+  return 12;
+}
+
+function normalizeRatio(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return 1;
+  return value;
+}
+
+function getStepRatios(sys: TuningSystem): number[] {
+  const count = getStepCount(sys);
+
+  if (Array.isArray(sys.stepRatios) && sys.stepRatios.length === count) {
+    const base = normalizeRatio(sys.stepRatios[0]);
+    return sys.stepRatios.map((ratio) => normalizeRatio(ratio) / base || 1);
+  }
+
+  if (Array.isArray(sys.stepCents) && sys.stepCents.length === count) {
+    const base = sys.stepCents[0] ?? 0;
+    return sys.stepCents.map((cents) => Math.pow(2, (cents - base) / 1200));
+  }
+
+  return Array.from({ length: count }, (_, i) => Math.pow(2, i / count));
+}
+
 /** Convert frequency to nearest N-TET step offset from reference (A4), as an integer. */
 export function freqToStep(f: number, sys: TuningSystem): number {
-  return Math.round(sys.divisions * Math.log2(f / sys.refFreq));
+  if (!Number.isFinite(f) || f <= 0) return 0;
+
+  const ratio = f / sys.refFreq;
+  const divisions = getStepCount(sys);
+  const ratios = getStepRatios(sys);
+  const approxOctave = Math.log2(ratio);
+  const octaveFloor = Math.floor(approxOctave);
+
+  let bestStep = 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (let octave = octaveFloor - 1; octave <= octaveFloor + 1; octave += 1) {
+    const octaveFactor = Math.pow(2, octave);
+    for (let pc = 0; pc < divisions; pc += 1) {
+      const candidate = octaveFactor * (ratios[pc] ?? 1);
+      const distance = Math.abs(Math.log2(ratio / candidate));
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestStep = octave * divisions + pc;
+      }
+    }
+  }
+
+  return bestStep;
 }
 
 /** Convert step offset (relative to A4) to frequency. step=0 => A4. */
 export function stepToFreq(step: number, sys: TuningSystem): number {
-  return sys.refFreq * Math.pow(2, step / sys.divisions);
+  if (!Number.isFinite(step)) return sys.refFreq;
+
+  const divisions = getStepCount(sys);
+  const ratios = getStepRatios(sys);
+  const octave = Math.floor(step / divisions);
+  const pc = ((step % divisions) + divisions) % divisions;
+  const ratio = ratios[pc] ?? 1;
+
+  return sys.refFreq * Math.pow(2, octave) * ratio;
 }
 
 /** MIDI <-> step helpers (keeps your existing MIDI logic usable) */
 export function midiToStep(midi: number, sys: TuningSystem): number {
-  // 12-TET midi to step, generalized: 12 steps per semitone -> N/12 of those
-  return Math.round((midi - sys.refMidi) * (sys.divisions / 12));
+  const freq = TUNING_FALLBACK_REF_FREQ * Math.pow(2, (midi - TUNING_FALLBACK_REF_MIDI) / 12);
+  return freqToStep(freq, sys);
 }
 
 export function stepToMidi(step: number, sys: TuningSystem): number {
-  return Math.round(step * (12 / sys.divisions) + sys.refMidi);
+  const freq = stepToFreq(step, sys);
+  return Math.round(12 * Math.log2(freq / TUNING_FALLBACK_REF_FREQ) + TUNING_FALLBACK_REF_MIDI);
 }
 
 /** Pitch-class (0..N-1) from a global step count. */
 export function stepToPc(step: number, sys: TuningSystem): number {
-  return ((step % sys.divisions) + sys.divisions) % sys.divisions;
+  const divisions = getStepCount(sys);
+  return ((step % divisions) + divisions) % divisions;
 }
 
 /** Cents deviation of a frequency from the nearest N-TET step (for your tuner needle). */
@@ -162,12 +239,10 @@ export function centsFromNearest(
   f: number,
   sys: TuningSystem,
 ): { cents: number; nearestStep: number } {
-  const raw = sys.divisions * Math.log2(f / sys.refFreq);
-  const nearest = Math.round(raw);
-  const deltaSteps = raw - nearest;
-  const centsPerStep = 1200 / sys.divisions;
-  const cents = deltaSteps * centsPerStep;
-  return { cents, nearestStep: nearest };
+  const nearestStep = freqToStep(f, sys);
+  const nearestFreq = stepToFreq(nearestStep, sys);
+  const cents = 1200 * Math.log2(f / nearestFreq);
+  return { cents, nearestStep };
 }
 
 export type TuningLookupResult = {
@@ -179,21 +254,22 @@ export function findSystemByEdo(
   systems: Record<string, TuningSystem> | null | undefined,
   edo: number,
   metaSystemId?: string | null,
+  explicitSystemId?: string | null,
 ): TuningLookupResult | null {
   if (!Number.isFinite(edo) || edo <= 0) {
     return null;
   }
 
   const metaId = typeof metaSystemId === "string" ? metaSystemId : null;
+  const explicitId = typeof explicitSystemId === "string" ? explicitSystemId : null;
 
-  if (
-    metaId &&
-    systems &&
-    Object.prototype.hasOwnProperty.call(systems, metaId)
-  ) {
-    const system = systems[metaId];
-    if (system) {
-      return { id: metaId, system };
+  for (const candidateId of [explicitId, metaId]) {
+    if (!candidateId) continue;
+    if (systems && Object.prototype.hasOwnProperty.call(systems, candidateId)) {
+      const system = systems[candidateId];
+      if (system) {
+        return { id: candidateId, system };
+      }
     }
   }
 
@@ -208,7 +284,7 @@ export function findSystemByEdo(
   if (systems) {
     for (const [id, system] of Object.entries(systems)) {
       if (!system) continue;
-      const divisions = Number(system.divisions);
+      const divisions = Number(getStepCount(system));
       if (Number.isFinite(divisions) && divisions === edo) {
         return { id, system };
       }
@@ -232,14 +308,35 @@ export function getSystemLabel({
   match,
   edo,
   metaSystemId,
+  systemName,
+  systemId,
 }: {
   match: TuningLookupResult | null;
   edo: number;
   metaSystemId?: string | null;
+  systemName?: string | null;
+  systemId?: string | null;
 }): string {
+  const normalizedName =
+    typeof systemName === "string" && systemName.trim().length
+      ? systemName.trim()
+      : null;
+
+  if (normalizedName) {
+    return normalizedName;
+  }
+
   const metaLabel = typeof metaSystemId === "string" ? metaSystemId : null;
+  if (match?.system?.name) {
+    return match.system.name;
+  }
+
   if (metaLabel !== null) {
     return metaLabel;
+  }
+
+  if (typeof systemId === "string" && systemId.trim().length > 0) {
+    return systemId.trim();
   }
 
   if (match?.id) {

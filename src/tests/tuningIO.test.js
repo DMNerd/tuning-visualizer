@@ -28,7 +28,7 @@ test("parseTuningPack rejects packs with non-positive edo", () => {
 
   assert.throws(
     () => parseTuningPack(invalid),
-    /System edo must be at least 12\./,
+    /System edo must be at least 1\./,
   );
 });
 
@@ -100,4 +100,43 @@ test("parseTuningPack accepts packs that meet string requirements", () => {
   };
 
   assert.doesNotThrow(() => parseTuningPack(valid));
+});
+
+test("parseTuningPack accepts system metadata", () => {
+  const valid = {
+    ...basePack,
+    system: {
+      edo: 12,
+      id: "just-12",
+      name: "Just 12",
+      steps: Array.from({ length: 12 }, (_, i) => i * 100),
+      ratios: Array.from({ length: 12 }, (_, i) => 1 + i * 0.01),
+      refFreq: 442,
+      refMidi: 70,
+    },
+  };
+
+  const parsed = parseTuningPack(valid);
+
+  assert.equal(parsed.system.id, "just-12");
+  assert.equal(parsed.system.name, "Just 12");
+  assert.equal(parsed.system.refFreq, 442);
+  assert.equal(parsed.system.refMidi, 70);
+  assert.equal(parsed.system.steps.length, 12);
+  assert.equal(parsed.system.ratios.length, 12);
+});
+
+test("parseTuningPack rejects mismatched system tables", () => {
+  const invalid = {
+    ...basePack,
+    system: {
+      edo: 12,
+      steps: [0, 100],
+    },
+  };
+
+  assert.throws(
+    () => parseTuningPack(invalid),
+    /System tables must include an entry for each division\./,
+  );
 });

@@ -57,6 +57,35 @@ function ensurePack(pack) {
   const edo = Number(pack?.system?.edo);
   const system = Number.isFinite(edo) && edo > 0 ? { edo } : { edo: 12 };
 
+  const systemName =
+    typeof pack?.system?.name === "string" ? pack.system.name.trim() : null;
+  const systemId =
+    typeof pack?.system?.id === "string" ? pack.system.id.trim() : null;
+
+  if (systemName) system.name = systemName;
+  if (systemId) system.id = systemId;
+
+  const steps = Array.isArray(pack?.system?.steps)
+    ? pack.system.steps.filter((value) => Number.isFinite(value))
+    : null;
+  const ratios = Array.isArray(pack?.system?.ratios)
+    ? pack.system.ratios.filter((value) => Number.isFinite(value))
+    : null;
+
+  if (steps && steps.length) {
+    system.steps = steps;
+  }
+  if (ratios && ratios.length) {
+    system.ratios = ratios;
+  }
+
+  if (Number.isFinite(pack?.system?.refFreq)) {
+    system.refFreq = pack.system.refFreq;
+  }
+  if (Number.isFinite(pack?.system?.refMidi)) {
+    system.refMidi = pack.system.refMidi;
+  }
+
   const strings = Array.isArray(pack?.tuning?.strings)
     ? pack.tuning.strings
     : [];
@@ -81,7 +110,7 @@ const TEMPLATE_STRINGS = [
 function buildTemplatePack(pack) {
   const base = ensurePack(pack);
   const edo = Number(base?.system?.edo);
-  const normalizedEdo = Number.isFinite(edo) ? Math.max(12, edo) : 12;
+  const normalizedEdo = Number.isFinite(edo) && edo > 0 ? edo : 12;
 
   const strings = Array.isArray(base?.tuning?.strings)
     ? base.tuning.strings.slice(0, STR_MAX)
@@ -89,11 +118,19 @@ function buildTemplatePack(pack) {
 
   const seededStrings = strings.length >= STR_MIN ? strings : TEMPLATE_STRINGS;
 
+  const system = { ...base.system, edo: normalizedEdo };
+  if (Array.isArray(system.steps) && system.steps.length !== normalizedEdo) {
+    delete system.steps;
+  }
+  if (Array.isArray(system.ratios) && system.ratios.length !== normalizedEdo) {
+    delete system.ratios;
+  }
+
   const meta = isPlainObject(base?.meta) ? base.meta : {};
 
   return {
     name: base?.name?.trim?.() || "New tuning pack",
-    system: { edo: normalizedEdo },
+    system,
     tuning: { strings: seededStrings },
     meta,
   };
@@ -119,13 +156,44 @@ function buildNoteNodeMetadata(pack) {
   const edo = Number(pack?.system?.edo);
   const metaSystemId =
     typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
-  const systemMatch = findSystemByEdo(TUNINGS, edo, metaSystemId);
+  const systemId = typeof pack?.system?.id === "string" ? pack.system.id : null;
+  const systemName =
+    typeof pack?.system?.name === "string" ? pack.system.name : null;
+  const systemMatch = findSystemByEdo(TUNINGS, edo, metaSystemId, systemId);
   const system = systemMatch?.system ?? null;
   const seen = new Set();
   const options = [];
 
-  if (system && Number.isFinite(system.divisions) && system.divisions > 0) {
-    for (let pc = 0; pc < system.divisions; pc += 1) {
+  const divisionCount = (() => {
+    const packRatioCount = Array.isArray(pack?.system?.ratios)
+      ? pack.system.ratios.filter((value) => Number.isFinite(value)).length
+      : 0;
+    if (packRatioCount > 0) {
+      return packRatioCount;
+    }
+
+    const packStepCount = Array.isArray(pack?.system?.steps)
+      ? pack.system.steps.filter((value) => Number.isFinite(value)).length
+      : 0;
+    if (packStepCount > 0) {
+      return packStepCount;
+    }
+
+    if (Array.isArray(system?.stepRatios) && system.stepRatios.length > 0) {
+      return system.stepRatios.length;
+    }
+    if (Array.isArray(system?.stepCents) && system.stepCents.length > 0) {
+      return system.stepCents.length;
+    }
+    if (system && Number.isFinite(system.divisions) && system.divisions > 0) {
+      return system.divisions;
+    }
+
+    return Number.isFinite(edo) && edo > 0 ? edo : null;
+  })();
+
+  if (Number.isFinite(divisionCount) && divisionCount > 0) {
+    for (let pc = 0; pc < divisionCount; pc += 1) {
       pushUnique(options, seen, system.nameForPc(pc, "sharp"));
       pushUnique(options, seen, system.nameForPc(pc, "flat"));
     }
@@ -142,7 +210,9 @@ function buildNoteNodeMetadata(pack) {
   const systemLabel = getSystemLabel({
     match: systemMatch,
     edo,
-    metaSystemId,
+    metaSystemId: metaSystemId ?? systemId,
+    systemName,
+    systemId,
   });
 
   return { noteOptions: options, systemLabel };
@@ -553,7 +623,25 @@ function TuningPackEditorModal({
       JSON.stringify(
         {
           name: "Custom pack example",
-          system: { edo: 12 },
+          system: {
+            edo: 12,
+            id: "just-12",
+            name: "Just intonation (12)",
+            steps: [
+              0,
+              204,
+              386,
+              498,
+              702,
+              884,
+              1088,
+              1200,
+              1404,
+              1586,
+              1688,
+              1902,
+            ],
+          },
           tuning: {
             strings: [
               { label: "String 1", note: "E4" },
@@ -639,7 +727,7 @@ function TuningPackEditorModal({
                   <strong>Name:</strong> required text label.
                 </li>
                 <li>
-                  <strong>system.edo:</strong> integer {"\u2265"} 12.
+                  <strong>system.edo:</strong> integer {"\u2265"} 1.
                 </li>
                 <li>
                   <strong>Strings:</strong> between {STR_MIN} and {STR_MAX}{" "}
