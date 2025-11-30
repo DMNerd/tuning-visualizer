@@ -36,7 +36,13 @@ export const DOT_SIZE_MAX = 24;
 export const DOT_SIZE_DEFAULT = 14;
 
 export const DISPLAY_DEFAULTS = {
-  show: "names" as "names" | "degrees" | "intervals" | "fret" | "off",
+  show: "names" as
+    | "names"
+    | "degrees"
+    | "intervals"
+    | "edoSteps"
+    | "fret"
+    | "off",
   showOpen: true,
   showFretNums: true,
   dotSize: 14,

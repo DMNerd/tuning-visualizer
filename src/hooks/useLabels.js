@@ -5,6 +5,7 @@ export const LABEL_OPTIONS = [
   { value: "names", label: "Note names" },
   { value: "degrees", label: "Degrees" },
   { value: "intervals", label: "Intervals (12-TET relative)" },
+  { value: "edoSteps", label: "EDO steps" },
   { value: "fret", label: "Fret number" },
   { value: "off", label: "Off" },
 ];
@@ -98,13 +99,17 @@ export function useLabels({
           return intervalOf(pc);
         case "names":
           return nameForPcRef.current(pc);
+        case "edoSteps": {
+          const steps = (pc - rootIx + system.divisions) % system.divisions;
+          return String(steps);
+        }
         case "fret":
           return String(fret);
         default:
           return "";
       }
     },
-    [mode, intervalOf, degreeForPcRef, nameForPcRef],
+    [mode, intervalOf, degreeForPcRef, nameForPcRef, rootIx, system],
   );
 
   return useMemo(
