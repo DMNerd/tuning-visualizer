@@ -166,7 +166,6 @@ export default function App() {
     setTuning,
     presetMap,
     presetMetaMap,
-    presetNames,
     saveDefault,
     savedExists,
     defaultForCount,
@@ -258,7 +257,6 @@ export default function App() {
   } = useMergedPresets({
     presetMap,
     presetMetaMap,
-    presetNames,
     customTunings,
     setTuning,
     setStringMeta,

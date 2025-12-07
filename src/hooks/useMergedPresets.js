@@ -7,38 +7,11 @@ import {
 } from "react-use";
 import { normalizePresetMeta } from "@/lib/meta/meta";
 import { isPlainObject } from "@/utils/object";
-
-function coerceTuningArray(strings) {
-  if (!Array.isArray(strings)) return null;
-  const out = strings
-    .map((entry) => {
-      if (typeof entry === "string") return entry.trim();
-      if (typeof entry === "number" && Number.isFinite(entry))
-        return String(entry);
-      if (isPlainObject(entry)) {
-        if (typeof entry.note === "string") return entry.note;
-        if (typeof entry.midi === "number" && Number.isFinite(entry.midi)) {
-          return String(entry.midi);
-        }
-      }
-      return null;
-    })
-    .filter(Boolean);
-  return out.length ? out : null;
-}
-
-function coerceAnyTuning(value) {
-  if (Array.isArray(value)) return coerceTuningArray(value);
-  if (isPlainObject(value)) {
-    return coerceTuningArray(value?.tuning?.strings);
-  }
-  return null;
-}
+import { coerceAnyTuning, usePresetBuilder } from "./usePresetBuilder";
 
 export function useMergedPresets({
   presetMap,
   presetMetaMap,
-  presetNames,
   customTunings,
   setTuning,
   setStringMeta,
@@ -82,55 +55,53 @@ export function useMergedPresets({
     [compatibleCustoms],
   );
 
-  const customPresetMap = useMemo(() => {
-    if (!compatibleCustoms.length) return {};
+  const factoryPreset = useMemo(
+    () => presetMap?.["Factory default"] ?? null,
+    [presetMap],
+  );
+
+  const savedPreset = useMemo(
+    () => presetMap?.["Saved default"] ?? null,
+    [presetMap],
+  );
+
+  const savedPresetMeta = useMemo(
+    () => presetMetaMap?.["Saved default"] ?? null,
+    [presetMetaMap],
+  );
+
+  const catalogPresets = useMemo(() => {
+    const entries = Object.entries(presetMap || {});
     const out = {};
-    for (const pack of compatibleCustoms) {
-      const name = typeof pack?.name === "string" ? pack.name : null;
-      const arr = coerceAnyTuning(pack);
-      if (!name || !arr?.length) continue;
-      out[name] = arr;
+    for (const [name, tuning] of entries) {
+      if (name === "Factory default" || name === "Saved default") continue;
+      out[name] = tuning;
     }
     return out;
-  }, [compatibleCustoms]);
+  }, [presetMap]);
 
-  const customPresetMetaMap = useMemo(() => {
-    if (!compatibleCustoms.length) return {};
+  const catalogMeta = useMemo(() => {
+    const entries = Object.entries(presetMetaMap || {});
     const out = {};
-    for (const pack of compatibleCustoms) {
-      const name = typeof pack?.name === "string" ? pack.name : null;
-      const meta = normalizePresetMeta(pack?.meta, { stringMetaFormat: "map" });
-      if (!name || !meta) continue;
+    for (const [name, meta] of entries) {
+      if (name === "Factory default" || name === "Saved default") continue;
       out[name] = meta;
     }
     return out;
-  }, [compatibleCustoms]);
+  }, [presetMetaMap]);
 
-  const mergedPresetMap = useMemo(
-    () => ({ ...presetMap, ...customPresetMap }),
-    [presetMap, customPresetMap],
-  );
-
-  const mergedPresetMetaMap = useMemo(() => {
-    const merged = { ...presetMetaMap };
-    for (const [k, v] of Object.entries(customPresetMetaMap)) {
-      merged[k] = v;
-    }
-    return merged;
-  }, [presetMetaMap, customPresetMetaMap]);
-
-  const mergedPresetNames = useMemo(() => {
-    const names = new Set([
-      ...(Array.isArray(presetNames) ? presetNames : []),
-      ...customPresetNames,
-    ]);
-    const sc = Number(currentStrings);
-    return Array.from(names).filter((name) => {
-      const arr = coerceAnyTuning(mergedPresetMap?.[name]);
-      if (!Number.isFinite(sc)) return true;
-      return Array.isArray(arr) ? arr.length === sc : false;
-    });
-  }, [presetNames, customPresetNames, mergedPresetMap, currentStrings]);
+  const {
+    presetMap: mergedPresetMap,
+    presetMetaMap: mergedPresetMetaMap,
+    presetNames: mergedPresetNames,
+  } = usePresetBuilder({
+    factory: factoryPreset,
+    saved: savedPreset,
+    savedMeta: savedPresetMeta,
+    catalogPresets,
+    catalogMeta,
+    customPacks: compatibleCustoms,
+  });
 
   const defaultPresetName = useMemo(
     () => (savedExists ? "Saved default" : "Factory default"),

@@ -8,6 +8,7 @@ import {
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { isPlainObject } from "@/utils/object";
 import { normalizePresetMeta } from "@/lib/meta/meta";
+import { usePresetBuilder } from "@/hooks/usePresetBuilder";
 
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
@@ -83,33 +84,14 @@ export function useDefaultTuning({
     setTuning(getPreferredDefault());
   }, [getPreferredDefault, setTuning]);
 
-  const presetMap = useMemo(() => {
-    const m = { "Factory default": factory };
-    if (savedExists) m["Saved default"] = saved.slice();
-
-    const catalog = PRESET_TUNINGS?.[systemId]?.[strings] || {};
-    for (const [name, arr] of Object.entries(catalog)) {
-      if (!m[name]) m[name] = arr;
-    }
-    return m;
-  }, [factory, savedExists, saved, systemId, strings, PRESET_TUNINGS]);
-
-  const presetMetaMap = useMemo(() => {
-    const metaForGroup = PRESET_TUNING_META?.[systemId]?.[strings] || {};
-    const out = Object.create(null);
-    out["Factory default"] = null;
-    if (presetMap["Saved default"]) {
-      out["Saved default"] = savedMeta ? { ...savedMeta } : null;
-    }
-
-    for (const name of Object.keys(presetMap)) {
-      if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = normalizePresetMeta(metaForGroup[name], {
-        stringMetaFormat: "array",
-      });
-    }
-    return out;
-  }, [PRESET_TUNING_META, systemId, strings, presetMap, savedMeta]);
+  const { presetMap, presetMetaMap, presetNames } = usePresetBuilder({
+    factory,
+    saved: savedExists ? saved.slice() : null,
+    savedMeta,
+    catalogPresets: PRESET_TUNINGS?.[systemId]?.[strings] || {},
+    catalogMeta: PRESET_TUNING_META?.[systemId]?.[strings] || {},
+    stringMetaFormat: "array",
+  });
 
   const getPresetMeta = useCallback(
     (name) => (name in presetMetaMap ? presetMetaMap[name] : null),
@@ -193,7 +175,7 @@ export function useDefaultTuning({
       presetMap,
       presetMetaMap,
       getPresetMeta,
-      presetNames: Object.keys(presetMap),
+      presetNames,
       savedExists,
       saveDefault,
       loadSavedDefault,
@@ -206,6 +188,7 @@ export function useDefaultTuning({
       presetMap,
       presetMetaMap,
       getPresetMeta,
+      presetNames,
       savedExists,
       saveDefault,
       loadSavedDefault,
