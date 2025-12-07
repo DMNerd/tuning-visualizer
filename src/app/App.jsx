@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import clsx from "clsx";
 import { ErrorBoundary } from "react-error-boundary";
 import {
@@ -31,7 +31,6 @@ import {
   STR_MAX,
   FRETS_MIN,
   FRETS_MAX,
-  STR_FACTORY,
   getFactoryFrets,
   SYSTEM_DEFAULT,
   ROOT_DEFAULT,
@@ -59,62 +58,91 @@ const TuningPackManagerModal = React.lazy(
 );
 
 // hooks
-import { useTheme } from "@/hooks/useTheme";
-import { useScaleOptions } from "@/hooks/useScaleOptions";
-import { useDrawFrets } from "@/hooks/useDrawFrets";
-import { useDefaultTuning } from "@/hooks/useDefaultTuning";
-import { useStringsChange } from "@/hooks/useStringsChange";
-import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
-import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
-import { useSystemPrefs } from "@/hooks/useSystemPrefs";
 import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
-import { useFretsTouched } from "@/hooks/useFretsTouched";
-import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
 import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
 import { useChordLogic } from "@/hooks/useChordLogic";
 import { useFileBase } from "@/hooks/useFileBase";
 import { useHotkeys } from "@/hooks/useHotkeys";
-import { useCapo } from "@/hooks/useCapo";
 import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
 import { useRandomScale } from "@/hooks/useRandomScale";
-import { useFullscreen, useToggle } from "react-use";
+import { useDisplayState } from "@/hooks/useDisplayState";
+import { useSystemState } from "@/hooks/useSystemState";
+import { useInstrumentConfig } from "@/hooks/useInstrumentConfig";
+import { useScaleOptions } from "@/hooks/useScaleOptions";
+import AppLayout from "@/components/Layout/AppLayout";
 
 export default function App() {
-  // System selection
-  const { systemId, setSystemId, root, setRoot, ensureValidRoot } =
-    useSystemPrefs({
-      tunings: TUNINGS,
-      defaultSystemId: SYSTEM_DEFAULT,
-      defaultRoot: ROOT_DEFAULT,
-    });
+  const boardRef = React.useRef(null);
+  const { confirm } = useConfirm();
 
-  const system = TUNINGS[systemId];
+  const {
+    displayPrefs,
+    setDisplayPrefs,
+    displaySetters,
+    theme,
+    setTheme,
+    themeMode,
+    stageRef,
+    isFs,
+    toggleFs,
+  } = useDisplayState(DISPLAY_DEFAULTS);
 
-  // Strings / Frets
-  const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
-    useFretsTouched(getFactoryFrets(system.divisions));
+  const {
+    systemId,
+    setSystemId,
+    system,
+    root,
+    setRoot,
+    pcFromName,
+    nameForPc,
+    sysNames,
+    rootIx,
+  } = useSystemState({
+    tunings: TUNINGS,
+    defaultSystemId: SYSTEM_DEFAULT,
+    defaultRoot: ROOT_DEFAULT,
+    accidental: displayPrefs.accidental,
+  });
 
-  const { strings, setStrings, resetInstrumentPrefs, setFretsPref } =
-    useInstrumentPrefs({
-      frets,
-      fretsTouched,
-      setFrets,
-      setFretsUI,
-      setFretsTouched,
-      STR_MIN,
-      STR_MAX,
-      FRETS_MIN,
-      FRETS_MAX,
-      STR_FACTORY,
-    });
+  const instrument = useInstrumentConfig({
+    system,
+    systemId,
+    stringsRange: { min: STR_MIN, max: STR_MAX },
+    fretsRange: { min: FRETS_MIN, max: FRETS_MAX },
+    factory: getFactoryFrets,
+    presetMeta: PRESET_TUNING_META,
+    defaultTunings: DEFAULT_TUNINGS,
+    presetTunings: PRESET_TUNINGS,
+  });
 
-  // Display options
-  const [displayPrefs, setDisplayPrefs, displaySetters] =
-    useDisplayPrefs(DISPLAY_DEFAULTS);
+  const {
+    strings,
+    setStrings,
+    frets,
+    setFretsPref,
+    setFretsUI,
+    resetInstrumentPrefs,
+    tuning,
+    setTuning,
+    presetMap,
+    presetMetaMap,
+    savedExists,
+    stringMeta,
+    setStringMeta,
+    boardMeta,
+    setBoardMeta,
+    handleSaveDefault,
+    handleStringsChange,
+    drawFrets,
+    capo,
+  } = instrument;
+
+  const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = capo;
+
   const {
     show,
     showOpen,
@@ -139,61 +167,6 @@ export default function App() {
     setLefty,
   } = displaySetters;
 
-  const [theme, setTheme, themeMode] = useTheme();
-
-  const { confirm } = useConfirm();
-
-  // Refs
-  const boardRef = useRef(null);
-  const stageRef = useRef(null);
-
-  // Fullscreen (react-use)
-  const [isFsRequested, toggleFs] = useToggle(false);
-  const isFs = useFullscreen(stageRef, isFsRequested, {
-    onClose: () => toggleFs(false),
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isFs) root.classList.add("is-fs");
-    else root.classList.remove("is-fs");
-    return () => root.classList.remove("is-fs");
-  }, [isFs]);
-
-  // Tuning (defaults + presets + meta)
-  const {
-    tuning,
-    setTuning,
-    presetMap,
-    presetMetaMap,
-    saveDefault,
-    savedExists,
-    defaultForCount,
-  } = useDefaultTuning({
-    systemId,
-    strings,
-    DEFAULT_TUNINGS,
-    PRESET_TUNINGS,
-    PRESET_TUNING_META,
-  });
-
-  const [stringMeta, setStringMeta] = useState(null);
-  const [boardMeta, setBoardMeta] = useState(null);
-
-  const handleSaveDefault = useCallback(() => {
-    saveDefault(stringMeta, boardMeta);
-  }, [saveDefault, stringMeta, boardMeta]);
-
-  const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
-    system,
-    accidental,
-  );
-  useEffect(() => {
-    ensureValidRoot(sysNames);
-  }, [ensureValidRoot, sysNames]);
-
-  const rootIx = pcFromName(root);
-
   const {
     chordRoot,
     setChordRoot,
@@ -213,27 +186,19 @@ export default function App() {
     initial: SCALE_DEFAULT,
   });
 
-  const drawFrets = useDrawFrets({
-    baseFrets: frets,
-    divisions: system.divisions,
-    fretsTouched,
-    setFretsRaw: setFrets,
+  const fileBase = useFileBase({
+    root,
+    scale,
+    accidental,
+    strings: instrument.strings,
   });
-
-  const fileBase = useFileBase({ root, scale, accidental, strings });
 
   useAccidentalRespell({
     system,
     accidental,
     setRoot,
-    setTuning,
+    setTuning: instrument.setTuning,
     setChordRoot,
-  });
-
-  const handleStringsChange = useStringsChange({
-    setStrings,
-    setTuning,
-    defaultForCount,
   });
 
   const {
@@ -245,7 +210,7 @@ export default function App() {
     saveCustomTuning,
     deleteCustomTuning,
     clearCustomTunings,
-  } = useTuningIO({ systemId, strings, TUNINGS });
+  } = useTuningIO({ systemId, strings: instrument.strings, TUNINGS });
 
   const {
     mergedPresetNames,
@@ -304,11 +269,6 @@ export default function App() {
       duration: 6000,
     });
   }, []);
-
-  const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = useCapo({
-    strings,
-    stringMeta,
-  });
 
   const {
     editorState,
@@ -388,203 +348,204 @@ export default function App() {
     [systemId, tuning, scale, showChord, chordRoot, chordType],
   );
 
-  return (
-    <div className="tv-shell">
-      <header className="tv-shell__header">
-        <PanelHeader theme={theme} setTheme={setTheme} />
-      </header>
-      <main className="tv-shell__main">
-        <div className="tv-stage" ref={stageRef}>
-          <div
-            className={clsx("tv-stage__surface", { "is-lefty": lefty })}
-            onDoubleClick={() => toggleFs()}
+  const header = <PanelHeader theme={theme} setTheme={setTheme} />;
+
+  const stage = (
+    <div className="tv-stage" ref={stageRef}>
+      <div
+        className={clsx("tv-stage__surface", { "is-lefty": lefty })}
+        onDoubleClick={() => toggleFs()}
+      >
+        <div className="tv-stage__toolbar">
+          <button
+            type="button"
+            className="tv-button tv-button--icon"
+            aria-label="Reset all to defaults"
+            onClick={() => resetAll({ confirm: true })}
+            title="Reset all to defaults"
           >
-            <div className="tv-stage__toolbar">
-              <button
-                type="button"
-                className="tv-button tv-button--icon"
-                aria-label="Reset all to defaults"
-                onClick={() => resetAll({ confirm: true })}
-                title="Reset all to defaults"
-              >
-                <FiRotateCcw size={16} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className={clsx(
-                  "tv-button",
-                  "tv-button--icon",
-                  "tv-button--fullscreen",
-                  { "is-active": isFs },
-                )}
-                aria-label={
-                  isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"
-                }
-                onClick={() => toggleFs()}
-                title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
-              >
-                {isFs ? (
-                  <FiMinimize size={16} aria-hidden />
-                ) : (
-                  <FiMaximize size={16} aria-hidden />
-                )}
-              </button>
-            </div>
-            <ErrorBoundary
-              FallbackComponent={ErrorFallback}
-              onReset={() => {
-                setCapoFret(CAPO_DEFAULT);
-              }}
-            >
-              <Fretboard
-                ref={boardRef}
-                strings={strings}
-                frets={drawFrets}
-                tuning={tuning}
-                rootIx={rootIx}
-                intervals={intervals}
-                accidental={accidental}
-                microLabelStyle={microLabelStyle}
-                show={show}
-                showOpen={showOpen}
-                showFretNums={showFretNums}
-                dotSize={dotSize}
-                lefty={lefty}
-                system={system}
-                chordPCs={chordPCs}
-                chordRootPc={chordRootIx}
-                openOnlyInScale={openOnlyInScale}
-                colorByDegree={colorByDegree}
-                hideNonChord={hideNonChord}
-                stringMeta={effectiveStringMeta}
-                boardMeta={boardMeta}
-                onSelectNote={handleSelectNote}
-                capoFret={capoFret}
-                onSetCapo={toggleCapoAt}
-              />
-            </ErrorBoundary>
-          </div>
+            <FiRotateCcw size={16} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={clsx(
+              "tv-button",
+              "tv-button--icon",
+              "tv-button--fullscreen",
+              { "is-active": isFs },
+            )}
+            aria-label={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
+            onClick={() => toggleFs()}
+            title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
+          >
+            {isFs ? (
+              <FiMinimize size={16} aria-hidden />
+            ) : (
+              <FiMaximize size={16} aria-hidden />
+            )}
+          </button>
         </div>
-      </main>
-      <footer className="tv-shell__controls">
-        <TuningSystemSelector
-          systemId={systemId}
-          setSystemId={setSystemId}
-          systems={TUNINGS}
-        />
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
-          resetKeys={[systemId, root, scale]}
-          onReset={resetMusicalState}
+          onReset={() => {
+            setCapoFret(CAPO_DEFAULT);
+          }}
         >
-          <ScaleControls
-            root={root}
-            setRoot={setRoot}
-            scale={scale}
-            setScale={setScale}
-            sysNames={sysNames}
-            scaleOptions={scaleOptions}
-            defaultScale={SCALE_DEFAULT}
-            onRandomize={randomizeScale}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
-          onReset={resetMusicalState}
-        >
-          <ChordBuilder
-            root={chordRoot}
-            onRootChange={setChordRoot}
-            sysNames={sysNames}
-            nameForPc={nameForPc}
-            type={chordType}
-            onTypeChange={setChordType}
-            showChord={showChord}
-            setShowChord={setShowChord}
-            hideNonChord={hideNonChord}
-            setHideNonChord={setHideNonChord}
-            supportsMicrotonal={Number(system?.divisions) > 12}
-            system={system}
+          <Fretboard
+            ref={boardRef}
+            strings={strings}
+            frets={drawFrets}
+            tuning={tuning}
             rootIx={rootIx}
             intervals={intervals}
+            accidental={accidental}
+            microLabelStyle={microLabelStyle}
+            show={show}
+            showOpen={showOpen}
+            showFretNums={showFretNums}
+            dotSize={dotSize}
+            lefty={lefty}
+            system={system}
             chordPCs={chordPCs}
             chordRootPc={chordRootIx}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          resetKeys={[strings, frets, systemId]}
-          onReset={() => {
-            resetInstrumentFactory(system.divisions);
-          }}
-        >
-          <InstrumentControls
-            strings={strings}
-            setStrings={setStrings}
-            frets={frets}
-            setFrets={setFretsPref}
-            sysNames={sysNames}
-            tuning={tuning}
-            setTuning={setTuning}
-            handleStringsChange={handleStringsChange}
-            presetNames={mergedPresetNames}
-            customPresetNames={customPresetNames}
-            presetMetaMap={mergedPresetMetaMap}
-            selectedPreset={selectedPreset}
-            setSelectedPreset={setPreset}
-            handleSaveDefault={handleSaveDefault}
-            handleResetFactoryDefault={resetInstrumentFactory}
-            systemId={systemId}
-            onCreateCustomPack={openCreate}
-            onEditCustomPack={openEditSelected}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          resetKeys={[displayPrefs]}
-          onReset={() => {
-            resetDisplay();
-          }}
-        >
-          <DisplayControls
-            show={show}
-            setShow={setShow}
-            showOpen={showOpen}
-            setShowOpen={setShowOpen}
-            showFretNums={showFretNums}
-            setShowFretNums={setShowFretNums}
-            dotSize={dotSize}
-            setDotSize={setDotSize}
-            accidental={accidental}
-            setAccidental={setAccidental}
-            microLabelStyle={microLabelStyle}
-            setMicroLabelStyle={setMicroLabelStyle}
             openOnlyInScale={openOnlyInScale}
-            setOpenOnlyInScale={setOpenOnlyInScale}
             colorByDegree={colorByDegree}
-            setColorByDegree={setColorByDegree}
-            lefty={lefty}
-            setLefty={setLefty}
-            degreeCount={intervals.length}
+            hideNonChord={hideNonChord}
+            stringMeta={effectiveStringMeta}
+            boardMeta={boardMeta}
+            onSelectNote={handleSelectNote}
+            capoFret={capoFret}
+            onSetCapo={toggleCapoAt}
           />
         </ErrorBoundary>
-        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[fileBase]}>
-          <ExportControls
-            boardRef={boardRef}
-            fileBase={fileBase}
-            downloadPNG={downloadPNG}
-            downloadSVG={downloadSVG}
-            printFretboard={printFretboard}
-            buildHeader={buildHeader}
-            exportCurrent={() => exportCurrent(tuning, stringMeta, boardMeta)}
-            exportAll={exportAll}
-            importFromJson={importFromJson}
-            onClearCustom={clearAllPacks}
-            onManageCustom={openManager}
-          />
-        </ErrorBoundary>
-      </footer>
+      </div>
+    </div>
+  );
+
+  const controls = (
+    <>
+      <TuningSystemSelector
+        systemId={systemId}
+        setSystemId={setSystemId}
+        systems={TUNINGS}
+      />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[systemId, root, scale]}
+        onReset={resetMusicalState}
+      >
+        <ScaleControls
+          root={root}
+          setRoot={setRoot}
+          scale={scale}
+          setScale={setScale}
+          sysNames={sysNames}
+          scaleOptions={scaleOptions}
+          defaultScale={SCALE_DEFAULT}
+          onRandomize={randomizeScale}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
+        onReset={resetMusicalState}
+      >
+        <ChordBuilder
+          root={chordRoot}
+          onRootChange={setChordRoot}
+          sysNames={sysNames}
+          nameForPc={nameForPc}
+          type={chordType}
+          onTypeChange={setChordType}
+          showChord={showChord}
+          setShowChord={setShowChord}
+          hideNonChord={hideNonChord}
+          setHideNonChord={setHideNonChord}
+          supportsMicrotonal={Number(system?.divisions) > 12}
+          system={system}
+          rootIx={rootIx}
+          intervals={intervals}
+          chordPCs={chordPCs}
+          chordRootPc={chordRootIx}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[strings, frets, systemId]}
+        onReset={() => {
+          resetInstrumentFactory(system.divisions);
+        }}
+      >
+        <InstrumentControls
+          strings={strings}
+          setStrings={setStrings}
+          frets={frets}
+          setFrets={setFretsPref}
+          sysNames={sysNames}
+          tuning={tuning}
+          setTuning={setTuning}
+          handleStringsChange={handleStringsChange}
+          presetNames={mergedPresetNames}
+          customPresetNames={customPresetNames}
+          presetMetaMap={mergedPresetMetaMap}
+          selectedPreset={selectedPreset}
+          setSelectedPreset={setPreset}
+          handleSaveDefault={handleSaveDefault}
+          handleResetFactoryDefault={resetInstrumentFactory}
+          systemId={systemId}
+          onCreateCustomPack={openCreate}
+          onEditCustomPack={openEditSelected}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[displayPrefs]}
+        onReset={() => {
+          resetDisplay();
+        }}
+      >
+        <DisplayControls
+          show={show}
+          setShow={setShow}
+          showOpen={showOpen}
+          setShowOpen={setShowOpen}
+          showFretNums={showFretNums}
+          setShowFretNums={setShowFretNums}
+          dotSize={dotSize}
+          setDotSize={setDotSize}
+          accidental={accidental}
+          setAccidental={setAccidental}
+          microLabelStyle={microLabelStyle}
+          setMicroLabelStyle={setMicroLabelStyle}
+          openOnlyInScale={openOnlyInScale}
+          setOpenOnlyInScale={setOpenOnlyInScale}
+          colorByDegree={colorByDegree}
+          setColorByDegree={setColorByDegree}
+          lefty={lefty}
+          setLefty={setLefty}
+          degreeCount={intervals.length}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[fileBase]}>
+        <ExportControls
+          boardRef={boardRef}
+          fileBase={fileBase}
+          downloadPNG={downloadPNG}
+          downloadSVG={downloadSVG}
+          printFretboard={printFretboard}
+          buildHeader={buildHeader}
+          exportCurrent={() => exportCurrent(tuning, stringMeta, boardMeta)}
+          exportAll={exportAll}
+          importFromJson={importFromJson}
+          onClearCustom={clearAllPacks}
+          onManageCustom={openManager}
+        />
+      </ErrorBoundary>
+    </>
+  );
+
+  const modals = (
+    <>
       {editorState ? (
         <React.Suspense
           fallback={
@@ -623,39 +584,44 @@ export default function App() {
           />
         </React.Suspense>
       ) : null}
-      <Toaster
-        position="top-right"
-        gutter={8}
-        toastOptions={{
-          duration: 2800,
-          className: "tv-toast",
-        }}
-        containerClassName="tv-toast-container"
-      >
-        {(t) => {
-          const icon =
-            t.type === "success" ? (
-              <FiCheckCircle size={18} color="var(--accent)" />
-            ) : t.type === "error" ? (
-              <FiAlertTriangle size={18} color="var(--root)" />
-            ) : t.type === "loading" ? (
-              <FiLoader size={18} className="tv-u-spin" />
-            ) : (
-              <FiInfo size={18} color="var(--fg)" />
-            );
-          return (
-            <ToastBar toast={t}>
-              {({ message, action }) => (
-                <div className="tv-toast-bar">
-                  <span className="tv-toast-icon">{icon}</span>
-                  <div>{message}</div>
-                  {action}
-                </div>
-              )}
-            </ToastBar>
-          );
-        }}
-      </Toaster>
-    </div>
+    </>
   );
+
+  const toaster = (
+    <Toaster
+      position="top-right"
+      gutter={8}
+      toastOptions={{
+        duration: 2800,
+        className: "tv-toast",
+      }}
+      containerClassName="tv-toast-container"
+    >
+      {(t) => {
+        const icon =
+          t.type === "success" ? (
+            <FiCheckCircle size={18} color="var(--accent)" />
+          ) : t.type === "error" ? (
+            <FiAlertTriangle size={18} color="var(--root)" />
+          ) : t.type === "loading" ? (
+            <FiLoader size={18} className="tv-u-spin" />
+          ) : (
+            <FiInfo size={18} color="var(--fg)" />
+          );
+        return (
+          <ToastBar toast={t}>
+            {({ message, action }) => (
+              <div className="tv-toast-bar">
+                <span className="tv-toast-icon">{icon}</span>
+                <div>{message}</div>
+                {action}
+              </div>
+            )}
+          </ToastBar>
+        );
+      }}
+    </Toaster>
+  );
+
+  return <AppLayout header={header} stage={stage} controls={controls} modals={modals} toaster={toaster} />;
 }
