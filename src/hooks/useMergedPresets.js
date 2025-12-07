@@ -7,7 +7,7 @@ import {
 } from "react-use";
 import { normalizePresetMeta } from "@/lib/meta/meta";
 import { isPlainObject } from "@/utils/object";
-import { coerceAnyTuning, usePresetBuilder } from "./usePresetBuilder";
+import { coerceAnyTuning, usePresetBuilder } from "@/hooks/usePresetBuilder";
 
 export function useMergedPresets({
   presetMap,
@@ -188,19 +188,12 @@ export function useMergedPresets({
 
   useEffect(() => {
     if (!selectedPreset) return;
+    if (queuedPresetRef.current === selectedPreset) return;
     const resolved = resolveTuningByName(selectedPreset);
     if (resolved?.length) {
       setPreset(selectedPreset);
     }
   }, [mergedPresetMap, resolveTuningByName, selectedPreset, setPreset]);
-
-  useUpdateEffect(() => {
-    if (!selectedPreset) return;
-    const resolved = resolveTuningByName(selectedPreset);
-    if (resolved?.length) {
-      setPreset(selectedPreset);
-    }
-  }, [mergedPresetMap, selectedPreset, resolveTuningByName, setPreset]);
 
   useUpdateEffect(() => {
     if (!selectedPreset) return;
