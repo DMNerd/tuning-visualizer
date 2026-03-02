@@ -107,12 +107,20 @@ const COMMON_PRESETS: CommonPresets = {
 
     "Open G (DGDGBD)": ["D", "B", "G", "D", "G", "D"],
     "Open D (DADF#AD)": ["D", "A", "F#", "D", "A", "D"],
-    "Open Dm (DADFAD)": ["D", "A", "F", "D", "A", "D"],
     "Open C (CGCGCE)": ["E", "C", "G", "C", "G", "C"],
     "Open E (EBEG#BE)": ["E", "B", "G#", "E", "B", "E"],
     "Open A (EAEAC#E)": ["E", "C#", "A", "E", "A", "E"],
     "Open B (F#BF#BD#F#)": ["F#", "D#", "B", "F#", "B", "F#"],
     "Open F (FACFAD)": ["D", "A", "F", "C", "A", "F"],
+
+    // Open minor tunings (all keys – common triad layouts / widely used variants)
+    "Open Am (EAEACE)": ["E", "C", "A", "E", "A", "E"],
+    "Open Bm (F#BF#BD F#)": ["F#", "D", "B", "F#", "B", "F#"],
+    "Open Cm (CGCGCEb)": ["Eb", "C", "G", "C", "G", "C"],
+    "Open Dm (DADFAD)": ["D", "A", "F", "D", "A", "D"],
+    "Open Em (EBEGBe)": ["E", "B", "G", "E", "B", "E"],
+    "Open Fm (FCFAbCF)": ["F", "C", "Ab", "F", "C", "F"],
+    "Open Gm (DGDGBbD)": ["D", "Bb", "G", "D", "G", "D"],
 
     "Double Drop D (DADGBD)": ["D", "B", "G", "D", "A", "D"],
     "All Fourths (EADGCF)": ["F", "C", "G", "D", "A", "E"],
