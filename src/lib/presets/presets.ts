@@ -167,6 +167,11 @@ const SYSTEM_OVERRIDES: SystemOverrides = {
     },
     5: { "Bass 5 +Q D (D↑)": ["G", "D↑", "A", "E", "B"] },
     6: {
+      "Interleaved 24-TET (E↑ B G↑ D A↑ E)": ["E↑", "B", "G↑", "D", "A↑", "E"],
+      "Interleaved Drop D (D A↑ D G↑ B E↑)": ["E↑", "B", "G↑", "D", "A↑", "D"],
+      "Interleaved Drop C (C G↑ C F↑ A D↑)": ["D↑", "A", "F↑", "C", "G↑", "C"],
+      "Split Top (EADG + B↓ E↓)": ["E↓", "B↓", "G", "D", "A", "E"],
+      "Hybrid Split (G↓ + E↓)": ["E↓", "B", "G↓", "D", "A", "E"],
       "Std +Q G string (G↑)": ["E", "B", "G↑", "D", "A", "E"],
       "Std +Q B string (B↑)": ["E", "B↑", "G", "D", "A", "E"],
       "Std −Q B string (B↓)": ["E", "B↓", "G", "D", "A", "E"],
