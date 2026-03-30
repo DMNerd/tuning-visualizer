@@ -3,36 +3,11 @@ import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import htmlMinifier from "vite-plugin-html-minifier-terser";
-import csp from "vite-plugin-csp-guard";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-function makePolicy(isDev) {
-  const base = {
-    "default-src": ["'self'"],
-    "script-src": ["'self'"],
-    "style-src-elem": ["'self'", "'unsafe-inline'"],
-    "style-src-attr": ["'unsafe-inline'"],
-    "img-src": ["'self'", "data:"],
-    "connect-src": ["'self'"],
-    "font-src": ["'self'"],
-    "object-src": ["'none'"],
-    "base-uri": ["'self'"],
-  };
-  if (isDev) {
-    base["connect-src"].push(
-      "ws://localhost:*",
-      "ws://127.0.0.1:*",
-      "http://localhost:*",
-      "http://127.0.0.1:*",
-    );
-  }
-  return base;
-}
-
-export default defineConfig(({ mode }) => {
-  const isDev = mode === "development";
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
@@ -48,7 +23,6 @@ export default defineConfig(({ mode }) => {
           minifyJS: true,
         },
       }),
-      csp({ policy: makePolicy(isDev), sri: true }),
     ],
 
     css: {
