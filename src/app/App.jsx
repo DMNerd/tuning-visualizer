@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import clsx from "clsx";
 import {
   FiCheckCircle,
@@ -59,6 +59,11 @@ import usePracticePanelState from "@/app/containers/usePracticePanelState";
 import ExportPanelContainer from "@/app/containers/ExportPanelContainer";
 import CustomTuningModalsContainer from "@/app/containers/CustomTuningModalsContainer";
 import { PANEL_CONTRACTS } from "@/app/contracts/panelContracts";
+import {
+  adaptDisplayControls,
+  adaptInstrumentControls,
+  adaptMetronomeControls,
+} from "@/app/controlAdapters";
 
 export default function App() {
   const boardRef = React.useRef(null);
@@ -139,18 +144,6 @@ export default function App() {
     accidental,
     microLabelStyle,
   } = displayPrefs;
-
-  const {
-    setShow,
-    setShowOpen,
-    setShowFretNums,
-    setDotSize,
-    setAccidental,
-    setMicroLabelStyle,
-    setOpenOnlyInScale,
-    setColorByDegree,
-    setLefty,
-  } = displaySetters;
 
   const chord = useChordLogic(system, pcFromName);
 
@@ -406,6 +399,58 @@ export default function App() {
     },
     reset: { resetInstrumentFactory },
   };
+  const instrumentControlModel = useMemo(
+    () =>
+      adaptInstrumentControls({
+        state: {
+          strings,
+          frets,
+          tuning,
+          systemId,
+          sysNames,
+          tunings: TUNINGS,
+          system,
+        },
+        preset: {
+          mergedPresetNames,
+          customPresetNames,
+          mergedPresetMetaMap,
+          selectedPreset,
+          setPreset,
+        },
+        handlers: {
+          setFretsPref,
+          setSystemId,
+          setTuning,
+          handleStringsChange,
+          handleSaveDefault,
+          openCreate,
+          openEditSelected,
+        },
+        reset: { resetInstrumentFactory },
+      }),
+    [
+      strings,
+      frets,
+      tuning,
+      systemId,
+      sysNames,
+      system,
+      mergedPresetNames,
+      customPresetNames,
+      mergedPresetMetaMap,
+      selectedPreset,
+      setPreset,
+      setFretsPref,
+      setSystemId,
+      setTuning,
+      handleStringsChange,
+      handleSaveDefault,
+      openCreate,
+      openEditSelected,
+      resetInstrumentFactory,
+    ],
+  );
 
   const theoryPanel = {
     contract: PANEL_CONTRACTS.theory,
@@ -442,6 +487,39 @@ export default function App() {
     },
     reset: { resetPracticeCounters: practice.resetPracticeCounters },
   };
+  const metronomeControlModel = useMemo(
+    () =>
+      adaptMetronomeControls({
+        metronome: {
+          ...practice.metronomePrefs,
+          ...practice.metronomeEngine,
+          safeBarsPerScale: practice.safeBarsPerScale,
+          barsRemaining: practice.barsRemaining,
+        },
+        controls: {
+          ...practice.metronomeSetters,
+          ...practiceActions,
+        },
+      }),
+    [
+      practice.metronomePrefs,
+      practice.metronomeEngine,
+      practice.safeBarsPerScale,
+      practice.barsRemaining,
+      practice.metronomeSetters,
+      practiceActions,
+    ],
+  );
+
+  const displayControlModel = useMemo(
+    () =>
+      adaptDisplayControls({
+        displayPrefs,
+        displaySetters,
+        degreeCount: intervals.length,
+      }),
+    [displayPrefs, displaySetters, intervals.length],
+  );
 
   const exportPanel = {
     contract: PANEL_CONTRACTS.export,
@@ -479,36 +557,22 @@ export default function App() {
 
   const controls = (
     <>
-      <InstrumentPanelContainer {...instrumentPanel} />
+      <InstrumentPanelContainer
+        {...instrumentPanel}
+        controlModel={instrumentControlModel}
+      />
       <TheoryPanelContainer {...theoryPanel} />
-      <PracticePanelContainer {...practicePanel} />
+      <PracticePanelContainer
+        {...practicePanel}
+        controlModel={metronomeControlModel}
+      />
       <SafeSection
         resetKeys={[displayPrefs]}
         onReset={() => {
           resetDisplay();
         }}
       >
-        <DisplayControls
-          show={show}
-          setShow={setShow}
-          showOpen={showOpen}
-          setShowOpen={setShowOpen}
-          showFretNums={showFretNums}
-          setShowFretNums={setShowFretNums}
-          dotSize={dotSize}
-          setDotSize={setDotSize}
-          accidental={accidental}
-          setAccidental={setAccidental}
-          microLabelStyle={microLabelStyle}
-          setMicroLabelStyle={setMicroLabelStyle}
-          openOnlyInScale={openOnlyInScale}
-          setOpenOnlyInScale={setOpenOnlyInScale}
-          colorByDegree={colorByDegree}
-          setColorByDegree={setColorByDegree}
-          lefty={lefty}
-          setLefty={setLefty}
-          degreeCount={intervals.length}
-        />
+        <DisplayControls {...displayControlModel} />
       </SafeSection>
       <ExportPanelContainer {...exportPanel} />
     </>

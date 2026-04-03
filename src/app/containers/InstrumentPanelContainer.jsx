@@ -6,8 +6,7 @@ import InstrumentControls from "@/components/UI/controls/InstrumentControls";
 
 export default function InstrumentPanelContainer({
   state,
-  preset,
-  handlers,
+  controlModel,
   reset,
 }) {
   return (
@@ -18,28 +17,7 @@ export default function InstrumentPanelContainer({
         reset.resetInstrumentFactory(state.system.divisions);
       }}
     >
-      <InstrumentControls
-        strings={state.strings}
-        setStrings={handlers.setStrings}
-        frets={state.frets}
-        setFrets={handlers.setFretsPref}
-        systems={state.tunings}
-        setSystemId={handlers.setSystemId}
-        sysNames={state.sysNames}
-        tuning={state.tuning}
-        setTuning={handlers.setTuning}
-        handleStringsChange={handlers.handleStringsChange}
-        presetNames={preset.mergedPresetNames}
-        customPresetNames={preset.customPresetNames}
-        presetMetaMap={preset.mergedPresetMetaMap}
-        selectedPreset={preset.selectedPreset}
-        setSelectedPreset={preset.setPreset}
-        handleSaveDefault={handlers.handleSaveDefault}
-        handleResetFactoryDefault={reset.resetInstrumentFactory}
-        systemId={state.systemId}
-        onCreateCustomPack={handlers.openCreate}
-        onEditCustomPack={handlers.openEditSelected}
-      />
+      <InstrumentControls {...controlModel} />
     </ErrorBoundary>
   );
 }

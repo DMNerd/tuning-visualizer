@@ -6,7 +6,7 @@ import MetronomeControls from "@/components/UI/controls/MetronomeControls";
 
 export default function PracticePanelContainer({
   metronome,
-  controls,
+  controlModel,
   reset,
 }) {
   return (
@@ -20,29 +20,7 @@ export default function PracticePanelContainer({
       ]}
       onReset={reset.resetPracticeCounters}
     >
-      <MetronomeControls
-        isPlaying={metronome.isPlaying}
-        bpm={metronome.bpm}
-        setBpm={controls.setBpm}
-        timeSig={metronome.timeSig}
-        setTimeSig={controls.setTimeSig}
-        subdivision={metronome.subdivision}
-        setSubdivision={controls.setSubdivision}
-        countInEnabled={metronome.countInEnabled}
-        setCountInEnabled={controls.setCountInEnabled}
-        autoAdvanceEnabled={metronome.autoAdvanceEnabled}
-        setAutoAdvanceEnabled={controls.setAutoAdvanceEnabled}
-        barsPerScale={metronome.safeBarsPerScale}
-        setBarsPerScale={controls.setBarsPerScale}
-        announceCountInBeforeChange={metronome.announceCountInBeforeChange}
-        setAnnounceCountInBeforeChange={controls.setAnnounceCountInBeforeChange}
-        barsRemaining={metronome.barsRemaining}
-        toggleMetronome={controls.toggleMetronome}
-        bpmUp={controls.bpmUp}
-        bpmDown={controls.bpmDown}
-        tapTempo={controls.tapTempo}
-        randomizeScaleNow={controls.randomizeScaleNow}
-      />
+      <MetronomeControls {...controlModel} />
     </ErrorBoundary>
   );
 }

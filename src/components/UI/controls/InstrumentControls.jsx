@@ -130,27 +130,26 @@ function NumberField({ id, label, value, min, max, onSubmit }) {
   );
 }
 
-function InstrumentControls({
-  strings,
-  frets,
-  setFrets,
-  systems,
-  systemId,
-  setSystemId,
-  sysNames,
-  tuning,
-  setTuning,
-  handleStringsChange,
-  presetNames,
-  customPresetNames,
-  presetMetaMap,
-  selectedPreset,
-  setSelectedPreset,
-  handleSaveDefault,
-  handleResetFactoryDefault,
-  onCreateCustomPack,
-  onEditCustomPack,
-}) {
+function InstrumentControls({ state, actions, meta }) {
+  const { strings, frets, tuning, systemId, selectedPreset } = state;
+  const {
+    setFrets,
+    setSystemId,
+    setTuning,
+    handleStringsChange,
+    setSelectedPreset,
+    handleSaveDefault,
+    handleResetFactoryDefault,
+    onCreateCustomPack,
+    onEditCustomPack,
+  } = actions;
+  const {
+    systems,
+    sysNames,
+    presetNames,
+    customPresetNames,
+    presetMetaMap,
+  } = meta;
   const onSaveDefault = () =>
     withToastPromise(
       () => handleSaveDefault?.(),
@@ -299,25 +298,9 @@ function InstrumentControls({
 
 function pick(p) {
   return {
-    strings: p.strings,
-    frets: p.frets,
-    setFrets: p.setFrets,
-    systems: p.systems,
-    setSystemId: p.setSystemId,
-    sysNames: p.sysNames,
-    tuning: p.tuning,
-    setTuning: p.setTuning,
-    presetNames: p.presetNames,
-    customPresetNames: p.customPresetNames,
-    presetMetaMap: p.presetMetaMap,
-    selectedPreset: p.selectedPreset,
-    setSelectedPreset: p.setSelectedPreset,
-    handleStringsChange: p.handleStringsChange,
-    handleSaveDefault: p.handleSaveDefault,
-    handleResetFactoryDefault: p.handleResetFactoryDefault,
-    systemId: p.systemId,
-    onCreateCustomPack: p.onCreateCustomPack,
-    onEditCustomPack: p.onEditCustomPack,
+    state: p.state,
+    actions: p.actions,
+    meta: p.meta,
   };
 }
 

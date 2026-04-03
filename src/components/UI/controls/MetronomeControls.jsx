@@ -5,29 +5,41 @@ import { memoWithPick } from "@/utils/memo";
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
-function MetronomeControls({
-  isPlaying,
-  bpm,
-  setBpm,
-  timeSig,
-  setTimeSig,
-  subdivision,
-  setSubdivision,
-  countInEnabled,
-  setCountInEnabled,
-  autoAdvanceEnabled,
-  setAutoAdvanceEnabled,
-  barsPerScale,
-  setBarsPerScale,
-  announceCountInBeforeChange,
-  setAnnounceCountInBeforeChange,
-  barsRemaining,
-  toggleMetronome,
-  bpmUp,
-  bpmDown,
-  tapTempo,
-  randomizeScaleNow,
-}) {
+function MetronomeControls({ state, actions, meta }) {
+  const {
+    isPlaying,
+    bpm,
+    timeSig,
+    subdivision,
+    countInEnabled,
+    autoAdvanceEnabled,
+    barsPerScale,
+    announceCountInBeforeChange,
+    barsRemaining,
+  } = state;
+
+  const {
+    setBpm,
+    setTimeSig,
+    setSubdivision,
+    setCountInEnabled,
+    setAutoAdvanceEnabled,
+    setBarsPerScale,
+    setAnnounceCountInBeforeChange,
+    toggleMetronome,
+    bpmUp,
+    bpmDown,
+    tapTempo,
+    randomizeScaleNow,
+  } = actions;
+
+  const timeSignatures = meta?.timeSignatures ?? TIME_SIGNATURES;
+  const subdivisions = meta?.subdivisions ?? SUBDIVISIONS;
+  const bpmMin = meta?.bpmMin ?? 20;
+  const bpmMax = meta?.bpmMax ?? 300;
+  const barsPerScaleMin = meta?.barsPerScaleMin ?? 1;
+  const barsPerScaleMax = meta?.barsPerScaleMax ?? 64;
+
   return (
     <Section title="Metronome" size="sm">
       <div className={clsx("tv-controls", "tv-controls--metronome")}>
@@ -72,11 +84,11 @@ function MetronomeControls({
               id="metronome-bpm"
               name="metronome-bpm"
               type="number"
-              min={20}
-              max={300}
+              min={bpmMin}
+              max={bpmMax}
               step={1}
               value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value) || 20)}
+              onChange={(e) => setBpm(Number(e.target.value) || bpmMin)}
             />
             <button
               type="button"
@@ -103,7 +115,7 @@ function MetronomeControls({
               value={timeSig}
               onChange={(e) => setTimeSig(e.target.value)}
             >
-              {TIME_SIGNATURES.map((option) => (
+              {timeSignatures.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -121,7 +133,7 @@ function MetronomeControls({
               value={subdivision}
               onChange={(e) => setSubdivision(e.target.value)}
             >
-              {SUBDIVISIONS.map((option) => (
+              {subdivisions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -160,12 +172,14 @@ function MetronomeControls({
             id="metronome-bars-per-scale"
             name="metronome-bars-per-scale"
             type="number"
-            min={1}
-            max={64}
+            min={barsPerScaleMin}
+            max={barsPerScaleMax}
             step={1}
             value={barsPerScale}
             onChange={(e) =>
-              setBarsPerScale(Math.max(1, Number(e.target.value) || 1))
+              setBarsPerScale(
+                Math.max(barsPerScaleMin, Number(e.target.value) || barsPerScaleMin),
+              )
             }
             disabled={!autoAdvanceEnabled}
           />
@@ -195,27 +209,9 @@ function MetronomeControls({
 
 function pick(p) {
   return {
-    isPlaying: p.isPlaying,
-    bpm: p.bpm,
-    timeSig: p.timeSig,
-    subdivision: p.subdivision,
-    countInEnabled: p.countInEnabled,
-    autoAdvanceEnabled: p.autoAdvanceEnabled,
-    barsPerScale: p.barsPerScale,
-    announceCountInBeforeChange: p.announceCountInBeforeChange,
-    barsRemaining: p.barsRemaining,
-    setBpm: p.setBpm,
-    setTimeSig: p.setTimeSig,
-    setSubdivision: p.setSubdivision,
-    setCountInEnabled: p.setCountInEnabled,
-    setAutoAdvanceEnabled: p.setAutoAdvanceEnabled,
-    setBarsPerScale: p.setBarsPerScale,
-    setAnnounceCountInBeforeChange: p.setAnnounceCountInBeforeChange,
-    toggleMetronome: p.toggleMetronome,
-    bpmUp: p.bpmUp,
-    bpmDown: p.bpmDown,
-    tapTempo: p.tapTempo,
-    randomizeScaleNow: p.randomizeScaleNow,
+    state: p.state,
+    actions: p.actions,
+    meta: p.meta,
   };
 }
 

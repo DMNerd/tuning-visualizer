@@ -42,27 +42,30 @@ function DegreeLegend({ k = 7 }) {
   );
 }
 
-function DisplayControls({
-  show,
-  setShow,
-  showOpen,
-  setShowOpen,
-  showFretNums,
-  setShowFretNums,
-  dotSize,
-  setDotSize,
-  openOnlyInScale,
-  setOpenOnlyInScale,
-  accidental,
-  setAccidental,
-  microLabelStyle,
-  setMicroLabelStyle,
-  colorByDegree,
-  setColorByDegree,
-  lefty,
-  setLefty,
-  degreeCount = 7,
-}) {
+function DisplayControls({ state, actions, meta }) {
+  const {
+    show,
+    showOpen,
+    showFretNums,
+    dotSize,
+    openOnlyInScale,
+    accidental,
+    microLabelStyle,
+    colorByDegree,
+    lefty,
+  } = state;
+  const {
+    setShow,
+    setShowOpen,
+    setShowFretNums,
+    setDotSize,
+    setOpenOnlyInScale,
+    setAccidental,
+    setMicroLabelStyle,
+    setColorByDegree,
+    setLefty,
+  } = actions;
+  const degreeCount = meta?.degreeCount ?? 7;
   return (
     <Section title="Display">
       <div className={clsx("tv-controls", "tv-controls--display")}>
@@ -256,16 +259,9 @@ function DisplayControls({
 
 function pick(p) {
   return {
-    show: p.show,
-    showOpen: p.showOpen,
-    showFretNums: p.showFretNums,
-    dotSize: p.dotSize,
-    openOnlyInScale: p.openOnlyInScale,
-    accidental: p.accidental,
-    microLabelStyle: p.microLabelStyle,
-    colorByDegree: p.colorByDegree,
-    lefty: p.lefty,
-    degreeCount: p.degreeCount,
+    state: p.state,
+    actions: p.actions,
+    meta: p.meta,
   };
 }
 
