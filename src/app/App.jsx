@@ -252,7 +252,7 @@ export default function App() {
     setShowChord: chord.setShowChord,
     setHideNonChord: chord.setHideNonChord,
     onShowCheatsheet: showCheatsheet,
-    onRandomizeScale: practiceActions.randomizeScaleNow,
+    onRandomizeScale: practiceActions.randomizeScaleFromHotkey,
     onCreateCustomPack: openCreate,
     practiceActions,
     strings,

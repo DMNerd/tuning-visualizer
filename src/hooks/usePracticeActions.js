@@ -9,7 +9,8 @@ export function usePracticeActions({
   startMetronome,
   stopMetronome,
   setBpm,
-  randomizeScale,
+  randomizeNow,
+  randomizeFromHotkey,
 }) {
   const tapTempoTimesRef = useRef([]);
 
@@ -45,8 +46,12 @@ export function usePracticeActions({
   }, [setBpm]);
 
   const randomizeScaleNow = useCallback(() => {
-    randomizeScale?.();
-  }, [randomizeScale]);
+    randomizeNow?.();
+  }, [randomizeNow]);
+
+  const randomizeScaleFromHotkey = useCallback(() => {
+    randomizeFromHotkey?.();
+  }, [randomizeFromHotkey]);
 
   const resetTapTempo = useCallback(() => {
     tapTempoTimesRef.current = [];
@@ -59,6 +64,7 @@ export function usePracticeActions({
       bpmDown,
       tapTempo,
       randomizeScaleNow,
+      randomizeScaleFromHotkey,
       resetTapTempo,
     }),
     [
@@ -67,6 +73,7 @@ export function usePracticeActions({
       bpmDown,
       tapTempo,
       randomizeScaleNow,
+      randomizeScaleFromHotkey,
       resetTapTempo,
     ],
   );

@@ -13,7 +13,7 @@ export default function usePracticePanelState({
   const [randomizeMode, setRandomizeMode] = React.useState(
     RANDOMIZE_MODES.Both,
   );
-  const { randomize: randomizeScaleNow } = useRandomScale({
+  const { randomizeNow, randomizeFromHotkey } = useRandomScale({
     ...randomizeConfig,
     mode: randomizeMode,
     throttleMs: 150,
@@ -33,12 +33,6 @@ export default function usePracticePanelState({
   const safeBarsPerScale = Math.max(1, Number(barsPerScale) || 1);
   const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
   const barsRemainingRef = React.useRef(safeBarsPerScale);
-  const randomizeScaleRef = React.useRef(() => {});
-
-  React.useEffect(() => {
-    randomizeScaleRef.current = randomizeScaleNow;
-  }, [randomizeScaleNow]);
-
   const handleMetronomeBeat = useCallback(
     ({ beat }) => {
       if (beat !== 1 || !autoAdvanceEnabled) return;
@@ -49,7 +43,7 @@ export default function usePracticePanelState({
       }
 
       if (nextBarsRemaining <= 0) {
-        randomizeScaleRef.current?.();
+        randomizeNow?.();
         barsRemainingRef.current = safeBarsPerScale;
         setBarsRemaining(safeBarsPerScale);
         return;
@@ -58,7 +52,12 @@ export default function usePracticePanelState({
       barsRemainingRef.current = nextBarsRemaining;
       setBarsRemaining(nextBarsRemaining);
     },
-    [announceCountInBeforeChange, autoAdvanceEnabled, safeBarsPerScale],
+    [
+      announceCountInBeforeChange,
+      autoAdvanceEnabled,
+      randomizeNow,
+      safeBarsPerScale,
+    ],
   );
 
   React.useEffect(() => {
@@ -78,7 +77,8 @@ export default function usePracticePanelState({
     startMetronome: metronomeEngine.start,
     stopMetronome: metronomeEngine.stop,
     setBpm: metronomeSetters.setBpm,
-    randomizeScale: randomizeScaleNow,
+    randomizeNow,
+    randomizeFromHotkey,
   });
 
   const resetMetronomePrefs = useCallback(() => {
@@ -100,7 +100,8 @@ export default function usePracticePanelState({
     barsRemaining,
     metronomeEngine,
     practiceActions,
-    randomizeScaleNow,
+    randomizeNow,
+    randomizeFromHotkey,
     resetMetronomePrefs,
     resetPracticeCounters,
   };

@@ -176,14 +176,14 @@ export function useHotkeys(options) {
       {
         combo: "r",
         handler: () => {
-          if (typeof practiceActions?.randomizeScaleNow === "function") {
-            practiceActions.randomizeScaleNow();
+          if (typeof practiceActions?.randomizeScaleFromHotkey === "function") {
+            practiceActions.randomizeScaleFromHotkey();
             return;
           }
           onRandomizeScale?.();
         },
         when: () =>
-          typeof practiceActions?.randomizeScaleNow === "function" ||
+          typeof practiceActions?.randomizeScaleFromHotkey === "function" ||
           typeof onRandomizeScale === "function",
       },
       {

@@ -1,12 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useThrottleFn } from "react-use";
+import { useCallback } from "react";
 import { pickRandomScale } from "@/utils/random";
+import { useThrottledTrigger } from "@/hooks/useThrottledTrigger";
 
 export const RANDOMIZE_MODES = {
   Both: "both",
   ScaleOnly: "scale",
   KeyOnly: "key",
 };
+
+export function applyRandomizedScale({ result, mode, setRoot, setScale }) {
+  if (!result) return;
+
+  const { root: nextRoot, scale: nextScale } = result;
+
+  if (mode === RANDOMIZE_MODES.KeyOnly) {
+    setRoot(nextRoot);
+    return;
+  }
+
+  if (mode === RANDOMIZE_MODES.ScaleOnly) {
+    setScale(nextScale);
+    return;
+  }
+
+  setRoot(nextRoot);
+  setScale(nextScale);
+}
 
 export function useRandomScale({
   sysNames,
@@ -16,43 +35,21 @@ export function useRandomScale({
   mode = RANDOMIZE_MODES.Both,
   throttleMs = 150,
 }) {
-  const randomize = useCallback(() => {
+  const randomizeNow = useCallback(() => {
     const result = pickRandomScale({ sysNames, scaleOptions });
-    if (!result) return;
-    const { root: nextRoot, scale: nextScale } = result;
-    if (mode === RANDOMIZE_MODES.KeyOnly) {
-      setRoot(nextRoot);
-      return;
-    }
-    if (mode === RANDOMIZE_MODES.ScaleOnly) {
-      setScale(nextScale);
-      return;
-    }
-    setRoot(nextRoot);
-    setScale(nextScale);
-  }, [sysNames, scaleOptions, setRoot, setScale, mode]);
+    applyRandomizedScale({ result, mode, setRoot, setScale });
+  }, [sysNames, scaleOptions, mode, setRoot, setScale]);
 
-  const randomizeRef = useRef(randomize);
-  useEffect(() => {
-    randomizeRef.current = randomize;
-  }, [randomize]);
-
-  const [hotkeyTick, setHotkeyTick] = useState(-1);
-
-  useThrottleFn(
-    (tick) => {
-      if (tick < 0) return;
-      randomizeRef.current();
-    },
+  const { trigger, runNow } = useThrottledTrigger({
+    callback: randomizeNow,
     throttleMs,
-    [hotkeyTick],
-  );
+  });
 
-  const triggerFromHotkey = useCallback(() => {
-    setHotkeyTick((count) => count + 1);
-  }, []);
+  const randomizeFromHotkey = useCallback(() => {
+    trigger();
+  }, [trigger]);
 
-  return { randomize, triggerFromHotkey };
+  return { randomizeNow, randomizeFromHotkey, runNow };
 }
 
 export default useRandomScale;
