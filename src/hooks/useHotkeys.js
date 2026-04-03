@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useKey } from "react-use";
 import { clamp } from "@/utils/math";
 import {
@@ -10,144 +10,26 @@ import {
   DOT_SIZE_MAX,
   DOT_SIZE_MIN,
 } from "@/lib/config/appDefaults";
+import { isTypingTarget, matchesCombo } from "@/hooks/hotkeyUtils";
 
-const isTypingTarget = (el) => {
-  if (!el) return false;
-  const tag = el.tagName?.toLowerCase();
-  const editable = el.getAttribute?.("contenteditable") === "true";
-  return editable || tag === "input" || tag === "textarea" || tag === "select";
-};
+const createShortcutHandler = (shortcuts) => (event) => {
+  if (isTypingTarget(event.target)) return;
 
-const KEY_CODE_ALIASES = {
-  "/": "slash",
-  "[": "bracketleft",
-  "]": "bracketright",
-  "-": "minus",
-  "=": "equal",
-  ",": "comma",
-  ".": "period",
-};
+  for (const shortcut of shortcuts) {
+    if (!shortcut?.combo || typeof shortcut.handler !== "function") continue;
+    if (typeof shortcut.when === "function" && !shortcut.when()) continue;
 
-const normalizeComboKey = (key) => {
-  if (!key) return "";
-  const lower = key.toLowerCase();
-  if (lower === "space" || lower === "spacebar") return "space";
-  if (lower === "enter" || lower === "return") return "enter";
-  if (lower === "escape" || lower === "esc") return "escape";
-  return lower;
-};
-
-const normalizeEventKey = (key) => {
-  if (!key) return "";
-  const lower = key.toLowerCase();
-  if (lower === " ") return "space";
-  if (lower === "spacebar") return "space";
-  if (lower === "esc") return "escape";
-  return lower;
-};
-
-const matchesModifiers = (expected, event) =>
-  event.altKey === expected.altKey &&
-  event.ctrlKey === expected.ctrlKey &&
-  event.metaKey === expected.metaKey &&
-  event.shiftKey === expected.shiftKey;
-
-const matchesKey = (keyPart, event) => {
-  if (!keyPart) return false;
-  const normalizedPart = normalizeComboKey(keyPart);
-  const eventKey = normalizeEventKey(event.key);
-
-  if (normalizedPart === eventKey) return true;
-  if (normalizedPart.length === 1 && eventKey === normalizedPart) return true;
-  if (normalizedPart === "space" && eventKey === "space") return true;
-  if (normalizedPart === "/" && (eventKey === "/" || eventKey === "?"))
-    return true;
-
-  const code = KEY_CODE_ALIASES[normalizedPart];
-  if (code && event.code?.toLowerCase() === code) {
-    return true;
-  }
-
-  return false;
-};
-
-const parseCombo = (combo) => {
-  if (typeof combo !== "string") return null;
-  const parts = combo
-    .split("+")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  const modifiers = {
-    altKey: false,
-    ctrlKey: false,
-    metaKey: false,
-    shiftKey: false,
-  };
-  let keyPart = "";
-
-  parts.forEach((part) => {
-    const lower = part.toLowerCase();
-    if (lower === "ctrl" || lower === "control" || lower === "cmdorctrl") {
-      modifiers.ctrlKey = true;
-    } else if (lower === "meta" || lower === "cmd" || lower === "command") {
-      modifiers.metaKey = true;
-    } else if (lower === "alt" || lower === "option") {
-      modifiers.altKey = true;
-    } else if (lower === "shift") {
-      modifiers.shiftKey = true;
-    } else {
-      keyPart = part;
-    }
-  });
-
-  if (!keyPart && parts.length) {
-    keyPart = parts[parts.length - 1];
-  }
-
-  return { keyPart, modifiers };
-};
-
-const createKeyPredicate = (keyFilter) => {
-  if (typeof keyFilter === "function") {
-    return (event) => !isTypingTarget(event.target) && keyFilter(event);
-  }
-
-  const combos = Array.isArray(keyFilter) ? keyFilter : [keyFilter];
-  const predicates = combos
-    .map((combo) => {
-      const parsed = parseCombo(combo);
-      if (!parsed) return null;
-      return (event) => {
-        if (isTypingTarget(event.target)) return false;
-        if (!matchesModifiers(parsed.modifiers, event)) return false;
-        return matchesKey(parsed.keyPart, event);
-      };
-    })
-    .filter(Boolean);
-
-  if (!predicates.length) {
-    return () => false;
-  }
-
-  return (event) => predicates.some((predicate) => predicate(event));
-};
-
-const useShortcut = (keyFilter, handler) => {
-  const predicate = useMemo(() => createKeyPredicate(keyFilter), [keyFilter]);
-
-  const runHandler = useCallback(
-    (event) => {
-      if (typeof handler !== "function") return;
+    const combos = Array.isArray(shortcut.combo) ? shortcut.combo : [shortcut.combo];
+    if (combos.some((combo) => matchesCombo(combo, event))) {
       event.preventDefault();
-      handler(event);
-    },
-    [handler],
-  );
-
-  useKey(predicate, runHandler, undefined, [predicate, runHandler]);
+      shortcut.handler(event);
+      return;
+    }
+  }
 };
 
 export function useHotkeys(options) {
+
   const {
     toggleFs,
     setDisplayPrefs,
@@ -169,124 +51,181 @@ export function useHotkeys(options) {
     practiceActions,
   } = options;
 
-  const labelValues = options.labelValues || options.LABEL_VALUES || [];
-
-  // Cheatsheet
-  useShortcut(["shift+/", "ctrl+/", "F1"], () => {
-    if (typeof onShowCheatsheet === "function") onShowCheatsheet();
-  });
-
-  // TunningIO
-  useShortcut(["ctrl+n", "meta+n"], () => {
-    if (typeof onCreateCustomPack === "function") {
-      onCreateCustomPack();
-    }
-  });
-
-  // Fullscreen
-  useShortcut("f", () => {
-    if (typeof toggleFs === "function") toggleFs();
-  });
-
-  // Labels cycle
-  useShortcut("l", () => {
-    if (!setDisplayPrefs) return;
-    setDisplayPrefs((d) => {
-      if (!labelValues.length) return;
-      const ix = labelValues.findIndex((v) => v === d.show);
-      d.show = labelValues[(ix + 1) % labelValues.length];
-    });
-  });
-
-  // Toggles
-  useShortcut("o", () =>
-    setDisplayPrefs?.((d) => {
-      d.showOpen = !d.showOpen;
-    }),
-  );
-  useShortcut("n", () =>
-    setDisplayPrefs?.((d) => {
-      d.showFretNums = !d.showFretNums;
-    }),
-  );
-  useShortcut("d", () =>
-    setDisplayPrefs?.((d) => {
-      d.colorByDegree = !d.colorByDegree;
-    }),
-  );
-  useShortcut("a", () =>
-    setDisplayPrefs?.((d) => {
-      d.accidental = d.accidental === "sharp" ? "flat" : "sharp";
-    }),
-  );
-  useShortcut("g", () =>
-    setDisplayPrefs?.((d) => {
-      d.lefty = !d.lefty;
-    }),
+  const labelValues = useMemo(
+    () => options.labelValues || options.LABEL_VALUES || [],
+    [options.labelValues, options.LABEL_VALUES],
   );
 
-  // Chord overlay
-  useShortcut("c", () => setShowChord?.());
-  useShortcut("h", () => setHideNonChord?.());
+  const SHORTCUTS = useMemo(() => {
+    const display = [
+      {
+        combo: ["shift+/", "ctrl+/", "F1"],
+        handler: () => onShowCheatsheet?.(),
+        when: () => typeof onShowCheatsheet === "function",
+      },
+      {
+        combo: "f",
+        handler: () => toggleFs?.(),
+        when: () => typeof toggleFs === "function",
+      },
+      {
+        combo: "l",
+        handler: () => {
+          setDisplayPrefs?.((d) => {
+            if (!labelValues.length) return;
+            const ix = labelValues.findIndex((v) => v === d.show);
+            d.show = labelValues[(ix + 1) % labelValues.length];
+          });
+        },
+        when: () => typeof setDisplayPrefs === "function",
+      },
+      {
+        combo: "o",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.showOpen = !d.showOpen;
+          }),
+      },
+      {
+        combo: "n",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.showFretNums = !d.showFretNums;
+          }),
+      },
+      {
+        combo: "d",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.colorByDegree = !d.colorByDegree;
+          }),
+      },
+      {
+        combo: "a",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.accidental = d.accidental === "sharp" ? "flat" : "sharp";
+          }),
+      },
+      {
+        combo: "g",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.lefty = !d.lefty;
+          }),
+      },
+      {
+        combo: ",",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) - 1, minDot, maxDot);
+          }),
+      },
+      {
+        combo: ".",
+        handler: () =>
+          setDisplayPrefs?.((d) => {
+            d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) + 1, minDot, maxDot);
+          }),
+      },
+    ];
 
-  // Strings +/-
-  useShortcut("[", () =>
-    handleStringsChange?.(clamp((strings ?? 0) - 1, minStrings, maxStrings)),
-  );
-  useShortcut("]", () =>
-    handleStringsChange?.(clamp((strings ?? 0) + 1, minStrings, maxStrings)),
-  );
+    const instrument = [
+      {
+        combo: "c",
+        handler: () => setShowChord?.(),
+      },
+      {
+        combo: "h",
+        handler: () => setHideNonChord?.(),
+      },
+      {
+        combo: "[",
+        handler: () =>
+          handleStringsChange?.(clamp((strings ?? 0) - 1, minStrings, maxStrings)),
+      },
+      {
+        combo: "]",
+        handler: () =>
+          handleStringsChange?.(clamp((strings ?? 0) + 1, minStrings, maxStrings)),
+      },
+      {
+        combo: "-",
+        handler: () => setFrets?.(clamp((frets ?? 0) - 1, minFrets, maxFrets)),
+      },
+      {
+        combo: "=",
+        handler: () => setFrets?.(clamp((frets ?? 0) + 1, minFrets, maxFrets)),
+      },
+    ];
 
-  // Frets +/-
-  useShortcut("-", () =>
-    setFrets?.(clamp((frets ?? 0) - 1, minFrets, maxFrets)),
-  );
-  useShortcut("=", () =>
-    setFrets?.(clamp((frets ?? 0) + 1, minFrets, maxFrets)),
-  );
+    const practice = [
+      {
+        combo: "r",
+        handler: () => {
+          if (typeof practiceActions?.randomizeScaleNow === "function") {
+            practiceActions.randomizeScaleNow();
+            return;
+          }
+          onRandomizeScale?.();
+        },
+        when: () =>
+          typeof practiceActions?.randomizeScaleNow === "function" ||
+          typeof onRandomizeScale === "function",
+      },
+      {
+        combo: ["m", "space"],
+        handler: () => practiceActions?.toggleMetronome?.(),
+        when: () => typeof practiceActions?.toggleMetronome === "function",
+      },
+      {
+        combo: ["alt+[", "arrowdown"],
+        handler: () => practiceActions?.bpmDown?.(),
+        when: () => typeof practiceActions?.bpmDown === "function",
+      },
+      {
+        combo: ["alt+]", "arrowup"],
+        handler: () => practiceActions?.bpmUp?.(),
+        when: () => typeof practiceActions?.bpmUp === "function",
+      },
+      {
+        combo: ["t", "enter"],
+        handler: () => practiceActions?.tapTempo?.(),
+        when: () => typeof practiceActions?.tapTempo === "function",
+      },
+    ];
 
-  // Dot size +/-
-  useShortcut(",", () =>
-    setDisplayPrefs?.((d) => {
-      d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) - 1, minDot, maxDot);
-    }),
-  );
-  useShortcut(".", () =>
-    setDisplayPrefs?.((d) => {
-      d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) + 1, minDot, maxDot);
-    }),
-  );
+    const tuningPacks = [
+      {
+        combo: ["ctrl+n", "meta+n"],
+        handler: () => onCreateCustomPack?.(),
+        when: () => typeof onCreateCustomPack === "function",
+      },
+    ];
 
-  // Randomize scale
-  useShortcut("r", () => {
-    if (typeof practiceActions?.randomizeScaleNow === "function") {
-      practiceActions.randomizeScaleNow();
-      return;
-    }
-    if (typeof onRandomizeScale === "function") {
-      onRandomizeScale();
-    }
-  });
+    return [...display, ...instrument, ...practice, ...tuningPacks];
+  }, [
+    frets,
+    handleStringsChange,
+    labelValues,
+    maxDot,
+    maxFrets,
+    maxStrings,
+    minDot,
+    minFrets,
+    minStrings,
+    onCreateCustomPack,
+    onRandomizeScale,
+    onShowCheatsheet,
+    practiceActions,
+    setDisplayPrefs,
+    setFrets,
+    setHideNonChord,
+    setShowChord,
+    strings,
+    toggleFs,
+  ]);
 
-  // Metronome
-  useShortcut("m", () => {
-    if (typeof practiceActions?.toggleMetronome === "function") {
-      practiceActions.toggleMetronome();
-    }
-  });
-  useShortcut("alt+[", () => {
-    if (typeof practiceActions?.bpmDown === "function") {
-      practiceActions.bpmDown();
-    }
-  });
-  useShortcut("alt+]", () => {
-    if (typeof practiceActions?.bpmUp === "function") {
-      practiceActions.bpmUp();
-    }
-  });
-  useShortcut("t", () => {
-    if (typeof practiceActions?.tapTempo === "function") {
-      practiceActions.tapTempo();
-    }
-  });
+  const onKey = useMemo(() => createShortcutHandler(SHORTCUTS), [SHORTCUTS]);
+  useKey(true, onKey, undefined, [onKey]);
 }
