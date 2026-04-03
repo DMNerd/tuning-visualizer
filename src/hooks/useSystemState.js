@@ -7,6 +7,7 @@ export function useSystemState({
   defaultSystemId,
   defaultRoot,
   accidental,
+  noteNaming,
 }) {
   const { systemId, setSystemId, root, setRoot, ensureValidRoot } =
     useSystemPrefs({
@@ -20,6 +21,7 @@ export function useSystemState({
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
     accidental,
+    noteNaming,
   );
 
   useEffect(() => {

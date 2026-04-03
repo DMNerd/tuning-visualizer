@@ -118,6 +118,7 @@ export function useAppOrchestration({
   useAccidentalRespell({
     system: theorySystem.system,
     accidental: displayPrefs.accidental,
+    noteNaming: displayPrefs.noteNaming,
     setRoot: theorySystem.setRoot,
     setTuning: instrumentActions.setTuning,
     setChordRoot: theoryChord.setChordRoot,

@@ -14,6 +14,7 @@ export function useDisplayState(defaults) {
       "showFretNums",
       "dotSize",
       "accidental",
+      "noteNaming",
       "microLabelStyle",
       "openOnlyInScale",
       "colorByDegree",

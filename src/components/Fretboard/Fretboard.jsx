@@ -34,6 +34,7 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx,
     intervals,
     accidental,
+    noteNaming,
     microLabelStyle,
     show,
     showOpen,
@@ -86,7 +87,7 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental);
+  const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental, noteNaming);
   const pcForName = pcFromName;
   const notePlacementMode =
     boardMeta?.notePlacement === "onFret" ? "onFret" : "between";
@@ -487,6 +488,7 @@ function pickRenderProps(p) {
     frets: p.frets,
     rootIx: p.rootIx,
     accidental: p.accidental,
+    noteNaming: p.noteNaming,
     microLabelStyle: p.microLabelStyle,
     show: p.show,
     showOpen: p.showOpen,

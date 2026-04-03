@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { buildNoteAliases, renderNoteName } from "@/lib/theory/noteNaming";
 
 /**
  * Maps between note-name spellings and pitch classes for a given tuning system.
@@ -6,12 +7,16 @@ import { useMemo, useCallback } from "react";
  *  - pcForName(name) → number
  *  - nameForPc(pc) → string (using current accidental preference)
  */
-export function usePitchMapping(system, accidental) {
+export function usePitchMapping(system, accidental, noteNaming = "english") {
   const nameToPc = useMemo(() => {
     const map = new Map();
     for (let pc = 0; pc < system.divisions; pc++) {
-      map.set(system.nameForPc(pc, "sharp"), pc);
-      map.set(system.nameForPc(pc, "flat"), pc);
+      for (const acc of ["sharp", "flat"]) {
+        const canonical = system.nameForPc(pc, acc);
+        for (const alias of buildNoteAliases(canonical)) {
+          map.set(alias, pc);
+        }
+      }
     }
     return map;
   }, [system]);
@@ -25,8 +30,8 @@ export function usePitchMapping(system, accidental) {
   );
 
   const nameForPc = useCallback(
-    (pc) => system.nameForPc(pc, accidental),
-    [system, accidental],
+    (pc) => renderNoteName(system.nameForPc(pc, accidental), noteNaming),
+    [system, accidental, noteNaming],
   );
 
   return useMemo(() => ({ pcForName, nameForPc }), [pcForName, nameForPc]);

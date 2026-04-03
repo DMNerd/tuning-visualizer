@@ -4,6 +4,7 @@ import { useSystemNoteNames } from "./useSystemNoteNames";
 export function useAccidentalRespell({
   system,
   accidental,
+  noteNaming,
   setRoot,
   setTuning,
   setChordRoot,
@@ -11,6 +12,7 @@ export function useAccidentalRespell({
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
     accidental,
+    noteNaming,
   );
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export function useAccidentalRespell({
     });
   }, [
     accidental,
+    noteNaming,
     pcFromName,
     nameForPc,
     sysNames,

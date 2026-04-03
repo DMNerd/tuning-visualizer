@@ -50,6 +50,7 @@ function DisplayControls({ state, actions, meta }) {
     dotSize,
     openOnlyInScale,
     accidental,
+    noteNaming,
     microLabelStyle,
     colorByDegree,
     lefty,
@@ -61,6 +62,7 @@ function DisplayControls({ state, actions, meta }) {
     setDotSize,
     setOpenOnlyInScale,
     setAccidental,
+    setNoteNaming,
     setMicroLabelStyle,
     setColorByDegree,
     setLefty,
@@ -100,6 +102,20 @@ function DisplayControls({ state, actions, meta }) {
                 Flats (C, Db, D…)
               </label>
             </div>
+          </div>
+
+
+          <div className="tv-field">
+            <span className="tv-field__label">Note naming</span>
+            <select
+              id="noteNaming"
+              name="noteNaming"
+              value={noteNaming}
+              onChange={(e) => setNoteNaming(e.target.value)}
+            >
+              <option value="english">International (B)</option>
+              <option value="german">German/Czech (H/B)</option>
+            </select>
           </div>
 
           <div className="tv-field">
@@ -268,6 +284,7 @@ function pickDisplayMemoProps(p) {
     dotSize: s.dotSize,
     openOnlyInScale: s.openOnlyInScale,
     accidental: s.accidental,
+    noteNaming: s.noteNaming,
     microLabelStyle: s.microLabelStyle,
     colorByDegree: s.colorByDegree,
     lefty: s.lefty,
@@ -278,6 +295,7 @@ function pickDisplayMemoProps(p) {
     setDotSize: a.setDotSize,
     setOpenOnlyInScale: a.setOpenOnlyInScale,
     setAccidental: a.setAccidental,
+    setNoteNaming: a.setNoteNaming,
     setMicroLabelStyle: a.setMicroLabelStyle,
     setColorByDegree: a.setColorByDegree,
     setLefty: a.setLefty,

@@ -9,6 +9,7 @@ export function useTheoryDomain({
   defaultSystemId,
   defaultRoot,
   accidental,
+  noteNaming,
   allScales,
   defaultScale,
 }) {
@@ -27,6 +28,7 @@ export function useTheoryDomain({
     defaultSystemId,
     defaultRoot,
     accidental,
+    noteNaming,
   });
 
   const chord = useChordLogic(system, pcFromName);

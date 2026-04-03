@@ -71,6 +71,7 @@ export default function App() {
     defaultSystemId: SYSTEM_DEFAULT,
     defaultRoot: ROOT_DEFAULT,
     accidental: displayPrefs.accidental,
+    noteNaming: displayPrefs.noteNaming,
     allScales: ALL_SCALES,
     defaultScale: SCALE_DEFAULT,
   });
@@ -186,6 +187,7 @@ export default function App() {
             rootIx={theoryDomain.system.rootIx}
             intervals={theoryDomain.scale.intervals}
             accidental={accidental}
+            noteNaming={displayPrefs.noteNaming}
             microLabelStyle={microLabelStyle}
             show={show}
             showOpen={showOpen}

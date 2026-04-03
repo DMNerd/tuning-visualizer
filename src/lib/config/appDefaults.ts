@@ -50,6 +50,7 @@ export const DISPLAY_DEFAULTS = {
   openOnlyInScale: false,
   colorByDegree: false,
   accidental: "sharp" as "sharp" | "flat",
+  noteNaming: "english" as "english" | "german",
   microLabelStyle: "letters" as "letters" | "unicode" | "none",
 };
 
