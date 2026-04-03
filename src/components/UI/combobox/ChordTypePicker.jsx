@@ -77,10 +77,8 @@ export default function ChordTypePicker({
       getFilterTerms={(opt) => [opt.label, opt.type]}
       renderList={({
         options,
-        activeIndex,
-        getOptionProps,
-        commitSelection,
         listProps,
+        renderOptionItem,
       }) => {
         const available = new Set(options.map((opt) => opt.type));
         let cursor = -1;
@@ -107,30 +105,16 @@ export default function ChordTypePicker({
                     </li>
                     {sectionOptions.map((option) => {
                       cursor += 1;
-                      const optionProps = getOptionProps(cursor, {
-                        option,
-                        onSelect: () => commitSelection(option),
-                      });
-                      return (
-                        <li
-                          key={option.type}
-                          {...optionProps}
-                          aria-selected={option.type === selectedType}
-                          className={clsx(
-                            "tv-combobox__option",
-                            "tv-chord-type-picker__option",
-                            {
-                              "is-active": cursor === activeIndex,
-                              "is-selected": option.type === selectedType,
-                              "is-microtonal": option.isMicrotonal,
-                            },
-                          )}
-                        >
+                      return renderOptionItem(option, cursor, {
+                        className: clsx("tv-chord-type-picker__option", {
+                          "is-microtonal": option.isMicrotonal,
+                        }),
+                        content: (
                           <span className="tv-combobox__option-title">
                             {option.label}
                           </span>
-                        </li>
-                      );
+                        ),
+                      });
                     })}
                   </Fragment>
                 );

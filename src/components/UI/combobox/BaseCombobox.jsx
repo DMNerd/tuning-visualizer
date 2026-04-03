@@ -139,6 +139,54 @@ export default function BaseCombobox({
   const activeOptionId =
     isOpen && activeIndex >= 0 ? getOptionId(activeIndex) : undefined;
 
+  const renderOptionItem = useCallback(
+    (option, index, config = {}) => {
+      const optionKey = getOptionKey(option);
+      const isSelected = optionKey === selectedKey;
+      const isActive = index === activeIndex;
+      const optionProps = getOptionProps(index, {
+        option,
+        onSelect: () => commitSelection(option),
+        ...config.optionProps,
+      });
+
+      return (
+        <li
+          key={config.key ?? optionKey}
+          aria-selected={isSelected}
+          {...optionProps}
+          className={clsx(
+            "tv-combobox__option",
+            optionProps.className,
+            config.className,
+            {
+              "is-active": isActive,
+              "is-selected": isSelected,
+            },
+          )}
+        >
+          {config.content ??
+            (typeof renderOption === "function"
+              ? renderOption(option, {
+                  isActive,
+                  isSelected,
+                  index,
+                })
+              : getOptionLabel(option))}
+        </li>
+      );
+    },
+    [
+      getOptionKey,
+      selectedKey,
+      activeIndex,
+      getOptionProps,
+      commitSelection,
+      renderOption,
+      getOptionLabel,
+    ],
+  );
+
   return (
     <div
       {...rootProps}
@@ -175,6 +223,7 @@ export default function BaseCombobox({
               normalizedQuery,
               commitSelection,
               closeList,
+              renderOptionItem,
             })
           ) : (
             <ul
@@ -186,35 +235,9 @@ export default function BaseCombobox({
                   No matches.
                 </li>
               ) : (
-                filteredOptions.map((option, index) => {
-                  const optionKey = getOptionKey(option);
-                  const isSelected = optionKey === selectedKey;
-                  const optionProps = getOptionProps(index, {
-                    option,
-                    onSelect: () => commitSelection(option),
-                  });
-                  return (
-                    <li
-                      key={optionKey}
-                      aria-selected={isSelected}
-                      {...optionProps}
-                      className={clsx(
-                        "tv-combobox__option",
-                        optionProps.className,
-                        {
-                          "is-active": index === activeIndex,
-                          "is-selected": isSelected,
-                        },
-                      )}
-                    >
-                      {typeof renderOption === "function"
-                        ? renderOption(option, {
-                            isActive: index === activeIndex,
-                          })
-                        : getOptionLabel(option)}
-                    </li>
-                  );
-                })
+                filteredOptions.map((option, index) =>
+                  renderOptionItem(option, index),
+                )
               )}
             </ul>
           )}

@@ -22,7 +22,7 @@ export default function ScalePicker({
       getOptionLabel={(opt) => opt.label}
       getFilterTerms={(opt) => [opt.label, opt.systemId]}
       renderOption={(opt) => (
-        <li className={clsx("tv-combobox__option", "tv-scale-picker__option")}>
+        <>
           <span className="tv-scale-picker__option-label">{opt.label}</span>
           {opt.systemId ? (
             <span className="tv-scale-picker__option-meta">
@@ -31,14 +31,12 @@ export default function ScalePicker({
               </span>
             </span>
           ) : null}
-        </li>
+        </>
       )}
       renderList={({
         options,
-        activeIndex,
-        getOptionProps,
         listProps,
-        commitSelection,
+        renderOptionItem,
       }) => (
         <div className="tv-scale-picker__popover">
           <ul
@@ -55,42 +53,12 @@ export default function ScalePicker({
                 No matching scales
               </li>
             ) : (
-              options.map((option, index) => {
-                const optionProps = getOptionProps(index, {
-                  option,
-                  onSelect: () => commitSelection(option),
-                });
-                const { className: optClass, ...rest } = optionProps;
-                const isActive = index === activeIndex;
-                const isSelected = option.label === scale;
-                return (
-                  <li
-                    key={`${option.systemId}-${option.label}`}
-                    aria-selected={isSelected}
-                    {...rest}
-                    className={clsx(
-                      "tv-combobox__option",
-                      "tv-scale-picker__option",
-                      optClass,
-                      {
-                        "is-active": isActive,
-                        "is-selected": isSelected,
-                      },
-                    )}
-                  >
-                    <span className="tv-scale-picker__option-label">
-                      {option.label}
-                    </span>
-                    {option.systemId ? (
-                      <span className="tv-scale-picker__option-meta">
-                        <span className="tv-combobox__badge tv-combobox__badge--accent">
-                          {option.systemId}
-                        </span>
-                      </span>
-                    ) : null}
-                  </li>
-                );
-              })
+              options.map((option, index) =>
+                renderOptionItem(option, index, {
+                  className: "tv-scale-picker__option",
+                  key: `${option.systemId}-${option.label}`,
+                }),
+              )
             )}
           </ul>
         </div>
