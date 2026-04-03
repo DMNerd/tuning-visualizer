@@ -1,38 +1,23 @@
 import { useMemo, useCallback } from "react";
-import {
-  useDebounce,
-  useLocalStorage,
-  useEffectOnce,
-  useUpdateEffect,
-} from "react-use";
+import { useDebounce, useEffectOnce, useUpdateEffect } from "react-use";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { clamp } from "@/utils/math";
+import { useValidatedStorage } from "@/hooks/useValidatedStorage";
 
-const makeNumberStorageOptions = ({ min, max, fallback }) => {
-  const coerce = (value) => {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return clamp(value, min, max);
-    }
-    if (typeof value === "string") {
-      const parsed = Number(value);
-      if (Number.isFinite(parsed)) {
-        return clamp(parsed, min, max);
-      }
-    }
-    return fallback;
-  };
+const clampMaybeNumber = (value, min, max, fallback) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return clamp(value, min, max);
+  }
 
-  return {
-    serializer: (value) => JSON.stringify(coerce(value)),
-    deserializer: (value) => {
-      try {
-        return coerce(JSON.parse(value));
-      } catch {
-        return fallback;
-      }
-    },
-  };
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return clamp(parsed, min, max);
+    }
+  }
+
+  return fallback;
 };
 
 export function useInstrumentPrefs({
@@ -47,37 +32,27 @@ export function useInstrumentPrefs({
   FRETS_MAX,
   STR_FACTORY,
 }) {
-  const stringStorageOptions = useMemo(
-    () =>
-      makeNumberStorageOptions({
-        min: STR_MIN,
-        max: STR_MAX,
-        fallback: STR_FACTORY,
-      }),
+  const coerceStrings = useCallback(
+    (value) => clampMaybeNumber(value, STR_MIN, STR_MAX, STR_FACTORY),
     [STR_MIN, STR_MAX, STR_FACTORY],
   );
 
-  const fretsStorageOptions = useMemo(
-    () =>
-      makeNumberStorageOptions({
-        min: FRETS_MIN,
-        max: FRETS_MAX,
-        fallback: undefined,
-      }),
+  const coerceSavedFrets = useCallback(
+    (value) => clampMaybeNumber(value, FRETS_MIN, FRETS_MAX, undefined),
     [FRETS_MIN, FRETS_MAX],
   );
 
-  const [strings, setStrings] = useLocalStorage(
-    STORAGE_KEYS.STRINGS,
-    STR_FACTORY,
-    stringStorageOptions,
-  );
+  const [strings, setStrings] = useValidatedStorage({
+    key: STORAGE_KEYS.STRINGS,
+    defaultValue: STR_FACTORY,
+    coerce: coerceStrings,
+  });
 
-  const [savedFrets, setSavedFrets, removeSavedFrets] = useLocalStorage(
-    STORAGE_KEYS.FRETS,
-    undefined,
-    fretsStorageOptions,
-  );
+  const [savedFrets, setSavedFrets, removeSavedFrets] = useValidatedStorage({
+    key: STORAGE_KEYS.FRETS,
+    defaultValue: undefined,
+    coerce: coerceSavedFrets,
+  });
 
   useEffectOnce(() => {
     if (typeof savedFrets === "number" && !fretsTouched) {
