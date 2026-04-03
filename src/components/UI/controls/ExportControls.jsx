@@ -1,9 +1,15 @@
 import { useRef, useMemo } from "react";
 import clsx from "clsx";
+import { toast } from "react-hot-toast";
 import Section from "@/components/UI/Section";
 import { withToastPromise } from "@/utils/toast";
 import { memoWithKeys } from "@/utils/memo";
 import { PNG_EXPORT_SCALE, EXPORT_PADDING } from "@/lib/export/scales";
+import {
+  getImportPipelineErrorMessage,
+  IMPORT_PIPELINE_ERROR_CODES,
+  runImportFilePipeline,
+} from "@/lib/export/importPipeline";
 
 function ExportControls({
   boardRef,
@@ -69,36 +75,24 @@ function ExportControls({
 
   const onFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    const result = await runImportFilePipeline({
+      file,
+      importFromJson,
+    });
 
-    let text;
-    try {
-      text = await file.text();
-    } catch (err) {
-      console.error(err);
-      e.target.value = "";
-      return;
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      console.error("Selected file is not valid JSON.");
-      e.target.value = "";
-      return;
-    }
-
-    const json = Array.isArray(parsed) ? parsed : [parsed];
-    const maybePromise = importFromJson?.(json, [file.name]);
-    if (maybePromise && typeof maybePromise.finally === "function") {
-      return maybePromise.finally(() => {
-        e.target.value = "";
-      });
+    if (!result.ok) {
+      if (result.error.code !== IMPORT_PIPELINE_ERROR_CODES.IMPORT_FAILED) {
+        toast.error(getImportPipelineErrorMessage(result.error), {
+          id: "import-tunings",
+        });
+      }
+      if (result.error.cause) {
+        console.error(result.error.cause);
+      }
     }
 
     e.target.value = "";
-    return maybePromise;
+    return result;
   };
 
   return (
