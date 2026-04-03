@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import clsx from "clsx";
-import { ErrorBoundary } from "react-error-boundary";
 import {
   FiCheckCircle,
   FiAlertTriangle,
@@ -9,17 +8,11 @@ import {
 } from "react-icons/fi";
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 
-// exporters
 import { downloadPNG, downloadSVG, printFretboard } from "@/lib/export/scales";
-
-// fretboard
 import Fretboard from "@/components/Fretboard/Fretboard";
-
-// cheatsheet
 import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 import StageHud from "@/components/UI/StageHud";
 
-// theory
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
 import { PRESET_TUNING_META } from "@/lib/presets/presets";
@@ -40,23 +33,10 @@ import {
 
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
 
-// existing UI atoms
 import PanelHeader from "@/components/UI/PanelHeader";
-import ScaleControls from "@/components/UI/controls/ScaleControls";
-import MetronomeControls from "@/components/UI/controls/MetronomeControls";
+import SafeSection from "@/components/UI/SafeSection";
 import DisplayControls from "@/components/UI/controls/DisplayControls";
-import InstrumentControls from "@/components/UI/controls/InstrumentControls";
-import ExportControls from "@/components/UI/controls/ExportControls";
-import ChordBuilder from "@/components/UI/ChordBuilder";
-import ErrorFallback from "@/components/UI/ErrorFallback";
-const TuningPackEditorModal = React.lazy(
-  () => import("@/components/UI/modals/TuningPackEditorModal"),
-);
-const TuningPackManagerModal = React.lazy(
-  () => import("@/components/UI/modals/TuningPackManagerModal"),
-);
 
-// hooks
 import { useTuningIO } from "@/hooks/useTuningIO";
 import { useMergedPresets } from "@/hooks/useMergedPresets";
 import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
@@ -67,96 +47,22 @@ import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
-import { useRandomScale } from "@/hooks/useRandomScale";
-import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
-import { usePracticeActions } from "@/hooks/usePracticeActions";
 import { useDisplayState } from "@/hooks/useDisplayState";
-import { useMetronomePrefs } from "@/hooks/useMetronomePrefs";
-import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
 import { useSystemState } from "@/hooks/useSystemState";
 import { useInstrumentConfig } from "@/hooks/useInstrumentConfig";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
 import AppLayout from "@/components/Layout/AppLayout";
+import InstrumentPanelContainer from "@/app/containers/InstrumentPanelContainer";
+import TheoryPanelContainer from "@/app/containers/TheoryPanelContainer";
+import PracticePanelContainer from "@/app/containers/PracticePanelContainer";
+import usePracticePanelState from "@/app/containers/usePracticePanelState";
+import ExportPanelContainer from "@/app/containers/ExportPanelContainer";
+import CustomTuningModalsContainer from "@/app/containers/CustomTuningModalsContainer";
+import { PANEL_CONTRACTS } from "@/app/contracts/panelContracts";
 
 export default function App() {
   const boardRef = React.useRef(null);
   const { confirm } = useConfirm();
-  const randomizeScaleRef = React.useRef(() => {});
-  const [randomizeMode, setRandomizeMode] = React.useState(
-    RANDOMIZE_MODES.Both,
-  );
-  const [metronomePrefs, setMetronomePrefs, metronomeSetters] =
-    useMetronomePrefs(METRONOME_DEFAULTS);
-  const {
-    bpm,
-    timeSig,
-    subdivision,
-    countInEnabled,
-    autoAdvanceEnabled,
-    barsPerScale,
-    announceCountInBeforeChange,
-  } = metronomePrefs;
-  const {
-    setBpm,
-    setTimeSig,
-    setSubdivision,
-    setCountInEnabled,
-    setAutoAdvanceEnabled,
-    setBarsPerScale,
-    setAnnounceCountInBeforeChange,
-  } = metronomeSetters;
-  const safeBarsPerScale = Math.max(1, Number(barsPerScale) || 1);
-  const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
-  const barsRemainingRef = React.useRef(safeBarsPerScale);
-
-  const handleMetronomeBeat = useCallback(
-    ({ beat }) => {
-      if (beat !== 1 || !autoAdvanceEnabled) return;
-
-      const nextBarsRemaining = Math.max(0, barsRemainingRef.current - 1);
-      if (announceCountInBeforeChange && nextBarsRemaining === 1) {
-        toast("Scale change on next downbeat", { id: "scale-change-countin" });
-      }
-
-      if (nextBarsRemaining <= 0) {
-        randomizeScaleRef.current?.();
-        barsRemainingRef.current = safeBarsPerScale;
-        setBarsRemaining(safeBarsPerScale);
-        return;
-      }
-
-      barsRemainingRef.current = nextBarsRemaining;
-      setBarsRemaining(nextBarsRemaining);
-    },
-    [announceCountInBeforeChange, autoAdvanceEnabled, safeBarsPerScale],
-  );
-
-  React.useEffect(() => {
-    barsRemainingRef.current = safeBarsPerScale;
-    setBarsRemaining(safeBarsPerScale);
-  }, [safeBarsPerScale, autoAdvanceEnabled]);
-
-  const {
-    start,
-    stop,
-    isPlaying,
-    currentBeat,
-    currentBar,
-    audioReady,
-    audioError,
-  } = useMetronomeEngine({
-    bpm,
-    timeSig,
-    subdivision,
-    onBeat: handleMetronomeBeat,
-  });
-  const resetMetronomePrefs = useCallback(() => {
-    setMetronomePrefs(METRONOME_DEFAULTS);
-  }, [setMetronomePrefs]);
-  const resetPracticeCountersBase = useCallback(() => {
-    barsRemainingRef.current = METRONOME_DEFAULTS.barsPerScale;
-    setBarsRemaining(METRONOME_DEFAULTS.barsPerScale);
-  }, []);
 
   const {
     displayPrefs,
@@ -245,26 +151,25 @@ export default function App() {
     setColorByDegree,
     setLefty,
   } = displaySetters;
-  const showPracticeHud = isPlaying;
 
-  const {
-    chordRoot,
-    setChordRoot,
-    chordType,
-    setChordType,
-    showChord,
-    setShowChord,
-    hideNonChord,
-    setHideNonChord,
-    chordRootIx,
-    chordPCs,
-  } = useChordLogic(system, pcFromName);
+  const chord = useChordLogic(system, pcFromName);
 
   const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
     system,
     ALL_SCALES,
     initial: SCALE_DEFAULT,
   });
+
+  const practice = usePracticePanelState({
+    metronomeDefaults: METRONOME_DEFAULTS,
+    randomizeConfig: {
+      sysNames,
+      scaleOptions,
+      setRoot,
+      setScale,
+    },
+  });
+  const practiceActions = practice.practiceActions;
 
   const fileBase = useFileBase({
     root,
@@ -278,7 +183,7 @@ export default function App() {
     accidental,
     setRoot,
     setTuning: instrument.setTuning,
-    setChordRoot,
+    setChordRoot: chord.setChordRoot,
   });
 
   const {
@@ -312,51 +217,6 @@ export default function App() {
     strings,
     savedExists,
   });
-
-  const { randomize: randomizeScale } = useRandomScale({
-    sysNames,
-    scaleOptions,
-    setRoot,
-    setScale,
-    mode: randomizeMode,
-    throttleMs: 150,
-  });
-
-  React.useEffect(() => {
-    randomizeScaleRef.current = randomizeScale;
-  }, [randomizeScale]);
-
-  const practiceActions = usePracticeActions({
-    isPlaying,
-    startMetronome: start,
-    stopMetronome: stop,
-    setBpm,
-    randomizeScale,
-  });
-
-  const resetPracticeCounters = useCallback(() => {
-    resetPracticeCountersBase();
-    practiceActions.resetTapTempo();
-  }, [practiceActions, resetPracticeCountersBase]);
-
-  const handleSelectNote = useCallback(
-    (pc, providedName, event) => {
-      const noteName = providedName ?? nameForPc(pc);
-      if (!noteName) return;
-      if (!sysNames.includes(noteName)) return;
-
-      if (event?.type === "contextmenu" || event?.button === 2) {
-        event?.preventDefault?.();
-        if (typeof setChordRoot === "function") {
-          setChordRoot(noteName);
-        }
-        return;
-      }
-
-      setRoot(noteName);
-    },
-    [nameForPc, sysNames, setChordRoot, setRoot],
-  );
 
   const showCheatsheet = useCallback(() => {
     toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
@@ -397,8 +257,8 @@ export default function App() {
     setDisplayPrefs,
     setFrets: setFretsUI,
     handleStringsChange,
-    setShowChord,
-    setHideNonChord,
+    setShowChord: chord.setShowChord,
+    setHideNonChord: chord.setHideNonChord,
     onShowCheatsheet: showCheatsheet,
     onRandomizeScale: practiceActions.randomizeScaleNow,
     onCreateCustomPack: openCreate,
@@ -423,31 +283,51 @@ export default function App() {
       setSystemId,
       setRoot,
       setScale,
-      setChordRoot,
-      setChordType,
-      setShowChord,
-      setHideNonChord,
+      setChordRoot: chord.setChordRoot,
+      setChordType: chord.setChordType,
+      setShowChord: chord.setShowChord,
+      setHideNonChord: chord.setHideNonChord,
       setPreset,
-      stopMetronome: stop,
-      resetMetronomePrefs,
-      resetPracticeCounters,
+      stopMetronome: practice.metronomeEngine.stop,
+      resetMetronomePrefs: practice.resetMetronomePrefs,
+      resetPracticeCounters: practice.resetPracticeCounters,
       toast,
       confirm,
     });
+
+  const handleSelectNote = useCallback(
+    (pc, providedName, event) => {
+      const noteName = providedName ?? nameForPc(pc);
+      if (!noteName) return;
+      if (!sysNames.includes(noteName)) return;
+
+      if (event?.type === "contextmenu" || event?.button === 2) {
+        event?.preventDefault?.();
+        if (typeof chord.setChordRoot === "function") {
+          chord.setChordRoot(noteName);
+        }
+        return;
+      }
+
+      setRoot(noteName);
+    },
+    [nameForPc, sysNames, chord, setRoot],
+  );
 
   const buildHeader = useCallback(
     () => ({
       system: systemId,
       tuning,
       scale,
-      chordEnabled: showChord,
-      chordRoot,
-      chordType,
+      chordEnabled: chord.showChord,
+      chordRoot: chord.chordRoot,
+      chordType: chord.chordType,
     }),
-    [systemId, tuning, scale, showChord, chordRoot, chordType],
+    [systemId, tuning, scale, chord.showChord, chord.chordRoot, chord.chordType],
   );
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
+  const showPracticeHud = practice.metronomeEngine.isPlaying;
 
   const stage = (
     <div className="tv-stage" ref={stageRef}>
@@ -459,17 +339,16 @@ export default function App() {
           isFs={isFs}
           onToggleFs={() => toggleFs()}
           onResetAll={() => resetAll({ confirm: true })}
-          currentBeat={currentBeat}
-          currentBar={currentBar}
-          timeSig={timeSig}
-          isPlaying={isPlaying}
+          currentBeat={practice.metronomeEngine.currentBeat}
+          currentBar={practice.metronomeEngine.currentBar}
+          timeSig={practice.metronomePrefs.timeSig}
+          isPlaying={practice.metronomeEngine.isPlaying}
           showPracticeHud={showPracticeHud}
-          countInEnabled={countInEnabled}
-          audioReady={audioReady}
-          audioError={audioError}
+          countInEnabled={practice.metronomePrefs.countInEnabled}
+          audioReady={practice.metronomeEngine.audioReady}
+          audioError={practice.metronomeEngine.audioError}
         />
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
+        <SafeSection
           onReset={() => {
             setCapoFret(CAPO_DEFAULT);
           }}
@@ -489,127 +368,121 @@ export default function App() {
             dotSize={dotSize}
             lefty={lefty}
             system={system}
-            chordPCs={chordPCs}
-            chordRootPc={chordRootIx}
+            chordPCs={chord.chordPCs}
+            chordRootPc={chord.chordRootIx}
             openOnlyInScale={openOnlyInScale}
             colorByDegree={colorByDegree}
-            hideNonChord={hideNonChord}
+            hideNonChord={chord.hideNonChord}
             stringMeta={effectiveStringMeta}
             boardMeta={boardMeta}
             onSelectNote={handleSelectNote}
             capoFret={capoFret}
             onSetCapo={toggleCapoAt}
           />
-        </ErrorBoundary>
+        </SafeSection>
       </div>
     </div>
   );
 
+  const instrumentPanel = {
+    contract: PANEL_CONTRACTS.instrument,
+    state: { strings, frets, tuning, systemId, sysNames, tunings: TUNINGS, system },
+    preset: {
+      mergedPresetNames,
+      customPresetNames,
+      mergedPresetMetaMap,
+      selectedPreset,
+      setPreset,
+    },
+    handlers: {
+      setStrings,
+      setFretsPref,
+      setSystemId,
+      setTuning,
+      handleStringsChange,
+      handleSaveDefault,
+      openCreate,
+      openEditSelected,
+    },
+    reset: { resetInstrumentFactory },
+  };
+
+  const theoryPanel = {
+    contract: PANEL_CONTRACTS.theory,
+    system: { systemId, system, sysNames, nameForPc, rootIx },
+    scale: {
+      root,
+      setRoot,
+      scale,
+      setScale,
+      scaleOptions,
+      intervals,
+      defaultScale: SCALE_DEFAULT,
+    },
+    chord,
+    randomize: {
+      randomizeMode: practice.randomizeMode,
+      setRandomizeMode: practice.setRandomizeMode,
+      onRandomize: practiceActions.randomizeScaleNow,
+    },
+    reset: { resetMusicalState },
+  };
+
+  const practicePanel = {
+    contract: PANEL_CONTRACTS.practice,
+    metronome: {
+      ...practice.metronomePrefs,
+      ...practice.metronomeEngine,
+      safeBarsPerScale: practice.safeBarsPerScale,
+      barsRemaining: practice.barsRemaining,
+    },
+    controls: {
+      ...practice.metronomeSetters,
+      ...practiceActions,
+    },
+    reset: { resetPracticeCounters: practice.resetPracticeCounters },
+  };
+
+  const exportPanel = {
+    contract: PANEL_CONTRACTS.export,
+    fileBase,
+    boardRef,
+    exporters: {
+      downloadPNG,
+      downloadSVG,
+      printFretboard,
+      buildHeader,
+      exportCurrent: () => exportCurrent(tuning, stringMeta, boardMeta),
+      exportAll,
+      importFromJson,
+    },
+    packActions: {
+      clearAllPacks,
+      openManager,
+    },
+  };
+
+  const modalPanel = {
+    contract: PANEL_CONTRACTS.customTuningModals,
+    modal: { editorState, isManagerOpen },
+    customTunings,
+    systems: TUNINGS,
+    themeMode,
+    handlers: {
+      cancelEditor,
+      submitEditor,
+      closeManager,
+      editFromManager,
+      deletePack,
+    },
+  };
+
   const controls = (
     <>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[strings, frets, systemId]}
-        onReset={() => {
-          resetInstrumentFactory(system.divisions);
-        }}
-      >
-        <InstrumentControls
-          strings={strings}
-          setStrings={setStrings}
-          frets={frets}
-          setFrets={setFretsPref}
-          systems={TUNINGS}
-          setSystemId={setSystemId}
-          sysNames={sysNames}
-          tuning={tuning}
-          setTuning={setTuning}
-          handleStringsChange={handleStringsChange}
-          presetNames={mergedPresetNames}
-          customPresetNames={customPresetNames}
-          presetMetaMap={mergedPresetMetaMap}
-          selectedPreset={selectedPreset}
-          setSelectedPreset={setPreset}
-          handleSaveDefault={handleSaveDefault}
-          handleResetFactoryDefault={resetInstrumentFactory}
-          systemId={systemId}
-          onCreateCustomPack={openCreate}
-          onEditCustomPack={openEditSelected}
-        />
-      </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[systemId, root, scale]}
-        onReset={resetMusicalState}
-      >
-        <ScaleControls
-          root={root}
-          setRoot={setRoot}
-          scale={scale}
-          setScale={setScale}
-          sysNames={sysNames}
-          scaleOptions={scaleOptions}
-          defaultScale={SCALE_DEFAULT}
-          randomizeMode={randomizeMode}
-          setRandomizeMode={setRandomizeMode}
-          onRandomize={practiceActions.randomizeScaleNow}
-        />
-      </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[chordRoot, chordType, showChord, hideNonChord]}
-        onReset={resetMusicalState}
-      >
-        <ChordBuilder
-          root={chordRoot}
-          onRootChange={setChordRoot}
-          sysNames={sysNames}
-          nameForPc={nameForPc}
-          type={chordType}
-          onTypeChange={setChordType}
-          showChord={showChord}
-          setShowChord={setShowChord}
-          hideNonChord={hideNonChord}
-          setHideNonChord={setHideNonChord}
-          supportsMicrotonal={Number(system?.divisions) > 12}
-          system={system}
-          rootIx={rootIx}
-          intervals={intervals}
-          chordPCs={chordPCs}
-          chordRootPc={chordRootIx}
-        />
-      </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[bpm, timeSig, subdivision, isPlaying]}
-        onReset={resetPracticeCounters}
-      >
-        <MetronomeControls
-          isPlaying={isPlaying}
-          bpm={bpm}
-          setBpm={setBpm}
-          timeSig={timeSig}
-          setTimeSig={setTimeSig}
-          subdivision={subdivision}
-          setSubdivision={setSubdivision}
-          countInEnabled={countInEnabled}
-          setCountInEnabled={setCountInEnabled}
-          autoAdvanceEnabled={autoAdvanceEnabled}
-          setAutoAdvanceEnabled={setAutoAdvanceEnabled}
-          barsPerScale={safeBarsPerScale}
-          setBarsPerScale={setBarsPerScale}
-          announceCountInBeforeChange={announceCountInBeforeChange}
-          setAnnounceCountInBeforeChange={setAnnounceCountInBeforeChange}
-          barsRemaining={barsRemaining}
-          toggleMetronome={practiceActions.toggleMetronome}
-          bpmUp={practiceActions.bpmUp}
-          bpmDown={practiceActions.bpmDown}
-          tapTempo={practiceActions.tapTempo}
-          randomizeScaleNow={practiceActions.randomizeScaleNow}
-        />
-      </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
+      <InstrumentPanelContainer {...instrumentPanel} />
+      <TheoryPanelContainer {...theoryPanel} />
+      <PracticePanelContainer {...practicePanel} />
+      <SafeSection
         resetKeys={[displayPrefs]}
         onReset={() => {
           resetDisplay();
@@ -636,71 +509,12 @@ export default function App() {
           setLefty={setLefty}
           degreeCount={intervals.length}
         />
-      </ErrorBoundary>
-      <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[fileBase]}>
-        <ExportControls
-          boardRef={boardRef}
-          fileBase={fileBase}
-          downloadPNG={downloadPNG}
-          downloadSVG={downloadSVG}
-          printFretboard={printFretboard}
-          buildHeader={buildHeader}
-          exportCurrent={() => exportCurrent(tuning, stringMeta, boardMeta)}
-          exportAll={exportAll}
-          importFromJson={importFromJson}
-          onClearCustom={clearAllPacks}
-          onManageCustom={openManager}
-        />
-      </ErrorBoundary>
+      </SafeSection>
+      <ExportPanelContainer {...exportPanel} />
     </>
   );
 
-  const modals = (
-    <>
-      {editorState ? (
-        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[editorState]}>
-          <React.Suspense
-            fallback={
-              <div className="tv-modal-suspense" role="status" aria-live="polite">
-                Loading editor...
-              </div>
-            }
-          >
-            <TuningPackEditorModal
-              isOpen={Boolean(editorState)}
-              mode={editorState?.mode ?? "create"}
-              initialPack={editorState?.initialPack}
-              originalName={editorState?.originalName ?? undefined}
-              onCancel={cancelEditor}
-              onSubmit={submitEditor}
-              themeMode={themeMode}
-            />
-          </React.Suspense>
-        </ErrorBoundary>
-      ) : null}
-      {isManagerOpen ? (
-        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[isManagerOpen]}>
-          <React.Suspense
-            fallback={
-              <div className="tv-modal-suspense" role="status" aria-live="polite">
-                Loading manager...
-              </div>
-            }
-          >
-            <TuningPackManagerModal
-              isOpen={isManagerOpen}
-              tunings={customTunings}
-              systems={TUNINGS}
-              themeMode={themeMode}
-              onClose={closeManager}
-              onEdit={editFromManager}
-              onDelete={deletePack}
-            />
-          </React.Suspense>
-        </ErrorBoundary>
-      ) : null}
-    </>
-  );
+  const modals = <CustomTuningModalsContainer {...modalPanel} />;
 
   const toaster = (
     <Toaster
