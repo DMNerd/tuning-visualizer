@@ -143,6 +143,7 @@ export default function App() {
     root: theoryDomain.system.root,
     scale: theoryDomain.scale.scale,
     accidental,
+    noteNaming: displayPrefs.noteNaming,
     strings: instrumentState.strings,
     systemId: theoryDomain.system.systemId,
     tuning,

@@ -10,6 +10,7 @@ export function useExportCustomTuningDomain({
   root,
   scale,
   accidental,
+  noteNaming = "english",
   strings,
   systemId,
   tuning,
@@ -32,11 +33,24 @@ export function useExportCustomTuningDomain({
       system: systemId,
       tuning,
       scale,
+      spelling: noteNaming === "german" ? "DE H/B" : "Intl B",
+      accidental,
+      strings,
       chordEnabled: showChord,
       chordRoot,
       chordType,
     }),
-    [systemId, tuning, scale, showChord, chordRoot, chordType],
+    [
+      systemId,
+      tuning,
+      scale,
+      noteNaming,
+      accidental,
+      strings,
+      showChord,
+      chordRoot,
+      chordType,
+    ],
   );
 
   const { clearAllPacks, openManager } = customPackEditor;

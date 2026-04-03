@@ -5,6 +5,9 @@ export type ExportHeader = {
   system?: string;
   tuning?: string | string[];
   scale?: string;
+  spelling?: string;
+  accidental?: "sharp" | "flat" | string;
+  strings?: number;
   chordEnabled?: boolean;
   chordRoot?: string;
   chordType?: string;
@@ -213,17 +216,34 @@ function withPaddingAndHeader(
 }
 
 function formatHeaderSingleLine(h: ExportHeader): string {
-  const bits: string[] = [];
-  if (h.system) bits.push(`System: ${h.system}`);
-  if (h.tuning)
-    bits.push(
-      `Tuning: ${Array.isArray(h.tuning) ? h.tuning.join(" ") : h.tuning}`,
-    );
-  if (h.scale) bits.push(`Scale: ${h.scale}`);
-  if (h.chordEnabled && (h.chordRoot || h.chordType)) {
-    bits.push(`Chord: ${[h.chordRoot, h.chordType].filter(Boolean).join(" ")}`);
+  const primary: string[] = [];
+  const meta: string[] = [];
+
+  if (h.system) primary.push(h.system);
+  if (h.tuning) {
+    if (Array.isArray(h.tuning)) {
+      const previewCount = 8;
+      const base = h.tuning.slice(0, previewCount).join(" ");
+      const extra = h.tuning.length - previewCount;
+      primary.push(extra > 0 ? `${base} …(+${extra})` : base);
+    } else {
+      primary.push(h.tuning);
+    }
   }
-  return bits.join(" • ");
+  if (h.scale) primary.push(h.scale);
+  if (h.chordEnabled && (h.chordRoot || h.chordType)) {
+    primary.push([h.chordRoot, h.chordType].filter(Boolean).join(" "));
+  }
+
+  if (typeof h.strings === "number" && Number.isFinite(h.strings)) {
+    meta.push(`${h.strings}str`);
+  }
+  if (h.accidental === "flat") meta.push("♭");
+  if (h.accidental === "sharp") meta.push("♯");
+  if (h.spelling) meta.push(h.spelling);
+
+  if (meta.length) primary.push(meta.join(" · "));
+  return primary.join(" • ");
 }
 
 export function downloadSVG(
