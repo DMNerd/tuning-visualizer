@@ -134,6 +134,9 @@ function InstrumentControls({
   strings,
   frets,
   setFrets,
+  systems,
+  systemId,
+  setSystemId,
   sysNames,
   tuning,
   setTuning,
@@ -145,7 +148,6 @@ function InstrumentControls({
   setSelectedPreset,
   handleSaveDefault,
   handleResetFactoryDefault,
-  systemId,
   onCreateCustomPack,
   onEditCustomPack,
 }) {
@@ -178,6 +180,24 @@ function InstrumentControls({
   return (
     <Section title="Instrument">
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
+        <div className="tv-field">
+          <label className="tv-field__label" htmlFor="system">
+            Tuning system
+          </label>
+          <select
+            id="system"
+            name="system"
+            value={systemId}
+            onChange={(e) => setSystemId(e.target.value)}
+          >
+            {Object.keys(systems).map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="tv-controls__row--two">
           <NumberField
             id="strings"
@@ -282,6 +302,8 @@ function pick(p) {
     strings: p.strings,
     frets: p.frets,
     setFrets: p.setFrets,
+    systems: p.systems,
+    setSystemId: p.setSystemId,
     sysNames: p.sysNames,
     tuning: p.tuning,
     setTuning: p.setTuning,

@@ -1,43 +1,21 @@
-import { useEffect, useMemo } from "react";
-import { useDebounce, useLocalStorage } from "react-use";
-import { useImmer } from "use-immer";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
-import { makeImmerSetters } from "@/utils/makeImmerSetters";
+import { usePersistedPrefs } from "@/hooks/usePersistedPrefs";
 
 export function useDisplayPrefs(initial) {
-  const [stored, setStored] = useLocalStorage(STORAGE_KEYS.DISPLAY_PREFS, {});
-
-  const [prefs, setPrefs] = useImmer(() => ({
-    ...initial,
-    ...(stored || {}),
-  }));
-
-  useEffect(() => {
-    setPrefs((d) => {
-      Object.assign(d, initial, stored || {});
-    });
-  }, [stored, initial, setPrefs]);
-
-  useDebounce(() => setStored(prefs), 300, [prefs, setStored]);
-
-  const fieldSetters = useMemo(
-    () =>
-      makeImmerSetters(setPrefs, [
-        "show",
-        "showOpen",
-        "showFretNums",
-        "dotSize",
-        "accidental",
-        "microLabelStyle",
-        "openOnlyInScale",
-        "colorByDegree",
-        "lefty",
-      ]),
-    [setPrefs],
-  );
-
-  return useMemo(
-    () => [prefs, setPrefs, fieldSetters],
-    [prefs, setPrefs, fieldSetters],
-  );
+  return usePersistedPrefs({
+    storageKey: STORAGE_KEYS.DISPLAY_PREFS,
+    initial,
+    setterKeys: [
+      "show",
+      "showOpen",
+      "showFretNums",
+      "dotSize",
+      "accidental",
+      "microLabelStyle",
+      "openOnlyInScale",
+      "colorByDegree",
+      "lefty",
+    ],
+    debounceMs: 300,
+  });
 }

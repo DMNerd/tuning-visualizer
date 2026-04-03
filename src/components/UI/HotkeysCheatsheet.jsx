@@ -1,7 +1,7 @@
 import React from "react";
 
 const HOTKEY_ROWS = [
-  ["F1", "show this help"],
+  ["Shift+/ • Ctrl+/ • F1", "show this help"],
   ["f", "fullscreen"],
   ["l", "cycle labels"],
   ["o", "toggle open notes"],
@@ -12,10 +12,13 @@ const HOTKEY_ROWS = [
   ["c", "chord overlay"],
   ["h", "hide non-chord tones"],
   ["r", "randomise scale and root"],
+  ["m", "toggle metronome playback"],
+  ["Alt+[ / Alt+]", "metronome BPM - / +"],
+  ["t", "tap tempo"],
   ["[ / ]", "strings - / +"],
   ["- / =", "frets - / +"],
   [", / .", "dot size - / +"],
-  ["Ctrl+N", "create new tuning pack"],
+  ["Ctrl+N • Cmd+N", "create new tuning pack"],
 ];
 
 function HotkeysCheatsheet({ onClose }) {

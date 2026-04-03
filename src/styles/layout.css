@@ -108,7 +108,13 @@
   fill: var(--muted);
 }
 
-.tv-stage__toolbar {
+.tv-stage-hud {
+  position: absolute;
+  inset: var(--space-xs);
+  pointer-events: none;
+}
+
+.tv-stage-hud__toolbar {
   position: absolute;
   inset: var(--space-xs) var(--space-xs) auto auto;
   display: inline-flex;
@@ -118,11 +124,83 @@
   box-shadow: none;
   width: auto;
   height: auto;
+  pointer-events: auto;
 }
 
-.tv-stage__toolbar::before,
-.tv-stage__toolbar::after {
+.tv-stage-hud__toolbar::before,
+.tv-stage-hud__toolbar::after {
   content: none !important;
+}
+
+.tv-stage-hud .tv-beat-indicator {
+  position: absolute;
+  inset: var(--space-xs) auto auto 50%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--panel) 92%, transparent);
+  color: var(--fg);
+  pointer-events: none;
+}
+
+.tv-stage-hud .tv-beat-indicator__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.tv-stage-hud .tv-beat-indicator__beats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tv-stage-hud .tv-beat-indicator__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--fg) 10%, transparent);
+  transition:
+    background var(--speed) var(--ease),
+    transform var(--speed) var(--ease);
+}
+
+.tv-stage-hud .tv-beat-indicator__dot.is-active {
+  background: var(--accent);
+  transform: scale(1.2);
+}
+
+.tv-stage-hud .tv-beat-indicator.is-playing .tv-beat-indicator__meta {
+  color: var(--fg);
+}
+
+.tv-stage-hud__badges {
+  position: absolute;
+  inset: auto auto var(--space-xs) 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.tv-stage-hud__badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--panel) 92%, transparent);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.tv-stage-hud__badge.is-error {
+  color: var(--root);
 }
 
 .tv-shell__controls {

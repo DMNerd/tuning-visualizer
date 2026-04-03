@@ -52,3 +52,13 @@ export const DISPLAY_DEFAULTS = {
   accidental: "sharp" as "sharp" | "flat",
   microLabelStyle: "letters" as "letters" | "unicode" | "none",
 };
+
+export const METRONOME_DEFAULTS = {
+  bpm: 80,
+  timeSig: "4/4" as "2/4" | "3/4" | "4/4" | "5/4" | "6/8" | "7/8",
+  subdivision: "Quarter" as "Quarter" | "Eighth" | "Triplet" | "Sixteenth",
+  countInEnabled: false,
+  autoAdvanceEnabled: false,
+  barsPerScale: 4,
+  announceCountInBeforeChange: false,
+};

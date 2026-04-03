@@ -4,6 +4,7 @@ import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
 import { memoWithPick } from "@/utils/memo";
 import ScalePicker from "@/components/UI/combobox/ScalePicker";
+import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
 
 function ScaleControls({
   root,
@@ -14,6 +15,8 @@ function ScaleControls({
   scaleOptions,
   defaultRoot = "C",
   defaultScale,
+  randomizeMode = RANDOMIZE_MODES.Both,
+  setRandomizeMode = () => {},
   onRandomize = () => {},
 }) {
   const resolvedDefaultScale = React.useMemo(() => {
@@ -80,8 +83,8 @@ function ScaleControls({
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Pick a random root and scale"
-              title="Random root & scale"
+              aria-label="Apply randomization based on selected randomize mode"
+              title="Randomize"
               onClick={onRandomize}
             >
               <FiShuffle size={16} aria-hidden />
@@ -97,6 +100,22 @@ function ScaleControls({
             </button>
           </div>
         </div>
+
+        <div className="tv-field">
+          <label className="tv-field__label" htmlFor="scale-randomize-mode">
+            Randomize
+          </label>
+          <select
+            id="scale-randomize-mode"
+            name="scale-randomize-mode"
+            value={randomizeMode}
+            onChange={(e) => setRandomizeMode(e.target.value)}
+          >
+            <option value={RANDOMIZE_MODES.Both}>Key + scale</option>
+            <option value={RANDOMIZE_MODES.ScaleOnly}>Scale only</option>
+            <option value={RANDOMIZE_MODES.KeyOnly}>Key only</option>
+          </select>
+        </div>
       </div>
     </Section>
   );
@@ -110,6 +129,8 @@ function pick(p) {
     scaleOptions: p.scaleOptions,
     defaultRoot: p.defaultRoot,
     defaultScale: p.defaultScale,
+    randomizeMode: p.randomizeMode,
+    setRandomizeMode: p.setRandomizeMode,
     onRandomize: p.onRandomize,
     setRoot: p.setRoot,
     setScale: p.setScale,

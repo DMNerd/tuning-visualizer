@@ -2,9 +2,6 @@ import React, { useCallback } from "react";
 import clsx from "clsx";
 import { ErrorBoundary } from "react-error-boundary";
 import {
-  FiMaximize,
-  FiMinimize,
-  FiRotateCcw,
   FiCheckCircle,
   FiAlertTriangle,
   FiInfo,
@@ -20,6 +17,7 @@ import Fretboard from "@/components/Fretboard/Fretboard";
 
 // cheatsheet
 import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
+import StageHud from "@/components/UI/StageHud";
 
 // theory
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -36,6 +34,7 @@ import {
   ROOT_DEFAULT,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
+  METRONOME_DEFAULTS,
   SCALE_DEFAULT,
 } from "@/lib/config/appDefaults";
 
@@ -43,11 +42,11 @@ import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
 
 // existing UI atoms
 import PanelHeader from "@/components/UI/PanelHeader";
-import TuningSystemSelector from "@/components/UI/TuningSystemSelector";
-import ScaleControls from "@/components/UI/ScaleControls";
-import DisplayControls from "@/components/UI/DisplayControls";
-import InstrumentControls from "@/components/UI/InstrumentControls";
-import ExportControls from "@/components/UI/ExportControls";
+import ScaleControls from "@/components/UI/controls/ScaleControls";
+import MetronomeControls from "@/components/UI/controls/MetronomeControls";
+import DisplayControls from "@/components/UI/controls/DisplayControls";
+import InstrumentControls from "@/components/UI/controls/InstrumentControls";
+import ExportControls from "@/components/UI/controls/ExportControls";
 import ChordBuilder from "@/components/UI/ChordBuilder";
 import ErrorFallback from "@/components/UI/ErrorFallback";
 const TuningPackEditorModal = React.lazy(
@@ -69,7 +68,11 @@ import { useConfirm } from "@/hooks/useConfirm";
 import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
 import { useRandomScale } from "@/hooks/useRandomScale";
+import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
+import { usePracticeActions } from "@/hooks/usePracticeActions";
 import { useDisplayState } from "@/hooks/useDisplayState";
+import { useMetronomePrefs } from "@/hooks/useMetronomePrefs";
+import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
 import { useSystemState } from "@/hooks/useSystemState";
 import { useInstrumentConfig } from "@/hooks/useInstrumentConfig";
 import { useScaleOptions } from "@/hooks/useScaleOptions";
@@ -78,6 +81,82 @@ import AppLayout from "@/components/Layout/AppLayout";
 export default function App() {
   const boardRef = React.useRef(null);
   const { confirm } = useConfirm();
+  const randomizeScaleRef = React.useRef(() => {});
+  const [randomizeMode, setRandomizeMode] = React.useState(
+    RANDOMIZE_MODES.Both,
+  );
+  const [metronomePrefs, setMetronomePrefs, metronomeSetters] =
+    useMetronomePrefs(METRONOME_DEFAULTS);
+  const {
+    bpm,
+    timeSig,
+    subdivision,
+    countInEnabled,
+    autoAdvanceEnabled,
+    barsPerScale,
+    announceCountInBeforeChange,
+  } = metronomePrefs;
+  const {
+    setBpm,
+    setTimeSig,
+    setSubdivision,
+    setCountInEnabled,
+    setAutoAdvanceEnabled,
+    setBarsPerScale,
+    setAnnounceCountInBeforeChange,
+  } = metronomeSetters;
+  const safeBarsPerScale = Math.max(1, Number(barsPerScale) || 1);
+  const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
+  const barsRemainingRef = React.useRef(safeBarsPerScale);
+
+  const handleMetronomeBeat = useCallback(
+    ({ beat }) => {
+      if (beat !== 1 || !autoAdvanceEnabled) return;
+
+      const nextBarsRemaining = Math.max(0, barsRemainingRef.current - 1);
+      if (announceCountInBeforeChange && nextBarsRemaining === 1) {
+        toast("Scale change on next downbeat", { id: "scale-change-countin" });
+      }
+
+      if (nextBarsRemaining <= 0) {
+        randomizeScaleRef.current?.();
+        barsRemainingRef.current = safeBarsPerScale;
+        setBarsRemaining(safeBarsPerScale);
+        return;
+      }
+
+      barsRemainingRef.current = nextBarsRemaining;
+      setBarsRemaining(nextBarsRemaining);
+    },
+    [announceCountInBeforeChange, autoAdvanceEnabled, safeBarsPerScale],
+  );
+
+  React.useEffect(() => {
+    barsRemainingRef.current = safeBarsPerScale;
+    setBarsRemaining(safeBarsPerScale);
+  }, [safeBarsPerScale, autoAdvanceEnabled]);
+
+  const {
+    start,
+    stop,
+    isPlaying,
+    currentBeat,
+    currentBar,
+    audioReady,
+    audioError,
+  } = useMetronomeEngine({
+    bpm,
+    timeSig,
+    subdivision,
+    onBeat: handleMetronomeBeat,
+  });
+  const resetMetronomePrefs = useCallback(() => {
+    setMetronomePrefs(METRONOME_DEFAULTS);
+  }, [setMetronomePrefs]);
+  const resetPracticeCountersBase = useCallback(() => {
+    barsRemainingRef.current = METRONOME_DEFAULTS.barsPerScale;
+    setBarsRemaining(METRONOME_DEFAULTS.barsPerScale);
+  }, []);
 
   const {
     displayPrefs,
@@ -166,6 +245,7 @@ export default function App() {
     setColorByDegree,
     setLefty,
   } = displaySetters;
+  const showPracticeHud = isPlaying;
 
   const {
     chordRoot,
@@ -233,16 +313,31 @@ export default function App() {
     savedExists,
   });
 
-  const {
-    randomize: randomizeScale,
-    triggerFromHotkey: triggerRandomizeScale,
-  } = useRandomScale({
+  const { randomize: randomizeScale } = useRandomScale({
     sysNames,
     scaleOptions,
     setRoot,
     setScale,
+    mode: randomizeMode,
     throttleMs: 150,
   });
+
+  React.useEffect(() => {
+    randomizeScaleRef.current = randomizeScale;
+  }, [randomizeScale]);
+
+  const practiceActions = usePracticeActions({
+    isPlaying,
+    startMetronome: start,
+    stopMetronome: stop,
+    setBpm,
+    randomizeScale,
+  });
+
+  const resetPracticeCounters = useCallback(() => {
+    resetPracticeCountersBase();
+    practiceActions.resetTapTempo();
+  }, [practiceActions, resetPracticeCountersBase]);
 
   const handleSelectNote = useCallback(
     (pc, providedName, event) => {
@@ -305,8 +400,9 @@ export default function App() {
     setShowChord,
     setHideNonChord,
     onShowCheatsheet: showCheatsheet,
-    onRandomizeScale: triggerRandomizeScale,
+    onRandomizeScale: practiceActions.randomizeScaleNow,
     onCreateCustomPack: openCreate,
+    practiceActions,
     strings,
     frets,
     LABEL_VALUES,
@@ -332,6 +428,9 @@ export default function App() {
       setShowChord,
       setHideNonChord,
       setPreset,
+      stopMetronome: stop,
+      resetMetronomePrefs,
+      resetPracticeCounters,
       toast,
       confirm,
     });
@@ -356,35 +455,19 @@ export default function App() {
         className={clsx("tv-stage__surface", { "is-lefty": lefty })}
         onDoubleClick={() => toggleFs()}
       >
-        <div className="tv-stage__toolbar">
-          <button
-            type="button"
-            className="tv-button tv-button--icon"
-            aria-label="Reset all to defaults"
-            onClick={() => resetAll({ confirm: true })}
-            title="Reset all to defaults"
-          >
-            <FiRotateCcw size={16} aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={clsx(
-              "tv-button",
-              "tv-button--icon",
-              "tv-button--fullscreen",
-              { "is-active": isFs },
-            )}
-            aria-label={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
-            onClick={() => toggleFs()}
-            title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
-          >
-            {isFs ? (
-              <FiMinimize size={16} aria-hidden />
-            ) : (
-              <FiMaximize size={16} aria-hidden />
-            )}
-          </button>
-        </div>
+        <StageHud
+          isFs={isFs}
+          onToggleFs={() => toggleFs()}
+          onResetAll={() => resetAll({ confirm: true })}
+          currentBeat={currentBeat}
+          currentBar={currentBar}
+          timeSig={timeSig}
+          isPlaying={isPlaying}
+          showPracticeHud={showPracticeHud}
+          countInEnabled={countInEnabled}
+          audioReady={audioReady}
+          audioError={audioError}
+        />
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           onReset={() => {
@@ -424,11 +507,36 @@ export default function App() {
 
   const controls = (
     <>
-      <TuningSystemSelector
-        systemId={systemId}
-        setSystemId={setSystemId}
-        systems={TUNINGS}
-      />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[strings, frets, systemId]}
+        onReset={() => {
+          resetInstrumentFactory(system.divisions);
+        }}
+      >
+        <InstrumentControls
+          strings={strings}
+          setStrings={setStrings}
+          frets={frets}
+          setFrets={setFretsPref}
+          systems={TUNINGS}
+          setSystemId={setSystemId}
+          sysNames={sysNames}
+          tuning={tuning}
+          setTuning={setTuning}
+          handleStringsChange={handleStringsChange}
+          presetNames={mergedPresetNames}
+          customPresetNames={customPresetNames}
+          presetMetaMap={mergedPresetMetaMap}
+          selectedPreset={selectedPreset}
+          setSelectedPreset={setPreset}
+          handleSaveDefault={handleSaveDefault}
+          handleResetFactoryDefault={resetInstrumentFactory}
+          systemId={systemId}
+          onCreateCustomPack={openCreate}
+          onEditCustomPack={openEditSelected}
+        />
+      </ErrorBoundary>
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         resetKeys={[systemId, root, scale]}
@@ -442,7 +550,9 @@ export default function App() {
           sysNames={sysNames}
           scaleOptions={scaleOptions}
           defaultScale={SCALE_DEFAULT}
-          onRandomize={randomizeScale}
+          randomizeMode={randomizeMode}
+          setRandomizeMode={setRandomizeMode}
+          onRandomize={practiceActions.randomizeScaleNow}
         />
       </ErrorBoundary>
       <ErrorBoundary
@@ -469,34 +579,29 @@ export default function App() {
           chordRootPc={chordRootIx}
         />
       </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[strings, frets, systemId]}
-        onReset={() => {
-          resetInstrumentFactory(system.divisions);
-        }}
-      >
-        <InstrumentControls
-          strings={strings}
-          setStrings={setStrings}
-          frets={frets}
-          setFrets={setFretsPref}
-          sysNames={sysNames}
-          tuning={tuning}
-          setTuning={setTuning}
-          handleStringsChange={handleStringsChange}
-          presetNames={mergedPresetNames}
-          customPresetNames={customPresetNames}
-          presetMetaMap={mergedPresetMetaMap}
-          selectedPreset={selectedPreset}
-          setSelectedPreset={setPreset}
-          handleSaveDefault={handleSaveDefault}
-          handleResetFactoryDefault={resetInstrumentFactory}
-          systemId={systemId}
-          onCreateCustomPack={openCreate}
-          onEditCustomPack={openEditSelected}
-        />
-      </ErrorBoundary>
+      <MetronomeControls
+        isPlaying={isPlaying}
+        bpm={bpm}
+        setBpm={setBpm}
+        timeSig={timeSig}
+        setTimeSig={setTimeSig}
+        subdivision={subdivision}
+        setSubdivision={setSubdivision}
+        countInEnabled={countInEnabled}
+        setCountInEnabled={setCountInEnabled}
+        autoAdvanceEnabled={autoAdvanceEnabled}
+        setAutoAdvanceEnabled={setAutoAdvanceEnabled}
+        barsPerScale={safeBarsPerScale}
+        setBarsPerScale={setBarsPerScale}
+        announceCountInBeforeChange={announceCountInBeforeChange}
+        setAnnounceCountInBeforeChange={setAnnounceCountInBeforeChange}
+        barsRemaining={barsRemaining}
+        toggleMetronome={practiceActions.toggleMetronome}
+        bpmUp={practiceActions.bpmUp}
+        bpmDown={practiceActions.bpmDown}
+        tapTempo={practiceActions.tapTempo}
+        randomizeScaleNow={practiceActions.randomizeScaleNow}
+      />
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         resetKeys={[displayPrefs]}
@@ -623,5 +728,13 @@ export default function App() {
     </Toaster>
   );
 
-  return <AppLayout header={header} stage={stage} controls={controls} modals={modals} toaster={toaster} />;
+  return (
+    <AppLayout
+      header={header}
+      stage={stage}
+      controls={controls}
+      modals={modals}
+      toaster={toaster}
+    />
+  );
 }

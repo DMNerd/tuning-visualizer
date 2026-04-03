@@ -166,6 +166,7 @@ export function useHotkeys(options) {
     maxDot = DOT_SIZE_MAX,
     onRandomizeScale,
     onCreateCustomPack,
+    practiceActions,
   } = options;
 
   const labelValues = options.labelValues || options.LABEL_VALUES || [];
@@ -258,8 +259,34 @@ export function useHotkeys(options) {
 
   // Randomize scale
   useShortcut("r", () => {
-    if (typeof options.onRandomizeScale === "function") {
+    if (typeof practiceActions?.randomizeScaleNow === "function") {
+      practiceActions.randomizeScaleNow();
+      return;
+    }
+    if (typeof onRandomizeScale === "function") {
       onRandomizeScale();
+    }
+  });
+
+  // Metronome
+  useShortcut("m", () => {
+    if (typeof practiceActions?.toggleMetronome === "function") {
+      practiceActions.toggleMetronome();
+    }
+  });
+  useShortcut("alt+[", () => {
+    if (typeof practiceActions?.bpmDown === "function") {
+      practiceActions.bpmDown();
+    }
+  });
+  useShortcut("alt+]", () => {
+    if (typeof practiceActions?.bpmUp === "function") {
+      practiceActions.bpmUp();
+    }
+  });
+  useShortcut("t", () => {
+    if (typeof practiceActions?.tapTempo === "function") {
+      practiceActions.tapTempo();
     }
   });
 }

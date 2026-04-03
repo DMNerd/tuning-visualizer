@@ -26,6 +26,9 @@ export function useResets({
   setShowChord,
   setHideNonChord,
   setPreset,
+  stopMetronome,
+  resetMetronomePrefs,
+  resetPracticeCounters,
   toast,
   confirm,
 }) {
@@ -44,6 +47,9 @@ export function useResets({
   const setShowChordRef = useLatest(setShowChord);
   const setHideNonChordRef = useLatest(setHideNonChord);
   const setPresetRef = useLatest(setPreset);
+  const stopMetronomeRef = useLatest(stopMetronome);
+  const resetMetronomePrefsRef = useLatest(resetMetronomePrefs);
+  const resetPracticeCountersRef = useLatest(resetPracticeCounters);
   const toastRef = useLatest(toast);
   const confirmRef = useLatest(confirm);
 
@@ -74,6 +80,9 @@ export function useResets({
   }, [setSystemIdRef]);
 
   const resetMusicalState = useCallback(() => {
+    stopMetronomeRef.current?.();
+    resetMetronomePrefsRef.current?.();
+    resetPracticeCountersRef.current?.();
     setRootRef.current(ROOT_DEFAULT);
     setScaleRef.current(SCALE_DEFAULT);
     setChordRootRef.current(ROOT_DEFAULT);
@@ -89,6 +98,9 @@ export function useResets({
     setShowChordRef,
     setHideNonChordRef,
     setPresetRef,
+    stopMetronomeRef,
+    resetMetronomePrefsRef,
+    resetPracticeCountersRef,
   ]);
 
   const resetAll = useCallback(
@@ -97,7 +109,7 @@ export function useResets({
         const ok = await confirmRef.current({
           title: "Reset all settings?",
           message:
-            "This will reset tuning system, instrument (strings, frets, capo), display, scale & root, and chord overlay.",
+            "This will reset tuning system, instrument (strings, frets, capo), display, scale & root, chord overlay, and metronome.",
           confirmText: "Reset all",
           cancelText: "Cancel",
           toastId: "confirm-reset",
