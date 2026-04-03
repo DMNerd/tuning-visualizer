@@ -5,7 +5,7 @@ import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 import { Tooltip } from "react-tooltip";
 import { FiInfo } from "react-icons/fi";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithShallowPick } from "@/utils/memo";
 import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
 
 function DegreeLegend({ k = 7 }) {
@@ -257,14 +257,39 @@ function DisplayControls({ state, actions, meta }) {
   );
 }
 
-function pick(p) {
+function pickDisplayMemoProps(p) {
+  const s = p.state ?? {};
+  const a = p.actions ?? {};
+  const m = p.meta ?? {};
   return {
-    state: p.state,
-    actions: p.actions,
-    meta: p.meta,
+    show: s.show,
+    showOpen: s.showOpen,
+    showFretNums: s.showFretNums,
+    dotSize: s.dotSize,
+    openOnlyInScale: s.openOnlyInScale,
+    accidental: s.accidental,
+    microLabelStyle: s.microLabelStyle,
+    colorByDegree: s.colorByDegree,
+    lefty: s.lefty,
+    degreeCount: m.degreeCount,
+    setShow: a.setShow,
+    setShowOpen: a.setShowOpen,
+    setShowFretNums: a.setShowFretNums,
+    setDotSize: a.setDotSize,
+    setOpenOnlyInScale: a.setOpenOnlyInScale,
+    setAccidental: a.setAccidental,
+    setMicroLabelStyle: a.setMicroLabelStyle,
+    setColorByDegree: a.setColorByDegree,
+    setLefty: a.setLefty,
   };
 }
 
-const DisplayControlsMemo = memoWithPick(DisplayControls, pick);
+// React Profiler note: Display updates frequently while dragging dot size and
+// toggling UI controls, so we avoid deep `dequal` and compare stable primitive
+// values + handler identities with a shallow pick.
+const DisplayControlsMemo = memoWithShallowPick(
+  DisplayControls,
+  pickDisplayMemoProps,
+);
 
 export default DisplayControlsMemo;

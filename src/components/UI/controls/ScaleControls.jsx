@@ -2,7 +2,7 @@ import React from "react";
 import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithKeys } from "@/utils/memo";
 import ScalePicker from "@/components/UI/combobox/ScalePicker";
 import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
 
@@ -121,22 +121,20 @@ function ScaleControls({
   );
 }
 
-function pick(p) {
-  return {
-    root: p.root,
-    scale: p.scale,
-    sysNames: p.sysNames,
-    scaleOptions: p.scaleOptions,
-    defaultRoot: p.defaultRoot,
-    defaultScale: p.defaultScale,
-    randomizeMode: p.randomizeMode,
-    setRandomizeMode: p.setRandomizeMode,
-    onRandomize: p.onRandomize,
-    setRoot: p.setRoot,
-    setScale: p.setScale,
-  };
-}
-
-const ScaleControlsMemo = memoWithPick(ScaleControls, pick);
+// React Profiler note: props are already top-level fields, so key-based
+// identity checks are cheaper and clearer than deep structural `dequal`.
+const ScaleControlsMemo = memoWithKeys(ScaleControls, [
+  "root",
+  "setRoot",
+  "scale",
+  "setScale",
+  "sysNames",
+  "scaleOptions",
+  "defaultRoot",
+  "defaultScale",
+  "randomizeMode",
+  "setRandomizeMode",
+  "onRandomize",
+]);
 
 export default ScaleControlsMemo;

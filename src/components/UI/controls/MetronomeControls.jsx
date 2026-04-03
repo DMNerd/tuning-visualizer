@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithShallowPick } from "@/utils/memo";
 
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
@@ -207,14 +207,46 @@ function MetronomeControls({ state, actions, meta }) {
   );
 }
 
-function pick(p) {
+function pickMetronomeMemoProps(p) {
+  const s = p.state ?? {};
+  const a = p.actions ?? {};
+  const m = p.meta ?? {};
   return {
-    state: p.state,
-    actions: p.actions,
-    meta: p.meta,
+    isPlaying: s.isPlaying,
+    bpm: s.bpm,
+    timeSig: s.timeSig,
+    subdivision: s.subdivision,
+    countInEnabled: s.countInEnabled,
+    autoAdvanceEnabled: s.autoAdvanceEnabled,
+    barsPerScale: s.barsPerScale,
+    announceCountInBeforeChange: s.announceCountInBeforeChange,
+    barsRemaining: s.barsRemaining,
+    timeSignatures: m.timeSignatures,
+    subdivisions: m.subdivisions,
+    bpmMin: m.bpmMin,
+    bpmMax: m.bpmMax,
+    barsPerScaleMin: m.barsPerScaleMin,
+    barsPerScaleMax: m.barsPerScaleMax,
+    setBpm: a.setBpm,
+    setTimeSig: a.setTimeSig,
+    setSubdivision: a.setSubdivision,
+    setCountInEnabled: a.setCountInEnabled,
+    setAutoAdvanceEnabled: a.setAutoAdvanceEnabled,
+    setBarsPerScale: a.setBarsPerScale,
+    setAnnounceCountInBeforeChange: a.setAnnounceCountInBeforeChange,
+    toggleMetronome: a.toggleMetronome,
+    bpmUp: a.bpmUp,
+    bpmDown: a.bpmDown,
+    tapTempo: a.tapTempo,
+    randomizeScaleNow: a.randomizeScaleNow,
   };
 }
 
-const MetronomeControlsMemo = memoWithPick(MetronomeControls, pick);
+// React Profiler note: metronome ticks can drive rapid renders; shallow key
+// comparison keeps comparator overhead low while still tracking all used props.
+const MetronomeControlsMemo = memoWithShallowPick(
+  MetronomeControls,
+  pickMetronomeMemoProps,
+);
 
 export default MetronomeControlsMemo;

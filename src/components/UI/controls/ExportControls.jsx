@@ -2,7 +2,7 @@ import { useRef, useMemo } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { withToastPromise } from "@/utils/toast";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithKeys } from "@/utils/memo";
 import { PNG_EXPORT_SCALE, EXPORT_PADDING } from "@/lib/export/scales";
 
 function ExportControls({
@@ -176,22 +176,20 @@ function ExportControls({
   );
 }
 
-function pick(p) {
-  return {
-    boardRef: p.boardRef,
-    fileBase: p.fileBase,
-    downloadPNG: p.downloadPNG,
-    downloadSVG: p.downloadSVG,
-    printFretboard: p.printFretboard,
-    buildHeader: p.buildHeader,
-    exportCurrent: p.exportCurrent,
-    exportAll: p.exportAll,
-    importFromJson: p.importFromJson,
-    onClearCustom: p.onClearCustom,
-    onManageCustom: p.onManageCustom,
-  };
-}
-
-const ExportControlsMemo = memoWithPick(ExportControls, pick);
+// React Profiler note: export controls are callback/ref heavy and do not depend
+// on deep nested structures; top-level key checks avoid `dequal` cost.
+const ExportControlsMemo = memoWithKeys(ExportControls, [
+  "boardRef",
+  "fileBase",
+  "downloadPNG",
+  "downloadSVG",
+  "printFretboard",
+  "buildHeader",
+  "exportCurrent",
+  "exportAll",
+  "importFromJson",
+  "onClearCustom",
+  "onManageCustom",
+]);
 
 export default ExportControlsMemo;

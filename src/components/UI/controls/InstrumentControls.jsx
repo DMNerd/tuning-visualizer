@@ -10,7 +10,7 @@ import {
 } from "@/lib/config/appDefaults";
 import { clamp } from "@/utils/math";
 import { withToastPromise } from "@/utils/toast";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithShallowPick } from "@/utils/memo";
 
 function commitNumberField({
   rawOverride,
@@ -296,14 +296,39 @@ function InstrumentControls({ state, actions, meta }) {
   );
 }
 
-function pick(p) {
+function pickInstrumentMemoProps(p) {
+  const s = p.state ?? {};
+  const a = p.actions ?? {};
+  const m = p.meta ?? {};
   return {
-    state: p.state,
-    actions: p.actions,
-    meta: p.meta,
+    strings: s.strings,
+    frets: s.frets,
+    tuning: s.tuning,
+    systemId: s.systemId,
+    selectedPreset: s.selectedPreset,
+    systems: m.systems,
+    sysNames: m.sysNames,
+    presetNames: m.presetNames,
+    customPresetNames: m.customPresetNames,
+    presetMetaMap: m.presetMetaMap,
+    setFrets: a.setFrets,
+    setSystemId: a.setSystemId,
+    setTuning: a.setTuning,
+    handleStringsChange: a.handleStringsChange,
+    setSelectedPreset: a.setSelectedPreset,
+    handleSaveDefault: a.handleSaveDefault,
+    handleResetFactoryDefault: a.handleResetFactoryDefault,
+    onCreateCustomPack: a.onCreateCustomPack,
+    onEditCustomPack: a.onEditCustomPack,
   };
 }
 
-const InstrumentControlsMemo = memoWithPick(InstrumentControls, pick);
+// React Profiler note: this panel depends on array/object references from state
+// and metadata, but deep structural checks are unnecessary; shallow identity
+// checks match the update model from React state/Immer.
+const InstrumentControlsMemo = memoWithShallowPick(
+  InstrumentControls,
+  pickInstrumentMemoProps,
+);
 
 export default InstrumentControlsMemo;
