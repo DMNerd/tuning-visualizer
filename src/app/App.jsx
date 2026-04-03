@@ -315,7 +315,14 @@ export default function App() {
       chordRoot: chord.chordRoot,
       chordType: chord.chordType,
     }),
-    [systemId, tuning, scale, chord.showChord, chord.chordRoot, chord.chordType],
+    [
+      systemId,
+      tuning,
+      scale,
+      chord.showChord,
+      chord.chordRoot,
+      chord.chordType,
+    ],
   );
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
@@ -378,7 +385,15 @@ export default function App() {
 
   const instrumentPanel = {
     contract: PANEL_CONTRACTS.instrument,
-    state: { strings, frets, tuning, systemId, sysNames, tunings: TUNINGS, system },
+    state: {
+      strings,
+      frets,
+      tuning,
+      systemId,
+      sysNames,
+      tunings: TUNINGS,
+      system,
+    },
     preset: {
       mergedPresetNames,
       customPresetNames,

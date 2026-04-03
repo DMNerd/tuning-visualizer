@@ -75,11 +75,7 @@ export default function ChordTypePicker({
       getOptionKey={(opt) => opt.type}
       getOptionLabel={(opt) => opt.label}
       getFilterTerms={(opt) => [opt.label, opt.type]}
-      renderList={({
-        options,
-        listProps,
-        renderOptionItem,
-      }) => {
+      renderList={({ options, listProps, renderOptionItem }) => {
         const available = new Set(options.map((opt) => opt.type));
         let cursor = -1;
         return (

@@ -19,7 +19,9 @@ const createShortcutHandler = (shortcuts) => (event) => {
     if (!shortcut?.combo || typeof shortcut.handler !== "function") continue;
     if (typeof shortcut.when === "function" && !shortcut.when()) continue;
 
-    const combos = Array.isArray(shortcut.combo) ? shortcut.combo : [shortcut.combo];
+    const combos = Array.isArray(shortcut.combo)
+      ? shortcut.combo
+      : [shortcut.combo];
     if (combos.some((combo) => matchesCombo(combo, event))) {
       event.preventDefault();
       shortcut.handler(event);
@@ -29,7 +31,6 @@ const createShortcutHandler = (shortcuts) => (event) => {
 };
 
 export function useHotkeys(options) {
-
   const {
     toggleFs,
     setDisplayPrefs,
@@ -118,14 +119,22 @@ export function useHotkeys(options) {
         combo: ",",
         handler: () =>
           setDisplayPrefs?.((d) => {
-            d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) - 1, minDot, maxDot);
+            d.dotSize = clamp(
+              (d.dotSize ?? DOT_SIZE_DEFAULT) - 1,
+              minDot,
+              maxDot,
+            );
           }),
       },
       {
         combo: ".",
         handler: () =>
           setDisplayPrefs?.((d) => {
-            d.dotSize = clamp((d.dotSize ?? DOT_SIZE_DEFAULT) + 1, minDot, maxDot);
+            d.dotSize = clamp(
+              (d.dotSize ?? DOT_SIZE_DEFAULT) + 1,
+              minDot,
+              maxDot,
+            );
           }),
       },
     ];
@@ -142,12 +151,16 @@ export function useHotkeys(options) {
       {
         combo: "[",
         handler: () =>
-          handleStringsChange?.(clamp((strings ?? 0) - 1, minStrings, maxStrings)),
+          handleStringsChange?.(
+            clamp((strings ?? 0) - 1, minStrings, maxStrings),
+          ),
       },
       {
         combo: "]",
         handler: () =>
-          handleStringsChange?.(clamp((strings ?? 0) + 1, minStrings, maxStrings)),
+          handleStringsChange?.(
+            clamp((strings ?? 0) + 1, minStrings, maxStrings),
+          ),
       },
       {
         combo: "-",

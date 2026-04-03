@@ -27,7 +27,9 @@ export type ImportPipelineFailure = {
   error: ImportPipelineError;
 };
 
-export type ImportPipelineResult = ImportPipelineSuccess | ImportPipelineFailure;
+export type ImportPipelineResult =
+  | ImportPipelineSuccess
+  | ImportPipelineFailure;
 
 type ImportPipelineArgs = {
   file?: File | null;
@@ -37,7 +39,9 @@ type ImportPipelineArgs = {
   ) => Promise<unknown> | void;
 };
 
-export function getImportPipelineErrorMessage(error: ImportPipelineError): string {
+export function getImportPipelineErrorMessage(
+  error: ImportPipelineError,
+): string {
   switch (error.code) {
     case IMPORT_PIPELINE_ERROR_CODES.NO_FILE:
       return "No file selected.";

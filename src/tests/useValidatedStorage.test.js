@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { coerceWithFallback, resolveNextValue } from "@/hooks/validatedStorageUtils";
+import {
+  coerceWithFallback,
+  resolveNextValue,
+} from "@/hooks/validatedStorageUtils";
 import { clamp } from "@/utils/math";
 
 const numberInRange = (min, max, fallback) => (value) => {

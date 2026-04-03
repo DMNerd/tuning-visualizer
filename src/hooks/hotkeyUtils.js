@@ -82,7 +82,8 @@ const matchesKey = (keyPart, event) => {
 
   if (normalizedPart === eventKey) return true;
   if (normalizedPart === "space" && eventKey === "space") return true;
-  if (normalizedPart === "/" && (eventKey === "/" || eventKey === "?")) return true;
+  if (normalizedPart === "/" && (eventKey === "/" || eventKey === "?"))
+    return true;
 
   const code = KEY_CODE_ALIASES[normalizedPart];
   if (code && event.code?.toLowerCase() === code) {

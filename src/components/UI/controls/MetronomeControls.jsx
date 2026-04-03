@@ -178,7 +178,10 @@ function MetronomeControls({ state, actions, meta }) {
             value={barsPerScale}
             onChange={(e) =>
               setBarsPerScale(
-                Math.max(barsPerScaleMin, Number(e.target.value) || barsPerScaleMin),
+                Math.max(
+                  barsPerScaleMin,
+                  Number(e.target.value) || barsPerScaleMin,
+                ),
               )
             }
             disabled={!autoAdvanceEnabled}

@@ -10,7 +10,9 @@ export default function usePracticePanelState({
   metronomeDefaults,
   randomizeConfig,
 }) {
-  const [randomizeMode, setRandomizeMode] = React.useState(RANDOMIZE_MODES.Both);
+  const [randomizeMode, setRandomizeMode] = React.useState(
+    RANDOMIZE_MODES.Both,
+  );
   const { randomize: randomizeScaleNow } = useRandomScale({
     ...randomizeConfig,
     mode: randomizeMode,

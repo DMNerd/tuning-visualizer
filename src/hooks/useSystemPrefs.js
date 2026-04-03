@@ -14,7 +14,10 @@ export function useSystemPrefs({
     [tunings, defaultSystemId],
   );
 
-  const coerceRoot = useCallback((value) => value ?? defaultRoot, [defaultRoot]);
+  const coerceRoot = useCallback(
+    (value) => value ?? defaultRoot,
+    [defaultRoot],
+  );
 
   const [systemId, setSystemId] = useValidatedStorage({
     key: STORAGE_KEYS.SYSTEM_ID,

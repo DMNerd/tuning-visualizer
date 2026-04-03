@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce, useLocalStorage } from "react-use";
-import { coerceWithFallback, resolveNextValue } from "@/hooks/validatedStorageUtils";
+import {
+  coerceWithFallback,
+  resolveNextValue,
+} from "@/hooks/validatedStorageUtils";
 
-export function useValidatedStorage({
-  key,
-  defaultValue,
-  coerce,
-  debounceMs,
-}) {
+export function useValidatedStorage({ key, defaultValue, coerce, debounceMs }) {
   const [stored, setStored, removeStored] = useLocalStorage(key, defaultValue);
 
   const validate = useCallback(

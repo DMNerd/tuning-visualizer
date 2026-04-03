@@ -33,11 +33,7 @@ export default function ScalePicker({
           ) : null}
         </>
       )}
-      renderList={({
-        options,
-        listProps,
-        renderOptionItem,
-      }) => (
+      renderList={({ options, listProps, renderOptionItem }) => (
         <div className="tv-scale-picker__popover">
           <ul
             {...listProps}

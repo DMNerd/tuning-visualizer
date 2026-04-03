@@ -54,16 +54,19 @@ export function useResets({
     confirm,
   });
 
-  const resetInstrumentState = useCallback((divisions) => {
-    const edo = Number.isFinite(divisions)
-      ? divisions
-      : refs.current.divisions;
-    const factoryFrets = getFactoryFrets(edo);
-    refs.current.resetInstrumentPrefs(STR_FACTORY, factoryFrets);
-    refs.current.setCapoFret(CAPO_DEFAULT);
-    refs.current.setStringMeta(null);
-    refs.current.setBoardMeta?.(null);
-  }, [refs]);
+  const resetInstrumentState = useCallback(
+    (divisions) => {
+      const edo = Number.isFinite(divisions)
+        ? divisions
+        : refs.current.divisions;
+      const factoryFrets = getFactoryFrets(edo);
+      refs.current.resetInstrumentPrefs(STR_FACTORY, factoryFrets);
+      refs.current.setCapoFret(CAPO_DEFAULT);
+      refs.current.setStringMeta(null);
+      refs.current.setBoardMeta?.(null);
+    },
+    [refs],
+  );
 
   const resetDisplayState = useCallback(() => {
     refs.current.setDisplayPrefs(DISPLAY_DEFAULTS);
@@ -119,13 +122,21 @@ export function useResets({
       // Order matters: system first, then instrument/display, then musical
       // state (which depends on metronome stop/reset happening first).
       resetSystem();
-      resetInstrumentState(Number.isFinite(defaultEdo) ? defaultEdo : undefined);
+      resetInstrumentState(
+        Number.isFinite(defaultEdo) ? defaultEdo : undefined,
+      );
       resetDisplayState();
       resetMusicalState();
 
       refs.current.toast?.success?.("All settings reset.");
     },
-    [refs, resetSystem, resetInstrumentState, resetDisplayState, resetMusicalState],
+    [
+      refs,
+      resetSystem,
+      resetInstrumentState,
+      resetDisplayState,
+      resetMusicalState,
+    ],
   );
 
   return {

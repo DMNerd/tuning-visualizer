@@ -143,13 +143,8 @@ function InstrumentControls({ state, actions, meta }) {
     onCreateCustomPack,
     onEditCustomPack,
   } = actions;
-  const {
-    systems,
-    sysNames,
-    presetNames,
-    customPresetNames,
-    presetMetaMap,
-  } = meta;
+  const { systems, sysNames, presetNames, customPresetNames, presetMetaMap } =
+    meta;
   const onSaveDefault = () =>
     withToastPromise(
       () => handleSaveDefault?.(),

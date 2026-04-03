@@ -1,7 +1,12 @@
 const METRONOME_TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const METRONOME_SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
-export function buildInstrumentControlModel({ instrument, presets, handlers, reset }) {
+export function buildInstrumentControlModel({
+  instrument,
+  presets,
+  handlers,
+  reset,
+}) {
   return {
     state: {
       strings: instrument.strings,
@@ -69,7 +74,11 @@ export function buildMetronomeControlModel({ metronome, controls }) {
   };
 }
 
-export function buildDisplayControlModel({ displayPrefs, displaySetters, degreeCount }) {
+export function buildDisplayControlModel({
+  displayPrefs,
+  displaySetters,
+  degreeCount,
+}) {
   return {
     state: {
       show: displayPrefs.show,
