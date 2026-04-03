@@ -11,12 +11,15 @@ function BeatIndicator({
   currentBar = 1,
   timeSig = "4/4",
   isPlaying = false,
+  className,
 }) {
   const beatsPerBar = React.useMemo(() => parseBeats(timeSig), [timeSig]);
 
   return (
     <div
-      className={clsx("tv-beat-indicator", { "is-playing": isPlaying })}
+      className={clsx("tv-beat-indicator", className, {
+        "is-playing": isPlaying,
+      })}
       role="status"
       aria-live="polite"
       aria-atomic="true"

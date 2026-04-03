@@ -4,7 +4,7 @@
 :root {
   color-scheme: light dark;
 
-  /* layout rhythm */
+  /* layout rhythm + control-panel column sizing */
   --gap: 12px;
   --gutter: clamp(12px, 3vw, 24px);
   --max-stage: clamp(1100px, 96vw, 1400px);
@@ -23,13 +23,20 @@
   --card-h-md: clamp(220px, 34vh, 300px);
   --card-h-lg: clamp(280px, 42vh, 380px);
 
-  /* masonry */
+  /* masonry/card grid rhythm */
   --card-gap: clamp(8px, 1.6vw, 12px);
+  /* canonical min width for auto-fit control/panel columns */
   --col-width: clamp(260px, 24vw, 360px);
 
   /* motion */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --speed: 220ms;
+
+  /* typography */
+  --font-xs: 0.65625rem; /* 10.5px */
+  --font-sm: 0.71875rem; /* 11.5px */
+  --font-body: 0.75rem; /* 12px */
+  --font-lg: 1.125rem; /* 18px */
 }
 
 :root:not([data-theme]),
@@ -65,7 +72,16 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
+  }
+}
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]),
+  :root[data-theme="dark"] {
     --fg: #e5e7eb;
     --muted: #9ca3af;
     --line: #3a3f46;
@@ -91,34 +107,6 @@
     --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
     --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
   }
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --fg: #e5e7eb;
-  --muted: #9ca3af;
-  --line: #3a3f46;
-  --bg: #101214;
-  --panel: #15171a;
-  --board: #1a1d21;
-  --fret: #5b626a;
-  --fret-micro: #7c8a97;
-  --fret-dotted: color-mix(in oklab, var(--fret) 55%, var(--fg) 45%);
-
-  --accent: #ffc24b;
-  --root: #ff7a3d;
-
-  --nut: #dcdcdc;
-  --note: var(--accent);
-  --note-micro: #89c2ff;
-  --fretboard-string: #8b929a;
-  --fretboard-inlay: #3b4149;
-  --fretboard-note-fill: #0b0b0b;
-  --fretboard-nut-stroke: #000000;
-
-  --card-bg: color-mix(in oklab, var(--panel) 94%, var(--fg) 6%);
-  --card-border: color-mix(in oklab, var(--line) 86%, var(--fg) 14%);
-  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="dark"] .tv-modal__editor {

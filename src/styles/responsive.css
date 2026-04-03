@@ -26,6 +26,7 @@
 
   @media (--bp-xl) {
     :root {
+      /* narrower control/panel columns on medium-large viewports */
       --col-width: clamp(240px, 30vw, 340px);
     }
   }
@@ -64,10 +65,11 @@
       padding-block-start: clamp(48px, 12vw, 64px);
     }
 
-    select,
-    input[type="number"],
-    input[type="range"],
-    input[type="text"],
+    :is(select, input[type="number"], input[type="range"], input[type="text"]) {
+      min-height: 2.5rem;
+      font-size: 1rem;
+    }
+
     .tv-button {
       min-height: 2.5rem;
       font-size: 1rem;

@@ -132,10 +132,7 @@
   content: none !important;
 }
 
-.tv-stage-hud .tv-beat-indicator {
-  position: absolute;
-  inset: var(--space-xs) auto auto 50%;
-  transform: translateX(-50%);
+.tv-beat-indicator {
   display: grid;
   gap: 4px;
   padding: 6px 10px;
@@ -143,23 +140,22 @@
   border-radius: 10px;
   background: color-mix(in oklab, var(--panel) 92%, transparent);
   color: var(--fg);
-  pointer-events: none;
 }
 
-.tv-stage-hud .tv-beat-indicator__meta {
+.tv-beat-indicator__meta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
 }
 
-.tv-stage-hud .tv-beat-indicator__beats {
+.tv-beat-indicator__beats {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.tv-stage-hud .tv-beat-indicator__dot {
+.tv-beat-indicator__dot {
   width: 9px;
   height: 9px;
   border-radius: 999px;
@@ -170,13 +166,20 @@
     transform var(--speed) var(--ease);
 }
 
-.tv-stage-hud .tv-beat-indicator__dot.is-active {
+.tv-beat-indicator__dot.is-active {
   background: var(--accent);
   transform: scale(1.2);
 }
 
-.tv-stage-hud .tv-beat-indicator.is-playing .tv-beat-indicator__meta {
+.tv-beat-indicator.is-playing .tv-beat-indicator__meta {
   color: var(--fg);
+}
+
+.tv-stage-hud__beat-indicator {
+  position: absolute;
+  inset: var(--space-xs) auto auto 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .tv-stage-hud__badges {
@@ -215,7 +218,7 @@
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
-    minmax(clamp(260px, 28vw, 360px), 1fr)
+    minmax(var(--col-width), 1fr)
   );
   gap: var(--card-gap);
   align-content: start;
@@ -424,7 +427,7 @@ html.is-fs {
 
 .tv-field small,
 .tv-field__hint {
-  font-size: 11.5px;
+  font-size: var(--font-sm);
   line-height: 1.2;
   color: var(--muted);
 }
@@ -532,10 +535,7 @@ html.is-fs {
   margin-top: 4px;
 }
 
-select,
-input[type="number"],
-input[type="range"],
-input[type="text"] {
+:is(select, input[type="number"], input[type="range"], input[type="text"]) {
   padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -552,9 +552,7 @@ input[type="text"] {
 }
 
 /* Force dark dropdown popup on Windows Chromium */
-:root[data-theme="dark"] select,
-:root[data-theme="dark"] select option,
-:root[data-theme="dark"] select optgroup {
+:root[data-theme="dark"] :is(select, select option, select optgroup) {
   background-color: var(--panel) !important;
   color: var(--fg) !important;
 }
@@ -768,7 +766,7 @@ svg {
 }
 
 .tv-fretboard__marker {
-  font-size: 11.5px;
+  font-size: var(--font-sm);
   fill: var(--muted);
 }
 
@@ -792,14 +790,14 @@ svg {
 }
 
 .tv-fretboard__note {
-  font-size: 10.5px;
+  font-size: var(--font-xs);
   font-weight: 700;
   pointer-events: none;
   fill: var(--fretboard-note-fill);
 }
 
 .tv-fretboard__note--root {
-  font-size: 11.5px;
+  font-size: var(--font-sm);
 }
 
 .tv-fretboard__fret--dotted {
@@ -870,7 +868,7 @@ svg {
   color: var(--muted);
   padding: 0 4px;
   line-height: 1;
-  font-size: 18px;
+  font-size: var(--font-lg);
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -929,7 +927,7 @@ svg {
   border-radius: 6px;
   background: color-mix(in oklab, var(--fg) 10%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
+  font-size: var(--font-body);
   line-height: 1.2;
 }
 
@@ -1012,7 +1010,7 @@ svg {
 
 .tv-legend p {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-body);
   line-height: 1.3;
   color: var(--muted);
 }
@@ -1027,7 +1025,7 @@ svg {
   border-radius: 50%;
   background: var(--panel);
   color: var(--fg);
-  font-size: 12px;
+  font-size: var(--font-body);
   line-height: 1;
   cursor: pointer;
   user-select: none;

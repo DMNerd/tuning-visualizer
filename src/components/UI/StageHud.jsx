@@ -50,6 +50,7 @@ function StageHud({
       {showPracticeHud ? (
         <>
           <BeatIndicator
+            className="tv-stage-hud__beat-indicator"
             currentBeat={currentBeat}
             currentBar={currentBar}
             timeSig={timeSig}
