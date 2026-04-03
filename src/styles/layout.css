@@ -433,6 +433,93 @@ html.is-fs {
   margin-top: 8px;
 }
 
+.tv-field--scale-tones {
+  grid-column: 1 / -1;
+}
+
+.tv-tone-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tv-tone-list--analysis {
+  margin-top: 6px;
+}
+
+.tv-tone-list__item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tv-tone-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  color: var(--fg);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.tv-tone-chip--in-scale {
+  border-color: color-mix(in oklab, var(--line) 72%, var(--accent));
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.tv-tone-chip--outside {
+  border-color: color-mix(in oklab, var(--line) 64%, var(--root));
+  background: color-mix(in oklab, var(--root) 14%, transparent);
+}
+
+.tv-tone-chip--in-chord {
+  border-color: color-mix(in oklab, var(--line) 70%, var(--accent));
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+.tv-tone-chip__meta {
+  color: var(--muted);
+  font-size: 0.625rem;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.tv-tone-degree {
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.tv-fit-indicator {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}
+
+.tv-fit-indicator.is-success {
+  border-color: color-mix(in oklab, var(--line) 72%, var(--accent));
+  color: color-mix(in oklab, var(--accent) 70%, var(--fg));
+}
+
+.tv-fit-indicator.is-warning {
+  border-color: color-mix(in oklab, var(--line) 64%, var(--root));
+  color: color-mix(in oklab, var(--root) 72%, var(--fg));
+}
+
 .tv-field__help {
   color: var(--muted);
 }

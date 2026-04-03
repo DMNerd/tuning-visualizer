@@ -13,6 +13,9 @@ function ScaleControls({
   setScale,
   sysNames,
   scaleOptions,
+  scaleTonePcs = [],
+  scaleToneLabels = [],
+  chordTonePcs = null,
   defaultRoot = "C",
   defaultScale,
   randomizeMode = RANDOMIZE_MODES.Both,
@@ -40,6 +43,7 @@ function ScaleControls({
   const rootLabelId = React.useId();
   const scaleInputId = React.useId();
   const scaleLabelId = React.useId();
+  const scaleTonesLabelId = React.useId();
 
   return (
     <Section title="Scale" size="sm" className="tv-panel--scale-controls">
@@ -101,6 +105,37 @@ function ScaleControls({
           </div>
         </div>
 
+        <div className="tv-field tv-field--scale-tones">
+          <span className="tv-field__label" id={scaleTonesLabelId}>
+            Scale tones
+          </span>
+          <div
+            className="tv-tone-list"
+            aria-label="Scale tones"
+            aria-labelledby={scaleTonesLabelId}
+            role="list"
+          >
+            {scaleToneLabels.map((toneLabel, index) => (
+              <div
+                key={`${scaleTonePcs[index] ?? toneLabel}-${index}`}
+                className="tv-tone-list__item"
+                role="listitem"
+              >
+                <span
+                  className={clsx("tv-tone-chip", {
+                    "tv-tone-chip--in-chord":
+                      chordTonePcs instanceof Set &&
+                      chordTonePcs.has(scaleTonePcs[index]),
+                  })}
+                >
+                  {toneLabel}
+                </span>
+                <span className="tv-tone-degree">{index + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="scale-randomize-mode">
             Randomize
@@ -130,6 +165,9 @@ const ScaleControlsMemo = memoWithKeys(ScaleControls, [
   "setScale",
   "sysNames",
   "scaleOptions",
+  "scaleTonePcs",
+  "scaleToneLabels",
+  "chordTonePcs",
   "defaultRoot",
   "defaultScale",
   "randomizeMode",

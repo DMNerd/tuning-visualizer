@@ -12,6 +12,39 @@ export default function TheoryPanelContainer({
   randomize,
   reset,
 }) {
+  const scaleTones = React.useMemo(() => {
+    const divisions = Number(system.system?.divisions) || system.sysNames.length || 12;
+    const intervals = Array.isArray(scale.intervals) ? scale.intervals : [];
+
+    return intervals.map((interval) => {
+      const absolutePc = ((system.rootIx + interval) % divisions + divisions) % divisions;
+      return {
+        pc: absolutePc,
+        label: system.nameForPc(absolutePc),
+      };
+    });
+  }, [
+    system,
+    scale.intervals,
+  ]);
+
+  const chordFit = React.useMemo(() => {
+    const scaleToneSet = new Set(scaleTones.map((tone) => tone.pc));
+    const chordTonePcs = chord.chordPCs instanceof Set ? [...chord.chordPCs] : [];
+    const total = chordTonePcs.length;
+    const inScale = chordTonePcs.filter((pc) => scaleToneSet.has(pc)).length;
+    const outside = Math.max(total - inScale, 0);
+    const text = total > 0 ? `Chord fit: ${inScale}/${total} tones in scale` : null;
+
+    return {
+      inScale,
+      total,
+      outside,
+      text,
+      kind: outside > 0 ? "warning" : "success",
+    };
+  }, [chord.chordPCs, scaleTones]);
+
   return (
     <>
       <ErrorBoundary
@@ -27,6 +60,9 @@ export default function TheoryPanelContainer({
           sysNames={system.sysNames}
           scaleOptions={scale.scaleOptions}
           defaultScale={scale.defaultScale}
+          scaleTonePcs={scaleTones.map((tone) => tone.pc)}
+          scaleToneLabels={scaleTones.map((tone) => tone.label)}
+          chordTonePcs={chord.chordPCs}
           randomizeMode={randomize.randomizeMode}
           setRandomizeMode={randomize.setRandomizeMode}
           onRandomize={randomize.onRandomize}
@@ -59,6 +95,7 @@ export default function TheoryPanelContainer({
           intervals={scale.intervals}
           chordPCs={chord.chordPCs}
           chordRootPc={chord.chordRootIx}
+          chordFit={chordFit}
         />
       </ErrorBoundary>
     </>

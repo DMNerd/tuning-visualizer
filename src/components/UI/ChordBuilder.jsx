@@ -31,6 +31,7 @@ function ChordBuilder({
   intervals,
   chordPCs,
   chordRootPc,
+  chordFit = null,
 }) {
   const resetDefaults = () => {
     onRootChange(defaultRoot);
@@ -55,62 +56,35 @@ function ChordBuilder({
     chordRootPc,
   });
 
-  const chordSummary = useMemo(() => {
-    if (!chordPCs || chordPCs.size === 0) return null;
+  const chordTones = useMemo(() => {
+    if (!chordPCs || chordPCs.size === 0) return [];
+    if (!system?.divisions) return [];
 
-    if (!system?.divisions) return null;
-
-    if (scaleSet.size === 0) {
-      return {
-        kind: "info",
-        text: "Select a scale to analyse the chord.",
-      };
-    }
-
-    const divisions = system.divisions;
+    const totalDivisions = system.divisions;
     const anchorRaw = Number.isFinite(chordRootPc)
       ? chordRootPc
       : Number.isFinite(rootIx)
         ? rootIx
         : 0;
-    const anchor = ((anchorRaw % divisions) + divisions) % divisions;
+    const anchor = ((anchorRaw % totalDivisions) + totalDivisions) % totalDivisions;
 
     const pcs = Array.from(chordPCs, (value) => {
-      const wrapped = ((value % divisions) + divisions) % divisions;
+      const wrapped = ((value % totalDivisions) + totalDivisions) % totalDivisions;
       return wrapped;
     });
 
     pcs.sort((a, b) => {
-      const da = (a - anchor + divisions) % divisions;
-      const db = (b - anchor + divisions) % divisions;
+      const da = (a - anchor + totalDivisions) % totalDivisions;
+      const db = (b - anchor + totalDivisions) % totalDivisions;
       return da - db;
     });
 
-    const tones = pcs.map((pc) => {
+    return pcs.map((pc) => {
       const noteName = nameForPc?.(pc) ?? String(pc);
       const degree = degreeForPc(pc);
       const inScale = scaleSet.has(pc);
-      return { noteName, degree, inScale };
+      return { pc, noteName, degree, inScale };
     });
-
-    const outside = tones.filter((tone) => !tone.inScale);
-    if (outside.length > 0) {
-      return {
-        kind: "warning",
-        text: `Chord tones outside current scale: ${outside
-          .map((tone) => tone.noteName)
-          .join(", ")}`,
-      };
-    }
-
-    const degreeLabels = tones
-      .map((tone) => (tone.degree != null ? String(tone.degree) : "–"))
-      .join(", ");
-
-    return {
-      kind: "success",
-      text: `Chord degrees in scale: ${degreeLabels}`,
-    };
   }, [
     chordPCs,
     chordRootPc,
@@ -120,6 +94,33 @@ function ChordBuilder({
     scaleSet,
     system?.divisions,
   ]);
+
+  const chordSummary = useMemo(() => {
+    if (!chordTones.length) return null;
+    if (scaleSet.size === 0) {
+      return {
+        kind: "info",
+        text: "Select a scale to analyse the chord.",
+      };
+    }
+
+    const outside = chordTones.filter((tone) => !tone.inScale);
+    if (outside.length > 0) {
+      return {
+        kind: "warning",
+        text: `Outside selected scale: ${outside.map((tone) => tone.noteName).join(", ")}`,
+      };
+    }
+
+    const degreeLabels = chordTones
+      .map((tone) => (tone.degree != null ? String(tone.degree) : "–"))
+      .join(", ");
+
+    return {
+      kind: "success",
+      text: `All chord tones are in scale (degrees: ${degreeLabels}).`,
+    };
+  }, [chordTones, scaleSet]);
 
   return (
     <Section title="Chord Builder" size="sm">
@@ -199,6 +200,46 @@ function ChordBuilder({
               Hide non-chord tones
             </label>
           </div>
+          {chordFit?.text ? (
+            <small
+              className={clsx("tv-fit-indicator", {
+                "is-warning": chordFit.kind === "warning",
+                "is-success": chordFit.kind === "success",
+              })}
+            >
+              {chordFit.text}
+            </small>
+          ) : null}
+          {chordTones.length > 0 ? (
+            <div
+              className="tv-tone-list tv-tone-list--analysis"
+              role="list"
+              aria-label="Chord tones analysis"
+            >
+              {chordTones.map((tone) => (
+                <div key={tone.pc} className="tv-tone-list__item" role="listitem">
+                  <span
+                    className={clsx("tv-tone-chip", {
+                      "tv-tone-chip--in-scale": tone.inScale,
+                      "tv-tone-chip--outside": !tone.inScale,
+                    })}
+                    aria-label={`${tone.noteName}, ${
+                      tone.inScale
+                        ? `degree ${tone.degree ?? "unknown"} in selected scale`
+                        : "outside selected scale"
+                    }`}
+                  >
+                    <span>{tone.noteName}</span>
+                    <small className="tv-tone-chip__meta">
+                      {tone.inScale
+                        ? `deg ${tone.degree ?? "–"}`
+                        : "outside"}
+                    </small>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           {chordSummary?.text ? (
             <small
               className={clsx("tv-field__help", {
@@ -228,6 +269,7 @@ function pick(p) {
     intervals: p.intervals,
     chordPCs: p.chordPCs,
     chordRootPc: p.chordRootPc,
+    chordFit: p.chordFit,
     defaultRoot: p.defaultRoot,
     defaultType: p.defaultType,
     onRootChange: p.onRootChange,

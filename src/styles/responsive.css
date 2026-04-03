@@ -108,6 +108,15 @@
       font-size: 1rem;
     }
 
+    .tv-tone-list {
+      gap: 10px;
+    }
+
+    .tv-tone-chip {
+      min-width: 2.25rem;
+      font-size: 0.875rem;
+    }
+
     .tv-field small,
     .tv-field__hint {
       font-size: 0.875rem;
