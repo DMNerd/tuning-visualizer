@@ -579,29 +579,35 @@ export default function App() {
           chordRootPc={chordRootIx}
         />
       </ErrorBoundary>
-      <MetronomeControls
-        isPlaying={isPlaying}
-        bpm={bpm}
-        setBpm={setBpm}
-        timeSig={timeSig}
-        setTimeSig={setTimeSig}
-        subdivision={subdivision}
-        setSubdivision={setSubdivision}
-        countInEnabled={countInEnabled}
-        setCountInEnabled={setCountInEnabled}
-        autoAdvanceEnabled={autoAdvanceEnabled}
-        setAutoAdvanceEnabled={setAutoAdvanceEnabled}
-        barsPerScale={safeBarsPerScale}
-        setBarsPerScale={setBarsPerScale}
-        announceCountInBeforeChange={announceCountInBeforeChange}
-        setAnnounceCountInBeforeChange={setAnnounceCountInBeforeChange}
-        barsRemaining={barsRemaining}
-        toggleMetronome={practiceActions.toggleMetronome}
-        bpmUp={practiceActions.bpmUp}
-        bpmDown={practiceActions.bpmDown}
-        tapTempo={practiceActions.tapTempo}
-        randomizeScaleNow={practiceActions.randomizeScaleNow}
-      />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        resetKeys={[bpm, timeSig, subdivision, isPlaying]}
+        onReset={resetPracticeCounters}
+      >
+        <MetronomeControls
+          isPlaying={isPlaying}
+          bpm={bpm}
+          setBpm={setBpm}
+          timeSig={timeSig}
+          setTimeSig={setTimeSig}
+          subdivision={subdivision}
+          setSubdivision={setSubdivision}
+          countInEnabled={countInEnabled}
+          setCountInEnabled={setCountInEnabled}
+          autoAdvanceEnabled={autoAdvanceEnabled}
+          setAutoAdvanceEnabled={setAutoAdvanceEnabled}
+          barsPerScale={safeBarsPerScale}
+          setBarsPerScale={setBarsPerScale}
+          announceCountInBeforeChange={announceCountInBeforeChange}
+          setAnnounceCountInBeforeChange={setAnnounceCountInBeforeChange}
+          barsRemaining={barsRemaining}
+          toggleMetronome={practiceActions.toggleMetronome}
+          bpmUp={practiceActions.bpmUp}
+          bpmDown={practiceActions.bpmDown}
+          tapTempo={practiceActions.tapTempo}
+          randomizeScaleNow={practiceActions.randomizeScaleNow}
+        />
+      </ErrorBoundary>
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         resetKeys={[displayPrefs]}
@@ -652,42 +658,46 @@ export default function App() {
   const modals = (
     <>
       {editorState ? (
-        <React.Suspense
-          fallback={
-            <div className="tv-modal-suspense" role="status" aria-live="polite">
-              Loading editor...
-            </div>
-          }
-        >
-          <TuningPackEditorModal
-            isOpen={Boolean(editorState)}
-            mode={editorState?.mode ?? "create"}
-            initialPack={editorState?.initialPack}
-            originalName={editorState?.originalName ?? undefined}
-            onCancel={cancelEditor}
-            onSubmit={submitEditor}
-            themeMode={themeMode}
-          />
-        </React.Suspense>
+        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[editorState]}>
+          <React.Suspense
+            fallback={
+              <div className="tv-modal-suspense" role="status" aria-live="polite">
+                Loading editor...
+              </div>
+            }
+          >
+            <TuningPackEditorModal
+              isOpen={Boolean(editorState)}
+              mode={editorState?.mode ?? "create"}
+              initialPack={editorState?.initialPack}
+              originalName={editorState?.originalName ?? undefined}
+              onCancel={cancelEditor}
+              onSubmit={submitEditor}
+              themeMode={themeMode}
+            />
+          </React.Suspense>
+        </ErrorBoundary>
       ) : null}
       {isManagerOpen ? (
-        <React.Suspense
-          fallback={
-            <div className="tv-modal-suspense" role="status" aria-live="polite">
-              Loading manager...
-            </div>
-          }
-        >
-          <TuningPackManagerModal
-            isOpen={isManagerOpen}
-            tunings={customTunings}
-            systems={TUNINGS}
-            themeMode={themeMode}
-            onClose={closeManager}
-            onEdit={editFromManager}
-            onDelete={deletePack}
-          />
-        </React.Suspense>
+        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[isManagerOpen]}>
+          <React.Suspense
+            fallback={
+              <div className="tv-modal-suspense" role="status" aria-live="polite">
+                Loading manager...
+              </div>
+            }
+          >
+            <TuningPackManagerModal
+              isOpen={isManagerOpen}
+              tunings={customTunings}
+              systems={TUNINGS}
+              themeMode={themeMode}
+              onClose={closeManager}
+              onEdit={editFromManager}
+              onDelete={deletePack}
+            />
+          </React.Suspense>
+        </ErrorBoundary>
       ) : null}
     </>
   );
