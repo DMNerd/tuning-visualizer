@@ -23,9 +23,6 @@ importers:
       json-edit-react:
         specifier: ^1.29.0
         version: 1.29.0(react@19.2.4)
-      nano-theme:
-        specifier: ^1.5.0
-        version: 1.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(tslib@2.8.1)
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -1644,11 +1641,6 @@ packages:
       react: '*'
       react-dom: '*'
 
-  nano-theme@1.5.0:
-    resolution: {integrity: sha512-lOSUW1IqKDKfeOdwHdwTCCo49BngV83KXRPMI9GDk7Fha6fjhzv2ozNPbrm+h+uh9CCIhM9fkvDtspGfb46bpw==}
-    peerDependencies:
-      react: '*'
-
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -2156,12 +2148,6 @@ packages:
     resolution: {integrity: sha512-vzCjQO/rgUuK9sf8VJZvjqiqiHFaZLnOiimmUuOKODxWL8mm/xua7viT7aqX7dgPY60otQjUotzFMmCB4VdmqQ==}
     engines: {node: '>=10'}
     hasBin: true
-
-  thingies@2.6.0:
-    resolution: {integrity: sha512-rMHRjmlFLM1R96UYPvpmnc3LYtdFrT33JIB7L9hetGue1qAPfn1N2LJeEjxUSidu1Iku+haLZXDuEXUHNGO/lg==}
-    engines: {node: '>=10.18'}
-    peerDependencies:
-      tslib: ^2
 
   throttle-debounce@3.0.1:
     resolution: {integrity: sha512-dTEWWNu6JmeVXY0ZYoPuH5cRIwc0MeGbJwah9KUNYSJwommQpCzTySTpEe8Gs1J23aeWEuAobe4Ag7EHVt/LOg==}
@@ -3819,16 +3805,6 @@ snapshots:
       stacktrace-js: 2.0.2
       stylis: 4.3.6
 
-  nano-theme@1.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(tslib@2.8.1):
-    dependencies:
-      nano-css: 5.6.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react: 19.2.4
-      react-use: 17.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      thingies: 2.6.0(tslib@2.8.1)
-    transitivePeerDependencies:
-      - react-dom
-      - tslib
-
   nanoid@3.3.11: {}
 
   natural-compare@1.4.0: {}
@@ -4429,10 +4405,6 @@ snapshots:
       acorn: 8.16.0
       commander: 2.20.3
       source-map-support: 0.5.21
-
-  thingies@2.6.0(tslib@2.8.1):
-    dependencies:
-      tslib: 2.8.1
 
   throttle-debounce@3.0.1: {}
 

@@ -3,7 +3,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import ErrorFallback from "@/components/UI/ErrorFallback";
 import ScaleControls from "@/components/UI/controls/ScaleControls";
-import ChordBuilder from "@/components/UI/ChordBuilder";
+import ChordControls from "@/components/UI/controls/ChordControls";
 
 export default function TheoryPanelContainer({
   system,
@@ -78,7 +78,7 @@ export default function TheoryPanelContainer({
         ]}
         onReset={reset.resetMusicalState}
       >
-        <ChordBuilder
+        <ChordControls
           root={chord.chordRoot}
           onRootChange={chord.setChordRoot}
           sysNames={system.sysNames}
@@ -93,7 +93,7 @@ export default function TheoryPanelContainer({
           system={system.system}
           rootIx={system.rootIx}
           intervals={scale.intervals}
-          chordPCs={chord.chordPCs}
+          chordPCs={chord.chordTonePCs}
           chordRootPc={chord.chordRootIx}
           chordFit={chordFit}
         />

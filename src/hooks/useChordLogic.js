@@ -24,6 +24,10 @@ export function useChordLogic(system, pcFromName) {
         : null,
     [showChord, chordRootIx, chordType, system.divisions],
   );
+  const chordTonePCs = useMemo(
+    () => buildChordPCsFromPc(chordRootIx, chordType, system.divisions),
+    [chordRootIx, chordType, system.divisions],
+  );
 
   useEffect(() => {
     if (system.divisions === 24) return;
@@ -43,6 +47,7 @@ export function useChordLogic(system, pcFromName) {
       setHideNonChord: toggleHideNonChord,
       chordRootIx,
       chordPCs,
+      chordTonePCs,
     }),
     [
       chordRoot,
@@ -51,6 +56,7 @@ export function useChordLogic(system, pcFromName) {
       hideNonChord,
       chordRootIx,
       chordPCs,
+      chordTonePCs,
       toggleShowChord,
       toggleHideNonChord,
     ],

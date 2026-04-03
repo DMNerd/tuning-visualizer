@@ -12,7 +12,7 @@ import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
 
-function ChordBuilder({
+function ChordControls({
   root,
   onRootChange,
   sysNames,
@@ -96,6 +96,7 @@ function ChordBuilder({
   ]);
 
   const chordSummary = useMemo(() => {
+    if (!showChord) return null;
     if (!chordTones.length) return null;
     if (scaleSet.size === 0) {
       return {
@@ -120,10 +121,10 @@ function ChordBuilder({
       kind: "success",
       text: `All chord tones are in scale (degrees: ${degreeLabels}).`,
     };
-  }, [chordTones, scaleSet]);
+  }, [chordTones, scaleSet, showChord]);
 
   return (
-    <Section title="Chord Builder" size="sm">
+    <Section title="Chord Controls" size="sm">
       <div className={clsx("tv-controls", "tv-controls--chord")}>
         <div className="tv-controls__grid--two">
           <div className="tv-field">
@@ -159,7 +160,7 @@ function ChordBuilder({
               <button
                 type="button"
                 className="tv-button tv-button--icon"
-                aria-label="Reset chord builder to defaults"
+                aria-label="Reset chord controls to defaults"
                 title="Reset to default"
                 onClick={resetDefaults}
               >
@@ -167,6 +168,55 @@ function ChordBuilder({
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="tv-field tv-field--scale-tones">
+          <span className="tv-field__label">Chord tones</span>
+          {chordTones.length > 0 ? (
+            <div
+              className="tv-tone-list tv-tone-list--analysis"
+              role="list"
+              aria-label="Chord tones"
+            >
+              {chordTones.map((tone) => (
+                <div key={tone.pc} className="tv-tone-list__item" role="listitem">
+                  <span
+                    className={clsx("tv-tone-chip", {
+                      "tv-tone-chip--in-scale": showChord && tone.inScale,
+                      "tv-tone-chip--outside": showChord && !tone.inScale,
+                    })}
+                    aria-label={
+                      showChord
+                        ? `${tone.noteName}, ${
+                            tone.inScale
+                              ? `degree ${tone.degree ?? "unknown"} in selected scale`
+                              : "outside selected scale"
+                          }`
+                        : `${tone.noteName}`
+                    }
+                  >
+                    <span>{tone.noteName}</span>
+                    {showChord ? (
+                      <small className="tv-tone-chip__meta">
+                        {tone.inScale
+                          ? `deg ${tone.degree ?? "–"}`
+                          : "outside"}
+                      </small>
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {chordSummary?.text ? (
+            <small
+              className={clsx("tv-field__help", {
+                "tv-field__help--error": chordSummary.kind === "warning",
+              })}
+            >
+              {chordSummary.text}
+            </small>
+          ) : null}
         </div>
 
         <div className="tv-field">
@@ -210,45 +260,6 @@ function ChordBuilder({
               {chordFit.text}
             </small>
           ) : null}
-          {chordTones.length > 0 ? (
-            <div
-              className="tv-tone-list tv-tone-list--analysis"
-              role="list"
-              aria-label="Chord tones analysis"
-            >
-              {chordTones.map((tone) => (
-                <div key={tone.pc} className="tv-tone-list__item" role="listitem">
-                  <span
-                    className={clsx("tv-tone-chip", {
-                      "tv-tone-chip--in-scale": tone.inScale,
-                      "tv-tone-chip--outside": !tone.inScale,
-                    })}
-                    aria-label={`${tone.noteName}, ${
-                      tone.inScale
-                        ? `degree ${tone.degree ?? "unknown"} in selected scale`
-                        : "outside selected scale"
-                    }`}
-                  >
-                    <span>{tone.noteName}</span>
-                    <small className="tv-tone-chip__meta">
-                      {tone.inScale
-                        ? `deg ${tone.degree ?? "–"}`
-                        : "outside"}
-                    </small>
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {chordSummary?.text ? (
-            <small
-              className={clsx("tv-field__help", {
-                "tv-field__help--error": chordSummary.kind === "warning",
-              })}
-            >
-              {chordSummary.text}
-            </small>
-          ) : null}
         </div>
       </div>
     </Section>
@@ -279,6 +290,6 @@ function pick(p) {
   };
 }
 
-const ChordBuilderMemo = memoWithPick(ChordBuilder, pick);
+const ChordControlsMemo = memoWithPick(ChordControls, pick);
 
-export default ChordBuilderMemo;
+export default ChordControlsMemo;
