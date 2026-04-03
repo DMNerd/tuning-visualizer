@@ -7,24 +7,23 @@
 
     "jsx": "react-jsx",
 
-    "allowJs": true, // allow .js/.jsx
-    "checkJs": false, // set to true if you want TS to type-check JS files too
-    "noEmit": true, // bundler will emit
-    "isolatedModules": true, // plays nice with bundlers
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
     "resolveJsonModule": true,
 
-    "strict": true, // TS files get strict checking
+    "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
-    "types": ["react", "react-dom", "node"] // makes @types/* “used” and available everywhere
+    "types": ["react", "react-dom", "node"]
   },
   "include": [
     "src/**/*.ts",
