@@ -1,10 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  RANDOMIZE_MODES,
-  applyRandomizedScale,
-} from "@/hooks/useRandomScale";
+import { RANDOMIZE_MODES, applyRandomizedScale } from "@/hooks/useRandomScale";
 import { createThrottledTrigger } from "@/hooks/useThrottledTrigger";
 
 test("createThrottledTrigger throttles repeated trigger calls", () => {

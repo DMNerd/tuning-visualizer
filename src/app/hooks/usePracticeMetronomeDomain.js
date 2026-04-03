@@ -4,7 +4,10 @@ import { PANEL_CONTRACTS } from "@/app/contracts/panelContracts";
 import usePracticePanelState from "@/app/containers/usePracticePanelState";
 import { buildPracticeMetronomeDomainReturn } from "@/app/hooks/domainReturnBuilders";
 
-export function usePracticeMetronomeDomain({ metronomeDefaults, randomizeConfig }) {
+export function usePracticeMetronomeDomain({
+  metronomeDefaults,
+  randomizeConfig,
+}) {
   const practice = usePracticePanelState({
     metronomeDefaults,
     randomizeConfig,

@@ -177,9 +177,7 @@ export default function App() {
           audioReady={practiceDomain.metronome.engine.audioReady}
           audioError={practiceDomain.metronome.engine.audioError}
         />
-        <SafeSection
-          onReset={orchestration.onResetCapo}
-        >
+        <SafeSection onReset={orchestration.onResetCapo}>
           <Fretboard
             ref={boardRef}
             strings={strings}
@@ -268,7 +266,9 @@ export default function App() {
     ],
   );
 
-  const modals = <CustomTuningModalsContainer {...exportCustomDomain.modalPanel} />;
+  const modals = (
+    <CustomTuningModalsContainer {...exportCustomDomain.modalPanel} />
+  );
 
   const toaster = (
     <Toaster

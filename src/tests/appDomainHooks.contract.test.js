@@ -41,7 +41,10 @@ test("useInstrumentDomain return-shape contract", () => {
     buildInstrumentPanel: () => {},
     buildInstrumentControlModelWithReset: () => {},
   });
-  assert.deepEqual(sortedKeys(actual), [...INSTRUMENT_DOMAIN_RETURN_KEYS].sort());
+  assert.deepEqual(
+    sortedKeys(actual),
+    [...INSTRUMENT_DOMAIN_RETURN_KEYS].sort(),
+  );
 });
 
 test("usePracticeMetronomeDomain return-shape contract", () => {
@@ -63,5 +66,8 @@ test("useExportCustomTuningDomain return-shape contract", () => {
     modalPanel: {},
     packActions: {},
   });
-  assert.deepEqual(sortedKeys(actual), [...EXPORT_CUSTOM_DOMAIN_RETURN_KEYS].sort());
+  assert.deepEqual(
+    sortedKeys(actual),
+    [...EXPORT_CUSTOM_DOMAIN_RETURN_KEYS].sort(),
+  );
 });

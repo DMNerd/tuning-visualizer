@@ -5,23 +5,22 @@ import { useTheme } from "@/hooks/useTheme";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 export function useDisplayState(defaults) {
-  const [displayPrefs, setDisplayPrefs, displaySetters] =
-    usePersistedPrefs({
-      storageKey: STORAGE_KEYS.DISPLAY_PREFS,
-      initial: defaults,
-      setterKeys: [
-        "show",
-        "showOpen",
-        "showFretNums",
-        "dotSize",
-        "accidental",
-        "microLabelStyle",
-        "openOnlyInScale",
-        "colorByDegree",
-        "lefty",
-      ],
-      debounceMs: 300,
-    });
+  const [displayPrefs, setDisplayPrefs, displaySetters] = usePersistedPrefs({
+    storageKey: STORAGE_KEYS.DISPLAY_PREFS,
+    initial: defaults,
+    setterKeys: [
+      "show",
+      "showOpen",
+      "showFretNums",
+      "dotSize",
+      "accidental",
+      "microLabelStyle",
+      "openOnlyInScale",
+      "colorByDegree",
+      "lefty",
+    ],
+    debounceMs: 300,
+  });
   const [theme, setTheme, themeMode] = useTheme();
 
   const stageRef = useRef(null);
@@ -38,7 +37,11 @@ export function useDisplayState(defaults) {
   }, [isFs]);
 
   const display = useMemo(
-    () => ({ prefs: displayPrefs, setPrefs: setDisplayPrefs, setters: displaySetters }),
+    () => ({
+      prefs: displayPrefs,
+      setPrefs: setDisplayPrefs,
+      setters: displaySetters,
+    }),
     [displayPrefs, setDisplayPrefs, displaySetters],
   );
   const themeState = useMemo(

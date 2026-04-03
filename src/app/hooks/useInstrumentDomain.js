@@ -77,18 +77,10 @@ export function useInstrumentDomain({
     queuePresetByName: presets.queuePresetByName,
   });
 
-  const {
-    strings,
-    frets,
-    tuning,
-  } = instrumentState;
+  const { strings, frets, tuning } = instrumentState;
   const { divisions: systemDivisions } = system;
-  const {
-    setFretsPref,
-    setTuning,
-    handleStringsChange,
-    handleSaveDefault,
-  } = instrumentActions;
+  const { setFretsPref, setTuning, handleStringsChange, handleSaveDefault } =
+    instrumentActions;
   const {
     mergedPresetNames,
     customPresetNames,

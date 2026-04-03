@@ -5,7 +5,13 @@ import { LABEL_VALUES } from "@/hooks/useLabels";
 import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useResets } from "@/hooks/useResets";
-import { CAPO_DEFAULT, FRETS_MAX, FRETS_MIN, STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
+import {
+  CAPO_DEFAULT,
+  FRETS_MAX,
+  FRETS_MIN,
+  STR_MAX,
+  STR_MIN,
+} from "@/lib/config/appDefaults";
 
 /** @typedef {import("@/app/hooks/interfaces").AppOrchestrationInput} AppOrchestrationInput */
 
@@ -31,18 +37,35 @@ function validateOrchestrationInputsDev({
     },
     { path: "setDisplayPrefs", valid: typeof setDisplayPrefs === "function" },
     { path: "toggleFs", valid: typeof toggleFs === "function" },
-    { path: "theorySystem.setRoot", valid: typeof theorySystem?.setRoot === "function" },
-    { path: "theoryChord.setChordRoot", valid: typeof theoryChord?.setChordRoot === "function" },
-    { path: "instrumentActions.setTuning", valid: typeof instrumentActions?.setTuning === "function" },
-    { path: "instrumentActions.setFretsUI", valid: typeof instrumentActions?.setFretsUI === "function" },
+    {
+      path: "theorySystem.setRoot",
+      valid: typeof theorySystem?.setRoot === "function",
+    },
+    {
+      path: "theoryChord.setChordRoot",
+      valid: typeof theoryChord?.setChordRoot === "function",
+    },
+    {
+      path: "instrumentActions.setTuning",
+      valid: typeof instrumentActions?.setTuning === "function",
+    },
+    {
+      path: "instrumentActions.setFretsUI",
+      valid: typeof instrumentActions?.setFretsUI === "function",
+    },
     {
       path: "practiceActions.randomizeScaleFromHotkey",
       valid: typeof practiceActions?.randomizeScaleFromHotkey === "function",
     },
-    { path: "practiceMetronome.engine.stop", valid: typeof practiceMetronome?.engine?.stop === "function" },
+    {
+      path: "practiceMetronome.engine.stop",
+      valid: typeof practiceMetronome?.engine?.stop === "function",
+    },
   ];
 
-  const missing = checks.filter((check) => !check.valid).map((check) => check.path);
+  const missing = checks
+    .filter((check) => !check.valid)
+    .map((check) => check.path);
   if (missing.length > 0) {
     throw new Error(
       `[useAppOrchestration] Missing or invalid required inputs: ${missing.join(", ")}`,
