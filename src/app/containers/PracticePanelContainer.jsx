@@ -20,7 +20,11 @@ export default function PracticePanelContainer({
       ]}
       onReset={reset.resetPracticeCounters}
     >
-      <MetronomeControls {...controlModel} />
+      <MetronomeControls
+        state={controlModel.state}
+        actions={controlModel.actions}
+        meta={controlModel.meta}
+      />
     </ErrorBoundary>
   );
 }

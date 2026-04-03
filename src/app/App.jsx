@@ -60,10 +60,10 @@ import ExportPanelContainer from "@/app/containers/ExportPanelContainer";
 import CustomTuningModalsContainer from "@/app/containers/CustomTuningModalsContainer";
 import { PANEL_CONTRACTS } from "@/app/contracts/panelContracts";
 import {
-  adaptDisplayControls,
-  adaptInstrumentControls,
-  adaptMetronomeControls,
-} from "@/app/controlAdapters";
+  buildDisplayControlModel,
+  buildInstrumentControlModel,
+  buildMetronomeControlModel,
+} from "@/app/adapters/controls";
 
 export default function App() {
   const boardRef = React.useRef(null);
@@ -111,7 +111,6 @@ export default function App() {
 
   const {
     strings,
-    setStrings,
     frets,
     setFretsPref,
     setFretsUI,
@@ -388,7 +387,6 @@ export default function App() {
       setPreset,
     },
     handlers: {
-      setStrings,
       setFretsPref,
       setSystemId,
       setTuning,
@@ -401,17 +399,16 @@ export default function App() {
   };
   const instrumentControlModel = useMemo(
     () =>
-      adaptInstrumentControls({
-        state: {
+      buildInstrumentControlModel({
+        instrument: {
           strings,
           frets,
           tuning,
           systemId,
           sysNames,
           tunings: TUNINGS,
-          system,
         },
-        preset: {
+        presets: {
           mergedPresetNames,
           customPresetNames,
           mergedPresetMetaMap,
@@ -435,7 +432,6 @@ export default function App() {
       tuning,
       systemId,
       sysNames,
-      system,
       mergedPresetNames,
       customPresetNames,
       mergedPresetMetaMap,
@@ -489,7 +485,7 @@ export default function App() {
   };
   const metronomeControlModel = useMemo(
     () =>
-      adaptMetronomeControls({
+      buildMetronomeControlModel({
         metronome: {
           ...practice.metronomePrefs,
           ...practice.metronomeEngine,
@@ -513,7 +509,7 @@ export default function App() {
 
   const displayControlModel = useMemo(
     () =>
-      adaptDisplayControls({
+      buildDisplayControlModel({
         displayPrefs,
         displaySetters,
         degreeCount: intervals.length,
@@ -572,7 +568,11 @@ export default function App() {
           resetDisplay();
         }}
       >
-        <DisplayControls {...displayControlModel} />
+        <DisplayControls
+          state={displayControlModel.state}
+          actions={displayControlModel.actions}
+          meta={displayControlModel.meta}
+        />
       </SafeSection>
       <ExportPanelContainer {...exportPanel} />
     </>

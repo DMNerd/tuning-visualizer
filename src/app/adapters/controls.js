@@ -1,7 +1,37 @@
 const METRONOME_TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const METRONOME_SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
-export function adaptMetronomeControls({ metronome, controls }) {
+export function buildInstrumentControlModel({ instrument, presets, handlers, reset }) {
+  return {
+    state: {
+      strings: instrument.strings,
+      frets: instrument.frets,
+      tuning: instrument.tuning,
+      systemId: instrument.systemId,
+      selectedPreset: presets.selectedPreset,
+    },
+    actions: {
+      setFrets: handlers.setFretsPref,
+      setSystemId: handlers.setSystemId,
+      setTuning: handlers.setTuning,
+      handleStringsChange: handlers.handleStringsChange,
+      setSelectedPreset: presets.setPreset,
+      handleSaveDefault: handlers.handleSaveDefault,
+      handleResetFactoryDefault: reset.resetInstrumentFactory,
+      onCreateCustomPack: handlers.openCreate,
+      onEditCustomPack: handlers.openEditSelected,
+    },
+    meta: {
+      systems: instrument.tunings,
+      sysNames: instrument.sysNames,
+      presetNames: presets.mergedPresetNames,
+      customPresetNames: presets.customPresetNames,
+      presetMetaMap: presets.mergedPresetMetaMap,
+    },
+  };
+}
+
+export function buildMetronomeControlModel({ metronome, controls }) {
   return {
     state: {
       isPlaying: metronome.isPlaying,
@@ -39,7 +69,7 @@ export function adaptMetronomeControls({ metronome, controls }) {
   };
 }
 
-export function adaptDisplayControls({ displayPrefs, displaySetters, degreeCount }) {
+export function buildDisplayControlModel({ displayPrefs, displaySetters, degreeCount }) {
   return {
     state: {
       show: displayPrefs.show,
@@ -65,36 +95,6 @@ export function adaptDisplayControls({ displayPrefs, displaySetters, degreeCount
     },
     meta: {
       degreeCount,
-    },
-  };
-}
-
-export function adaptInstrumentControls({ state, preset, handlers, reset }) {
-  return {
-    state: {
-      strings: state.strings,
-      frets: state.frets,
-      tuning: state.tuning,
-      systemId: state.systemId,
-      selectedPreset: preset.selectedPreset,
-    },
-    actions: {
-      setFrets: handlers.setFretsPref,
-      setSystemId: handlers.setSystemId,
-      setTuning: handlers.setTuning,
-      handleStringsChange: handlers.handleStringsChange,
-      setSelectedPreset: preset.setPreset,
-      handleSaveDefault: handlers.handleSaveDefault,
-      handleResetFactoryDefault: reset.resetInstrumentFactory,
-      onCreateCustomPack: handlers.openCreate,
-      onEditCustomPack: handlers.openEditSelected,
-    },
-    meta: {
-      systems: state.tunings,
-      sysNames: state.sysNames,
-      presetNames: preset.mergedPresetNames,
-      customPresetNames: preset.customPresetNames,
-      presetMetaMap: preset.mergedPresetMetaMap,
     },
   };
 }

@@ -17,7 +17,11 @@ export default function InstrumentPanelContainer({
         reset.resetInstrumentFactory(state.system.divisions);
       }}
     >
-      <InstrumentControls {...controlModel} />
+      <InstrumentControls
+        state={controlModel.state}
+        actions={controlModel.actions}
+        meta={controlModel.meta}
+      />
     </ErrorBoundary>
   );
 }
