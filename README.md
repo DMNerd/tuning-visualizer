@@ -31,7 +31,9 @@ This app will be free and open source forever and is completely self-hostable
 
 - **Scales & Chords**
   - Scale picker filtered by tuning system
+  - **Scale tones panel**: displays the selected scale as note chips with degree numbers; tones that are also part of the active chord are visually highlighted
   - **Chord Builder**: highlight chord tones on top of the selected scale
+  - **Chord fit + tone analysis**: compact chord-fit status plus per-tone chips showing whether each chord tone is in the selected scale (`deg n`) or outside
   - Select any **root** note, choose **sharps/flats**, or use the **Random root & scale** control (`r`)
 
 - **Tunings**
@@ -43,6 +45,7 @@ This app will be free and open source forever and is completely self-hostable
 - **Display**
   - Multiple label modes: **note names**, **degrees/intervals**, **fret numbers (relative to 12-TET)**, or **fret numbers**
   - "**Micro-fret labels**" selector with styles for **letters**, **accidentals**, or **fractions** to match your preferred microtonal notation
+  - **German/Czech note names** for labels and tuning input (e.g. `B♭ → B`, `B → H`, `C# → Cis`, `E♭ → Es`) with microtonal `-ih/-eh` aliases in 24-TET (e.g. `Cih`, `Cisih`)
   - Option to color the notes based on **degrees** (independently)
   - Toggle **open strings** and **fret numbers**
   - Classic **inlay markers**
