@@ -1,10 +1,11 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { toast } from "react-hot-toast";
 
 import { usePracticeActions } from "@/hooks/usePracticeActions";
-import { useMetronomePrefs } from "@/hooks/useMetronomePrefs";
+import { usePersistedPrefs } from "@/hooks/usePersistedPrefs";
 import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
 import { useRandomScale, RANDOMIZE_MODES } from "@/hooks/useRandomScale";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 export default function usePracticePanelState({
   metronomeDefaults,
@@ -20,7 +21,20 @@ export default function usePracticePanelState({
   });
 
   const [metronomePrefs, setMetronomePrefs, metronomeSetters] =
-    useMetronomePrefs(metronomeDefaults);
+    usePersistedPrefs({
+      storageKey: STORAGE_KEYS.METRONOME_PREFS,
+      initial: metronomeDefaults,
+      setterKeys: [
+        "bpm",
+        "timeSig",
+        "subdivision",
+        "countInEnabled",
+        "autoAdvanceEnabled",
+        "barsPerScale",
+        "announceCountInBeforeChange",
+      ],
+      debounceMs: 300,
+    });
   const {
     bpm,
     timeSig,
@@ -91,18 +105,54 @@ export default function usePracticePanelState({
     practiceActions.resetTapTempo();
   }, [metronomeDefaults.barsPerScale, practiceActions]);
 
+  const randomize = useMemo(
+    () => ({
+      randomizeMode,
+      setRandomizeMode,
+      randomizeNow,
+      randomizeFromHotkey,
+    }),
+    [randomizeMode, setRandomizeMode, randomizeNow, randomizeFromHotkey],
+  );
+  const metronome = useMemo(
+    () => ({
+      prefs: metronomePrefs,
+      setters: metronomeSetters,
+      engine: metronomeEngine,
+      safeBarsPerScale,
+      barsRemaining,
+    }),
+    [
+      metronomePrefs,
+      metronomeSetters,
+      metronomeEngine,
+      safeBarsPerScale,
+      barsRemaining,
+    ],
+  );
+  const reset = useMemo(
+    () => ({ resetMetronomePrefs, resetPracticeCounters }),
+    [resetMetronomePrefs, resetPracticeCounters],
+  );
+
+  // Canonical API: consume `metronome`, `randomize`, and `reset`.
+  // `practiceActions` stays top-level because it is intentionally shared
+  // by multiple domains (panel model + orchestration/hotkeys).
   return {
-    randomizeMode,
-    setRandomizeMode,
-    metronomePrefs,
-    metronomeSetters,
-    safeBarsPerScale,
-    barsRemaining,
-    metronomeEngine,
+    metronome,
+    randomize,
+    reset,
     practiceActions,
-    randomizeNow,
-    randomizeFromHotkey,
-    resetMetronomePrefs,
-    resetPracticeCounters,
   };
+}
+
+export function useMetronomeControlsSlice(practiceState) {
+  const { metronome, practiceActions } = practiceState;
+  return useMemo(
+    () => ({
+      setters: metronome.setters,
+      actions: practiceActions,
+    }),
+    [metronome.setters, practiceActions],
+  );
 }

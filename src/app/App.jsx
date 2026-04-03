@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import clsx from "clsx";
 import {
   FiCheckCircle,
@@ -6,11 +6,10 @@ import {
   FiInfo,
   FiLoader,
 } from "react-icons/fi";
-import { Toaster, ToastBar, toast } from "react-hot-toast";
+import { Toaster, ToastBar } from "react-hot-toast";
 
 import { downloadPNG, downloadSVG, printFretboard } from "@/lib/export/scales";
 import Fretboard from "@/components/Fretboard/Fretboard";
-import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
 import StageHud from "@/components/UI/StageHud";
 
 import { TUNINGS } from "@/lib/theory/tuning";
@@ -25,7 +24,6 @@ import {
   getFactoryFrets,
   SYSTEM_DEFAULT,
   ROOT_DEFAULT,
-  CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
   METRONOME_DEFAULTS,
   SCALE_DEFAULT,
@@ -37,100 +35,64 @@ import PanelHeader from "@/components/UI/PanelHeader";
 import SafeSection from "@/components/UI/SafeSection";
 import DisplayControls from "@/components/UI/controls/DisplayControls";
 
-import { useTuningIO } from "@/hooks/useTuningIO";
-import { useMergedPresets } from "@/hooks/useMergedPresets";
-import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
-import { useChordLogic } from "@/hooks/useChordLogic";
-import { useFileBase } from "@/hooks/useFileBase";
-import { useHotkeys } from "@/hooks/useHotkeys";
-import { useResets } from "@/hooks/useResets";
 import { useConfirm } from "@/hooks/useConfirm";
-import { LABEL_VALUES } from "@/hooks/useLabels";
-import { useCustomTuningPacks } from "@/hooks/useCustomTuningPacks";
 import { useDisplayState } from "@/hooks/useDisplayState";
-import { useSystemState } from "@/hooks/useSystemState";
-import { useInstrumentConfig } from "@/hooks/useInstrumentConfig";
-import { useScaleOptions } from "@/hooks/useScaleOptions";
 import AppLayout from "@/components/Layout/AppLayout";
 import InstrumentPanelContainer from "@/app/containers/InstrumentPanelContainer";
 import TheoryPanelContainer from "@/app/containers/TheoryPanelContainer";
 import PracticePanelContainer from "@/app/containers/PracticePanelContainer";
-import usePracticePanelState from "@/app/containers/usePracticePanelState";
 import ExportPanelContainer from "@/app/containers/ExportPanelContainer";
 import CustomTuningModalsContainer from "@/app/containers/CustomTuningModalsContainer";
-import { PANEL_CONTRACTS } from "@/app/contracts/panelContracts";
-import {
-  buildDisplayControlModel,
-  buildInstrumentControlModel,
-  buildMetronomeControlModel,
-} from "@/app/adapters/controls";
+import { useTheoryDomain } from "@/app/hooks/useTheoryDomain";
+import { useInstrumentDomain } from "@/app/hooks/useInstrumentDomain";
+import { usePracticeMetronomeDomain } from "@/app/hooks/usePracticeMetronomeDomain";
+import { useExportCustomTuningDomain } from "@/app/hooks/useExportCustomTuningDomain";
+import { useAppOrchestration } from "@/app/hooks/useAppOrchestration";
+import { useAppPanelModels } from "@/app/hooks/useAppPanelModels";
 
 export default function App() {
   const boardRef = React.useRef(null);
   const { confirm } = useConfirm();
 
   const {
-    displayPrefs,
-    setDisplayPrefs,
-    displaySetters,
-    theme,
-    setTheme,
-    themeMode,
-    stageRef,
-    isFs,
-    toggleFs,
+    display: {
+      prefs: displayPrefs,
+      setPrefs: setDisplayPrefs,
+      setters: displaySetters,
+    },
+    themeState,
+    stage: stageState,
   } = useDisplayState(DISPLAY_DEFAULTS);
+  const { value: theme, setTheme, mode: themeMode } = themeState;
+  const { stageRef, isFs, toggleFs } = stageState;
 
-  const {
-    systemId,
-    setSystemId,
-    system,
-    root,
-    setRoot,
-    pcFromName,
-    nameForPc,
-    sysNames,
-    rootIx,
-  } = useSystemState({
+  const theoryDomain = useTheoryDomain({
     tunings: TUNINGS,
     defaultSystemId: SYSTEM_DEFAULT,
     defaultRoot: ROOT_DEFAULT,
     accidental: displayPrefs.accidental,
+    allScales: ALL_SCALES,
+    defaultScale: SCALE_DEFAULT,
   });
 
-  const instrument = useInstrumentConfig({
-    system,
-    systemId,
+  const instrumentDomain = useInstrumentDomain({
+    system: theoryDomain.system.system,
+    sysNames: theoryDomain.system.sysNames,
+    systemId: theoryDomain.system.systemId,
+    setSystemId: theoryDomain.system.setSystemId,
+    tunings: TUNINGS,
     stringsRange: { min: STR_MIN, max: STR_MAX },
     fretsRange: { min: FRETS_MIN, max: FRETS_MAX },
     factory: getFactoryFrets,
     presetMeta: PRESET_TUNING_META,
     defaultTunings: DEFAULT_TUNINGS,
     presetTunings: PRESET_TUNINGS,
+    confirm,
   });
-
-  const {
-    strings,
-    frets,
-    setFretsPref,
-    setFretsUI,
-    resetInstrumentPrefs,
-    tuning,
-    setTuning,
-    presetMap,
-    presetMetaMap,
-    savedExists,
-    stringMeta,
-    setStringMeta,
-    boardMeta,
-    setBoardMeta,
-    handleSaveDefault,
-    handleStringsChange,
-    drawFrets,
-    capo,
-  } = instrument;
-
-  const { capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta } = capo;
+  const { instrumentState, instrumentDerived, capo } = instrumentDomain;
+  const { strings, tuning, stringMeta, boardMeta } = instrumentState;
+  const { drawFrets } = instrumentDerived;
+  const { capoFret, toggleCapoAt, effectiveStringMeta } = capo;
 
   const {
     show,
@@ -144,189 +106,57 @@ export default function App() {
     microLabelStyle,
   } = displayPrefs;
 
-  const chord = useChordLogic(system, pcFromName);
-
-  const { scale, setScale, scaleOptions, intervals } = useScaleOptions({
-    system,
-    ALL_SCALES,
-    initial: SCALE_DEFAULT,
-  });
-
-  const practice = usePracticePanelState({
+  const practiceDomain = usePracticeMetronomeDomain({
     metronomeDefaults: METRONOME_DEFAULTS,
     randomizeConfig: {
-      sysNames,
-      scaleOptions,
-      setRoot,
-      setScale,
+      sysNames: theoryDomain.system.sysNames,
+      scaleOptions: theoryDomain.scale.scaleOptions,
+      setRoot: theoryDomain.system.setRoot,
+      setScale: theoryDomain.scale.setScale,
     },
   });
-  const practiceActions = practice.practiceActions;
-
-  const fileBase = useFileBase({
-    root,
-    scale,
-    accidental,
-    strings: instrument.strings,
-  });
-
-  useAccidentalRespell({
-    system,
-    accidental,
-    setRoot,
-    setTuning: instrument.setTuning,
-    setChordRoot: chord.setChordRoot,
-  });
-
-  const {
-    customTunings,
-    importFromJson,
-    exportCurrent,
-    exportAll,
-    getCurrentTuningPack,
-    saveCustomTuning,
-    deleteCustomTuning,
-    clearCustomTunings,
-  } = useTuningIO({ systemId, strings: instrument.strings, TUNINGS });
-
-  const {
-    mergedPresetNames,
-    customPresetNames,
-    mergedPresetMetaMap,
-    selectedPreset,
-    setPreset,
-    queuePresetByName,
-  } = useMergedPresets({
-    presetMap,
-    presetMetaMap,
-    customTunings,
-    setTuning,
-    setStringMeta,
-    setBoardMeta,
-    currentEdo: system.divisions,
-    currentStrings: strings,
-    systemId,
-    strings,
-    savedExists,
-  });
-
-  const showCheatsheet = useCallback(() => {
-    toast((t) => <HotkeysCheatsheet onClose={() => toast.dismiss(t.id)} />, {
-      id: "hotkeys-help",
-      duration: 6000,
-    });
-  }, []);
-
-  const {
-    editorState,
-    isManagerOpen,
-    openCreate,
-    openEditSelected,
-    openManager,
-    closeManager,
-    editFromManager,
-    deletePack,
-    clearAllPacks,
-    submitEditor,
-    cancelEditor,
-  } = useCustomTuningPacks({
+  const orchestration = useAppOrchestration({
+    displayPrefs,
+    setDisplayPrefs,
+    toggleFs,
+    theorySystem: theoryDomain.system,
+    theoryScale: theoryDomain.scale,
+    theoryChord: theoryDomain.chord,
+    instrumentActions: instrumentDomain.instrumentActions,
+    instrumentPresets: instrumentDomain.presets,
+    instrumentCapo: instrumentDomain.capo,
+    instrumentFrets: instrumentDomain.fretsSlice,
+    customPackEditor: instrumentDomain.customPackEditor,
+    practiceActions: practiceDomain.practiceActions,
+    practiceMetronome: practiceDomain.metronome,
+    practiceReset: practiceDomain.reset,
     confirm,
-    getCurrentTuningPack,
-    saveCustomTuning,
-    deleteCustomTuning,
-    clearCustomTunings,
+  });
+  const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } =
+    orchestration.resets;
+
+  const exportCustomDomain = useExportCustomTuningDomain({
+    boardRef,
+    tunings: TUNINGS,
+    themeMode,
+    root: theoryDomain.system.root,
+    scale: theoryDomain.scale.scale,
+    accidental,
+    strings: instrumentState.strings,
+    systemId: theoryDomain.system.systemId,
     tuning,
     stringMeta,
     boardMeta,
-    customTunings,
-    customPresetNames,
-    selectedPreset,
-    queuePresetByName,
+    showChord: theoryDomain.chord.showChord,
+    chordRoot: theoryDomain.chord.chordRoot,
+    chordType: theoryDomain.chord.chordType,
+    customTunings: instrumentDomain.customTunings,
+    customPackEditor: instrumentDomain.customPackEditor,
+    exporters: { downloadPNG, downloadSVG, printFretboard },
   });
-
-  useHotkeys({
-    toggleFs,
-    setDisplayPrefs,
-    setFrets: setFretsUI,
-    handleStringsChange,
-    setShowChord: chord.setShowChord,
-    setHideNonChord: chord.setHideNonChord,
-    onShowCheatsheet: showCheatsheet,
-    onRandomizeScale: practiceActions.randomizeScaleFromHotkey,
-    onCreateCustomPack: openCreate,
-    practiceActions,
-    strings,
-    frets,
-    LABEL_VALUES,
-    minStrings: STR_MIN,
-    maxStrings: STR_MAX,
-    minFrets: FRETS_MIN,
-    maxFrets: FRETS_MAX,
-  });
-
-  const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } =
-    useResets({
-      system,
-      resetInstrumentPrefs,
-      setCapoFret,
-      setStringMeta,
-      setBoardMeta,
-      setDisplayPrefs,
-      setSystemId,
-      setRoot,
-      setScale,
-      setChordRoot: chord.setChordRoot,
-      setChordType: chord.setChordType,
-      setShowChord: chord.setShowChord,
-      setHideNonChord: chord.setHideNonChord,
-      setPreset,
-      stopMetronome: practice.metronomeEngine.stop,
-      resetMetronomePrefs: practice.resetMetronomePrefs,
-      resetPracticeCounters: practice.resetPracticeCounters,
-      toast,
-      confirm,
-    });
-
-  const handleSelectNote = useCallback(
-    (pc, providedName, event) => {
-      const noteName = providedName ?? nameForPc(pc);
-      if (!noteName) return;
-      if (!sysNames.includes(noteName)) return;
-
-      if (event?.type === "contextmenu" || event?.button === 2) {
-        event?.preventDefault?.();
-        if (typeof chord.setChordRoot === "function") {
-          chord.setChordRoot(noteName);
-        }
-        return;
-      }
-
-      setRoot(noteName);
-    },
-    [nameForPc, sysNames, chord, setRoot],
-  );
-
-  const buildHeader = useCallback(
-    () => ({
-      system: systemId,
-      tuning,
-      scale,
-      chordEnabled: chord.showChord,
-      chordRoot: chord.chordRoot,
-      chordType: chord.chordType,
-    }),
-    [
-      systemId,
-      tuning,
-      scale,
-      chord.showChord,
-      chord.chordRoot,
-      chord.chordType,
-    ],
-  );
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
-  const showPracticeHud = practice.metronomeEngine.isPlaying;
+  const showPracticeHud = orchestration.showPracticeHud;
 
   const stage = (
     <div className="tv-stage" ref={stageRef}>
@@ -338,27 +168,25 @@ export default function App() {
           isFs={isFs}
           onToggleFs={() => toggleFs()}
           onResetAll={() => resetAll({ confirm: true })}
-          currentBeat={practice.metronomeEngine.currentBeat}
-          currentBar={practice.metronomeEngine.currentBar}
-          timeSig={practice.metronomePrefs.timeSig}
-          isPlaying={practice.metronomeEngine.isPlaying}
+          currentBeat={practiceDomain.metronome.engine.currentBeat}
+          currentBar={practiceDomain.metronome.engine.currentBar}
+          timeSig={practiceDomain.metronome.prefs.timeSig}
+          isPlaying={practiceDomain.metronome.engine.isPlaying}
           showPracticeHud={showPracticeHud}
-          countInEnabled={practice.metronomePrefs.countInEnabled}
-          audioReady={practice.metronomeEngine.audioReady}
-          audioError={practice.metronomeEngine.audioError}
+          countInEnabled={practiceDomain.metronome.prefs.countInEnabled}
+          audioReady={practiceDomain.metronome.engine.audioReady}
+          audioError={practiceDomain.metronome.engine.audioError}
         />
         <SafeSection
-          onReset={() => {
-            setCapoFret(CAPO_DEFAULT);
-          }}
+          onReset={orchestration.onResetCapo}
         >
           <Fretboard
             ref={boardRef}
             strings={strings}
             frets={drawFrets}
             tuning={tuning}
-            rootIx={rootIx}
-            intervals={intervals}
+            rootIx={theoryDomain.system.rootIx}
+            intervals={theoryDomain.scale.intervals}
             accidental={accidental}
             microLabelStyle={microLabelStyle}
             show={show}
@@ -366,15 +194,15 @@ export default function App() {
             showFretNums={showFretNums}
             dotSize={dotSize}
             lefty={lefty}
-            system={system}
-            chordPCs={chord.chordPCs}
-            chordRootPc={chord.chordRootIx}
+            system={theoryDomain.system.system}
+            chordPCs={theoryDomain.chord.chordPCs}
+            chordRootPc={theoryDomain.chord.chordRootIx}
             openOnlyInScale={openOnlyInScale}
             colorByDegree={colorByDegree}
-            hideNonChord={chord.hideNonChord}
+            hideNonChord={theoryDomain.chord.hideNonChord}
             stringMeta={effectiveStringMeta}
             boardMeta={boardMeta}
-            onSelectNote={handleSelectNote}
+            onSelectNote={theoryDomain.handlers.handleSelectNote}
             capoFret={capoFret}
             onSetCapo={toggleCapoAt}
           />
@@ -383,217 +211,64 @@ export default function App() {
     </div>
   );
 
-  const instrumentPanel = {
-    contract: PANEL_CONTRACTS.instrument,
-    state: {
-      strings,
-      frets,
-      tuning,
-      systemId,
-      sysNames,
-      tunings: TUNINGS,
-      system,
-    },
-    preset: {
-      mergedPresetNames,
-      customPresetNames,
-      mergedPresetMetaMap,
-      selectedPreset,
-      setPreset,
-    },
-    handlers: {
-      setFretsPref,
-      setSystemId,
-      setTuning,
-      handleStringsChange,
-      handleSaveDefault,
-      openCreate,
-      openEditSelected,
-    },
-    reset: { resetInstrumentFactory },
-  };
-  const instrumentControlModel = useMemo(
-    () =>
-      buildInstrumentControlModel({
-        instrument: {
-          strings,
-          frets,
-          tuning,
-          systemId,
-          sysNames,
-          tunings: TUNINGS,
-        },
-        presets: {
-          mergedPresetNames,
-          customPresetNames,
-          mergedPresetMetaMap,
-          selectedPreset,
-          setPreset,
-        },
-        handlers: {
-          setFretsPref,
-          setSystemId,
-          setTuning,
-          handleStringsChange,
-          handleSaveDefault,
-          openCreate,
-          openEditSelected,
-        },
-        reset: { resetInstrumentFactory },
-      }),
-    [
-      strings,
-      frets,
-      tuning,
-      systemId,
-      sysNames,
-      mergedPresetNames,
-      customPresetNames,
-      mergedPresetMetaMap,
-      selectedPreset,
-      setPreset,
-      setFretsPref,
-      setSystemId,
-      setTuning,
-      handleStringsChange,
-      handleSaveDefault,
-      openCreate,
-      openEditSelected,
-      resetInstrumentFactory,
-    ],
-  );
+  const {
+    instrumentPanel,
+    instrumentControlModel,
+    theoryPanel,
+    practicePanel,
+    metronomeControlModel,
+    displayControlModel,
+  } = useAppPanelModels({
+    theoryDomain,
+    practiceDomain,
+    instrumentDomain,
+    resetInstrumentFactory,
+    resetMusicalState,
+    displayPrefs,
+    displaySetters,
+  });
 
-  const theoryPanel = {
-    contract: PANEL_CONTRACTS.theory,
-    system: { systemId, system, sysNames, nameForPc, rootIx },
-    scale: {
-      root,
-      setRoot,
-      scale,
-      setScale,
-      scaleOptions,
-      intervals,
-      defaultScale: SCALE_DEFAULT,
-    },
-    chord,
-    randomize: {
-      randomizeMode: practice.randomizeMode,
-      setRandomizeMode: practice.setRandomizeMode,
-      onRandomize: practiceActions.randomizeScaleNow,
-    },
-    reset: { resetMusicalState },
-  };
-
-  const practicePanel = {
-    contract: PANEL_CONTRACTS.practice,
-    metronome: {
-      ...practice.metronomePrefs,
-      ...practice.metronomeEngine,
-      safeBarsPerScale: practice.safeBarsPerScale,
-      barsRemaining: practice.barsRemaining,
-    },
-    controls: {
-      ...practice.metronomeSetters,
-      ...practiceActions,
-    },
-    reset: { resetPracticeCounters: practice.resetPracticeCounters },
-  };
-  const metronomeControlModel = useMemo(
-    () =>
-      buildMetronomeControlModel({
-        metronome: {
-          ...practice.metronomePrefs,
-          ...practice.metronomeEngine,
-          safeBarsPerScale: practice.safeBarsPerScale,
-          barsRemaining: practice.barsRemaining,
-        },
-        controls: {
-          ...practice.metronomeSetters,
-          ...practiceActions,
-        },
-      }),
-    [
-      practice.metronomePrefs,
-      practice.metronomeEngine,
-      practice.safeBarsPerScale,
-      practice.barsRemaining,
-      practice.metronomeSetters,
-      practiceActions,
-    ],
-  );
-
-  const displayControlModel = useMemo(
-    () =>
-      buildDisplayControlModel({
-        displayPrefs,
-        displaySetters,
-        degreeCount: intervals.length,
-      }),
-    [displayPrefs, displaySetters, intervals.length],
-  );
-
-  const exportPanel = {
-    contract: PANEL_CONTRACTS.export,
-    fileBase,
-    boardRef,
-    exporters: {
-      downloadPNG,
-      downloadSVG,
-      printFretboard,
-      buildHeader,
-      exportCurrent: () => exportCurrent(tuning, stringMeta, boardMeta),
-      exportAll,
-      importFromJson,
-    },
-    packActions: {
-      clearAllPacks,
-      openManager,
-    },
-  };
-
-  const modalPanel = {
-    contract: PANEL_CONTRACTS.customTuningModals,
-    modal: { editorState, isManagerOpen },
-    customTunings,
-    systems: TUNINGS,
-    themeMode,
-    handlers: {
-      cancelEditor,
-      submitEditor,
-      closeManager,
-      editFromManager,
-      deletePack,
-    },
-  };
-
-  const controls = (
-    <>
-      <InstrumentPanelContainer
-        {...instrumentPanel}
-        controlModel={instrumentControlModel}
-      />
-      <TheoryPanelContainer {...theoryPanel} />
-      <PracticePanelContainer
-        {...practicePanel}
-        controlModel={metronomeControlModel}
-      />
-      <SafeSection
-        resetKeys={[displayPrefs]}
-        onReset={() => {
-          resetDisplay();
-        }}
-      >
-        <DisplayControls
-          state={displayControlModel.state}
-          actions={displayControlModel.actions}
-          meta={displayControlModel.meta}
+  const controls = useMemo(
+    () => (
+      <>
+        <InstrumentPanelContainer
+          {...instrumentPanel}
+          controlModel={instrumentControlModel}
         />
-      </SafeSection>
-      <ExportPanelContainer {...exportPanel} />
-    </>
+        <TheoryPanelContainer {...theoryPanel} />
+        <PracticePanelContainer
+          {...practicePanel}
+          controlModel={metronomeControlModel}
+        />
+        <SafeSection
+          resetKeys={[displayPrefs]}
+          onReset={() => {
+            resetDisplay();
+          }}
+        >
+          <DisplayControls
+            state={displayControlModel.state}
+            actions={displayControlModel.actions}
+            meta={displayControlModel.meta}
+          />
+        </SafeSection>
+        <ExportPanelContainer {...exportCustomDomain.exportPanel} />
+      </>
+    ),
+    [
+      instrumentPanel,
+      instrumentControlModel,
+      theoryPanel,
+      practicePanel,
+      metronomeControlModel,
+      displayPrefs,
+      resetDisplay,
+      displayControlModel,
+      exportCustomDomain.exportPanel,
+    ],
   );
 
-  const modals = <CustomTuningModalsContainer {...modalPanel} />;
+  const modals = <CustomTuningModalsContainer {...exportCustomDomain.modalPanel} />;
 
   const toaster = (
     <Toaster

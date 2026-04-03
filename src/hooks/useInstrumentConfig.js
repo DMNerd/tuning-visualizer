@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFretsTouched } from "@/hooks/useFretsTouched";
 import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
 import { useDefaultTuning } from "@/hooks/useDefaultTuning";
@@ -74,28 +74,77 @@ export function useInstrumentConfig({
     stringMeta,
   });
 
+  const state = useMemo(
+    () => ({ strings, frets, tuning, stringMeta, boardMeta }),
+    [strings, frets, tuning, stringMeta, boardMeta],
+  );
+  const actions = useMemo(
+    () => ({
+      setStrings,
+      setFrets,
+      setFretsPref,
+      setFretsUI,
+      setTuning,
+      setStringMeta,
+      setBoardMeta,
+      resetInstrumentPrefs,
+      handleSaveDefault,
+      handleStringsChange,
+    }),
+    [
+      setStrings,
+      setFrets,
+      setFretsPref,
+      setFretsUI,
+      setTuning,
+      setStringMeta,
+      setBoardMeta,
+      resetInstrumentPrefs,
+      handleSaveDefault,
+      handleStringsChange,
+    ],
+  );
+  const derived = useMemo(
+    () => ({ drawFrets, fretsTouched, savedExists, defaultForCount }),
+    [drawFrets, fretsTouched, savedExists, defaultForCount],
+  );
+  const presets = useMemo(
+    () => ({ presetMap, presetMetaMap }),
+    [presetMap, presetMetaMap],
+  );
+
+  // Canonical API: consume `state`, `actions`, `derived`, `presets`, and `capo`.
   return {
-    strings,
-    setStrings,
-    frets,
-    setFrets,
-    setFretsPref,
-    setFretsUI,
-    fretsTouched,
-    resetInstrumentPrefs,
-    tuning,
-    setTuning,
-    presetMap,
-    presetMetaMap,
-    savedExists,
-    defaultForCount,
-    stringMeta,
-    setStringMeta,
-    boardMeta,
-    setBoardMeta,
-    handleSaveDefault,
-    handleStringsChange,
-    drawFrets,
+    state,
+    actions,
+    derived,
+    presets,
     capo,
   };
+}
+
+export function useInstrumentCapoSlice(instrumentConfig) {
+  return instrumentConfig.capo;
+}
+
+export function useInstrumentFretsSlice(instrumentConfig) {
+  const { state, actions, derived } = instrumentConfig;
+  return useMemo(
+    () => ({
+      strings: state.strings,
+      frets: state.frets,
+      drawFrets: derived.drawFrets,
+      setFretsUI: actions.setFretsUI,
+      setFretsPref: actions.setFretsPref,
+      handleStringsChange: actions.handleStringsChange,
+    }),
+    [
+      state.strings,
+      state.frets,
+      derived.drawFrets,
+      actions.setFretsUI,
+      actions.setFretsPref,
+      actions.handleStringsChange,
+    ],
+  );
 }

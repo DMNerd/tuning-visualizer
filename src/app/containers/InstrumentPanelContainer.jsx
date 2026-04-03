@@ -14,7 +14,7 @@ export default function InstrumentPanelContainer({
       FallbackComponent={ErrorFallback}
       resetKeys={[state.strings, state.frets, state.systemId]}
       onReset={() => {
-        reset.resetInstrumentFactory(state.system.divisions);
+        reset.resetInstrumentFactory(state.systemDivisions);
       }}
     >
       <InstrumentControls

@@ -1,11 +1,27 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFullscreen, useToggle } from "react-use";
-import { useDisplayPrefs } from "@/hooks/useDisplayPrefs";
+import { usePersistedPrefs } from "@/hooks/usePersistedPrefs";
 import { useTheme } from "@/hooks/useTheme";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 export function useDisplayState(defaults) {
   const [displayPrefs, setDisplayPrefs, displaySetters] =
-    useDisplayPrefs(defaults);
+    usePersistedPrefs({
+      storageKey: STORAGE_KEYS.DISPLAY_PREFS,
+      initial: defaults,
+      setterKeys: [
+        "show",
+        "showOpen",
+        "showFretNums",
+        "dotSize",
+        "accidental",
+        "microLabelStyle",
+        "openOnlyInScale",
+        "colorByDegree",
+        "lefty",
+      ],
+      debounceMs: 300,
+    });
   const [theme, setTheme, themeMode] = useTheme();
 
   const stageRef = useRef(null);
@@ -21,15 +37,31 @@ export function useDisplayState(defaults) {
     return () => root.classList.remove("is-fs");
   }, [isFs]);
 
+  const display = useMemo(
+    () => ({ prefs: displayPrefs, setPrefs: setDisplayPrefs, setters: displaySetters }),
+    [displayPrefs, setDisplayPrefs, displaySetters],
+  );
+  const themeState = useMemo(
+    () => ({ value: theme, setTheme, mode: themeMode }),
+    [theme, setTheme, themeMode],
+  );
+  const stage = useMemo(
+    () => ({ stageRef, isFs, toggleFs }),
+    [stageRef, isFs, toggleFs],
+  );
+
+  // Canonical API: consume `display`, `themeState`, and `stage`.
   return {
-    displayPrefs,
-    setDisplayPrefs,
-    displaySetters,
-    theme,
-    setTheme,
-    themeMode,
-    stageRef,
-    isFs,
-    toggleFs,
+    display,
+    themeState,
+    stage,
   };
+}
+
+export function useDisplayPrefsSlice(displayState) {
+  return displayState.display;
+}
+
+export function useDisplayStageSlice(displayState) {
+  return displayState.stage;
 }

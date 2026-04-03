@@ -9,7 +9,7 @@ import {
   SCALE_DEFAULT,
   CHORD_DEFAULT,
 } from "@/lib/config/appDefaults";
-import { useLatestMap } from "@/hooks/useLatestMap";
+import { useLatest } from "react-use";
 
 export function useResets({
   system,
@@ -32,7 +32,7 @@ export function useResets({
   toast,
   confirm,
 }) {
-  const refs = useLatestMap({
+  const refs = useLatest({
     divisions: system.divisions,
     resetInstrumentPrefs,
     setCapoFret,

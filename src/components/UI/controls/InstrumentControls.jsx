@@ -145,6 +145,10 @@ function InstrumentControls({ state, actions, meta }) {
   } = actions;
   const { systems, sysNames, presetNames, customPresetNames, presetMetaMap } =
     meta;
+  const safeSystems = systems ?? {};
+  const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
+  const safeTuning = Array.isArray(tuning) ? tuning : [];
+
   const onSaveDefault = () =>
     withToastPromise(
       () => handleSaveDefault?.(),
@@ -184,7 +188,7 @@ function InstrumentControls({ state, actions, meta }) {
             value={systemId}
             onChange={(e) => setSystemId(e.target.value)}
           >
-            {Object.keys(systems).map((id) => (
+            {Object.keys(safeSystems).map((id) => (
               <option key={id} value={id}>
                 {id}
               </option>
@@ -213,7 +217,7 @@ function InstrumentControls({ state, actions, meta }) {
         </div>
 
         <div className="tv-controls__strings-grid">
-          {tuning.map((note, i) => {
+          {safeTuning.map((note, i) => {
             const stringNum = strings - i;
             return (
               <div key={i} className="tv-field">
@@ -231,7 +235,7 @@ function InstrumentControls({ state, actions, meta }) {
                     });
                   }}
                 >
-                  {sysNames.map((n) => (
+                  {safeSysNames.map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
