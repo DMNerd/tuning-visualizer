@@ -131,10 +131,20 @@ export const useInstrumentCoreStore = create(
             frets: nextFretsFactory,
             fretsTouched: false,
           }),
+        resetCore: () =>
+          set({
+            strings: STR_FACTORY,
+            frets: FRETS_FACTORY,
+            fretsTouched: false,
+            tuning: [],
+            stringMeta: null,
+            boardMeta: null,
+            userDefaultTuningMap: {},
+          }),
       };
     }),
     {
-      name: "tv.instrumentCore",
+      name: STORAGE_KEYS.INSTRUMENT_CORE,
       version: 1,
       storage: createJSONStorage(() => globalThis.localStorage),
       migrate: (persistedState) => {
@@ -274,6 +284,7 @@ export const selectInstrumentCoreActions = (state) => ({
   setUserDefaultTuningMap: state.setUserDefaultTuningMap,
   updateUserDefaultTuningMap: state.updateUserDefaultTuningMap,
   resetInstrumentPrefs: state.resetInstrumentPrefs,
+  resetCore: state.resetCore,
 });
 
 export const selectInstrumentStrings = (state) => state.strings;

@@ -32,6 +32,7 @@ export const useDisplayPrefsStore = create(
       return {
         prefs: DISPLAY_DEFAULTS,
         setPrefs,
+        resetPrefs: () => set({ prefs: DISPLAY_DEFAULTS }),
         setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
         hydrateWithDefaults: (defaults) => {
           if (!defaults) return;
@@ -58,6 +59,7 @@ export const useDisplayPrefsStore = create(
 
 export const selectDisplayPrefs = (state) => state.prefs;
 export const selectDisplaySetPrefs = (state) => state.setPrefs;
+export const selectDisplayResetPrefs = (state) => state.resetPrefs;
 export const selectDisplaySetters = (state) => state.setters;
 export const selectDisplayHydrateWithDefaults = (state) =>
   state.hydrateWithDefaults;

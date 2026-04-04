@@ -1,9 +1,20 @@
 import { useEffect, useMemo } from "react";
-import { useLocalStorage, useMedia } from "react-use";
-import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { useMedia } from "react-use";
+import { useShallow } from "zustand/react/shallow";
 
-export function useTheme(key = STORAGE_KEYS.THEME) {
-  const [theme, setTheme] = useLocalStorage(key, "auto");
+import {
+  useThemeStore,
+  selectTheme,
+  selectSetTheme,
+} from "@/stores/useThemeStore";
+
+export function useTheme() {
+  const { theme, setTheme } = useThemeStore(
+    useShallow((state) => ({
+      theme: selectTheme(state),
+      setTheme: selectSetTheme(state),
+    })),
+  );
   const prefersDark = useMedia("(prefers-color-scheme: dark)", false);
 
   const effectiveTheme = useMemo(() => {

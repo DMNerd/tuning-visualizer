@@ -58,6 +58,7 @@ export default function App() {
     display: {
       prefs: displayPrefs,
       setPrefs: setDisplayPrefs,
+      resetPrefs: resetDisplayPrefs,
       setters: displaySetters,
     },
     themeState,
@@ -119,6 +120,8 @@ export default function App() {
   const orchestration = useAppOrchestration({
     displayPrefs,
     setDisplayPrefs,
+    resetDisplayPrefs,
+    setTheme,
     toggleFs,
     theorySystem: theoryDomain.system,
     theoryScale: theoryDomain.scale,

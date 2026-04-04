@@ -18,6 +18,7 @@ export function useResets({
   setStringMeta,
   setBoardMeta,
   setDisplayPrefs,
+  resetDisplayPrefs,
   setSystemId,
   setRoot,
   setScale,
@@ -25,7 +26,9 @@ export function useResets({
   setChordType,
   setShowChord,
   setHideNonChord,
+  resetTheory,
   setPreset,
+  setTheme,
   stopMetronome,
   resetMetronomePrefs,
   resetPracticeCounters,
@@ -39,6 +42,7 @@ export function useResets({
     setStringMeta,
     setBoardMeta,
     setDisplayPrefs,
+    resetDisplayPrefs,
     setSystemId,
     setRoot,
     setScale,
@@ -46,7 +50,9 @@ export function useResets({
     setChordType,
     setShowChord,
     setHideNonChord,
+    resetTheory,
     setPreset,
+    setTheme,
     stopMetronome,
     resetMetronomePrefs,
     resetPracticeCounters,
@@ -69,7 +75,11 @@ export function useResets({
   );
 
   const resetDisplayState = useCallback(() => {
-    refs.current.setDisplayPrefs(DISPLAY_DEFAULTS);
+    if (typeof refs.current.resetDisplayPrefs === "function") {
+      refs.current.resetDisplayPrefs();
+      return;
+    }
+    refs.current.setDisplayPrefs?.(DISPLAY_DEFAULTS);
   }, [refs]);
 
   const resetSystem = useCallback(() => {
@@ -83,13 +93,18 @@ export function useResets({
     refs.current.resetMetronomePrefs?.();
     refs.current.resetPracticeCounters?.();
 
-    refs.current.setRoot(ROOT_DEFAULT);
-    refs.current.setScale(SCALE_DEFAULT);
-    refs.current.setChordRoot(ROOT_DEFAULT);
-    refs.current.setChordType(CHORD_DEFAULT);
-    refs.current.setShowChord(false);
-    refs.current.setHideNonChord(false);
+    if (typeof refs.current.resetTheory === "function") {
+      refs.current.resetTheory();
+    } else {
+      refs.current.setRoot(ROOT_DEFAULT);
+      refs.current.setScale(SCALE_DEFAULT);
+      refs.current.setChordRoot(ROOT_DEFAULT);
+      refs.current.setChordType(CHORD_DEFAULT);
+      refs.current.setShowChord(false);
+      refs.current.setHideNonChord(false);
+    }
     refs.current.setPreset?.("Factory default");
+    refs.current.setTheme?.("auto");
   }, [refs]);
 
   const resetInstrumentFactory = useCallback(

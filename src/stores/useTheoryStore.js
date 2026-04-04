@@ -78,10 +78,20 @@ export const useTheoryStore = create(
             state.hideNonChord =
               typeof value === "boolean" ? value : !state.hideNonChord;
           }),
+        resetTheory: () =>
+          set({
+            systemId: SYSTEM_DEFAULT,
+            root: ROOT_DEFAULT,
+            scale: SCALE_DEFAULT,
+            chordRoot: ROOT_DEFAULT,
+            chordType: CHORD_DEFAULT,
+            showChord: false,
+            hideNonChord: false,
+          }),
       };
     }),
     {
-      name: "tv.theoryPrefs",
+      name: STORAGE_KEYS.THEORY_PREFS,
       version: 1,
       storage: createJSONStorage(() => globalThis.localStorage),
       migrate: (persistedState) => {
@@ -160,6 +170,7 @@ export const selectTheoryActions = (state) => ({
   setChordType: state.setChordType,
   setShowChord: state.setShowChord,
   setHideNonChord: state.setHideNonChord,
+  resetTheory: state.resetTheory,
 });
 
 export const selectTheorySystemId = (state) => state.systemId;

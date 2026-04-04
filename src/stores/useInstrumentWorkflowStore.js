@@ -117,6 +117,15 @@ export const useInstrumentWorkflowStore = create(
           set((state) => {
             state._rehydrateRevision += 1;
           }),
+        resetWorkflow: () =>
+          set({
+            customTunings: [],
+            selectedPreset: "Factory default",
+            queuedPresetName: null,
+            editorState: null,
+            isManagerOpen: false,
+            pendingPresetName: null,
+          }),
         ...baseSetters,
       };
     }),
@@ -174,6 +183,7 @@ export const selectInstrumentWorkflowActions = (state) => ({
   setEditorState: state.setEditorState,
   setManagerOpen: state.setManagerOpen,
   setPendingPresetName: state.setPendingPresetName,
+  resetWorkflow: state.resetWorkflow,
 });
 
 export const selectWorkflowCustomTunings = (state) => state.customTunings;

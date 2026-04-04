@@ -7,15 +7,23 @@ import {
   selectDisplayHydrateWithDefaults,
   selectDisplayPrefs,
   selectDisplaySetPrefs,
+  selectDisplayResetPrefs,
   selectDisplaySetters,
 } from "@/stores/useDisplayPrefsStore";
 
 export function useDisplayState(defaults) {
-  const { displayPrefs, setDisplayPrefs, displaySetters, hydrateWithDefaults } =
+  const {
+    displayPrefs,
+    setDisplayPrefs,
+    resetDisplayPrefs,
+    displaySetters,
+    hydrateWithDefaults,
+  } =
     useDisplayPrefsStore(
       useShallow((state) => ({
         displayPrefs: selectDisplayPrefs(state),
         setDisplayPrefs: selectDisplaySetPrefs(state),
+        resetDisplayPrefs: selectDisplayResetPrefs(state),
         displaySetters: selectDisplaySetters(state),
         hydrateWithDefaults: selectDisplayHydrateWithDefaults(state),
       })),
@@ -44,9 +52,10 @@ export function useDisplayState(defaults) {
     () => ({
       prefs: displayPrefs,
       setPrefs: setDisplayPrefs,
+      resetPrefs: resetDisplayPrefs,
       setters: displaySetters,
     }),
-    [displayPrefs, setDisplayPrefs, displaySetters],
+    [displayPrefs, setDisplayPrefs, resetDisplayPrefs, displaySetters],
   );
   const themeState = useMemo(
     () => ({ value: theme, setTheme, mode: themeMode }),

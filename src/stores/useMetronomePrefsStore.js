@@ -16,6 +16,12 @@ const SETTER_KEYS = [
   "barsPerScale",
   "announceCountInBeforeChange",
 ];
+const RANDOMIZE_MODE_DEFAULT = "both";
+const RANDOMIZE_MODES = new Set(["both", "scale", "key"]);
+
+function isValidRandomizeMode(value) {
+  return typeof value === "string" && RANDOMIZE_MODES.has(value);
+}
 
 function normalizeLegacyShape(persisted) {
   if (!persisted) return null;
@@ -61,8 +67,23 @@ export const useMetronomePrefsStore = create(
 
       return {
         prefs: METRONOME_DEFAULTS,
+<<<<<<< ours
+=======
+        randomizeMode: RANDOMIZE_MODE_DEFAULT,
+>>>>>>> theirs
         _rehydrateRevision: 0,
         setPrefs,
+        setRandomizeMode: (randomizeMode) =>
+          set({
+            randomizeMode: isValidRandomizeMode(randomizeMode)
+              ? randomizeMode
+              : RANDOMIZE_MODE_DEFAULT,
+          }),
+        resetPrefs: () =>
+          set({
+            prefs: METRONOME_DEFAULTS,
+            randomizeMode: RANDOMIZE_MODE_DEFAULT,
+          }),
         setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
         touchMetronomePrefsState: () =>
           set((state) => {
@@ -86,7 +107,10 @@ export const useMetronomePrefsStore = create(
         }
         return normalized;
       },
-      partialize: (state) => ({ prefs: state.prefs }),
+      partialize: (state) => ({
+        prefs: state.prefs,
+        randomizeMode: state.randomizeMode,
+      }),
       merge: (persisted, current) => {
         let normalized = normalizeLegacyShape(persisted);
         if (!normalized) {
@@ -98,6 +122,10 @@ export const useMetronomePrefsStore = create(
         return {
           ...current,
           ...normalized,
+          randomizeMode:
+            isValidRandomizeMode(normalized?.randomizeMode)
+              ? normalized.randomizeMode
+              : RANDOMIZE_MODE_DEFAULT,
           prefs: {
             ...METRONOME_DEFAULTS,
             ...(normalized?.prefs || {}),
@@ -115,6 +143,10 @@ export const useMetronomePrefsStore = create(
 
 export const selectMetronomePrefs = (state) => state.prefs;
 export const selectMetronomeSetPrefs = (state) => state.setPrefs;
+export const selectMetronomeResetPrefs = (state) => state.resetPrefs;
+export const selectMetronomeRandomizeMode = (state) => state.randomizeMode;
+export const selectMetronomeSetRandomizeMode = (state) =>
+  state.setRandomizeMode;
 export const selectMetronomeSetters = (state) => state.setters;
 export const selectMetronomeHydrateWithDefaults = (state) =>
   state.hydrateWithDefaults;

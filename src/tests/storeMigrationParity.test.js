@@ -42,7 +42,12 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
   storage.clear();
   storage.setItem(
     STORAGE_KEYS.METRONOME_PREFS,
-    JSON.stringify({ bpm: 97, timeSig: "3/4", autoAdvanceEnabled: true }),
+    JSON.stringify({
+      bpm: 97,
+      timeSig: "3/4",
+      autoAdvanceEnabled: true,
+      randomizeMode: "invalid-mode",
+    }),
   );
 
   const { useMetronomePrefsStore } = await importFresh(
@@ -55,6 +60,7 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
   assert.equal(state.prefs.bpm, 97);
   assert.equal(state.prefs.timeSig, "3/4");
   assert.equal(state.prefs.autoAdvanceEnabled, true);
+  assert.equal(state.randomizeMode, "both");
   assert.equal(typeof state.setters.setBpm, "function");
   assert.equal(typeof state.setters.setTimeSig, "function");
 
@@ -63,6 +69,29 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
   assert.equal(typeof persisted?.state, "object");
   assert.equal(typeof persisted?.state?.prefs, "object");
   assert.equal(persisted?.state?.prefs?.bpm, 97);
+});
+
+test("metronome store falls back for invalid persisted randomizeMode", async () => {
+  storage.clear();
+  storage.setItem(
+    STORAGE_KEYS.METRONOME_PREFS,
+    JSON.stringify({
+      state: {
+        prefs: { bpm: 101, timeSig: "4/4" },
+        randomizeMode: "not-real",
+      },
+      version: 1,
+    }),
+  );
+
+  const { useMetronomePrefsStore } = await importFresh(
+    "../stores/useMetronomePrefsStore.js",
+  );
+
+  await useMetronomePrefsStore.persist.rehydrate();
+  const state = useMetronomePrefsStore.getState();
+  assert.equal(state.prefs.bpm, 101);
+  assert.equal(state.randomizeMode, "both");
 });
 
 test("legacy theory keys hydrate into new theory store and clear old keys", async () => {
@@ -84,7 +113,7 @@ test("legacy theory keys hydrate into new theory store and clear old keys", asyn
 test("theory store prefers valid persisted payload over legacy keys", async () => {
   storage.clear();
   storage.setItem(
-    "tv.theoryPrefs",
+    STORAGE_KEYS.THEORY_PREFS,
     JSON.stringify({
       state: { systemId: "19-TET", root: "F#" },
       version: 1,
@@ -154,7 +183,7 @@ test("instrument core migration clamps strings/frets and reset action restores f
 test("instrument core prefers valid persisted payload over legacy keys", async () => {
   storage.clear();
   storage.setItem(
-    "tv.instrumentCore",
+    STORAGE_KEYS.INSTRUMENT_CORE,
     JSON.stringify({
       state: {
         strings: 7,
@@ -330,6 +359,16 @@ test("metronome prefs setters and engine reset semantics remain distinct", async
   assert.equal(engine.isPlaying, false);
   assert.equal(engine.currentBeat, 1);
   assert.equal(engine.currentBar, 1);
+
+  useMetronomePrefsStore.getState().setRandomizeMode("key");
+  useMetronomePrefsStore.getState().resetPrefs();
+  prefs = useMetronomePrefsStore.getState().prefs;
+  assert.equal(prefs.bpm, 80);
+  assert.equal(prefs.timeSig, "4/4");
+  assert.equal(useMetronomePrefsStore.getState().randomizeMode, "both");
+
+  useMetronomePrefsStore.getState().setRandomizeMode("invalid");
+  assert.equal(useMetronomePrefsStore.getState().randomizeMode, "both");
 });
 
 test("theory and workflow action names and behaviors remain stable", async () => {
@@ -394,6 +433,68 @@ test("theory and workflow action names and behaviors remain stable", async () =>
   assert.equal(workflowState.customTunings.length, 2);
   assert.equal(workflowState.customTunings[0].name, "Custom B");
   assert.equal(workflowState.customTunings[1].name, "Custom C+");
+});
+
+test("resetAllStores restores defaults and clears only app-owned keys", async () => {
+  storage.clear();
+  storage.setItem("third.party", "keep-me");
+  storage.setItem("tv.random", "keep-me-too");
+
+  const { resetAllStores } = await importFresh("../stores/resetAllStores.js");
+  const { useDisplayPrefsStore } = await import("../stores/useDisplayPrefsStore.js");
+  const { useMetronomePrefsStore } = await import(
+    "../stores/useMetronomePrefsStore.js"
+  );
+  const { useInstrumentCoreStore } = await import(
+    "../stores/useInstrumentCoreStore.js"
+  );
+  const { useInstrumentWorkflowStore } = await import(
+    "../stores/useInstrumentWorkflowStore.js"
+  );
+  const { useTheoryStore } = await import("../stores/useTheoryStore.js");
+  const { useThemeStore } = await import("../stores/useThemeStore.js");
+
+  useDisplayPrefsStore.getState().setPrefs({ accidental: "flat", dotSize: 20 });
+  useMetronomePrefsStore.getState().setPrefs({ bpm: 132, timeSig: "5/4" });
+  useMetronomePrefsStore.getState().setRandomizeMode("key");
+  useInstrumentCoreStore.getState().setStrings(8);
+  useInstrumentCoreStore.getState().setFrets(30);
+  useInstrumentCoreStore.getState().setTuning(["D", "A", "D", "G", "A", "D"]);
+  useInstrumentWorkflowStore.getState().setCustomTunings([{ name: "Custom X" }]);
+  useInstrumentWorkflowStore.getState().setManagerOpen(true);
+  useTheoryStore.getState().setSystemId("24-TET");
+  useTheoryStore.getState().setRoot("D");
+  useThemeStore.getState().setTheme("dark");
+
+  resetAllStores();
+
+  assert.equal(useDisplayPrefsStore.getState().prefs.accidental, "sharp");
+  assert.equal(useDisplayPrefsStore.getState().prefs.dotSize, 14);
+  assert.equal(useMetronomePrefsStore.getState().prefs.bpm, 80);
+  assert.equal(useMetronomePrefsStore.getState().prefs.timeSig, "4/4");
+  assert.equal(useMetronomePrefsStore.getState().randomizeMode, "both");
+  assert.equal(useInstrumentCoreStore.getState().strings, 6);
+  assert.equal(useInstrumentCoreStore.getState().frets, 24);
+  assert.deepEqual(useInstrumentCoreStore.getState().tuning, []);
+  assert.deepEqual(useInstrumentWorkflowStore.getState().customTunings, []);
+  assert.equal(useInstrumentWorkflowStore.getState().isManagerOpen, false);
+  assert.equal(useTheoryStore.getState().systemId, "12-TET");
+  assert.equal(useTheoryStore.getState().root, "C");
+  assert.equal(useThemeStore.getState().theme, "auto");
+
+  assert.equal(storage.getItem(STORAGE_KEYS.THEORY_PREFS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.INSTRUMENT_CORE), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.DISPLAY_PREFS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.METRONOME_PREFS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.THEME), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.STRINGS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.FRETS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.SYSTEM_ID), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.ROOT), null);
+  assert.equal(storage.getItem("third.party"), "keep-me");
+  assert.equal(storage.getItem("tv.random"), "keep-me-too");
 });
 
 test("generated immer setters preserve non-target keys on full-store drafts", async () => {
