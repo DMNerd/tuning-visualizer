@@ -1,5 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSystemNoteNames } from "./useSystemNoteNames";
+
+export function normalizeNameForSystem(pc, nameForPc, sysNames) {
+  const candidate = nameForPc(pc);
+  if (sysNames.includes(candidate)) return candidate;
+  if (sysNames.length > 0) {
+    const idx = ((pc % sysNames.length) + sysNames.length) % sysNames.length;
+    return sysNames[idx] ?? candidate;
+  }
+  return candidate;
+}
 
 export function useAccidentalRespell({
   system,
@@ -9,6 +19,7 @@ export function useAccidentalRespell({
   setTuning,
   setChordRoot,
 }) {
+  const prevPcFromNameRef = useRef(null);
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
     accidental,
@@ -16,34 +27,28 @@ export function useAccidentalRespell({
   );
 
   useEffect(() => {
-    const normalizeName = (pc) => {
-      const candidate = nameForPc(pc);
-      if (sysNames.includes(candidate)) return candidate;
-      if (sysNames.length > 0) {
-        const idx =
-          ((pc % sysNames.length) + sysNames.length) % sysNames.length;
-        return sysNames[idx] ?? candidate;
-      }
-      return candidate;
-    };
+    const parsePrevName = prevPcFromNameRef.current ?? pcFromName;
+    const normalizeName = (pc) => normalizeNameForSystem(pc, nameForPc, sysNames);
 
     setRoot((prev) => {
-      const next = normalizeName(pcFromName(prev));
+      const next = normalizeName(parsePrevName(prev));
       return next !== prev ? next : prev;
     });
 
     setTuning((prev) => {
       if (!Array.isArray(prev)) return prev;
-      const next = prev.map((n) => normalizeName(pcFromName(n)));
+      const next = prev.map((n) => normalizeName(parsePrevName(n)));
       const same =
         prev.length === next.length && prev.every((v, i) => v === next[i]);
       return same ? prev : next;
     });
 
     setChordRoot((prev) => {
-      const next = normalizeName(pcFromName(prev));
+      const next = normalizeName(parsePrevName(prev));
       return next !== prev ? next : prev;
     });
+
+    prevPcFromNameRef.current = pcFromName;
   }, [
     accidental,
     noteNaming,
