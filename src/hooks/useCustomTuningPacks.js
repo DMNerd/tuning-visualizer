@@ -61,9 +61,7 @@ export function useCustomTuningPacks({
     selectWorkflowPendingPresetName,
   );
   const { setEditorState, setManagerOpen, setPendingPresetName } =
-    useInstrumentWorkflowStore(
-      useShallow(selectInstrumentWorkflowActions),
-    );
+    useInstrumentWorkflowStore(useShallow(selectInstrumentWorkflowActions));
 
   const confirmRef = useLatest(confirm);
   const getCurrentTuningPackRef = useLatest(getCurrentTuningPack);
@@ -82,13 +80,7 @@ export function useCustomTuningPacks({
       initialPack: pack,
       originalName: null,
     });
-  }, [
-    boardMeta,
-    stringMeta,
-    tuning,
-    getCurrentTuningPackRef,
-    setEditorState,
-  ]);
+  }, [boardMeta, stringMeta, tuning, getCurrentTuningPackRef, setEditorState]);
 
   const openEditSelected = useCallback(() => {
     if (!selectedPreset) return;

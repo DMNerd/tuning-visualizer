@@ -48,9 +48,8 @@ function trackSelectorChanges(store, selector) {
 }
 
 test("metronome HUD selector ignores unrelated engine updates", async () => {
-  const { useMetronomeEngineStore, selectMetronomeCurrentBeat } = await importFresh(
-    "../stores/useMetronomeEngineStore.js",
-  );
+  const { useMetronomeEngineStore, selectMetronomeCurrentBeat } =
+    await importFresh("../stores/useMetronomeEngineStore.js");
   useMetronomeEngineStore.setState({
     isPlaying: false,
     currentBeat: 1,
@@ -106,9 +105,8 @@ test("display controls selector only changes when selected pref changes", async 
 });
 
 test("preset picker selector ignores workflow modal/editor updates", async () => {
-  const { useInstrumentWorkflowStore, selectWorkflowSelectedPreset } = await importFresh(
-    "../stores/useInstrumentWorkflowStore.js",
-  );
+  const { useInstrumentWorkflowStore, selectWorkflowSelectedPreset } =
+    await importFresh("../stores/useInstrumentWorkflowStore.js");
   useInstrumentWorkflowStore.setState({
     customTunings: [],
     selectedPreset: "Factory default",

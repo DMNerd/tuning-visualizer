@@ -119,10 +119,9 @@ export const useMetronomePrefsStore = create(
         return {
           ...current,
           ...normalized,
-          randomizeMode:
-            isValidRandomizeMode(normalized?.randomizeMode)
-              ? normalized.randomizeMode
-              : RANDOMIZE_MODE_DEFAULT,
+          randomizeMode: isValidRandomizeMode(normalized?.randomizeMode)
+            ? normalized.randomizeMode
+            : RANDOMIZE_MODE_DEFAULT,
           prefs: {
             ...METRONOME_DEFAULTS,
             ...(normalized?.prefs || {}),

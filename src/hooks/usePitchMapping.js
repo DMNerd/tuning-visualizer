@@ -1,7 +1,11 @@
 import { useMemo, useCallback } from "react";
 import { buildNoteAliases, renderNoteName } from "@/lib/theory/noteNaming";
 
-export function buildNameToPcMap(system, noteNaming = "english", accidental = "sharp") {
+export function buildNameToPcMap(
+  system,
+  noteNaming = "english",
+  accidental = "sharp",
+) {
   const map = new Map();
   for (let pc = 0; pc < system.divisions; pc++) {
     for (const acc of ["sharp", "flat"]) {

@@ -24,22 +24,30 @@ export default function usePracticePanelState({
   const [randomizeMode, setRandomizeMode] = React.useState(
     RANDOMIZE_MODES.Both,
   );
-  const { randomizeNow, randomizeFromHotkey, pickRandomizedScale, applyPickedScale } =
-    useRandomScale({
+  const {
+    randomizeNow,
+    randomizeFromHotkey,
+    pickRandomizedScale,
+    applyPickedScale,
+  } = useRandomScale({
     ...randomizeConfig,
     mode: randomizeMode,
     throttleMs: 150,
   });
 
-  const { metronomePrefs, setMetronomePrefs, metronomeSetters, hydrateWithDefaults } =
-    useMetronomePrefsStore(
-      useShallow((state) => ({
-        metronomePrefs: selectMetronomePrefs(state),
-        setMetronomePrefs: selectMetronomeSetPrefs(state),
-        metronomeSetters: selectMetronomeSetters(state),
-        hydrateWithDefaults: selectMetronomeHydrateWithDefaults(state),
-      })),
-    );
+  const {
+    metronomePrefs,
+    setMetronomePrefs,
+    metronomeSetters,
+    hydrateWithDefaults,
+  } = useMetronomePrefsStore(
+    useShallow((state) => ({
+      metronomePrefs: selectMetronomePrefs(state),
+      setMetronomePrefs: selectMetronomeSetPrefs(state),
+      metronomeSetters: selectMetronomeSetters(state),
+      hydrateWithDefaults: selectMetronomeHydrateWithDefaults(state),
+    })),
+  );
 
   React.useEffect(() => {
     hydrateWithDefaults(metronomeDefaults);

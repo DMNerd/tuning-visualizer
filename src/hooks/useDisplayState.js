@@ -18,16 +18,15 @@ export function useDisplayState(defaults) {
     resetDisplayPrefs,
     displaySetters,
     hydrateWithDefaults,
-  } =
-    useDisplayPrefsStore(
-      useShallow((state) => ({
-        displayPrefs: selectDisplayPrefs(state),
-        setDisplayPrefs: selectDisplaySetPrefs(state),
-        resetDisplayPrefs: selectDisplayResetPrefs(state),
-        displaySetters: selectDisplaySetters(state),
-        hydrateWithDefaults: selectDisplayHydrateWithDefaults(state),
-      })),
-    );
+  } = useDisplayPrefsStore(
+    useShallow((state) => ({
+      displayPrefs: selectDisplayPrefs(state),
+      setDisplayPrefs: selectDisplaySetPrefs(state),
+      resetDisplayPrefs: selectDisplayResetPrefs(state),
+      displaySetters: selectDisplaySetters(state),
+      hydrateWithDefaults: selectDisplayHydrateWithDefaults(state),
+    })),
+  );
 
   useEffect(() => {
     hydrateWithDefaults(defaults);

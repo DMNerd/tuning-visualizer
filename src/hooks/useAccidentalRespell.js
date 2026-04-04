@@ -28,7 +28,8 @@ export function useAccidentalRespell({
 
   useEffect(() => {
     const parsePrevName = prevPcFromNameRef.current ?? pcFromName;
-    const normalizeName = (pc) => normalizeNameForSystem(pc, nameForPc, sysNames);
+    const normalizeName = (pc) =>
+      normalizeNameForSystem(pc, nameForPc, sysNames);
 
     setRoot((prev) => {
       const next = normalizeName(parsePrevName(prev));

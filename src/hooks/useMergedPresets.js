@@ -126,7 +126,9 @@ export function useMergedPresets({
     [savedExists],
   );
 
-  const selectedPreset = useInstrumentWorkflowStore(selectWorkflowSelectedPreset);
+  const selectedPreset = useInstrumentWorkflowStore(
+    selectWorkflowSelectedPreset,
+  );
   const queuedPresetName = useInstrumentWorkflowStore(
     selectWorkflowQueuedPresetName,
   );

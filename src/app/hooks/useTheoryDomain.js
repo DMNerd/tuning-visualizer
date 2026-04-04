@@ -79,7 +79,9 @@ export function useTheoryDomain({
   const scaleOptions = useMemo(() => {
     if (!system?.id) return [];
 
-    const matches = allScales.filter((candidate) => candidate.systemId === system.id);
+    const matches = allScales.filter(
+      (candidate) => candidate.systemId === system.id,
+    );
     if (matches.length) return matches;
 
     if (typeof system.divisions === "number") {
@@ -91,12 +93,16 @@ export function useTheoryDomain({
 
   useEffect(() => {
     if (!scaleOptions.length) return;
-    const stillValid = scaleOptions.some((candidate) => candidate.label === scale);
+    const stillValid = scaleOptions.some(
+      (candidate) => candidate.label === scale,
+    );
     if (!stillValid) setScale(defaultScale || scaleOptions[0].label);
   }, [scaleOptions, scale, setScale, defaultScale]);
 
   const intervals = useMemo(() => {
-    const definition = scaleOptions.find((candidate) => candidate.label === scale);
+    const definition = scaleOptions.find(
+      (candidate) => candidate.label === scale,
+    );
     return definition?.pcs ?? (scaleOptions[0]?.pcs || []);
   }, [scaleOptions, scale]);
 

@@ -30,7 +30,8 @@ function clampMaybeNumber(value, min, max, fallback) {
 }
 
 function readLegacyNumber(key, min, max, fallback) {
-  if (typeof globalThis.localStorage === "undefined") return { value: fallback, found: false };
+  if (typeof globalThis.localStorage === "undefined")
+    return { value: fallback, found: false };
   const raw = globalThis.localStorage.getItem(key);
   return {
     value: clampMaybeNumber(raw, min, max, fallback),
@@ -39,14 +40,19 @@ function readLegacyNumber(key, min, max, fallback) {
 }
 
 function readLegacyDefaultTuningMap() {
-  if (typeof globalThis.localStorage === "undefined") return { value: {}, found: false };
+  if (typeof globalThis.localStorage === "undefined")
+    return { value: {}, found: false };
   try {
-    const raw = globalThis.localStorage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING);
+    const raw = globalThis.localStorage.getItem(
+      STORAGE_KEYS.USER_DEFAULT_TUNING,
+    );
     if (!raw) return { value: {}, found: false };
     const parsed = JSON.parse(raw);
     return {
       value:
-        parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {},
+        parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          ? parsed
+          : {},
       found: true,
     };
   } catch {
@@ -119,11 +125,19 @@ export const useInstrumentCoreStore = create(
           }),
         setUserDefaultTuningMap: (valueOrUpdater) =>
           set((state) => {
-            applyValueOrUpdaterOnDraft(state, "userDefaultTuningMap", valueOrUpdater);
+            applyValueOrUpdaterOnDraft(
+              state,
+              "userDefaultTuningMap",
+              valueOrUpdater,
+            );
           }),
         updateUserDefaultTuningMap: (draftUpdater) =>
           set((state) => {
-            applyValueOrUpdaterOnDraft(state, "userDefaultTuningMap", draftUpdater);
+            applyValueOrUpdaterOnDraft(
+              state,
+              "userDefaultTuningMap",
+              draftUpdater,
+            );
           }),
         resetInstrumentPrefs: (nextStringsFactory, nextFretsFactory) =>
           set({
@@ -194,10 +208,11 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.value,
           ),
-          userDefaultTuningMap:
-            isValidPersistedMap(persistedState.userDefaultTuningMap)
-              ? persistedState.userDefaultTuningMap
-              : legacyDefaults.value,
+          userDefaultTuningMap: isValidPersistedMap(
+            persistedState.userDefaultTuningMap,
+          )
+            ? persistedState.userDefaultTuningMap
+            : legacyDefaults.value,
         };
       },
       partialize: (state) => ({
@@ -243,10 +258,11 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.found ? legacyFrets.value : FRETS_FACTORY,
           ),
-          userDefaultTuningMap:
-            isValidPersistedMap(persisted?.userDefaultTuningMap)
-              ? persisted.userDefaultTuningMap
-              : legacyDefaults.value,
+          userDefaultTuningMap: isValidPersistedMap(
+            persisted?.userDefaultTuningMap,
+          )
+            ? persisted.userDefaultTuningMap
+            : legacyDefaults.value,
         };
       },
       onRehydrateStorage: () => (_state, error) => {

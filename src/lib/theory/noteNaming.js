@@ -107,16 +107,12 @@ function fromGermanCore(germanCore) {
 
 function toGermanMicroSuffix(arrowSuffix) {
   if (!arrowSuffix) return "";
-  return arrowSuffix
-    .replace(/↑/gu, "ih")
-    .replace(/↓/gu, "eh");
+  return arrowSuffix.replace(/↑/gu, "ih").replace(/↓/gu, "eh");
 }
 
 function toArrowSuffixFromGerman(germanSuffix) {
   if (!germanSuffix) return "";
-  return germanSuffix
-    .replace(/IH/gu, "↑")
-    .replace(/EH/gu, "↓");
+  return germanSuffix.replace(/IH/gu, "↑").replace(/EH/gu, "↓");
 }
 
 export function toGermanNoteName(note) {

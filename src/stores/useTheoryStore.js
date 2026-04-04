@@ -28,7 +28,9 @@ function readLegacyTheoryPrefs() {
     return { systemId: SYSTEM_DEFAULT, root: ROOT_DEFAULT, found: false };
   }
 
-  const legacySystemId = globalThis.localStorage.getItem(STORAGE_KEYS.SYSTEM_ID);
+  const legacySystemId = globalThis.localStorage.getItem(
+    STORAGE_KEYS.SYSTEM_ID,
+  );
   const legacyRoot = globalThis.localStorage.getItem(STORAGE_KEYS.ROOT);
   const found = legacySystemId !== null || legacyRoot !== null;
 
@@ -51,10 +53,13 @@ export const useTheoryStore = create(
         set((state) => {
           updater(state);
         });
-      const baseSetters = makeImmerSetters(
-        setWithDraft,
-        ["systemId", "root", "scale", "chordRoot", "chordType"],
-      );
+      const baseSetters = makeImmerSetters(setWithDraft, [
+        "systemId",
+        "root",
+        "scale",
+        "chordRoot",
+        "chordType",
+      ]);
       const legacy = readLegacyTheoryPrefs();
       if (legacy.found) {
         shouldCleanupLegacyTheoryKeys = true;

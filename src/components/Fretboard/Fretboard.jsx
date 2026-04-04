@@ -87,7 +87,11 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = makeDisplayX(lefty, width);
 
-  const { pcFromName, nameForPc } = useSystemNoteNames(system, accidental, noteNaming);
+  const { pcFromName, nameForPc } = useSystemNoteNames(
+    system,
+    accidental,
+    noteNaming,
+  );
   const pcForName = pcFromName;
   const notePlacementMode =
     boardMeta?.notePlacement === "onFret" ? "onFret" : "between";

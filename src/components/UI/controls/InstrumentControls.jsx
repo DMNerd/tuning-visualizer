@@ -236,11 +236,7 @@ function InstrumentControls({ state, actions, meta }) {
                     });
                   }}
                 >
-                  {!hasOption && (
-                    <option value={note}>
-                      {note}
-                    </option>
-                  )}
+                  {!hasOption && <option value={note}>{note}</option>}
                   {safeSysNames.map((n) => (
                     <option key={n} value={n}>
                       {n}

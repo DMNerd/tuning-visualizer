@@ -66,10 +66,12 @@ function ChordControls({
       : Number.isFinite(rootIx)
         ? rootIx
         : 0;
-    const anchor = ((anchorRaw % totalDivisions) + totalDivisions) % totalDivisions;
+    const anchor =
+      ((anchorRaw % totalDivisions) + totalDivisions) % totalDivisions;
 
     const pcs = Array.from(chordPCs, (value) => {
-      const wrapped = ((value % totalDivisions) + totalDivisions) % totalDivisions;
+      const wrapped =
+        ((value % totalDivisions) + totalDivisions) % totalDivisions;
       return wrapped;
     });
 
@@ -179,7 +181,11 @@ function ChordControls({
               aria-label="Chord tones"
             >
               {chordTones.map((tone) => (
-                <div key={tone.pc} className="tv-tone-list__item" role="listitem">
+                <div
+                  key={tone.pc}
+                  className="tv-tone-list__item"
+                  role="listitem"
+                >
                   <span
                     className={clsx("tv-tone-chip", {
                       "tv-tone-chip--in-scale": showChord && tone.inScale,
@@ -198,9 +204,7 @@ function ChordControls({
                     <span>{tone.noteName}</span>
                     {showChord ? (
                       <small className="tv-tone-chip__meta">
-                        {tone.inScale
-                          ? `deg ${tone.degree ?? "–"}`
-                          : "outside"}
+                        {tone.inScale ? `deg ${tone.degree ?? "–"}` : "outside"}
                       </small>
                     ) : null}
                   </span>

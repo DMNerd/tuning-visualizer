@@ -28,16 +28,13 @@ export const useInstrumentWorkflowStore = create(
         set((state) => {
           updater(state);
         });
-      const baseSetters = makeImmerSetters(
-        setWithDraft,
-        {
-          selectedPreset: "setSelectedPreset",
-          queuedPresetName: "setQueuedPresetName",
-          editorState: "setEditorState",
-          isManagerOpen: "setManagerOpen",
-          pendingPresetName: "setPendingPresetName",
-        },
-      );
+      const baseSetters = makeImmerSetters(setWithDraft, {
+        selectedPreset: "setSelectedPreset",
+        queuedPresetName: "setQueuedPresetName",
+        editorState: "setEditorState",
+        isManagerOpen: "setManagerOpen",
+        pendingPresetName: "setPendingPresetName",
+      });
       return {
         customTunings: [],
         _rehydrateRevision: 0,
@@ -66,7 +63,8 @@ export const useInstrumentWorkflowStore = create(
             const list = state.customTunings;
             const packId =
               typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
-            const packName = typeof pack?.name === "string" ? pack.name.trim() : "";
+            const packName =
+              typeof pack?.name === "string" ? pack.name.trim() : "";
             const index = list.findIndex((entry) => {
               const entryId =
                 typeof entry?.meta?.id === "string" ? entry.meta.id.trim() : "";
@@ -90,14 +88,18 @@ export const useInstrumentWorkflowStore = create(
                 ? identifier.meta.id.trim()
                 : typeof identifier?.name === "string"
                   ? identifier.name.trim()
-                : typeof identifier === "string"
-                  ? identifier.trim()
-                  : "";
+                  : typeof identifier === "string"
+                    ? identifier.trim()
+                    : "";
 
             if (!id) return;
 
             let removedAny = false;
-            for (let index = state.customTunings.length - 1; index >= 0; index -= 1) {
+            for (
+              let index = state.customTunings.length - 1;
+              index >= 0;
+              index -= 1
+            ) {
               const entry = state.customTunings[index];
               const entryId =
                 typeof entry?.meta?.id === "string" ? entry.meta.id.trim() : "";
@@ -188,8 +190,7 @@ export const selectInstrumentWorkflowActions = (state) => ({
 
 export const selectWorkflowCustomTunings = (state) => state.customTunings;
 export const selectWorkflowSelectedPreset = (state) => state.selectedPreset;
-export const selectWorkflowQueuedPresetName = (state) =>
-  state.queuedPresetName;
+export const selectWorkflowQueuedPresetName = (state) => state.queuedPresetName;
 export const selectWorkflowEditorState = (state) => state.editorState;
 export const selectWorkflowManagerOpen = (state) => state.isManagerOpen;
 export const selectWorkflowPendingPresetName = (state) =>

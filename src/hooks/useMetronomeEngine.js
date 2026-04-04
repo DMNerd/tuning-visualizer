@@ -133,16 +133,19 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
     resetCursorState();
   }, [resetCursorState]);
 
-  const scheduleBeatUiUpdate = useCallback((when, beatNumber, barNumber) => {
-    const now = performance.now();
-    const delayMs = Math.max(0, when * 1000 - now);
-    const id = window.setTimeout(() => {
-      setCurrentBeat(beatNumber);
-      setCurrentBar(barNumber);
-      onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
-    }, delayMs);
-    uiTimerIdsRef.current.push(id);
-  }, [setCurrentBeat, setCurrentBar]);
+  const scheduleBeatUiUpdate = useCallback(
+    (when, beatNumber, barNumber) => {
+      const now = performance.now();
+      const delayMs = Math.max(0, when * 1000 - now);
+      const id = window.setTimeout(() => {
+        setCurrentBeat(beatNumber);
+        setCurrentBar(barNumber);
+        onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
+      }, delayMs);
+      uiTimerIdsRef.current.push(id);
+    },
+    [setCurrentBeat, setCurrentBar],
+  );
 
   const scheduler = useCallback(() => {
     const ctx = audioCtxRef.current;

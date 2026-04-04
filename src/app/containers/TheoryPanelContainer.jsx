@@ -13,28 +13,29 @@ export default function TheoryPanelContainer({
   reset,
 }) {
   const scaleTones = React.useMemo(() => {
-    const divisions = Number(system.system?.divisions) || system.sysNames.length || 12;
+    const divisions =
+      Number(system.system?.divisions) || system.sysNames.length || 12;
     const intervals = Array.isArray(scale.intervals) ? scale.intervals : [];
 
     return intervals.map((interval) => {
-      const absolutePc = ((system.rootIx + interval) % divisions + divisions) % divisions;
+      const absolutePc =
+        (((system.rootIx + interval) % divisions) + divisions) % divisions;
       return {
         pc: absolutePc,
         label: system.nameForPc(absolutePc),
       };
     });
-  }, [
-    system,
-    scale.intervals,
-  ]);
+  }, [system, scale.intervals]);
 
   const chordFit = React.useMemo(() => {
     const scaleToneSet = new Set(scaleTones.map((tone) => tone.pc));
-    const chordTonePcs = chord.chordPCs instanceof Set ? [...chord.chordPCs] : [];
+    const chordTonePcs =
+      chord.chordPCs instanceof Set ? [...chord.chordPCs] : [];
     const total = chordTonePcs.length;
     const inScale = chordTonePcs.filter((pc) => scaleToneSet.has(pc)).length;
     const outside = Math.max(total - inScale, 0);
-    const text = total > 0 ? `Chord fit: ${inScale}/${total} tones in scale` : null;
+    const text =
+      total > 0 ? `Chord fit: ${inScale}/${total} tones in scale` : null;
 
     return {
       inScale,

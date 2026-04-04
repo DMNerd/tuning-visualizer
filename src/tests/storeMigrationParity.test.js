@@ -135,7 +135,9 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
 
 test("legacy custom tuning payload array remains compatible in workflow store", async () => {
   storage.clear();
-  const legacyPayload = [{ name: "Custom 1", system: { edo: 12 }, tuning: { strings: [] } }];
+  const legacyPayload = [
+    { name: "Custom 1", system: { edo: 12 }, tuning: { strings: [] } },
+  ];
   storage.setItem(STORAGE_KEYS.CUSTOM_TUNINGS, JSON.stringify(legacyPayload));
 
   const { useInstrumentWorkflowStore } = await importFresh(
@@ -188,7 +190,9 @@ test("instrument core prefers valid persisted payload over legacy keys", async (
       state: {
         strings: 7,
         frets: 22,
-        userDefaultTuningMap: { "12-TET:7": ["A", "D", "G", "C", "E", "A", "D"] },
+        userDefaultTuningMap: {
+          "12-TET:7": ["A", "D", "G", "C", "E", "A", "D"],
+        },
       },
       version: 1,
     }),
@@ -223,7 +227,11 @@ test("instrument core store preserves tuning/stringMeta/boardMeta mutation seman
     "../stores/useInstrumentCoreStore.js",
   );
 
-  useInstrumentCoreStore.setState({ tuning: ["E", "A", "D", "G"], stringMeta: null, boardMeta: null });
+  useInstrumentCoreStore.setState({
+    tuning: ["E", "A", "D", "G"],
+    stringMeta: null,
+    boardMeta: null,
+  });
   useInstrumentCoreStore.getState().setTuning((draft) => {
     draft[0] = "D";
   });
@@ -243,7 +251,12 @@ test("instrument core store preserves tuning/stringMeta/boardMeta mutation seman
   assert.equal(state.tuning[0], "D");
   assert.deepEqual(state.stringMeta, [{ label: "Low" }, { label: "High" }]);
   assert.deepEqual(state.boardMeta, { title: "Drop D v2" });
-  assert.deepEqual(state.userDefaultTuningMap["12-TET:4"], ["D", "A", "D", "G"]);
+  assert.deepEqual(state.userDefaultTuningMap["12-TET:4"], [
+    "D",
+    "A",
+    "D",
+    "G",
+  ]);
 });
 
 test("instrument core setTuning updater recovers from invalid tuning shape", async () => {
@@ -416,7 +429,10 @@ test("theory and workflow action names and behaviors remain stable", async () =>
     draft.push({ name: "Custom C", meta: { id: "custom-c" } });
     draft.push({ name: "NameOnly Pack" });
   });
-  workflowActions.upsertCustomTuning({ name: "Custom C+", meta: { id: "custom-c" } });
+  workflowActions.upsertCustomTuning({
+    name: "Custom C+",
+    meta: { id: "custom-c" },
+  });
   workflowActions.removeCustomTuning("Custom A");
   workflowActions.removeCustomTuning({ name: "NameOnly Pack" });
   workflowActions.setSelectedPreset("Custom B");
@@ -441,19 +457,16 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   storage.setItem("tv.random", "keep-me-too");
 
   const { resetAllStores } = await importFresh("../stores/resetAllStores.js");
-  const { useDisplayPrefsStore } = await import("../stores/useDisplayPrefsStore.js");
-  const { useMetronomePrefsStore } = await import(
-    "../stores/useMetronomePrefsStore.js"
-  );
-  const { useInstrumentCoreStore } = await import(
-    "../stores/useInstrumentCoreStore.js"
-  );
-  const { useInstrumentWorkflowStore } = await import(
-    "../stores/useInstrumentWorkflowStore.js"
-  );
-  const { useMetronomeEngineStore } = await import(
-    "../stores/useMetronomeEngineStore.js"
-  );
+  const { useDisplayPrefsStore } =
+    await import("../stores/useDisplayPrefsStore.js");
+  const { useMetronomePrefsStore } =
+    await import("../stores/useMetronomePrefsStore.js");
+  const { useInstrumentCoreStore } =
+    await import("../stores/useInstrumentCoreStore.js");
+  const { useInstrumentWorkflowStore } =
+    await import("../stores/useInstrumentWorkflowStore.js");
+  const { useMetronomeEngineStore } =
+    await import("../stores/useMetronomeEngineStore.js");
   const { useTheoryStore } = await import("../stores/useTheoryStore.js");
   const { useThemeStore } = await import("../stores/useThemeStore.js");
 
@@ -466,7 +479,9 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   useInstrumentCoreStore.getState().setStrings(8);
   useInstrumentCoreStore.getState().setFrets(30);
   useInstrumentCoreStore.getState().setTuning(["D", "A", "D", "G", "A", "D"]);
-  useInstrumentWorkflowStore.getState().setCustomTunings([{ name: "Custom X" }]);
+  useInstrumentWorkflowStore
+    .getState()
+    .setCustomTunings([{ name: "Custom X" }]);
   useInstrumentWorkflowStore.getState().setManagerOpen(true);
   useTheoryStore.getState().setSystemId("24-TET");
   useTheoryStore.getState().setRoot("D");

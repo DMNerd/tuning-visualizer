@@ -9,7 +9,9 @@ export function applyValueOrUpdaterOnDraft<
   valueOrUpdater: ValueOrUpdater<Container[Key]>,
 ): void {
   if (typeof valueOrUpdater === "function") {
-    const updater = valueOrUpdater as (draft: Container[Key]) => Container[Key] | void;
+    const updater = valueOrUpdater as (
+      draft: Container[Key],
+    ) => Container[Key] | void;
     const next = updater(draftContainer[key]);
     if (next !== undefined) {
       draftContainer[key] = next;

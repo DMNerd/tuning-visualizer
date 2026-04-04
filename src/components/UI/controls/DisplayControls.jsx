@@ -104,7 +104,6 @@ function DisplayControls({ state, actions, meta }) {
             </div>
           </div>
 
-
           <div className="tv-field">
             <span className="tv-field__label">Note naming</span>
             <select
