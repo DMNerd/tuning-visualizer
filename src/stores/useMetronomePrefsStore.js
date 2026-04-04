@@ -67,10 +67,7 @@ export const useMetronomePrefsStore = create(
 
       return {
         prefs: METRONOME_DEFAULTS,
-<<<<<<< ours
-=======
         randomizeMode: RANDOMIZE_MODE_DEFAULT,
->>>>>>> theirs
         _rehydrateRevision: 0,
         setPrefs,
         setRandomizeMode: (randomizeMode) =>
