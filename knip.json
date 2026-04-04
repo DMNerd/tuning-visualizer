@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema-jsonc.json",
+  "entry": [
+    "index.html",
+    "src/tests/**/*.test.js"
+  ],
+  "project": [
+    "src/**/*.{js,jsx,ts,tsx}"
+  ],
+  "ignore": [
+    ".eslintrc.json"
+  ],
+  "ignoreDependencies": [
+    "lightningcss"
+  ]
+}
