@@ -2,11 +2,15 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import htmlMinifier from "vite-plugin-html-minifier-terser";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const packageJson = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf-8"),
+);
 
 export default defineConfig(({ command, mode }) => {
   const isProductionBuild = command === "build" && mode === "production";
@@ -38,6 +42,10 @@ export default defineConfig(({ command, mode }) => {
           ]
         : []),
     ],
+
+    define: {
+      "import.meta.env.VITE_APP_VERSION": JSON.stringify(packageJson.version),
+    },
 
     css: {
       transformer: "lightningcss",

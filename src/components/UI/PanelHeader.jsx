@@ -11,10 +11,15 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   const isAuto = theme === "auto";
   const isLight = theme === "light";
   const isDark = theme === "dark";
+  const appVersion = import.meta.env.DEV
+    ? "dev"
+    : `v${import.meta.env.VITE_APP_VERSION}`;
 
   return (
     <div className="tv-header">
-      <h1 className="tv-header__title">TunningViz</h1>
+      <h1 className="tv-header__title">
+        TunningViz <span className="tv-header__version">{appVersion}</span>
+      </h1>
 
       <div className="tv-header__actions">
         <div className="tv-header__toggles">
