@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import { METRONOME_DEFAULTS } from "@/lib/config/appDefaults";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
-import { applyDraftUpdate } from "@/utils/applyDraftUpdate";
+import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
 const SETTER_KEYS = [
   "bpm",
@@ -51,22 +52,29 @@ let didHydrateLegacyMetronomePayload = false;
 
 export const useMetronomePrefsStore = create(
   persist(
-    (set, get) => {
+    immer((set, get) => {
       const setPrefs = (update) => {
-        set((state) => ({ prefs: applyDraftUpdate(state.prefs, update) }));
+        set((state) => {
+          applyValueOrUpdaterOnDraft(state, "prefs", update);
+        });
       };
 
       return {
         prefs: METRONOME_DEFAULTS,
+        _rehydrateRevision: 0,
         setPrefs,
         setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
+        touchMetronomePrefsState: () =>
+          set((state) => {
+            state._rehydrateRevision += 1;
+          }),
         hydrateWithDefaults: (defaults) => {
           if (!defaults) return;
           const { prefs } = get();
           set({ prefs: { ...defaults, ...prefs } });
         },
       };
-    },
+    }),
     {
       name: STORAGE_KEYS.METRONOME_PREFS,
       version: 1,
@@ -99,7 +107,7 @@ export const useMetronomePrefsStore = create(
       onRehydrateStorage: () => (state, error) => {
         if (error || !state || !didHydrateLegacyMetronomePayload) return;
         didHydrateLegacyMetronomePayload = false;
-        state.setPrefs((prev) => ({ ...prev }));
+        state.touchMetronomePrefsState();
       },
     },
   ),

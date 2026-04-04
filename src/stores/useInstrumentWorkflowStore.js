@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
-import { applyDraftUpdate } from "@/utils/applyDraftUpdate";
+import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
 function readLegacyCustomTunings() {
   if (typeof globalThis.localStorage === "undefined") return null;
@@ -22,20 +23,13 @@ let didHydrateLegacyWorkflowPayload = false;
 
 export const useInstrumentWorkflowStore = create(
   persist(
-    (set) => {
+    immer((set) => {
+      const setWithDraft = (updater) =>
+        set((state) => {
+          updater(state);
+        });
       const baseSetters = makeImmerSetters(
-        (updater) =>
-          set((state) => {
-            const draft = {
-              selectedPreset: state.selectedPreset,
-              queuedPresetName: state.queuedPresetName,
-              editorState: state.editorState,
-              isManagerOpen: state.isManagerOpen,
-              pendingPresetName: state.pendingPresetName,
-            };
-            updater(draft);
-            return draft;
-          }),
+        setWithDraft,
         {
           selectedPreset: "setSelectedPreset",
           queuedPresetName: "setQueuedPresetName",
@@ -46,6 +40,7 @@ export const useInstrumentWorkflowStore = create(
       );
       return {
         customTunings: [],
+        _rehydrateRevision: 0,
         selectedPreset: "Factory default",
         queuedPresetName: null,
         editorState: null,
@@ -53,19 +48,22 @@ export const useInstrumentWorkflowStore = create(
         pendingPresetName: null,
 
         setCustomTunings: (valueOrUpdater) =>
-          set((state) => ({
-            customTunings: applyDraftUpdate(state.customTunings, valueOrUpdater),
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "customTunings", valueOrUpdater);
+          }),
         updateCustomTunings: (draftUpdater) =>
-          set((state) => ({
-            customTunings: applyDraftUpdate(state.customTunings, draftUpdater),
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "customTunings", draftUpdater);
+          }),
         upsertCustomTuning: (pack) =>
           set((state) => {
-            if (!pack || typeof pack !== "object") return {};
-            const list = Array.isArray(state.customTunings)
-              ? [...state.customTunings]
-              : [];
+            if (!pack || typeof pack !== "object") return;
+
+            if (!Array.isArray(state.customTunings)) {
+              state.customTunings = [];
+            }
+
+            const list = state.customTunings;
             const packId =
               typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
             const packName = typeof pack?.name === "string" ? pack.name.trim() : "";
@@ -82,13 +80,11 @@ export const useInstrumentWorkflowStore = create(
             } else {
               list.push(pack);
             }
-            return { customTunings: list };
           }),
         removeCustomTuning: (identifier) =>
           set((state) => {
-            const list = Array.isArray(state.customTunings)
-              ? state.customTunings
-              : [];
+            if (!Array.isArray(state.customTunings)) return;
+
             const id =
               typeof identifier?.meta?.id === "string"
                 ? identifier.meta.id.trim()
@@ -97,22 +93,33 @@ export const useInstrumentWorkflowStore = create(
                 : typeof identifier === "string"
                   ? identifier.trim()
                   : "";
-            const filtered = list.filter((entry) => {
+
+            if (!id) return;
+
+            let removedAny = false;
+            for (let index = state.customTunings.length - 1; index >= 0; index -= 1) {
+              const entry = state.customTunings[index];
               const entryId =
                 typeof entry?.meta?.id === "string" ? entry.meta.id.trim() : "";
               const entryName =
                 typeof entry?.name === "string" ? entry.name.trim() : "";
-              if (id && entryId) return entryId !== id;
-              if (id) return entryName !== id;
-              return true;
-            });
-            return filtered.length === list.length
-              ? {}
-              : { customTunings: filtered };
+
+              const isMatch = entryId ? entryId === id : entryName === id;
+              if (isMatch) {
+                state.customTunings.splice(index, 1);
+                removedAny = true;
+              }
+            }
+
+            if (!removedAny) return;
+          }),
+        touchWorkflowState: () =>
+          set((state) => {
+            state._rehydrateRevision += 1;
           }),
         ...baseSetters,
       };
-    },
+    }),
     {
       name: STORAGE_KEYS.CUSTOM_TUNINGS,
       version: 1,
@@ -142,7 +149,7 @@ export const useInstrumentWorkflowStore = create(
       onRehydrateStorage: () => (state, error) => {
         if (error || !state || !didHydrateLegacyWorkflowPayload) return;
         didHydrateLegacyWorkflowPayload = false;
-        state.setCustomTunings((prev) => [...prev]);
+        state.touchWorkflowState();
       },
     },
   ),

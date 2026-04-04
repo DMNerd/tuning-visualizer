@@ -219,6 +219,7 @@ function InstrumentControls({ state, actions, meta }) {
         <div className="tv-controls__strings-grid">
           {safeTuning.map((note, i) => {
             const stringNum = strings - i;
+            const hasOption = safeSysNames.includes(note);
             return (
               <div key={i} className="tv-field">
                 <label htmlFor={`string-${stringNum}`}>
@@ -235,6 +236,11 @@ function InstrumentControls({ state, actions, meta }) {
                     });
                   }}
                 >
+                  {!hasOption && (
+                    <option value={note}>
+                      {note}
+                    </option>
+                  )}
                   {safeSysNames.map((n) => (
                     <option key={n} value={n}>
                       {n}

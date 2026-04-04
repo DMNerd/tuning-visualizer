@@ -42,6 +42,7 @@ export function useMergedPresets({
 }) {
   const isMounted = useMountedState();
   const onInstrumentChangeRef = useLatest(onInstrumentChange);
+  const currentTuningRef = useLatest(currentTuning);
 
   const compatibleCustoms = useMemo(() => {
     if (!Array.isArray(customTunings) || !customTunings.length) return [];
@@ -166,7 +167,7 @@ export function useMergedPresets({
       ) {
         return;
       }
-      if (!areTuningsEqual(currentTuning, coerced)) {
+      if (!areTuningsEqual(currentTuningRef.current, coerced)) {
         setTuning(coerced);
       }
       const meta =
@@ -189,7 +190,7 @@ export function useMergedPresets({
       setStringMeta,
       setBoardMeta,
       currentStrings,
-      currentTuning,
+      currentTuningRef,
       selectedPreset,
       setSelectedPreset,
       setQueuedPresetName,

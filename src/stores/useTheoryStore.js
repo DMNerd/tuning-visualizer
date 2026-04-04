@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import {
   CHORD_DEFAULT,
@@ -45,20 +46,13 @@ let shouldCleanupLegacyTheoryKeys = false;
 
 export const useTheoryStore = create(
   persist(
-    (set) => {
+    immer((set) => {
+      const setWithDraft = (updater) =>
+        set((state) => {
+          updater(state);
+        });
       const baseSetters = makeImmerSetters(
-        (updater) =>
-          set((state) => {
-            const draft = {
-              systemId: state.systemId,
-              root: state.root,
-              scale: state.scale,
-              chordRoot: state.chordRoot,
-              chordType: state.chordType,
-            };
-            updater(draft);
-            return draft;
-          }),
+        setWithDraft,
         ["systemId", "root", "scale", "chordRoot", "chordType"],
       );
       const legacy = readLegacyTheoryPrefs();
@@ -75,16 +69,17 @@ export const useTheoryStore = create(
         hideNonChord: false,
         ...baseSetters,
         setShowChord: (value) =>
-          set((state) => ({
-            showChord: typeof value === "boolean" ? value : !state.showChord,
-          })),
+          set((state) => {
+            state.showChord =
+              typeof value === "boolean" ? value : !state.showChord;
+          }),
         setHideNonChord: (value) =>
-          set((state) => ({
-            hideNonChord:
-              typeof value === "boolean" ? value : !state.hideNonChord,
-          })),
+          set((state) => {
+            state.hideNonChord =
+              typeof value === "boolean" ? value : !state.hideNonChord;
+          }),
       };
-    },
+    }),
     {
       name: "tv.theoryPrefs",
       version: 1,

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
 
 const INITIAL_ENGINE_STATE = {
   isPlaying: false,
@@ -8,25 +9,27 @@ const INITIAL_ENGINE_STATE = {
   audioError: "",
 };
 
-export const useMetronomeEngineStore = create((set) => ({
-  ...INITIAL_ENGINE_STATE,
-  setIsPlaying: (isPlaying) => set({ isPlaying }),
-  setCurrentBeat: (currentBeat) => set({ currentBeat }),
-  setCurrentBar: (currentBar) => set({ currentBar }),
-  setAudioReady: (audioReady) => set({ audioReady }),
-  setAudioError: (audioError) => set({ audioError }),
-  resetCursorState: () =>
-    set({
-      currentBeat: INITIAL_ENGINE_STATE.currentBeat,
-      currentBar: INITIAL_ENGINE_STATE.currentBar,
-    }),
-  resetPlaybackState: () =>
-    set({
-      isPlaying: INITIAL_ENGINE_STATE.isPlaying,
-      currentBeat: INITIAL_ENGINE_STATE.currentBeat,
-      currentBar: INITIAL_ENGINE_STATE.currentBar,
-    }),
-}));
+export const useMetronomeEngineStore = create(
+  immer((set) => ({
+    ...INITIAL_ENGINE_STATE,
+    setIsPlaying: (isPlaying) => set({ isPlaying }),
+    setCurrentBeat: (currentBeat) => set({ currentBeat }),
+    setCurrentBar: (currentBar) => set({ currentBar }),
+    setAudioReady: (audioReady) => set({ audioReady }),
+    setAudioError: (audioError) => set({ audioError }),
+    resetCursorState: () =>
+      set({
+        currentBeat: INITIAL_ENGINE_STATE.currentBeat,
+        currentBar: INITIAL_ENGINE_STATE.currentBar,
+      }),
+    resetPlaybackState: () =>
+      set({
+        isPlaying: INITIAL_ENGINE_STATE.isPlaying,
+        currentBeat: INITIAL_ENGINE_STATE.currentBeat,
+        currentBar: INITIAL_ENGINE_STATE.currentBar,
+      }),
+  })),
+);
 
 export const selectMetronomeEngineState = (state) => ({
   isPlaying: state.isPlaying,

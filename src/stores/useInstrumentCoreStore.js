@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import {
   STR_FACTORY,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/config/appDefaults";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { clamp } from "@/utils/math";
-import { applyDraftUpdate } from "@/utils/applyDraftUpdate";
+import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
 function clampMaybeNumber(value, min, max, fallback) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -66,7 +67,7 @@ let shouldCleanupLegacyInstrumentCoreKeys = false;
 
 export const useInstrumentCoreStore = create(
   persist(
-    (set) => {
+    immer((set) => {
       const legacyStrings = readLegacyNumber(
         STORAGE_KEYS.STRINGS,
         STR_MIN,
@@ -97,33 +98,33 @@ export const useInstrumentCoreStore = create(
         setFretsTouched: (fretsTouched) => set({ fretsTouched }),
         setFretsUI: (frets) => set({ frets, fretsTouched: true }),
         setTuning: (valueOrUpdater) =>
-          set((state) => ({
-            tuning: applyDraftUpdate(state.tuning, valueOrUpdater),
-          })),
+          set((state) => {
+            if (
+              typeof valueOrUpdater === "function" &&
+              !Array.isArray(state.tuning)
+            ) {
+              state.tuning = [];
+            }
+            applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
+          }),
         setStringMeta: (stringMeta) => set({ stringMeta }),
         updateStringMeta: (draftUpdater) =>
-          set((state) => ({
-            stringMeta: applyDraftUpdate(state.stringMeta, draftUpdater),
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "stringMeta", draftUpdater);
+          }),
         setBoardMeta: (boardMeta) => set({ boardMeta }),
         updateBoardMeta: (draftUpdater) =>
-          set((state) => ({
-            boardMeta: applyDraftUpdate(state.boardMeta, draftUpdater),
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "boardMeta", draftUpdater);
+          }),
         setUserDefaultTuningMap: (valueOrUpdater) =>
-          set((state) => ({
-            userDefaultTuningMap:
-              typeof valueOrUpdater === "function"
-                ? valueOrUpdater(state.userDefaultTuningMap)
-                : valueOrUpdater,
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "userDefaultTuningMap", valueOrUpdater);
+          }),
         updateUserDefaultTuningMap: (draftUpdater) =>
-          set((state) => ({
-            userDefaultTuningMap: applyDraftUpdate(
-              state.userDefaultTuningMap,
-              draftUpdater,
-            ),
-          })),
+          set((state) => {
+            applyValueOrUpdaterOnDraft(state, "userDefaultTuningMap", draftUpdater);
+          }),
         resetInstrumentPrefs: (nextStringsFactory, nextFretsFactory) =>
           set({
             strings: nextStringsFactory,
@@ -131,7 +132,7 @@ export const useInstrumentCoreStore = create(
             fretsTouched: false,
           }),
       };
-    },
+    }),
     {
       name: "tv.instrumentCore",
       version: 1,

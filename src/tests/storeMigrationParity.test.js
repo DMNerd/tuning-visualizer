@@ -217,6 +217,22 @@ test("instrument core store preserves tuning/stringMeta/boardMeta mutation seman
   assert.deepEqual(state.userDefaultTuningMap["12-TET:4"], ["D", "A", "D", "G"]);
 });
 
+test("instrument core setTuning updater recovers from invalid tuning shape", async () => {
+  storage.clear();
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+
+  useInstrumentCoreStore.setState({ tuning: null });
+  useInstrumentCoreStore.getState().setTuning((draft) => {
+    draft[0] = "E";
+    draft[1] = "A";
+  });
+
+  const state = useInstrumentCoreStore.getState();
+  assert.deepEqual(state.tuning, ["E", "A"]);
+});
+
 test("display prefs store hydrates via globalThis localStorage adapter", async () => {
   storage.clear();
   storage.setItem(
@@ -378,4 +394,24 @@ test("theory and workflow action names and behaviors remain stable", async () =>
   assert.equal(workflowState.customTunings.length, 2);
   assert.equal(workflowState.customTunings[0].name, "Custom B");
   assert.equal(workflowState.customTunings[1].name, "Custom C+");
+});
+
+test("generated immer setters preserve non-target keys on full-store drafts", async () => {
+  storage.clear();
+  const { useTheoryStore } = await importFresh("../stores/useTheoryStore.js");
+  const { useInstrumentWorkflowStore } = await importFresh(
+    "../stores/useInstrumentWorkflowStore.js",
+  );
+
+  useTheoryStore.setState({ extraTheoryKey: "keep-me" });
+  useTheoryStore.getState().setSystemId("24-TET");
+  const theoryState = useTheoryStore.getState();
+  assert.equal(theoryState.systemId, "24-TET");
+  assert.equal(theoryState.extraTheoryKey, "keep-me");
+
+  useInstrumentWorkflowStore.setState({ extraWorkflowKey: "keep-me-too" });
+  useInstrumentWorkflowStore.getState().setSelectedPreset("Factory default");
+  const workflowState = useInstrumentWorkflowStore.getState();
+  assert.equal(workflowState.selectedPreset, "Factory default");
+  assert.equal(workflowState.extraWorkflowKey, "keep-me-too");
 });

@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { DISPLAY_DEFAULTS } from "@/lib/config/appDefaults";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
-import { applyDraftUpdate } from "@/utils/applyDraftUpdate";
+import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
 const SETTER_KEYS = [
   "show",
@@ -21,9 +22,11 @@ const SETTER_KEYS = [
 
 export const useDisplayPrefsStore = create(
   persist(
-    (set, get) => {
+    immer((set, get) => {
       const setPrefs = (update) => {
-        set((state) => ({ prefs: applyDraftUpdate(state.prefs, update) }));
+        set((state) => {
+          applyValueOrUpdaterOnDraft(state, "prefs", update);
+        });
       };
 
       return {
@@ -36,7 +39,7 @@ export const useDisplayPrefsStore = create(
           set({ prefs: { ...defaults, ...prefs } });
         },
       };
-    },
+    }),
     {
       name: STORAGE_KEYS.DISPLAY_PREFS,
       storage: createJSONStorage(() => globalThis.localStorage),
