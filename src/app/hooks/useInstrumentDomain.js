@@ -57,6 +57,7 @@ export function useInstrumentDomain({
     setBoardMeta: instrumentActions.setBoardMeta,
     currentEdo: system.divisions,
     currentStrings: instrumentState.strings,
+    currentTuning: instrumentState.tuning,
     systemId,
     strings: instrumentState.strings,
     savedExists: instrumentDerived.savedExists,

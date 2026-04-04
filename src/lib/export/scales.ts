@@ -6,7 +6,7 @@ export type ExportHeader = {
   tuning?: string | string[];
   scale?: string;
   spelling?: string;
-  accidental?: "sharp" | "flat" | string;
+  accidental?: string;
   strings?: number;
   chordEnabled?: boolean;
   chordRoot?: string;

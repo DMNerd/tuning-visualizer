@@ -1,0 +1,112 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+
+import { METRONOME_DEFAULTS } from "@/lib/config/appDefaults";
+import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { makeImmerSetters } from "@/utils/makeImmerSetters";
+import { applyDraftUpdate } from "@/utils/applyDraftUpdate";
+
+const SETTER_KEYS = [
+  "bpm",
+  "timeSig",
+  "subdivision",
+  "countInEnabled",
+  "autoAdvanceEnabled",
+  "barsPerScale",
+  "announceCountInBeforeChange",
+];
+
+function normalizeLegacyShape(persisted) {
+  if (!persisted) return null;
+
+  if (persisted.prefs && typeof persisted.prefs === "object") {
+    return persisted;
+  }
+
+  if (typeof persisted === "object" && !Array.isArray(persisted)) {
+    return { prefs: persisted };
+  }
+
+  return null;
+}
+
+function readLegacyMetronomePrefs() {
+  if (typeof globalThis.localStorage === "undefined") return null;
+  const raw = globalThis.localStorage.getItem(STORAGE_KEYS.METRONOME_PREFS);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return { prefs: parsed };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+let didHydrateLegacyMetronomePayload = false;
+
+export const useMetronomePrefsStore = create(
+  persist(
+    (set, get) => {
+      const setPrefs = (update) => {
+        set((state) => ({ prefs: applyDraftUpdate(state.prefs, update) }));
+      };
+
+      return {
+        prefs: METRONOME_DEFAULTS,
+        setPrefs,
+        setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
+        hydrateWithDefaults: (defaults) => {
+          if (!defaults) return;
+          const { prefs } = get();
+          set({ prefs: { ...defaults, ...prefs } });
+        },
+      };
+    },
+    {
+      name: STORAGE_KEYS.METRONOME_PREFS,
+      version: 1,
+      storage: createJSONStorage(() => globalThis.localStorage),
+      migrate: (persistedState) => {
+        const normalized = normalizeLegacyShape(persistedState);
+        if (normalized && !persistedState?.prefs) {
+          didHydrateLegacyMetronomePayload = true;
+        }
+        return normalized;
+      },
+      partialize: (state) => ({ prefs: state.prefs }),
+      merge: (persisted, current) => {
+        let normalized = normalizeLegacyShape(persisted);
+        if (!normalized) {
+          normalized = readLegacyMetronomePrefs();
+          if (normalized?.prefs) {
+            didHydrateLegacyMetronomePayload = true;
+          }
+        }
+        return {
+          ...current,
+          ...normalized,
+          prefs: {
+            ...METRONOME_DEFAULTS,
+            ...(normalized?.prefs || {}),
+          },
+        };
+      },
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state || !didHydrateLegacyMetronomePayload) return;
+        didHydrateLegacyMetronomePayload = false;
+        state.setPrefs((prev) => ({ ...prev }));
+      },
+    },
+  ),
+);
+
+export const selectMetronomePrefs = (state) => state.prefs;
+export const selectMetronomeSetPrefs = (state) => state.setPrefs;
+export const selectMetronomeSetters = (state) => state.setters;
+export const selectMetronomeHydrateWithDefaults = (state) =>
+  state.hydrateWithDefaults;

@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
-import { useToggle, useLatest, useMountedState } from "react-use";
+import { useCallback, useEffect } from "react";
+import { useLatest, useMountedState } from "react-use";
+import { useShallow } from "zustand/react/shallow";
 import { slug } from "@/lib/export/scales";
 import { withToastPromise } from "@/utils/toast";
+import {
+  useInstrumentWorkflowStore,
+  selectInstrumentWorkflowActions,
+  selectWorkflowEditorState,
+  selectWorkflowManagerOpen,
+  selectWorkflowPendingPresetName,
+} from "@/stores/useInstrumentWorkflowStore";
 
 function resolvePackLabel(target) {
   if (target && typeof target === "object") {
@@ -47,9 +55,15 @@ export function useCustomTuningPacks({
   selectedPreset,
   queuePresetByName,
 }) {
-  const [editorState, setEditorState] = useState(null);
-  const [isManagerOpen, toggleManager] = useToggle(false);
-  const [pendingPresetName, setPendingPresetName] = useState(null);
+  const editorState = useInstrumentWorkflowStore(selectWorkflowEditorState);
+  const isManagerOpen = useInstrumentWorkflowStore(selectWorkflowManagerOpen);
+  const pendingPresetName = useInstrumentWorkflowStore(
+    selectWorkflowPendingPresetName,
+  );
+  const { setEditorState, setManagerOpen, setPendingPresetName } =
+    useInstrumentWorkflowStore(
+      useShallow(selectInstrumentWorkflowActions),
+    );
 
   const confirmRef = useLatest(confirm);
   const getCurrentTuningPackRef = useLatest(getCurrentTuningPack);
@@ -68,7 +82,13 @@ export function useCustomTuningPacks({
       initialPack: pack,
       originalName: null,
     });
-  }, [boardMeta, stringMeta, tuning, getCurrentTuningPackRef]);
+  }, [
+    boardMeta,
+    stringMeta,
+    tuning,
+    getCurrentTuningPackRef,
+    setEditorState,
+  ]);
 
   const openEditSelected = useCallback(() => {
     if (!selectedPreset) return;
@@ -85,15 +105,15 @@ export function useCustomTuningPacks({
       initialPack: existing,
       originalName: existing.name,
     });
-  }, [selectedPreset, customPresetNames, customTunings]);
+  }, [selectedPreset, customPresetNames, customTunings, setEditorState]);
 
   const openManager = useCallback(() => {
-    toggleManager(true);
-  }, [toggleManager]);
+    setManagerOpen(true);
+  }, [setManagerOpen]);
 
   const closeManager = useCallback(() => {
-    toggleManager(false);
-  }, [toggleManager]);
+    setManagerOpen(false);
+  }, [setManagerOpen]);
 
   const editFromManager = useCallback(
     (pack) => {
@@ -104,9 +124,9 @@ export function useCustomTuningPacks({
         initialPack: pack,
         originalName: name,
       });
-      toggleManager(false);
+      setManagerOpen(false);
     },
-    [toggleManager],
+    [setEditorState, setManagerOpen],
   );
 
   const runWithCleanup = useCallback(
@@ -121,7 +141,7 @@ export function useCustomTuningPacks({
         setPendingPresetName(null);
         return result;
       }),
-    [isMounted, queuePresetByNameRef],
+    [isMounted, queuePresetByNameRef, setPendingPresetName],
   );
 
   const deletePack = useCallback(
@@ -161,7 +181,7 @@ export function useCustomTuningPacks({
 
   const cancelEditor = useCallback(() => {
     setEditorState(null);
-  }, []);
+  }, [setEditorState]);
 
   const submitEditor = useCallback(
     async (pack, options = {}) => {
@@ -189,7 +209,14 @@ export function useCustomTuningPacks({
       setEditorState(null);
       return saved;
     },
-    [editorState, isMounted, saveCustomTuningRef, queuePresetByNameRef],
+    [
+      editorState,
+      isMounted,
+      saveCustomTuningRef,
+      queuePresetByNameRef,
+      setEditorState,
+      setPendingPresetName,
+    ],
   );
 
   const clearAllPacks = useCallback(async () => {
@@ -234,6 +261,7 @@ export function useCustomTuningPacks({
     pendingPresetName,
     selectedPreset,
     queuePresetByNameRef,
+    setPendingPresetName,
   ]);
 
   return {

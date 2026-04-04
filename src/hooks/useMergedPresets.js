@@ -1,4 +1,5 @@
-import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback, useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import {
   usePrevious,
   useUpdateEffect,
@@ -8,6 +9,21 @@ import {
 import { normalizePresetMeta } from "@/lib/meta/meta";
 import { isPlainObject } from "@/utils/object";
 import { coerceAnyTuning, usePresetBuilder } from "@/hooks/usePresetBuilder";
+import {
+  useInstrumentWorkflowStore,
+  selectInstrumentWorkflowActions,
+  selectWorkflowQueuedPresetName,
+  selectWorkflowSelectedPreset,
+} from "@/stores/useInstrumentWorkflowStore";
+
+function areTuningsEqual(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 
 export function useMergedPresets({
   presetMap,
@@ -18,6 +34,7 @@ export function useMergedPresets({
   setBoardMeta,
   currentEdo,
   currentStrings,
+  currentTuning,
   systemId,
   strings,
   savedExists,
@@ -108,11 +125,13 @@ export function useMergedPresets({
     [savedExists],
   );
 
-  const [selectedPreset, setSelectedPreset] = useState(
-    defaultPresetName || "Factory default",
+  const selectedPreset = useInstrumentWorkflowStore(selectWorkflowSelectedPreset);
+  const queuedPresetName = useInstrumentWorkflowStore(
+    selectWorkflowQueuedPresetName,
   );
-
-  const queuedPresetRef = useRef(null);
+  const { setSelectedPreset, setQueuedPresetName } = useInstrumentWorkflowStore(
+    useShallow(selectInstrumentWorkflowActions),
+  );
 
   const resolveTuningByName = useCallback(
     (name) => {
@@ -132,10 +151,12 @@ export function useMergedPresets({
     (name) => {
       if (typeof name !== "string" || !name) return;
       if (!isMounted()) return;
-      setSelectedPreset(name);
+      if (selectedPreset !== name) {
+        setSelectedPreset(name);
+      }
       const coerced = resolveTuningByName(name);
       if (!coerced?.length) {
-        queuedPresetRef.current = name;
+        setQueuedPresetName(name);
         return;
       }
       if (
@@ -145,7 +166,9 @@ export function useMergedPresets({
       ) {
         return;
       }
-      setTuning(coerced);
+      if (!areTuningsEqual(currentTuning, coerced)) {
+        setTuning(coerced);
+      }
       const meta =
         normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
         normalizePresetMeta(
@@ -155,7 +178,7 @@ export function useMergedPresets({
       else setStringMeta(null);
       if (meta?.board) setBoardMeta(meta.board);
       else setBoardMeta(null);
-      queuedPresetRef.current = null;
+      setQueuedPresetName(null);
     },
     [
       isMounted,
@@ -166,12 +189,19 @@ export function useMergedPresets({
       setStringMeta,
       setBoardMeta,
       currentStrings,
+      currentTuning,
+      selectedPreset,
+      setSelectedPreset,
+      setQueuedPresetName,
     ],
   );
 
   const resetSelection = useCallback(() => {
-    setSelectedPreset(defaultPresetName || "Factory default");
-  }, [defaultPresetName]);
+    const nextPreset = defaultPresetName || "Factory default";
+    if (selectedPreset !== nextPreset) {
+      setSelectedPreset(nextPreset);
+    }
+  }, [defaultPresetName, selectedPreset, setSelectedPreset]);
 
   const queuePresetByName = useCallback(
     (name) => {
@@ -181,19 +211,25 @@ export function useMergedPresets({
         setPreset(name);
         return;
       }
-      queuedPresetRef.current = name;
+      setQueuedPresetName(name);
     },
-    [resolveTuningByName, setPreset],
+    [resolveTuningByName, setPreset, setQueuedPresetName],
   );
 
   useEffect(() => {
     if (!selectedPreset) return;
-    if (queuedPresetRef.current === selectedPreset) return;
+    if (queuedPresetName === selectedPreset) return;
     const resolved = resolveTuningByName(selectedPreset);
     if (resolved?.length) {
       setPreset(selectedPreset);
     }
-  }, [mergedPresetMap, resolveTuningByName, selectedPreset, setPreset]);
+  }, [
+    mergedPresetMap,
+    resolveTuningByName,
+    selectedPreset,
+    queuedPresetName,
+    setPreset,
+  ]);
 
   useUpdateEffect(() => {
     if (!selectedPreset) return;
@@ -219,14 +255,21 @@ export function useMergedPresets({
   ]);
 
   useUpdateEffect(() => {
-    const pending = queuedPresetRef.current;
+    const pending = queuedPresetName;
     if (!pending) return;
     const resolved = resolveTuningByName(pending);
     if (resolved?.length) {
       setPreset(pending);
-      queuedPresetRef.current = null;
+      setQueuedPresetName(null);
     }
-  }, [mergedPresetNames, mergedPresetMap, resolveTuningByName, setPreset]);
+  }, [
+    mergedPresetNames,
+    mergedPresetMap,
+    queuedPresetName,
+    resolveTuningByName,
+    setPreset,
+    setQueuedPresetName,
+  ]);
 
   const prevSystemId = usePrevious(systemId);
   const prevStrings = usePrevious(strings);

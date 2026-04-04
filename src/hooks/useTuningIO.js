@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useLocalStorage, useLatest } from "react-use";
+import { useLatest } from "react-use";
+import { useShallow } from "zustand/react/shallow";
 import { ordinal } from "@/utils/ordinals";
 import * as v from "valibot";
-import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import {
   parseTuningPack,
   stripVersionField,
@@ -16,6 +16,11 @@ import {
   normalizePackName,
   removePackByIdentifier,
 } from "@/lib/export/tuningIO";
+import {
+  useInstrumentWorkflowStore,
+  selectInstrumentWorkflowActions,
+  selectWorkflowCustomTunings,
+} from "@/stores/useInstrumentWorkflowStore";
 
 function ensureUniqueName(desiredName, takenNames) {
   const base = normalizePackName(desiredName);
@@ -226,9 +231,9 @@ function upgradeLegacyPack(pack) {
 ========================= */
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
-  const [customTunings, setCustomTunings] = useLocalStorage(
-    STORAGE_KEYS.CUSTOM_TUNINGS,
-    [],
+  const customTunings = useInstrumentWorkflowStore(selectWorkflowCustomTunings);
+  const { setCustomTunings, updateCustomTunings } = useInstrumentWorkflowStore(
+    useShallow(selectInstrumentWorkflowActions),
   );
   const upgradeRef = useRef(false);
 
@@ -252,9 +257,9 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
     upgradeRef.current = true;
     if (changed) {
-      setCustomTunings(upgraded);
+      updateCustomTunings(() => upgraded);
     }
-  }, [customTunings, setCustomTunings]);
+  }, [customTunings, updateCustomTunings]);
 
   const latestCustomTuningsRef = useLatest(customTunings);
 
@@ -332,11 +337,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       });
 
       const nextTunings = [...filtered, nextPack];
-      setCustomTunings(nextTunings);
+      updateCustomTunings(() => nextTunings);
 
       return savedPack ?? { ...parsed, name: desiredName };
     },
-    [getExistingCustomTunings, parsePack, setCustomTunings],
+    [getExistingCustomTunings, parsePack, updateCustomTunings],
   );
 
   const deleteCustomTuning = useCallback(
@@ -344,9 +349,9 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       if (!identifier) return;
       const existing = getExistingCustomTunings();
       const filtered = removePackByIdentifier(existing, identifier);
-      setCustomTunings(filtered);
+      updateCustomTunings(() => filtered);
     },
-    [getExistingCustomTunings, setCustomTunings],
+    [getExistingCustomTunings, updateCustomTunings],
   );
 
   const onImportTunings = useCallback(
@@ -387,9 +392,9 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       });
 
       const nextTunings = [...existing, ...newTunings];
-      setCustomTunings(nextTunings);
+      updateCustomTunings(() => nextTunings);
     },
-    [getExistingCustomTunings, setCustomTunings],
+    [getExistingCustomTunings, updateCustomTunings],
   );
 
   const importFromJson = useCallback(

@@ -1,27 +1,30 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFullscreen, useToggle } from "react-use";
-import { usePersistedPrefs } from "@/hooks/usePersistedPrefs";
+import { useShallow } from "zustand/react/shallow";
 import { useTheme } from "@/hooks/useTheme";
-import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import {
+  useDisplayPrefsStore,
+  selectDisplayHydrateWithDefaults,
+  selectDisplayPrefs,
+  selectDisplaySetPrefs,
+  selectDisplaySetters,
+} from "@/stores/useDisplayPrefsStore";
 
 export function useDisplayState(defaults) {
-  const [displayPrefs, setDisplayPrefs, displaySetters] = usePersistedPrefs({
-    storageKey: STORAGE_KEYS.DISPLAY_PREFS,
-    initial: defaults,
-    setterKeys: [
-      "show",
-      "showOpen",
-      "showFretNums",
-      "dotSize",
-      "accidental",
-      "noteNaming",
-      "microLabelStyle",
-      "openOnlyInScale",
-      "colorByDegree",
-      "lefty",
-    ],
-    debounceMs: 300,
-  });
+  const { displayPrefs, setDisplayPrefs, displaySetters, hydrateWithDefaults } =
+    useDisplayPrefsStore(
+      useShallow((state) => ({
+        displayPrefs: selectDisplayPrefs(state),
+        setDisplayPrefs: selectDisplaySetPrefs(state),
+        displaySetters: selectDisplaySetters(state),
+        hydrateWithDefaults: selectDisplayHydrateWithDefaults(state),
+      })),
+    );
+
+  useEffect(() => {
+    hydrateWithDefaults(defaults);
+  }, [defaults, hydrateWithDefaults]);
+
   const [theme, setTheme, themeMode] = useTheme();
 
   const stageRef = useRef(null);

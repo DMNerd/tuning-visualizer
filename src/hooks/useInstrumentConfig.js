@@ -1,60 +1,213 @@
-import { useCallback, useMemo, useState } from "react";
-import { useFretsTouched } from "@/hooks/useFretsTouched";
-import { useInstrumentPrefs } from "@/hooks/useInstrumentPrefs";
-import { useDefaultTuning } from "@/hooks/useDefaultTuning";
-import { useStringsChange } from "@/hooks/useStringsChange";
+import { useCallback, useEffect, useMemo } from "react";
+import { usePrevious } from "react-use";
+import { useShallow } from "zustand/react/shallow";
 import { useDrawFrets } from "@/hooks/useDrawFrets";
 import { useCapo } from "@/hooks/useCapo";
+import { useStringsChange } from "@/hooks/useStringsChange";
+import { usePresetBuilder } from "@/hooks/usePresetBuilder";
+import { normalizePresetMeta } from "@/lib/meta/meta";
+import { isPlainObject } from "@/utils/object";
+import {
+  useInstrumentCoreStore,
+  selectInstrumentCoreActions,
+  selectInstrumentBoardMeta,
+  selectInstrumentDefaultTuningMap,
+  selectInstrumentFrets,
+  selectInstrumentFretsTouched,
+  selectInstrumentStringMeta,
+  selectInstrumentStrings,
+  selectInstrumentTuning,
+} from "@/stores/useInstrumentCoreStore";
+
+function keyOf(systemId, strings) {
+  return `${systemId}:${strings}`;
+}
+
+function normalizeSavedEntry(raw) {
+  if (Array.isArray(raw)) {
+    return { tuning: raw, meta: null };
+  }
+  if (isPlainObject(raw)) {
+    const tuning = Array.isArray(raw.tuning) ? raw.tuning : null;
+    const meta = normalizePresetMeta(raw.meta, { stringMetaFormat: "array" });
+    if (Array.isArray(tuning) && tuning.length) {
+      return { tuning, meta };
+    }
+  }
+  return { tuning: null, meta: null };
+}
 
 export function useInstrumentConfig({
   system,
   systemId,
   stringsRange,
   fretsRange,
-  factory,
   presetMeta,
   defaultTunings,
   presetTunings,
 }) {
-  const { frets, setFrets, fretsTouched, setFretsUI, setFretsTouched } =
-    useFretsTouched(factory(system.divisions));
-
-  const { strings, setStrings, resetInstrumentPrefs, setFretsPref } =
-    useInstrumentPrefs({
-      frets,
-      fretsTouched,
-      setFrets,
-      setFretsUI,
-      setFretsTouched,
-      STR_MIN: stringsRange.min,
-      STR_MAX: stringsRange.max,
-      FRETS_MIN: fretsRange.min,
-      FRETS_MAX: fretsRange.max,
-      STR_FACTORY: factory,
-    });
+  const strings = useInstrumentCoreStore(selectInstrumentStrings);
+  const frets = useInstrumentCoreStore(selectInstrumentFrets);
+  const fretsTouched = useInstrumentCoreStore(selectInstrumentFretsTouched);
+  const tuning = useInstrumentCoreStore(selectInstrumentTuning);
+  const stringMeta = useInstrumentCoreStore(selectInstrumentStringMeta);
+  const boardMeta = useInstrumentCoreStore(selectInstrumentBoardMeta);
+  const userDefaultTuningMap = useInstrumentCoreStore(
+    selectInstrumentDefaultTuningMap,
+  );
 
   const {
-    tuning,
+    setStrings,
+    setFrets,
+    setFretsUI,
     setTuning,
-    presetMap,
-    presetMetaMap,
-    saveDefault,
-    savedExists,
-    defaultForCount,
-  } = useDefaultTuning({
+    setStringMeta,
+    setBoardMeta,
+    updateUserDefaultTuningMap,
+    resetInstrumentPrefs,
+  } = useInstrumentCoreStore(useShallow(selectInstrumentCoreActions));
+
+  const minStrings = stringsRange.min;
+  const maxStrings = stringsRange.max;
+  const minFrets = fretsRange.min;
+  const maxFrets = fretsRange.max;
+
+  useEffect(() => {
+    if (strings < minStrings || strings > maxStrings) {
+      setStrings(Math.max(minStrings, Math.min(maxStrings, strings)));
+    }
+  }, [strings, minStrings, maxStrings, setStrings]);
+
+  useEffect(() => {
+    if (frets < minFrets || frets > maxFrets) {
+      setFrets(Math.max(minFrets, Math.min(maxFrets, frets)));
+    }
+  }, [frets, minFrets, maxFrets, setFrets]);
+
+  const storeKey = keyOf(systemId, strings);
+  const savedEntry = useMemo(
+    () => normalizeSavedEntry(userDefaultTuningMap?.[storeKey]),
+    [userDefaultTuningMap, storeKey],
+  );
+  const saved = savedEntry.tuning;
+  const savedMeta = savedEntry.meta;
+  const savedExists = Array.isArray(saved) && saved.length > 0;
+
+  const factoryDefault = useMemo(() => {
+    const systemDefaults = defaultTunings?.[systemId]?.[strings];
+    if (Array.isArray(systemDefaults) && systemDefaults.length) {
+      return systemDefaults;
+    }
+
+    if (savedExists) {
+      return Array.isArray(saved) ? saved.slice() : [];
+    }
+
+    const twelveTetFallback = defaultTunings?.["12-TET"]?.[strings];
+    if (Array.isArray(twelveTetFallback) && twelveTetFallback.length) {
+      return twelveTetFallback.slice();
+    }
+
+    return Array.isArray(saved) ? saved.slice() : [];
+  }, [defaultTunings, systemId, strings, savedExists, saved]);
+
+  const getPreferredDefault = useCallback(() => {
+    if (savedExists) return Array.isArray(saved) ? saved.slice() : [];
+    return factoryDefault;
+  }, [savedExists, saved, factoryDefault]);
+
+  const prevSystemStringsKey = usePrevious(`${systemId}|${strings}`);
+  useEffect(() => {
+    if (prevSystemStringsKey === undefined) {
+      if (!Array.isArray(tuning) || tuning.length === 0) {
+        setTuning(getPreferredDefault());
+      }
+      return;
+    }
+
+    if (prevSystemStringsKey !== `${systemId}|${strings}`) {
+      setTuning(getPreferredDefault());
+    }
+  }, [
+    prevSystemStringsKey,
     systemId,
     strings,
-    DEFAULT_TUNINGS: defaultTunings,
-    PRESET_TUNINGS: presetTunings,
-    PRESET_TUNING_META: presetMeta,
+    tuning,
+    setTuning,
+    getPreferredDefault,
+  ]);
+
+  const { presetMap, presetMetaMap } = usePresetBuilder({
+    factory: factoryDefault,
+    saved: savedExists ? saved.slice() : null,
+    savedMeta,
+    catalogPresets: presetTunings?.[systemId]?.[strings] || {},
+    catalogMeta: presetMeta?.[systemId]?.[strings] || {},
+    stringMetaFormat: "array",
   });
 
-  const [stringMeta, setStringMeta] = useState(null);
-  const [boardMeta, setBoardMeta] = useState(null);
+  const saveDefault = useCallback(
+    (nextStringMeta, nextBoardMeta) => {
+      const isFactory =
+        Array.isArray(factoryDefault) &&
+        tuning.length === factoryDefault.length &&
+        tuning.every((value, index) => value === factoryDefault[index]);
+
+      updateUserDefaultTuningMap((next) => {
+        if (isFactory) {
+          delete next[storeKey];
+          return;
+        }
+
+        const metaInput = {
+          ...(Array.isArray(nextStringMeta) && nextStringMeta.length
+            ? { stringMeta: nextStringMeta }
+            : {}),
+          ...(isPlainObject(nextBoardMeta) ? { board: nextBoardMeta } : {}),
+        };
+        const normalizedMeta = normalizePresetMeta(metaInput, {
+          stringMetaFormat: "array",
+        });
+
+        next[storeKey] = {
+          tuning: Array.isArray(tuning) ? tuning.slice() : [],
+          ...(normalizedMeta ? { meta: normalizedMeta } : {}),
+        };
+      });
+    },
+    [factoryDefault, tuning, updateUserDefaultTuningMap, storeKey],
+  );
 
   const handleSaveDefault = useCallback(() => {
     saveDefault(stringMeta, boardMeta);
   }, [boardMeta, saveDefault, stringMeta]);
+
+  const defaultForCount = useCallback(
+    (count) => {
+      const key = keyOf(systemId, count);
+      const savedForCount = normalizeSavedEntry(userDefaultTuningMap?.[key]);
+      if (Array.isArray(savedForCount.tuning) && savedForCount.tuning.length) {
+        return savedForCount.tuning.slice();
+      }
+
+      const systemDefaults = defaultTunings?.[systemId]?.[count];
+      if (Array.isArray(systemDefaults) && systemDefaults.length) {
+        return systemDefaults;
+      }
+
+      const fallbackDefaults = defaultTunings?.["12-TET"]?.[count];
+      if (Array.isArray(fallbackDefaults) && fallbackDefaults.length) {
+        return fallbackDefaults.slice();
+      }
+
+      if (Array.isArray(tuning) && tuning.length === count) {
+        return tuning.slice();
+      }
+
+      return [];
+    },
+    [defaultTunings, systemId, userDefaultTuningMap, tuning],
+  );
 
   const handleStringsChange = useStringsChange({
     setStrings,
@@ -82,19 +235,18 @@ export function useInstrumentConfig({
     () => ({
       setStrings,
       setFrets,
-      setFretsPref,
       setFretsUI,
       setTuning,
       setStringMeta,
       setBoardMeta,
       resetInstrumentPrefs,
+      setFretsPref: setFretsUI,
       handleSaveDefault,
       handleStringsChange,
     }),
     [
       setStrings,
       setFrets,
-      setFretsPref,
       setFretsUI,
       setTuning,
       setStringMeta,
@@ -113,7 +265,6 @@ export function useInstrumentConfig({
     [presetMap, presetMetaMap],
   );
 
-  // Canonical API: consume `state`, `actions`, `derived`, `presets`, and `capo`.
   return {
     state,
     actions,

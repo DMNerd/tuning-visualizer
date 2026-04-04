@@ -1,11 +1,17 @@
 import React, { useCallback, useMemo } from "react";
 import { toast } from "react-hot-toast";
+import { useShallow } from "zustand/react/shallow";
 
 import { usePracticeActions } from "@/hooks/usePracticeActions";
-import { usePersistedPrefs } from "@/hooks/usePersistedPrefs";
 import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
 import { useRandomScale, RANDOMIZE_MODES } from "@/hooks/useRandomScale";
-import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import {
+  useMetronomePrefsStore,
+  selectMetronomeHydrateWithDefaults,
+  selectMetronomePrefs,
+  selectMetronomeSetPrefs,
+  selectMetronomeSetters,
+} from "@/stores/useMetronomePrefsStore";
 
 export default function usePracticePanelState({
   metronomeDefaults,
@@ -20,21 +26,19 @@ export default function usePracticePanelState({
     throttleMs: 150,
   });
 
-  const [metronomePrefs, setMetronomePrefs, metronomeSetters] =
-    usePersistedPrefs({
-      storageKey: STORAGE_KEYS.METRONOME_PREFS,
-      initial: metronomeDefaults,
-      setterKeys: [
-        "bpm",
-        "timeSig",
-        "subdivision",
-        "countInEnabled",
-        "autoAdvanceEnabled",
-        "barsPerScale",
-        "announceCountInBeforeChange",
-      ],
-      debounceMs: 300,
-    });
+  const { metronomePrefs, setMetronomePrefs, metronomeSetters, hydrateWithDefaults } =
+    useMetronomePrefsStore(
+      useShallow((state) => ({
+        metronomePrefs: selectMetronomePrefs(state),
+        setMetronomePrefs: selectMetronomeSetPrefs(state),
+        metronomeSetters: selectMetronomeSetters(state),
+        hydrateWithDefaults: selectMetronomeHydrateWithDefaults(state),
+      })),
+    );
+
+  React.useEffect(() => {
+    hydrateWithDefaults(metronomeDefaults);
+  }, [hydrateWithDefaults, metronomeDefaults]);
   const {
     bpm,
     timeSig,

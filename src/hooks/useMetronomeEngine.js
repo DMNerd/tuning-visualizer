@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useShallow } from "zustand/react/shallow";
+import {
+  useMetronomeEngineStore,
+  selectMetronomeEngineActions,
+  selectMetronomeEngineState,
+} from "@/stores/useMetronomeEngineStore";
 
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SEC = 0.1;
@@ -46,11 +52,17 @@ function scheduleClick(
 }
 
 export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentBeat, setCurrentBeat] = useState(1);
-  const [currentBar, setCurrentBar] = useState(1);
-  const [audioReady, setAudioReady] = useState(false);
-  const [audioError, setAudioError] = useState("");
+  const { isPlaying, currentBeat, currentBar, audioReady, audioError } =
+    useMetronomeEngineStore(useShallow(selectMetronomeEngineState));
+  const {
+    setIsPlaying,
+    setCurrentBeat,
+    setCurrentBar,
+    setAudioReady,
+    setAudioError,
+    resetCursorState,
+    resetPlaybackState,
+  } = useMetronomeEngineStore(useShallow(selectMetronomeEngineActions));
 
   const audioCtxRef = useRef(null);
   const timerRef = useRef(null);
@@ -105,7 +117,7 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
       setAudioError(message);
       throw error;
     }
-  }, []);
+  }, [setAudioError, setAudioReady]);
 
   const stopScheduler = useCallback(() => {
     if (timerRef.current) {
@@ -118,9 +130,8 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
     beatCursorRef.current = 0;
     barCursorRef.current = 1;
     nextNoteTimeRef.current = 0;
-    setCurrentBeat(1);
-    setCurrentBar(1);
-  }, []);
+    resetCursorState();
+  }, [resetCursorState]);
 
   const scheduleBeatUiUpdate = useCallback((when, beatNumber, barNumber) => {
     const now = performance.now();
@@ -131,7 +142,7 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
       onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
     }, delayMs);
     uiTimerIdsRef.current.push(id);
-  }, []);
+  }, [setCurrentBeat, setCurrentBar]);
 
   const scheduler = useCallback(() => {
     const ctx = audioCtxRef.current;
@@ -173,14 +184,14 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
     if (isPlaying) return;
     await ensureAudioContext();
     setIsPlaying(true);
-  }, [ensureAudioContext, isPlaying]);
+  }, [ensureAudioContext, isPlaying, setIsPlaying]);
 
   const stop = useCallback(() => {
     stopScheduler();
     clearUiTimers();
     resetCursor();
-    setIsPlaying(false);
-  }, [clearUiTimers, resetCursor, stopScheduler]);
+    resetPlaybackState();
+  }, [clearUiTimers, resetCursor, resetPlaybackState, stopScheduler]);
 
   useEffect(
     () => () => {
