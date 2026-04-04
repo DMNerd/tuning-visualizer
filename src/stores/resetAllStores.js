@@ -2,6 +2,7 @@ import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 
 import { useDisplayPrefsStore } from "@/stores/useDisplayPrefsStore";
 import { useMetronomePrefsStore } from "@/stores/useMetronomePrefsStore";
+import { useMetronomeEngineStore } from "@/stores/useMetronomeEngineStore";
 import { useInstrumentCoreStore } from "@/stores/useInstrumentCoreStore";
 import { useInstrumentWorkflowStore } from "@/stores/useInstrumentWorkflowStore";
 import { useTheoryStore } from "@/stores/useTheoryStore";
@@ -28,13 +29,26 @@ function clearAppOwnedStorageKeys() {
   }
 }
 
+function clearPersistedStoreStorage(store) {
+  if (!store?.persist?.clearStorage) return;
+  store.persist.clearStorage();
+}
+
 export function resetAllStores() {
-  useDisplayPrefsStore.getState().resetPrefs();
-  useMetronomePrefsStore.getState().resetPrefs();
-  useInstrumentCoreStore.getState().resetCore();
-  useInstrumentWorkflowStore.getState().resetWorkflow();
-  useTheoryStore.getState().resetTheory();
-  useThemeStore.getState().resetTheme();
+  useDisplayPrefsStore.getState().resetPrefs?.();
+  useMetronomePrefsStore.getState().resetPrefs?.();
+  useMetronomeEngineStore.getState().resetPlaybackState?.();
+  useInstrumentCoreStore.getState().resetCore?.();
+  useInstrumentWorkflowStore.getState().resetWorkflow?.();
+  useTheoryStore.getState().resetTheory?.();
+  useThemeStore.getState().resetTheme?.();
+
+  clearPersistedStoreStorage(useDisplayPrefsStore);
+  clearPersistedStoreStorage(useMetronomePrefsStore);
+  clearPersistedStoreStorage(useInstrumentCoreStore);
+  clearPersistedStoreStorage(useInstrumentWorkflowStore);
+  clearPersistedStoreStorage(useTheoryStore);
+  clearPersistedStoreStorage(useThemeStore);
 
   clearAppOwnedStorageKeys();
 }

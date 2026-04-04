@@ -10,6 +10,7 @@ import {
   CHORD_DEFAULT,
 } from "@/lib/config/appDefaults";
 import { useLatest } from "react-use";
+import { resetAllStores } from "@/stores/resetAllStores";
 
 export function useResets({
   system,
@@ -132,26 +133,13 @@ export function useResets({
         if (!ok) return;
       }
 
-      const defaultEdo = Number.parseInt(SYSTEM_DEFAULT, 10);
-
-      // Order matters: system first, then instrument/display, then musical
-      // state (which depends on metronome stop/reset happening first).
-      resetSystem();
-      resetInstrumentState(
-        Number.isFinite(defaultEdo) ? defaultEdo : undefined,
-      );
-      resetDisplayState();
-      resetMusicalState();
+      refs.current.stopMetronome?.();
+      refs.current.resetPracticeCounters?.();
+      resetAllStores();
 
       refs.current.toast?.success?.("All settings reset.");
     },
-    [
-      refs,
-      resetSystem,
-      resetInstrumentState,
-      resetDisplayState,
-      resetMusicalState,
-    ],
+    [refs],
   );
 
   return {

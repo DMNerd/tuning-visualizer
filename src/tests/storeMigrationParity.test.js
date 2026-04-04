@@ -451,12 +451,18 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   const { useInstrumentWorkflowStore } = await import(
     "../stores/useInstrumentWorkflowStore.js"
   );
+  const { useMetronomeEngineStore } = await import(
+    "../stores/useMetronomeEngineStore.js"
+  );
   const { useTheoryStore } = await import("../stores/useTheoryStore.js");
   const { useThemeStore } = await import("../stores/useThemeStore.js");
 
   useDisplayPrefsStore.getState().setPrefs({ accidental: "flat", dotSize: 20 });
   useMetronomePrefsStore.getState().setPrefs({ bpm: 132, timeSig: "5/4" });
   useMetronomePrefsStore.getState().setRandomizeMode("key");
+  useMetronomeEngineStore.getState().setIsPlaying(true);
+  useMetronomeEngineStore.getState().setCurrentBeat(3);
+  useMetronomeEngineStore.getState().setCurrentBar(2);
   useInstrumentCoreStore.getState().setStrings(8);
   useInstrumentCoreStore.getState().setFrets(30);
   useInstrumentCoreStore.getState().setTuning(["D", "A", "D", "G", "A", "D"]);
@@ -473,6 +479,9 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   assert.equal(useMetronomePrefsStore.getState().prefs.bpm, 80);
   assert.equal(useMetronomePrefsStore.getState().prefs.timeSig, "4/4");
   assert.equal(useMetronomePrefsStore.getState().randomizeMode, "both");
+  assert.equal(useMetronomeEngineStore.getState().isPlaying, false);
+  assert.equal(useMetronomeEngineStore.getState().currentBeat, 1);
+  assert.equal(useMetronomeEngineStore.getState().currentBar, 1);
   assert.equal(useInstrumentCoreStore.getState().strings, 6);
   assert.equal(useInstrumentCoreStore.getState().frets, 24);
   assert.deepEqual(useInstrumentCoreStore.getState().tuning, []);
