@@ -4,7 +4,11 @@ import { useShallow } from "zustand/react/shallow";
 
 import { usePracticeActions } from "@/hooks/usePracticeActions";
 import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
-import { useRandomScale, RANDOMIZE_MODES } from "@/hooks/useRandomScale";
+import {
+  useRandomScale,
+  RANDOMIZE_MODES,
+  formatRandomizedScaleAnnouncement,
+} from "@/hooks/useRandomScale";
 import {
   useMetronomePrefsStore,
   selectMetronomeHydrateWithDefaults,
@@ -20,7 +24,8 @@ export default function usePracticePanelState({
   const [randomizeMode, setRandomizeMode] = React.useState(
     RANDOMIZE_MODES.Both,
   );
-  const { randomizeNow, randomizeFromHotkey } = useRandomScale({
+  const { randomizeNow, randomizeFromHotkey, pickRandomizedScale, applyPickedScale } =
+    useRandomScale({
     ...randomizeConfig,
     mode: randomizeMode,
     throttleMs: 150,
@@ -51,17 +56,39 @@ export default function usePracticePanelState({
   const safeBarsPerScale = Math.max(1, Number(barsPerScale) || 1);
   const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
   const barsRemainingRef = React.useRef(safeBarsPerScale);
+  const pendingRandomizedScaleRef = React.useRef(null);
   const handleMetronomeBeat = useCallback(
     ({ beat }) => {
       if (beat !== 1 || !autoAdvanceEnabled) return;
 
       const nextBarsRemaining = Math.max(0, barsRemainingRef.current - 1);
       if (announceCountInBeforeChange && nextBarsRemaining === 1) {
-        toast("Scale change on next downbeat", { id: "scale-change-countin" });
+        const pendingResult = pickRandomizedScale?.();
+        pendingRandomizedScaleRef.current = pendingResult;
+
+        const nextLabel = formatRandomizedScaleAnnouncement({
+          result: pendingResult,
+          mode: randomizeMode,
+        });
+
+        toast(
+          nextLabel
+            ? `Scale change on next downbeat: ${nextLabel}`
+            : "Scale change on next downbeat",
+          { id: "scale-change-countin" },
+        );
       }
 
       if (nextBarsRemaining <= 0) {
-        randomizeNow?.();
+        const pendingResult = pendingRandomizedScaleRef.current;
+
+        if (pendingResult) {
+          applyPickedScale?.(pendingResult);
+        } else {
+          randomizeNow?.();
+        }
+
+        pendingRandomizedScaleRef.current = null;
         barsRemainingRef.current = safeBarsPerScale;
         setBarsRemaining(safeBarsPerScale);
         return;
@@ -73,12 +100,16 @@ export default function usePracticePanelState({
     [
       announceCountInBeforeChange,
       autoAdvanceEnabled,
+      applyPickedScale,
+      pickRandomizedScale,
+      randomizeMode,
       randomizeNow,
       safeBarsPerScale,
     ],
   );
 
   React.useEffect(() => {
+    pendingRandomizedScaleRef.current = null;
     barsRemainingRef.current = safeBarsPerScale;
     setBarsRemaining(safeBarsPerScale);
   }, [safeBarsPerScale, autoAdvanceEnabled]);

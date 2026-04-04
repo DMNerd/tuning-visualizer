@@ -27,6 +27,20 @@ export function applyRandomizedScale({ result, mode, setRoot, setScale }) {
   setScale(nextScale);
 }
 
+export function formatRandomizedScaleAnnouncement({ result, mode }) {
+  if (!result) return "";
+
+  if (mode === RANDOMIZE_MODES.KeyOnly) {
+    return `root ${result.root}`;
+  }
+
+  if (mode === RANDOMIZE_MODES.ScaleOnly) {
+    return `scale ${result.scale}`;
+  }
+
+  return `${result.root} ${result.scale}`;
+}
+
 export function useRandomScale({
   sysNames,
   scaleOptions,
@@ -35,10 +49,21 @@ export function useRandomScale({
   mode = RANDOMIZE_MODES.Both,
   throttleMs = 150,
 }) {
+  const pickRandomizedScale = useCallback(() => {
+    return pickRandomScale({ sysNames, scaleOptions });
+  }, [sysNames, scaleOptions]);
+
+  const applyPickedScale = useCallback(
+    (result) => {
+      applyRandomizedScale({ result, mode, setRoot, setScale });
+    },
+    [mode, setRoot, setScale],
+  );
+
   const randomizeNow = useCallback(() => {
-    const result = pickRandomScale({ sysNames, scaleOptions });
-    applyRandomizedScale({ result, mode, setRoot, setScale });
-  }, [sysNames, scaleOptions, mode, setRoot, setScale]);
+    const result = pickRandomizedScale();
+    applyPickedScale(result);
+  }, [pickRandomizedScale, applyPickedScale]);
 
   const { trigger, runNow } = useThrottledTrigger({
     callback: randomizeNow,
@@ -49,7 +74,13 @@ export function useRandomScale({
     trigger();
   }, [trigger]);
 
-  return { randomizeNow, randomizeFromHotkey, runNow };
+  return {
+    randomizeNow,
+    randomizeFromHotkey,
+    runNow,
+    pickRandomizedScale,
+    applyPickedScale,
+  };
 }
 
 export default useRandomScale;

@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { RANDOMIZE_MODES, applyRandomizedScale } from "@/hooks/useRandomScale";
+import {
+  RANDOMIZE_MODES,
+  applyRandomizedScale,
+  formatRandomizedScaleAnnouncement,
+} from "@/hooks/useRandomScale";
 import { createThrottledTrigger } from "@/hooks/useThrottledTrigger";
 
 test("createThrottledTrigger throttles repeated trigger calls", () => {
@@ -97,4 +101,32 @@ test("applyRandomizedScale updates state by randomize mode", () => {
     ["scale", "Dorian"],
     ["both", "Dorian"],
   ]);
+});
+
+test("formatRandomizedScaleAnnouncement includes the upcoming value", () => {
+  const result = { root: "A", scale: "Mixolydian" };
+
+  assert.equal(
+    formatRandomizedScaleAnnouncement({
+      result,
+      mode: RANDOMIZE_MODES.KeyOnly,
+    }),
+    "root A",
+  );
+
+  assert.equal(
+    formatRandomizedScaleAnnouncement({
+      result,
+      mode: RANDOMIZE_MODES.ScaleOnly,
+    }),
+    "scale Mixolydian",
+  );
+
+  assert.equal(
+    formatRandomizedScaleAnnouncement({
+      result,
+      mode: RANDOMIZE_MODES.Both,
+    }),
+    "A Mixolydian",
+  );
 });
