@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import htmlMinifier from "vite-plugin-html-minifier-terser";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
@@ -12,6 +13,23 @@ const packageJson = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf-8"),
 );
 
+function resolveAppVersion() {
+  const packageVersion = packageJson.version;
+
+  if (packageVersion && packageVersion !== "0.0.0") {
+    return packageVersion;
+  }
+
+  try {
+    return execSync("git describe --tags --always --dirty", {
+      encoding: "utf-8",
+    }).trim();
+  } catch {
+    return packageVersion || "unknown";
+  }
+}
+
+const appVersion = resolveAppVersion();
 export default defineConfig(({ command, mode }) => {
   const isProductionBuild = command === "build" && mode === "production";
 
@@ -44,7 +62,7 @@ export default defineConfig(({ command, mode }) => {
     ],
 
     define: {
-      "import.meta.env.VITE_APP_VERSION": JSON.stringify(packageJson.version),
+      "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
     },
 
     css: {
