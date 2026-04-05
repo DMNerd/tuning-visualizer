@@ -160,6 +160,8 @@ const Fretboard = forwardRef(function Fretboard(
 
         const inScale = scaleSet.has(pc);
         const inChord = chordPCs ? chordPCs.has(pc) : false;
+        const isOverlayOutsideScaleChord =
+          Boolean(chordPCs) && !hideNonChord && inChord && !inScale;
 
         let visible;
         if (hideNonChord && chordPCs) {
@@ -169,7 +171,7 @@ const Fretboard = forwardRef(function Fretboard(
           const baselineVisible = isOpen
             ? showOpen && (!openOnlyInScale || inScale)
             : inScale;
-          visible = baselineVisible;
+          visible = baselineVisible || isOverlayOutsideScaleChord;
         }
         if (!visible) continue;
 
@@ -203,6 +205,10 @@ const Fretboard = forwardRef(function Fretboard(
         }
 
         const isChordRoot = inChord && chordRootPc === pc;
+        const isChordOutsideScale = inChord && !inScale;
+        if (isChordOutsideScale) {
+          fill = "var(--chord-outside-fill)";
+        }
 
         const globalFretForLabel = isOpen ? sf : f;
         const raw = labelFor(pc, f);
@@ -223,6 +229,7 @@ const Fretboard = forwardRef(function Fretboard(
           isMicro,
           inChord,
           isChordRoot,
+          isChordOutsideScale,
           r,
           fill,
           label,
@@ -395,12 +402,20 @@ const Fretboard = forwardRef(function Fretboard(
             cy={n.cy}
             r={n.r}
             fill={n.fill}
-            stroke={n.inChord ? "var(--fg)" : "none"}
+            stroke={
+              n.inChord
+                ? n.isChordOutsideScale
+                  ? "var(--chord-outside-stroke)"
+                  : "var(--fg)"
+                : "none"
+            }
             strokeWidth={
               n.isChordRoot
                 ? CHORD_ROOT_STROKE_WIDTH
                 : n.inChord
-                  ? CHORD_NOTE_STROKE_WIDTH
+                  ? n.isChordOutsideScale
+                    ? CHORD_NOTE_STROKE_WIDTH * 0.7
+                    : CHORD_NOTE_STROKE_WIDTH
                   : 0
             }
             onClick={handleNoteInteraction("click", n)}
