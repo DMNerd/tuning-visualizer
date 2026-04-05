@@ -573,6 +573,74 @@ html.is-fs {
   align-items: center;
 }
 
+.tv-binary-toggle {
+  --tv-binary-toggle-gap: 4px;
+  --tv-binary-toggle-pad: 3px;
+  --tv-binary-toggle-radius: 10px;
+  --tv-binary-toggle-option-radius: 8px;
+  --tv-binary-toggle-option-pad-y: 4px;
+  --tv-binary-toggle-option-pad-x: 8px;
+  --tv-binary-toggle-surface: color-mix(in oklab, var(--line) 22%, transparent);
+  --tv-binary-toggle-active-bg: color-mix(
+    in oklab,
+    var(--root) 38%,
+    transparent
+  );
+  --tv-binary-toggle-focus-ring: color-mix(
+    in oklab,
+    var(--root) 55%,
+    transparent
+  );
+
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tv-binary-toggle-gap);
+  padding: var(--tv-binary-toggle-pad);
+  border: 1px solid var(--line);
+  border-radius: var(--tv-binary-toggle-radius);
+  background: var(--tv-binary-toggle-surface);
+  min-width: 0;
+}
+
+.tv-binary-toggle__option {
+  min-width: 0;
+}
+
+.tv-binary-toggle__input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tv-binary-toggle__label {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  border-radius: var(--tv-binary-toggle-option-radius);
+  padding: var(--tv-binary-toggle-option-pad-y) var(--tv-binary-toggle-option-pad-x);
+  color: var(--muted);
+  transition:
+    background var(--speed) var(--ease),
+    color var(--speed) var(--ease);
+}
+
+.tv-binary-toggle__input:checked + .tv-binary-toggle__label {
+  background: var(--tv-binary-toggle-active-bg);
+  color: var(--fg);
+}
+
+.tv-binary-toggle__input:focus-visible + .tv-binary-toggle__label {
+  outline: 2px solid var(--tv-binary-toggle-focus-ring);
+  outline-offset: 1px;
+}
+
 .tv-check {
   font-size: 0.75rem;
   color: var(--muted);
@@ -582,6 +650,19 @@ html.is-fs {
 }
 
 .tv-toggle {
+  --tv-toggle-track-width: 30px;
+  --tv-toggle-track-height: 18px;
+  --tv-toggle-track-radius: 999px;
+  --tv-toggle-track-padding: 2px;
+  --tv-toggle-thumb-size: 12px;
+  --tv-toggle-thumb-shift: 12px;
+  --tv-toggle-track-bg: color-mix(in oklab, var(--line) 36%, transparent);
+  --tv-toggle-track-bg-active: color-mix(in oklab, var(--root) 45%, transparent);
+  --tv-toggle-track-border-active: color-mix(in oklab, var(--root) 58%, var(--line));
+  --tv-toggle-focus-ring: color-mix(in oklab, var(--root) 55%, transparent);
+  --tv-toggle-disabled-switch-opacity: 0.55;
+  --tv-toggle-disabled-label-opacity: 0.7;
+
   min-width: 0;
 }
 
@@ -600,47 +681,47 @@ html.is-fs {
 
 .tv-toggle__switch {
   flex: 0 0 auto;
-  width: 30px;
-  height: 18px;
-  border-radius: 999px;
+  width: var(--tv-toggle-track-width);
+  height: var(--tv-toggle-track-height);
+  border-radius: var(--tv-toggle-track-radius);
   border: 1px solid var(--line);
-  background: color-mix(in oklab, var(--line) 36%, transparent);
+  background: var(--tv-toggle-track-bg);
   display: inline-flex;
   align-items: center;
-  padding: 2px;
+  padding: var(--tv-toggle-track-padding);
   transition:
     background var(--speed) var(--ease),
     border-color var(--speed) var(--ease);
 }
 
 .tv-toggle__thumb {
-  width: 12px;
-  height: 12px;
+  width: var(--tv-toggle-thumb-size);
+  height: var(--tv-toggle-thumb-size);
   border-radius: 50%;
   background: var(--fg);
   transition: transform var(--speed) var(--ease);
 }
 
 .tv-toggle__input:checked + .tv-toggle__switch {
-  background: color-mix(in oklab, var(--root) 45%, transparent);
-  border-color: color-mix(in oklab, var(--root) 58%, var(--line));
+  background: var(--tv-toggle-track-bg-active);
+  border-color: var(--tv-toggle-track-border-active);
 }
 
 .tv-toggle__input:checked + .tv-toggle__switch .tv-toggle__thumb {
-  transform: translateX(12px);
+  transform: translateX(var(--tv-toggle-thumb-shift));
 }
 
 .tv-toggle__input:focus-visible + .tv-toggle__switch {
-  outline: 2px solid color-mix(in oklab, var(--root) 55%, transparent);
+  outline: 2px solid var(--tv-toggle-focus-ring);
   outline-offset: 2px;
 }
 
 .tv-toggle__input:disabled + .tv-toggle__switch {
-  opacity: 0.55;
+  opacity: var(--tv-toggle-disabled-switch-opacity);
 }
 
 .tv-toggle:has(.tv-toggle__input:disabled) {
-  opacity: 0.7;
+  opacity: var(--tv-toggle-disabled-label-opacity);
 }
 
 .tv-toggle__label {

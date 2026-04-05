@@ -78,10 +78,11 @@ function DisplayControls({ state, actions, meta }) {
             <div
               role="group"
               aria-label="Accidentals"
-              className="tv-controls__radio-row"
+              className="tv-binary-toggle"
             >
-              <label className="tv-check" htmlFor="acc-sharp">
+              <label className="tv-binary-toggle__option" htmlFor="acc-sharp">
                 <input
+                  className="tv-binary-toggle__input"
                   id="acc-sharp"
                   name="accidental"
                   type="radio"
@@ -89,10 +90,11 @@ function DisplayControls({ state, actions, meta }) {
                   checked={accidental === "sharp"}
                   onChange={() => setAccidental("sharp")}
                 />
-                Sharps (C, C#, D…)
+                <span className="tv-binary-toggle__label">Sharps (C, C#, D…)</span>
               </label>
-              <label className="tv-check" htmlFor="acc-flat">
+              <label className="tv-binary-toggle__option" htmlFor="acc-flat">
                 <input
+                  className="tv-binary-toggle__input"
                   id="acc-flat"
                   name="accidental"
                   type="radio"
@@ -100,7 +102,7 @@ function DisplayControls({ state, actions, meta }) {
                   checked={accidental === "flat"}
                   onChange={() => setAccidental("flat")}
                 />
-                Flats (C, Db, D…)
+                <span className="tv-binary-toggle__label">Flats (C, Db, D…)</span>
               </label>
             </div>
           </div>
