@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 import clsx from "clsx";
 import { FaGithub } from "react-icons/fa";
 import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
@@ -73,4 +73,4 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   );
 }
 
-export default React.memo(PanelHeader);
+export default memo(PanelHeader);

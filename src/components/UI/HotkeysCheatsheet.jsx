@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 
 const HOTKEY_ROWS = [
   ["Shift+/ • Ctrl+/ • F1", "show this help"],
@@ -107,4 +107,4 @@ function HotkeysCheatsheet({ onClose }) {
   );
 }
 
-export default React.memo(HotkeysCheatsheet);
+export default memo(HotkeysCheatsheet);

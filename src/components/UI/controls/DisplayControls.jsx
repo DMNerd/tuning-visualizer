@@ -1,4 +1,4 @@
-import React from "react";
+import { useId } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
@@ -78,10 +78,10 @@ function DisplayControls({ state, actions, meta }) {
     : resolvedOpenOnlyInScale
       ? "scale"
       : "all";
-  const labelsInputId = React.useId();
-  const labelsFieldLabelId = React.useId();
-  const dotSizeInputId = React.useId();
-  const dotSizeLabelId = React.useId();
+  const labelsInputId = useId();
+  const labelsFieldLabelId = useId();
+  const dotSizeInputId = useId();
+  const dotSizeLabelId = useId();
 
   return (
     <Section id="display-controls" title="Display">

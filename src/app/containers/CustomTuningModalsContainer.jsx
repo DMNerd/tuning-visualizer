@@ -1,10 +1,10 @@
-import React from "react";
+import { lazy } from "react";
 import SafeLazyModal from "@/components/UI/SafeLazyModal";
 
-const TuningPackEditorModal = React.lazy(
+const TuningPackEditorModal = lazy(
   () => import("@/components/UI/modals/TuningPackEditorModal"),
 );
-const TuningPackManagerModal = React.lazy(
+const TuningPackManagerModal = lazy(
   () => import("@/components/UI/modals/TuningPackManagerModal"),
 );
 

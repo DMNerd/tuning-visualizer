@@ -1,4 +1,4 @@
-import React from "react";
+import { createElement } from "react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@/components/UI/ConfirmDialog";
 
@@ -23,7 +23,7 @@ export function useConfirm() {
 
       toast(
         (t) =>
-          React.createElement(ConfirmDialog, {
+          createElement(ConfirmDialog, {
             title,
             message,
             confirmText,

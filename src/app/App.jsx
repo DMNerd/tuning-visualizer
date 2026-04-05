@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import clsx from "clsx";
 import {
   FiCheckCircle,
@@ -51,7 +51,7 @@ import { useAppOrchestration } from "@/app/hooks/useAppOrchestration";
 import { useAppPanelModels } from "@/app/hooks/useAppPanelModels";
 
 export default function App() {
-  const boardRef = React.useRef(null);
+  const boardRef = useRef(null);
   const { confirm } = useConfirm();
 
   const {

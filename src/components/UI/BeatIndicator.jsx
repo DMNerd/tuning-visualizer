@@ -1,4 +1,4 @@
-import React from "react";
+import { memo, useMemo } from "react";
 import clsx from "clsx";
 
 function parseBeats(timeSig) {
@@ -13,7 +13,7 @@ function BeatIndicator({
   isPlaying = false,
   className,
 }) {
-  const beatsPerBar = React.useMemo(() => parseBeats(timeSig), [timeSig]);
+  const beatsPerBar = useMemo(() => parseBeats(timeSig), [timeSig]);
 
   return (
     <div
@@ -48,4 +48,4 @@ function BeatIndicator({
   );
 }
 
-export default React.memo(BeatIndicator);
+export default memo(BeatIndicator);

@@ -1,4 +1,4 @@
-import React from "react";
+import { Suspense } from "react";
 
 import SafeSection from "@/components/UI/SafeSection";
 
@@ -7,7 +7,7 @@ export default function SafeLazyModal({ isOpen, resetKeys, label, children }) {
 
   return (
     <SafeSection resetKeys={resetKeys}>
-      <React.Suspense
+      <Suspense
         fallback={
           <div className="tv-modal-suspense" role="status" aria-live="polite">
             Loading {label}...
@@ -15,7 +15,7 @@ export default function SafeLazyModal({ isOpen, resetKeys, label, children }) {
         }
       >
         {children}
-      </React.Suspense>
+      </Suspense>
     </SafeSection>
   );
 }

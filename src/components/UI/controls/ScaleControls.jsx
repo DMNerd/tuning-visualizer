@@ -1,4 +1,4 @@
-import React from "react";
+import { useId, useMemo } from "react";
 import clsx from "clsx";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@/components/UI/Section";
@@ -24,7 +24,7 @@ function ScaleControls({ state, actions, meta }) {
     chordTonePcs = null,
   } = meta;
 
-  const resolvedDefaultScale = React.useMemo(() => {
+  const resolvedDefaultScale = useMemo(() => {
     if (
       defaultScale &&
       Array.isArray(scaleOptions) &&
@@ -41,11 +41,11 @@ function ScaleControls({ state, actions, meta }) {
     if (resolvedDefaultScale) setScale(resolvedDefaultScale);
   };
 
-  const rootInputId = React.useId();
-  const rootLabelId = React.useId();
-  const scaleInputId = React.useId();
-  const scaleLabelId = React.useId();
-  const scaleTonesLabelId = React.useId();
+  const rootInputId = useId();
+  const rootLabelId = useId();
+  const scaleInputId = useId();
+  const scaleLabelId = useId();
+  const scaleTonesLabelId = useId();
 
   return (
     <Section

@@ -1,8 +1,8 @@
-import { memo } from "react";
+import { memo, type ComponentType } from "react";
 import { dequal } from "dequal";
 
 export function memoWithPick<P>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   pick: (props: P) => unknown,
 ) {
   return memo(Component, (prev, next) => dequal(pick(prev), pick(next)));
@@ -23,7 +23,7 @@ function shallowEqualObjects(a: AnyRecord, b: AnyRecord) {
 }
 
 export function memoWithShallowPick<P>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   pick: (props: P) => AnyRecord,
 ) {
   return memo(Component, (prev, next) =>
@@ -32,7 +32,7 @@ export function memoWithShallowPick<P>(
 }
 
 export function memoWithKeys<P extends AnyRecord>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   keys: (keyof P)[],
 ) {
   return memo(Component, (prev, next) =>
@@ -47,7 +47,7 @@ type GroupedPanelProps = {
 };
 
 export function memoPanel<P extends GroupedPanelProps>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
 ) {
   return memoWithPick(Component, (props) => ({
     state: props.state,

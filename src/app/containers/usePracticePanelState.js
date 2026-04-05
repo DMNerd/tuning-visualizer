@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useShallow } from "zustand/react/shallow";
 
@@ -22,7 +22,7 @@ export default function usePracticePanelState({
   randomizeConfig,
 }) {
   const { selectedRoot, selectedScale } = randomizeConfig;
-  const [randomizeMode, setRandomizeMode] = React.useState(
+  const [randomizeMode, setRandomizeMode] = useState(
     RANDOMIZE_MODES.Both,
   );
   const {
@@ -50,7 +50,7 @@ export default function usePracticePanelState({
     })),
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     hydrateWithDefaults(metronomeDefaults);
   }, [hydrateWithDefaults, metronomeDefaults]);
   const {
@@ -63,12 +63,12 @@ export default function usePracticePanelState({
   } = metronomePrefs;
 
   const safeBarsPerScale = Math.max(1, Number(barsPerScale) || 1);
-  const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
-  const barsRemainingRef = React.useRef(safeBarsPerScale);
-  const pendingRandomizedScaleRef = React.useRef(null);
-  const practiceStartSelectionRef = React.useRef(null);
-  const randomizedDuringPracticeRef = React.useRef(false);
-  const isPlayingRef = React.useRef(false);
+  const [barsRemaining, setBarsRemaining] = useState(safeBarsPerScale);
+  const barsRemainingRef = useRef(safeBarsPerScale);
+  const pendingRandomizedScaleRef = useRef(null);
+  const practiceStartSelectionRef = useRef(null);
+  const randomizedDuringPracticeRef = useRef(false);
+  const isPlayingRef = useRef(false);
 
   const capturePracticeStartSelection = useCallback(() => {
     if (practiceStartSelectionRef.current) return;
@@ -168,7 +168,7 @@ export default function usePracticePanelState({
     ],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     pendingRandomizedScaleRef.current = null;
     barsRemainingRef.current = safeBarsPerScale;
     setBarsRemaining(safeBarsPerScale);
@@ -181,7 +181,7 @@ export default function usePracticePanelState({
     onBeat: handleMetronomeBeat,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (metronomeEngine.isPlaying && !isPlayingRef.current) {
       practiceStartSelectionRef.current = null;
       randomizedDuringPracticeRef.current = false;

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import { useId } from "react";
 
 function SegmentedRadioGroup({
   label,
@@ -10,8 +10,8 @@ function SegmentedRadioGroup({
   className,
   labelClassName = "tv-field__label",
 }) {
-  const groupLabelId = React.useId();
-  const idPrefix = React.useId();
+  const groupLabelId = useId();
+  const idPrefix = useId();
   const optionCount = Array.isArray(options) ? options.length : 0;
 
   return (
