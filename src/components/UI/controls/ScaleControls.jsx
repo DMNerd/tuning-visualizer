@@ -5,6 +5,7 @@ import Section from "@/components/UI/Section";
 import { memoWithKeys } from "@/utils/memo";
 import ScalePicker from "@/components/UI/combobox/ScalePicker";
 import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
+import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
 
 function ScaleControls({ state, actions, meta }) {
   const {
@@ -45,8 +46,6 @@ function ScaleControls({ state, actions, meta }) {
   const scaleInputId = React.useId();
   const scaleLabelId = React.useId();
   const scaleTonesLabelId = React.useId();
-  const randomizeModeInputId = React.useId();
-  const randomizeModeLabelId = React.useId();
 
   return (
     <Section
@@ -144,26 +143,18 @@ function ScaleControls({ state, actions, meta }) {
           </div>
         </div>
 
-        <div className="tv-field">
-          <label
-            className="tv-field__label"
-            htmlFor={randomizeModeInputId}
-            id={randomizeModeLabelId}
-          >
-            Randomize
-          </label>
-          <select
-            id={randomizeModeInputId}
-            name="scale-randomize-mode"
-            value={randomizeMode}
-            aria-labelledby={randomizeModeLabelId}
-            onChange={(e) => setRandomizeMode(e.target.value)}
-          >
-            <option value={RANDOMIZE_MODES.Both}>Key + scale</option>
-            <option value={RANDOMIZE_MODES.ScaleOnly}>Scale only</option>
-            <option value={RANDOMIZE_MODES.KeyOnly}>Key only</option>
-          </select>
-        </div>
+        <SegmentedRadioGroup
+          className="tv-field--scale-tones"
+          label="Randomize"
+          name="scale-randomize-mode"
+          value={randomizeMode}
+          onChange={setRandomizeMode}
+          options={[
+            { value: RANDOMIZE_MODES.Both, label: "Key + scale" },
+            { value: RANDOMIZE_MODES.ScaleOnly, label: "Scale only" },
+            { value: RANDOMIZE_MODES.KeyOnly, label: "Key only" },
+          ]}
+        />
       </div>
     </Section>
   );
@@ -171,6 +162,10 @@ function ScaleControls({ state, actions, meta }) {
 
 // React Profiler note: props are already top-level fields, so key-based
 // identity checks are cheaper and clearer than deep structural `dequal`.
-const ScaleControlsMemo = memoWithKeys(ScaleControls, ["state", "actions", "meta"]);
+const ScaleControlsMemo = memoWithKeys(ScaleControls, [
+  "state",
+  "actions",
+  "meta",
+]);
 
 export default ScaleControlsMemo;

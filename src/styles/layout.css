@@ -619,6 +619,10 @@ html.is-fs {
   min-width: 0;
 }
 
+.tv-binary-toggle--ternary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .tv-binary-toggle__option {
   min-width: 0;
 }
@@ -641,7 +645,8 @@ html.is-fs {
   justify-content: center;
   width: 100%;
   border-radius: var(--tv-binary-toggle-option-radius);
-  padding: var(--tv-binary-toggle-option-pad-y) var(--tv-binary-toggle-option-pad-x);
+  padding: var(--tv-binary-toggle-option-pad-y)
+    var(--tv-binary-toggle-option-pad-x);
   color: var(--muted);
   transition:
     background var(--speed) var(--ease),
@@ -674,8 +679,16 @@ html.is-fs {
   --tv-toggle-thumb-size: 12px;
   --tv-toggle-thumb-shift: 12px;
   --tv-toggle-track-bg: color-mix(in oklab, var(--line) 36%, transparent);
-  --tv-toggle-track-bg-active: color-mix(in oklab, var(--root) 45%, transparent);
-  --tv-toggle-track-border-active: color-mix(in oklab, var(--root) 58%, var(--line));
+  --tv-toggle-track-bg-active: color-mix(
+    in oklab,
+    var(--root) 45%,
+    transparent
+  );
+  --tv-toggle-track-border-active: color-mix(
+    in oklab,
+    var(--root) 58%,
+    var(--line)
+  );
   --tv-toggle-focus-ring: color-mix(in oklab, var(--root) 55%, transparent);
   --tv-toggle-disabled-switch-opacity: 0.55;
   --tv-toggle-disabled-label-opacity: 0.7;

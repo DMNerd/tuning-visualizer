@@ -9,6 +9,7 @@ import { FiInfo } from "react-icons/fi";
 import { memoWithShallowPick } from "@/utils/memo";
 import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
 import ToggleSwitch from "@/components/UI/ToggleSwitch";
+import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
 
 function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
@@ -70,14 +71,15 @@ function DisplayControls({ state, actions, meta }) {
     setLefty,
   } = actions;
   const degreeCount = meta?.degreeCount ?? 7;
-  const accidentalGroupLabelId = React.useId();
-  const noteNamingInputId = React.useId();
-  const noteNamingLabelId = React.useId();
+  const resolvedShowOpen = showOpen !== false;
+  const resolvedOpenOnlyInScale = resolvedShowOpen && openOnlyInScale === true;
+  const openNotesMode = !resolvedShowOpen
+    ? "off"
+    : resolvedOpenOnlyInScale
+      ? "scale"
+      : "all";
   const labelsInputId = React.useId();
   const labelsFieldLabelId = React.useId();
-  const microLabelStyleInputId = React.useId();
-  const microLabelStyleLabelId = React.useId();
-  const openScopeGroupLabelId = React.useId();
   const dotSizeInputId = React.useId();
   const dotSizeLabelId = React.useId();
 
@@ -85,61 +87,27 @@ function DisplayControls({ state, actions, meta }) {
     <Section id="display-controls" title="Display">
       <div className={clsx("tv-controls", "tv-controls--display")}>
         <div className="tv-controls__group" role="region" aria-label="Notation">
-          <div className="tv-field">
-            <span className="tv-field__label" id={accidentalGroupLabelId}>
-              Accidentals
-            </span>
-            <div
-              role="group"
-              aria-labelledby={accidentalGroupLabelId}
-              className="tv-binary-toggle"
-            >
-              <label className="tv-binary-toggle__option" htmlFor="acc-sharp">
-                <input
-                  className="tv-binary-toggle__input"
-                  id="acc-sharp"
-                  name="accidental"
-                  type="radio"
-                  value="sharp"
-                  checked={accidental === "sharp"}
-                  onChange={() => setAccidental("sharp")}
-                />
-                <span className="tv-binary-toggle__label">Sharps (C, C#, D…)</span>
-              </label>
-              <label className="tv-binary-toggle__option" htmlFor="acc-flat">
-                <input
-                  className="tv-binary-toggle__input"
-                  id="acc-flat"
-                  name="accidental"
-                  type="radio"
-                  value="flat"
-                  checked={accidental === "flat"}
-                  onChange={() => setAccidental("flat")}
-                />
-                <span className="tv-binary-toggle__label">Flats (C, Db, D…)</span>
-              </label>
-            </div>
-          </div>
+          <SegmentedRadioGroup
+            label="Accidentals"
+            name="accidental"
+            value={accidental}
+            onChange={setAccidental}
+            options={[
+              { value: "sharp", label: "Sharps (C, C#, D…)" },
+              { value: "flat", label: "Flats (C, Db, D…)" },
+            ]}
+          />
 
-          <div className="tv-field">
-            <label
-              className="tv-field__label"
-              htmlFor={noteNamingInputId}
-              id={noteNamingLabelId}
-            >
-              Note naming
-            </label>
-            <select
-              id={noteNamingInputId}
-              name="noteNaming"
-              value={noteNaming}
-              aria-labelledby={noteNamingLabelId}
-              onChange={(e) => setNoteNaming(e.target.value)}
-            >
-              <option value="english">International (B)</option>
-              <option value="german">German/Czech (H/B)</option>
-            </select>
-          </div>
+          <SegmentedRadioGroup
+            label="Note naming"
+            name="noteNaming"
+            value={noteNaming}
+            onChange={setNoteNaming}
+            options={[
+              { value: "english", label: "International (B)" },
+              { value: "german", label: "German/Czech (H/B)" },
+            ]}
+          />
 
           <div className="tv-field">
             <label
@@ -164,32 +132,17 @@ function DisplayControls({ state, actions, meta }) {
             </select>
           </div>
 
-          <div className="tv-field">
-            <label
-              className="tv-field__label"
-              htmlFor={microLabelStyleInputId}
-              id={microLabelStyleLabelId}
-            >
-              Micro-fret labels
-            </label>
-            <select
-              id={microLabelStyleInputId}
-              name="microLabelStyle"
-              value={microLabelStyle}
-              aria-labelledby={microLabelStyleLabelId}
-              onChange={(e) => setMicroLabelStyle(e.target.value)}
-            >
-              <option value={MICRO_LABEL_STYLES.Letters}>
-                Letters (a, aa…)
-              </option>
-              <option value={MICRO_LABEL_STYLES.Accidentals}>
-                Accidentals (s / b)
-              </option>
-              <option value={MICRO_LABEL_STYLES.Fractions}>
-                Fractions (n+rem/N)
-              </option>
-            </select>
-          </div>
+          <SegmentedRadioGroup
+            label="Micro-fret labels"
+            name="microLabelStyle"
+            value={microLabelStyle}
+            onChange={setMicroLabelStyle}
+            options={[
+              { value: MICRO_LABEL_STYLES.Letters, label: "Letters" },
+              { value: MICRO_LABEL_STYLES.Accidentals, label: "Accidentals" },
+              { value: MICRO_LABEL_STYLES.Fractions, label: "Fractions" },
+            ]}
+          />
 
           <ToggleSwitch
             id="colorByDegree"
@@ -218,49 +171,31 @@ function DisplayControls({ state, actions, meta }) {
           className="tv-controls__group"
           role="region"
           aria-label="Open strings"
-          aria-disabled={!showOpen}
         >
-          <div className="tv-field">
-            <span className="tv-field__label" id={openScopeGroupLabelId}>
-              Open notes
-            </span>
-            <div
-              role="group"
-              aria-labelledby={openScopeGroupLabelId}
-              className="tv-controls__radio-row"
-            >
-              <ToggleSwitch
-                id="showOpen"
-                name="showOpen"
-                checked={showOpen}
-                onChange={(e) => setShowOpen(e.target.checked)}
-              >
-                Show open notes
-              </ToggleSwitch>
-              <label className="tv-check" htmlFor="open-all">
-                <input
-                  id="open-all"
-                  name="open-scope"
-                  type="radio"
-                  checked={!openOnlyInScale}
-                  onChange={() => setOpenOnlyInScale(false)}
-                  disabled={!showOpen}
-                />
-                All strings
-              </label>
-              <label className="tv-check" htmlFor="open-scale">
-                <input
-                  id="open-scale"
-                  name="open-scope"
-                  type="radio"
-                  checked={openOnlyInScale}
-                  onChange={() => setOpenOnlyInScale(true)}
-                  disabled={!showOpen}
-                />
-                In current scale
-              </label>
-            </div>
-          </div>
+          <SegmentedRadioGroup
+            label="Open notes"
+            name="open-notes-mode"
+            value={openNotesMode}
+            onChange={(nextMode) => {
+              if (nextMode === "off") {
+                setShowOpen(false);
+                setOpenOnlyInScale(false);
+                return;
+              }
+              if (nextMode === "all") {
+                setShowOpen(true);
+                setOpenOnlyInScale(false);
+                return;
+              }
+              setShowOpen(true);
+              setOpenOnlyInScale(true);
+            }}
+            options={[
+              { value: "off", label: "Off" },
+              { value: "all", label: "All strings" },
+              { value: "scale", label: "Current scale" },
+            ]}
+          />
         </div>
 
         <div

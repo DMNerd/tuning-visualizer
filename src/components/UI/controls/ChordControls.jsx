@@ -11,7 +11,7 @@ import { memoWithPick } from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
-import ToggleSwitch from "@/components/UI/ToggleSwitch";
+import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
 
 function ChordControls({ state, actions, meta }) {
   const {
@@ -132,16 +132,22 @@ function ChordControls({ state, actions, meta }) {
   const rootLabelId = useId();
   const typeInputId = useId();
   const typeLabelId = useId();
-  const chordOverlayGroupLabelId = useId();
-  const showChordInputId = useId();
-  const hideNonChordInputId = useId();
+  const chordOverlayMode = !showChord
+    ? "off"
+    : hideNonChord
+      ? "chord-only"
+      : "overlay";
 
   return (
     <Section id="chord-controls" title="Chord Controls" size="sm">
       <div className={clsx("tv-controls", "tv-controls--chord")}>
         <div className="tv-controls__grid--two">
           <div className="tv-field">
-            <label className="tv-field__label" htmlFor={rootInputId} id={rootLabelId}>
+            <label
+              className="tv-field__label"
+              htmlFor={rootInputId}
+              id={rootLabelId}
+            >
               Root
             </label>
             <select
@@ -160,7 +166,11 @@ function ChordControls({ state, actions, meta }) {
           </div>
 
           <div className="tv-field">
-            <label className="tv-field__label" htmlFor={typeInputId} id={typeLabelId}>
+            <label
+              className="tv-field__label"
+              htmlFor={typeInputId}
+              id={typeLabelId}
+            >
               Type
             </label>
             <div className="tv-controls__input-row">
@@ -240,46 +250,40 @@ function ChordControls({ state, actions, meta }) {
           ) : null}
         </div>
 
-        <div className="tv-field">
-          <span className="tv-field__label" id={chordOverlayGroupLabelId}>
-            Chord overlay
-          </span>
-          <div
-            className="tv-controls__radio-row"
-            role="group"
-            aria-labelledby={chordOverlayGroupLabelId}
-            aria-disabled={!showChord}
+        <SegmentedRadioGroup
+          label="Chord overlay"
+          name="chord-overlay-mode"
+          value={chordOverlayMode}
+          onChange={(mode) => {
+            if (mode === "off") {
+              setShowChord(false);
+              setHideNonChord(false);
+              return;
+            }
+            if (mode === "overlay") {
+              setShowChord(true);
+              setHideNonChord(false);
+              return;
+            }
+            setShowChord(true);
+            setHideNonChord(true);
+          }}
+          options={[
+            { value: "off", label: "Off" },
+            { value: "overlay", label: "Overlay" },
+            { value: "chord-only", label: "Chord tones only" },
+          ]}
+        />
+        {chordFit?.text ? (
+          <small
+            className={clsx("tv-fit-indicator", {
+              "is-warning": chordFit.kind === "warning",
+              "is-success": chordFit.kind === "success",
+            })}
           >
-            <ToggleSwitch
-              id={showChordInputId}
-              name="showChord"
-              checked={showChord}
-              onChange={(e) => setShowChord(e.target.checked)}
-            >
-              Show chord
-            </ToggleSwitch>
-
-            <ToggleSwitch
-              id={hideNonChordInputId}
-              name="hideNonChord"
-              checked={hideNonChord}
-              onChange={(e) => setHideNonChord(e.target.checked)}
-              disabled={!showChord}
-            >
-              Hide non-chord tones
-            </ToggleSwitch>
-          </div>
-          {chordFit?.text ? (
-            <small
-              className={clsx("tv-fit-indicator", {
-                "is-warning": chordFit.kind === "warning",
-                "is-success": chordFit.kind === "success",
-              })}
-            >
-              {chordFit.text}
-            </small>
-          ) : null}
-        </div>
+            {chordFit.text}
+          </small>
+        ) : null}
       </div>
     </Section>
   );
