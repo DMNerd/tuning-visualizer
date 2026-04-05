@@ -6,22 +6,23 @@ import { memoWithKeys } from "@/utils/memo";
 import ScalePicker from "@/components/UI/combobox/ScalePicker";
 import { RANDOMIZE_MODES } from "@/hooks/useRandomScale";
 
-function ScaleControls({
-  root,
-  setRoot,
-  scale,
-  setScale,
-  sysNames,
-  scaleOptions,
-  scaleTonePcs = [],
-  scaleToneLabels = [],
-  chordTonePcs = null,
-  defaultRoot = "C",
-  defaultScale,
-  randomizeMode = RANDOMIZE_MODES.Both,
-  setRandomizeMode = () => {},
-  onRandomize = () => {},
-}) {
+function ScaleControls({ state, actions, meta }) {
+  const {
+    root,
+    scale,
+    randomizeMode = RANDOMIZE_MODES.Both,
+    defaultRoot = "C",
+    defaultScale,
+  } = state;
+  const { setRoot, setScale, setRandomizeMode, onRandomize } = actions;
+  const {
+    sysNames,
+    scaleOptions,
+    scaleTonePcs = [],
+    scaleToneLabels = [],
+    chordTonePcs = null,
+  } = meta;
+
   const resolvedDefaultScale = React.useMemo(() => {
     if (
       defaultScale &&
@@ -44,9 +45,16 @@ function ScaleControls({
   const scaleInputId = React.useId();
   const scaleLabelId = React.useId();
   const scaleTonesLabelId = React.useId();
+  const randomizeModeInputId = React.useId();
+  const randomizeModeLabelId = React.useId();
 
   return (
-    <Section title="Scale" size="sm" className="tv-panel--scale-controls">
+    <Section
+      id="scale-controls"
+      title="Scale"
+      size="sm"
+      className="tv-panel--scale-controls"
+    >
       <div className={clsx("tv-controls", "tv-controls--scale")}>
         <div className="tv-field">
           <label
@@ -137,13 +145,18 @@ function ScaleControls({
         </div>
 
         <div className="tv-field">
-          <label className="tv-field__label" htmlFor="scale-randomize-mode">
+          <label
+            className="tv-field__label"
+            htmlFor={randomizeModeInputId}
+            id={randomizeModeLabelId}
+          >
             Randomize
           </label>
           <select
-            id="scale-randomize-mode"
+            id={randomizeModeInputId}
             name="scale-randomize-mode"
             value={randomizeMode}
+            aria-labelledby={randomizeModeLabelId}
             onChange={(e) => setRandomizeMode(e.target.value)}
           >
             <option value={RANDOMIZE_MODES.Both}>Key + scale</option>
@@ -158,21 +171,6 @@ function ScaleControls({
 
 // React Profiler note: props are already top-level fields, so key-based
 // identity checks are cheaper and clearer than deep structural `dequal`.
-const ScaleControlsMemo = memoWithKeys(ScaleControls, [
-  "root",
-  "setRoot",
-  "scale",
-  "setScale",
-  "sysNames",
-  "scaleOptions",
-  "scaleTonePcs",
-  "scaleToneLabels",
-  "chordTonePcs",
-  "defaultRoot",
-  "defaultScale",
-  "randomizeMode",
-  "setRandomizeMode",
-  "onRandomize",
-]);
+const ScaleControlsMemo = memoWithKeys(ScaleControls, ["state", "actions", "meta"]);
 
 export default ScaleControlsMemo;

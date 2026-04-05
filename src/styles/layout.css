@@ -319,6 +319,10 @@ html.is-fs {
   min-width: 0;
 }
 
+.tv-controls__input-row--align-input {
+  align-items: flex-start;
+}
+
 .tv-controls__input-row select {
   flex: 1;
   min-width: 0;
@@ -438,6 +442,19 @@ html.is-fs {
 
 .tv-field--spaced {
   margin-top: 8px;
+}
+
+.tv-field--inline-number {
+  flex: 0 1 8rem;
+  min-width: 0;
+}
+
+.tv-field--inline-number input[type="number"] {
+  width: 100%;
+}
+
+.tv-field--number-compact {
+  width: min(100%, 8rem);
 }
 
 .tv-field--scale-tones {

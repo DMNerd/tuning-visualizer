@@ -1,3 +1,4 @@
+import React from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
@@ -69,15 +70,28 @@ function DisplayControls({ state, actions, meta }) {
     setLefty,
   } = actions;
   const degreeCount = meta?.degreeCount ?? 7;
+  const accidentalGroupLabelId = React.useId();
+  const noteNamingInputId = React.useId();
+  const noteNamingLabelId = React.useId();
+  const labelsInputId = React.useId();
+  const labelsFieldLabelId = React.useId();
+  const microLabelStyleInputId = React.useId();
+  const microLabelStyleLabelId = React.useId();
+  const openScopeGroupLabelId = React.useId();
+  const dotSizeInputId = React.useId();
+  const dotSizeLabelId = React.useId();
+
   return (
-    <Section title="Display">
+    <Section id="display-controls" title="Display">
       <div className={clsx("tv-controls", "tv-controls--display")}>
         <div className="tv-controls__group" role="region" aria-label="Notation">
           <div className="tv-field">
-            <span className="tv-field__label">Accidentals</span>
+            <span className="tv-field__label" id={accidentalGroupLabelId}>
+              Accidentals
+            </span>
             <div
               role="group"
-              aria-label="Accidentals"
+              aria-labelledby={accidentalGroupLabelId}
               className="tv-binary-toggle"
             >
               <label className="tv-binary-toggle__option" htmlFor="acc-sharp">
@@ -108,11 +122,18 @@ function DisplayControls({ state, actions, meta }) {
           </div>
 
           <div className="tv-field">
-            <span className="tv-field__label">Note naming</span>
+            <label
+              className="tv-field__label"
+              htmlFor={noteNamingInputId}
+              id={noteNamingLabelId}
+            >
+              Note naming
+            </label>
             <select
-              id="noteNaming"
+              id={noteNamingInputId}
               name="noteNaming"
               value={noteNaming}
+              aria-labelledby={noteNamingLabelId}
               onChange={(e) => setNoteNaming(e.target.value)}
             >
               <option value="english">International (B)</option>
@@ -121,11 +142,18 @@ function DisplayControls({ state, actions, meta }) {
           </div>
 
           <div className="tv-field">
-            <span className="tv-field__label">Labels</span>
+            <label
+              className="tv-field__label"
+              htmlFor={labelsInputId}
+              id={labelsFieldLabelId}
+            >
+              Labels
+            </label>
             <select
-              id="labels"
+              id={labelsInputId}
               name="labels"
               value={show}
+              aria-labelledby={labelsFieldLabelId}
               onChange={(e) => setShow(e.target.value)}
             >
               {LABEL_OPTIONS.map((opt) => (
@@ -137,11 +165,18 @@ function DisplayControls({ state, actions, meta }) {
           </div>
 
           <div className="tv-field">
-            <span className="tv-field__label">Micro-fret labels</span>
+            <label
+              className="tv-field__label"
+              htmlFor={microLabelStyleInputId}
+              id={microLabelStyleLabelId}
+            >
+              Micro-fret labels
+            </label>
             <select
-              id="microLabelStyle"
+              id={microLabelStyleInputId}
               name="microLabelStyle"
               value={microLabelStyle}
+              aria-labelledby={microLabelStyleLabelId}
               onChange={(e) => setMicroLabelStyle(e.target.value)}
             >
               <option value={MICRO_LABEL_STYLES.Letters}>
@@ -186,10 +221,12 @@ function DisplayControls({ state, actions, meta }) {
           aria-disabled={!showOpen}
         >
           <div className="tv-field">
-            <span className="tv-field__label">Open notes</span>
+            <span className="tv-field__label" id={openScopeGroupLabelId}>
+              Open notes
+            </span>
             <div
               role="group"
-              aria-label="Open note scope"
+              aria-labelledby={openScopeGroupLabelId}
               className="tv-controls__radio-row"
             >
               <ToggleSwitch
@@ -241,14 +278,21 @@ function DisplayControls({ state, actions, meta }) {
           </ToggleSwitch>
 
           <div className="tv-field">
-            <span className="tv-field__label">Dot size</span>
+            <label
+              className="tv-field__label"
+              htmlFor={dotSizeInputId}
+              id={dotSizeLabelId}
+            >
+              Dot size
+            </label>
             <input
-              id="dotSize"
+              id={dotSizeInputId}
               name="dotSize"
               type="range"
               min={DOT_SIZE_MIN}
               max={DOT_SIZE_MAX}
               value={dotSize}
+              aria-labelledby={dotSizeLabelId}
               onChange={(e) => setDotSize(parseInt(e.target.value, 10))}
             />
           </div>

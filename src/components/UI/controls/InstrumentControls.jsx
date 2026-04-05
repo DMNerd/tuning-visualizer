@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import PresetPicker from "@/components/UI/combobox/PresetPicker";
@@ -8,127 +7,9 @@ import {
   FRETS_MIN,
   FRETS_MAX,
 } from "@/lib/config/appDefaults";
-import { clamp } from "@/utils/math";
 import { withToastPromise } from "@/utils/toast";
 import { memoWithShallowPick } from "@/utils/memo";
-
-function commitNumberField({
-  rawOverride,
-  textValue,
-  min,
-  max,
-  setError,
-  setText,
-  onSubmit,
-}) {
-  const raw =
-    typeof rawOverride === "number" ? rawOverride : parseInt(textValue, 10);
-
-  if (!Number.isFinite(raw)) {
-    setError(`Please enter a number between ${min} and ${max}.`);
-    return false;
-  }
-
-  const val = clamp(raw, min, max);
-  if (val !== raw) {
-    setError(`Allowed range is ${min}–${max}. Adjusted to ${val}.`);
-  } else {
-    setError("");
-  }
-  onSubmit(val);
-  setText(String(val));
-  return true;
-}
-
-function useNumberField({ value, min, max, onSubmit }) {
-  const [text, setText] = useState(String(value));
-  const [error, setError] = useState("");
-
-  useEffect(() => setText(String(value)), [value]);
-
-  const commit = useCallback(
-    (rawOverride) =>
-      commitNumberField({
-        rawOverride,
-        textValue: text,
-        min,
-        max,
-        setError,
-        setText,
-        onSubmit,
-      }),
-    [text, min, max, onSubmit],
-  );
-
-  const revert = useCallback(() => {
-    setText(String(value));
-  }, [value]);
-
-  const onBlur = useCallback(() => {
-    if (!commit()) revert();
-  }, [commit, revert]);
-
-  const onKeyDown = useCallback(
-    (e) => {
-      if (e.key === "Enter") commit();
-      if (e.key === "Escape") {
-        revert();
-        setError("");
-        e.currentTarget.blur();
-      }
-    },
-    [commit, revert],
-  );
-
-  const onChange = useCallback((e) => {
-    setText(e.target.value);
-  }, []);
-
-  return {
-    text,
-    error,
-    onChange,
-    onBlur,
-    onKeyDown,
-    placeholder: `${min}–${max}`,
-    helpText: error || `Allowed range: ${min}–${max}`,
-  };
-}
-
-function NumberField({ id, label, value, min, max, onSubmit }) {
-  const { text, error, onChange, onBlur, onKeyDown, placeholder, helpText } =
-    useNumberField({ value, min, max, onSubmit });
-  const helpId = `${id}-help`;
-
-  return (
-    <div className="tv-field">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        name={id}
-        type="number"
-        min={min}
-        max={max}
-        step={1}
-        value={text}
-        onChange={onChange}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        aria-invalid={Boolean(error)}
-        aria-describedby={helpId}
-        placeholder={placeholder}
-      />
-      <small
-        id={helpId}
-        className={clsx("tv-field__help", {
-          "tv-field__help--error": error,
-        })}
-      >
-        {helpText}
-      </small>
-    </div>
-  );
-}
+import NumberField from "@/components/UI/NumberField";
 
 function InstrumentControls({ state, actions, meta }) {
   const { strings, frets, tuning, systemId, selectedPreset } = state;
@@ -176,7 +57,7 @@ function InstrumentControls({ state, actions, meta }) {
     : false;
 
   return (
-    <Section title="Instrument">
+    <Section id="instrument-controls" title="Instrument">
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="system">

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useId } from "react";
 import clsx from "clsx";
 
 function Section({
@@ -9,8 +9,10 @@ function Section({
   className,
   id,
 }) {
-  const bodyId = id ? `${id}-body` : undefined;
-  const headerId = id ? `${id}-header` : undefined;
+  const generatedId = useId();
+  const resolvedId = id ?? `section-${generatedId}`;
+  const bodyId = `${resolvedId}-body`;
+  const headerId = `${resolvedId}-header`;
 
   const headerContent = (
     <>

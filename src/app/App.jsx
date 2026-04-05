@@ -199,7 +199,7 @@ export default function App() {
             dotSize={dotSize}
             lefty={lefty}
             system={theoryDomain.system.system}
-            chordPCs={theoryDomain.chord.chordPCs}
+            chordPCs={theoryDomain.chord.chordOverlayPcs}
             chordRootPc={theoryDomain.chord.chordRootIx}
             openOnlyInScale={openOnlyInScale}
             colorByDegree={colorByDegree}

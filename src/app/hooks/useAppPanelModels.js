@@ -1,5 +1,13 @@
 import { useMemo } from "react";
-import { buildDisplayControlModel } from "@/app/adapters/controls";
+import {
+  buildDisplayControlModel,
+  buildTheoryControlModel,
+} from "@/app/adapters/controls";
+import {
+  CHORD_DEFAULT,
+  ROOT_DEFAULT,
+  SCALE_DEFAULT,
+} from "@/lib/config/appDefaults";
 
 export function useAppPanelModels({
   theoryDomain,
@@ -23,32 +31,37 @@ export function useAppPanelModels({
     [buildInstrumentControlModelWithReset, resetInstrumentFactory],
   );
 
-  const theoryPanel = useMemo(
-    () => ({
-      system: {
-        systemId: theoryDomain.system.systemId,
-        system: theoryDomain.system.system,
-        sysNames: theoryDomain.system.sysNames,
-        nameForPc: theoryDomain.system.nameForPc,
-        rootIx: theoryDomain.system.rootIx,
-      },
-      scale: {
-        root: theoryDomain.system.root,
-        setRoot: theoryDomain.system.setRoot,
-        scale: theoryDomain.scale.scale,
-        setScale: theoryDomain.scale.setScale,
-        scaleOptions: theoryDomain.scale.scaleOptions,
-        intervals: theoryDomain.scale.intervals,
-        defaultScale: theoryDomain.scale.defaultScale,
-      },
-      chord: theoryDomain.chord,
-      randomize: {
-        randomizeMode: practiceDomain.randomize.randomizeMode,
-        setRandomizeMode: practiceDomain.randomize.setRandomizeMode,
-        onRandomize: practiceDomain.practiceActions.randomizeScaleNow,
-      },
-      reset: { resetMusicalState },
-    }),
+  const theoryControlModel = useMemo(
+    () =>
+      buildTheoryControlModel({
+        system: {
+          systemId: theoryDomain.system.systemId,
+          system: theoryDomain.system.system,
+          sysNames: theoryDomain.system.sysNames,
+          nameForPc: theoryDomain.system.nameForPc,
+          rootIx: theoryDomain.system.rootIx,
+        },
+        scale: {
+          root: theoryDomain.system.root,
+          setRoot: theoryDomain.system.setRoot,
+          scale: theoryDomain.scale.scale,
+          setScale: theoryDomain.scale.setScale,
+          scaleOptions: theoryDomain.scale.scaleOptions,
+          intervals: theoryDomain.scale.intervals,
+        },
+        chord: theoryDomain.chord,
+        randomize: {
+          randomizeMode: practiceDomain.randomize.randomizeMode,
+          setRandomizeMode: practiceDomain.randomize.setRandomizeMode,
+          onRandomize: practiceDomain.practiceActions.randomizeScaleNow,
+        },
+        defaults: {
+          root: ROOT_DEFAULT,
+          scale: theoryDomain.scale.defaultScale ?? SCALE_DEFAULT,
+          chordRoot: ROOT_DEFAULT,
+          chordType: CHORD_DEFAULT,
+        },
+      }),
     [
       theoryDomain.system.systemId,
       theoryDomain.system.system,
@@ -66,8 +79,15 @@ export function useAppPanelModels({
       practiceDomain.randomize.randomizeMode,
       practiceDomain.randomize.setRandomizeMode,
       practiceDomain.practiceActions.randomizeScaleNow,
-      resetMusicalState,
     ],
+  );
+
+  const theoryPanel = useMemo(
+    () => ({
+      controlModel: theoryControlModel,
+      reset: { resetMusicalState },
+    }),
+    [theoryControlModel, resetMusicalState],
   );
 
   const displayControlModel = useMemo(

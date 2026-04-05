@@ -96,7 +96,7 @@ function ExportControls({
   };
 
   return (
-    <Section title="Export / Import">
+    <Section id="export-controls" title="Export / Import">
       <div className={clsx("tv-controls", "tv-controls--export")}>
         <div className="tv-controls__grid--two">
           <button

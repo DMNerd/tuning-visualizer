@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
@@ -13,27 +13,29 @@ import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
 import ToggleSwitch from "@/components/UI/ToggleSwitch";
 
-function ChordControls({
-  root,
-  onRootChange,
-  sysNames,
-  nameForPc = null,
-  type,
-  onTypeChange,
-  showChord,
-  setShowChord,
-  hideNonChord,
-  setHideNonChord,
-  defaultRoot = ROOT_DEFAULT,
-  defaultType = CHORD_DEFAULT,
-  supportsMicrotonal = false,
-  system,
-  rootIx,
-  intervals,
-  chordPCs,
-  chordRootPc,
-  chordFit = null,
-}) {
+function ChordControls({ state, actions, meta }) {
+  const {
+    root,
+    type,
+    showChord,
+    hideNonChord,
+    defaultRoot = ROOT_DEFAULT,
+    defaultType = CHORD_DEFAULT,
+  } = state;
+  const { onRootChange, onTypeChange, setShowChord, setHideNonChord } = actions;
+  const {
+    sysNames,
+    nameForPc = null,
+    supportsMicrotonal = false,
+    system,
+    rootIx,
+    intervals,
+    chordTonePcs,
+    chordOverlayPcs,
+    chordRootPc,
+    chordFit = null,
+  } = meta;
+
   const resetDefaults = () => {
     onRootChange(defaultRoot);
     onTypeChange(defaultType);
@@ -53,12 +55,12 @@ function ChordControls({
     system,
     rootIx: typeof rootIx === "number" ? rootIx : 0,
     intervals: safeIntervals,
-    chordPCs,
+    chordPCs: chordTonePcs,
     chordRootPc,
   });
 
   const chordTones = useMemo(() => {
-    if (!chordPCs || chordPCs.size === 0) return [];
+    if (!chordTonePcs || chordTonePcs.size === 0) return [];
     if (!system?.divisions) return [];
 
     const totalDivisions = system.divisions;
@@ -70,7 +72,7 @@ function ChordControls({
     const anchor =
       ((anchorRaw % totalDivisions) + totalDivisions) % totalDivisions;
 
-    const pcs = Array.from(chordPCs, (value) => {
+    const pcs = Array.from(chordTonePcs, (value) => {
       const wrapped =
         ((value % totalDivisions) + totalDivisions) % totalDivisions;
       return wrapped;
@@ -89,7 +91,7 @@ function ChordControls({
       return { pc, noteName, degree, inScale };
     });
   }, [
-    chordPCs,
+    chordTonePcs,
     chordRootPc,
     degreeForPc,
     nameForPc,
@@ -126,16 +128,27 @@ function ChordControls({
     };
   }, [chordTones, scaleSet, showChord]);
 
+  const rootInputId = useId();
+  const rootLabelId = useId();
+  const typeInputId = useId();
+  const typeLabelId = useId();
+  const chordOverlayGroupLabelId = useId();
+  const showChordInputId = useId();
+  const hideNonChordInputId = useId();
+
   return (
-    <Section title="Chord Controls" size="sm">
+    <Section id="chord-controls" title="Chord Controls" size="sm">
       <div className={clsx("tv-controls", "tv-controls--chord")}>
         <div className="tv-controls__grid--two">
           <div className="tv-field">
-            <span className="tv-field__label">Root</span>
+            <label className="tv-field__label" htmlFor={rootInputId} id={rootLabelId}>
+              Root
+            </label>
             <select
-              id="chord-root"
+              id={rootInputId}
               name="chord-root"
               value={root}
+              aria-labelledby={rootLabelId}
               onChange={(e) => onRootChange(e.target.value)}
             >
               {sysNames.map((n) => (
@@ -147,18 +160,18 @@ function ChordControls({
           </div>
 
           <div className="tv-field">
-            <span className="tv-field__label" id="chord-type-label">
+            <label className="tv-field__label" htmlFor={typeInputId} id={typeLabelId}>
               Type
-            </span>
+            </label>
             <div className="tv-controls__input-row">
               <ChordTypePicker
-                id="chord-type"
+                id={typeInputId}
                 chordTypes={chordTypes}
                 labels={CHORD_LABELS}
                 selectedType={type}
                 onSelect={onTypeChange}
                 supportsMicrotonal={supportsMicrotonal}
-                ariaLabelledBy="chord-type-label"
+                ariaLabelledBy={typeLabelId}
               />
               <button
                 type="button"
@@ -191,6 +204,9 @@ function ChordControls({
                     className={clsx("tv-tone-chip", {
                       "tv-tone-chip--in-scale": showChord && tone.inScale,
                       "tv-tone-chip--outside": showChord && !tone.inScale,
+                      "tv-tone-chip--in-chord":
+                        chordOverlayPcs instanceof Set &&
+                        chordOverlayPcs.has(tone.pc),
                     })}
                     aria-label={
                       showChord
@@ -225,15 +241,17 @@ function ChordControls({
         </div>
 
         <div className="tv-field">
-          <span className="tv-field__label">Chord overlay</span>
+          <span className="tv-field__label" id={chordOverlayGroupLabelId}>
+            Chord overlay
+          </span>
           <div
             className="tv-controls__radio-row"
             role="group"
-            aria-label="Chord overlay"
+            aria-labelledby={chordOverlayGroupLabelId}
             aria-disabled={!showChord}
           >
             <ToggleSwitch
-              id="showChord"
+              id={showChordInputId}
               name="showChord"
               checked={showChord}
               onChange={(e) => setShowChord(e.target.checked)}
@@ -242,7 +260,7 @@ function ChordControls({
             </ToggleSwitch>
 
             <ToggleSwitch
-              id="hideNonChord"
+              id={hideNonChordInputId}
               name="hideNonChord"
               checked={hideNonChord}
               onChange={(e) => setHideNonChord(e.target.checked)}
@@ -268,26 +286,31 @@ function ChordControls({
 }
 
 function pick(p) {
+  const s = p.state ?? {};
+  const a = p.actions ?? {};
+  const m = p.meta ?? {};
+
   return {
-    root: p.root,
-    type: p.type,
-    showChord: p.showChord,
-    hideNonChord: p.hideNonChord,
-    sysNames: p.sysNames,
-    nameForPc: p.nameForPc,
-    supportsMicrotonal: p.supportsMicrotonal,
-    system: p.system,
-    rootIx: p.rootIx,
-    intervals: p.intervals,
-    chordPCs: p.chordPCs,
-    chordRootPc: p.chordRootPc,
-    chordFit: p.chordFit,
-    defaultRoot: p.defaultRoot,
-    defaultType: p.defaultType,
-    onRootChange: p.onRootChange,
-    onTypeChange: p.onTypeChange,
-    setShowChord: p.setShowChord,
-    setHideNonChord: p.setHideNonChord,
+    root: s.root,
+    type: s.type,
+    showChord: s.showChord,
+    hideNonChord: s.hideNonChord,
+    defaultRoot: s.defaultRoot,
+    defaultType: s.defaultType,
+    onRootChange: a.onRootChange,
+    onTypeChange: a.onTypeChange,
+    setShowChord: a.setShowChord,
+    setHideNonChord: a.setHideNonChord,
+    sysNames: m.sysNames,
+    nameForPc: m.nameForPc,
+    supportsMicrotonal: m.supportsMicrotonal,
+    system: m.system,
+    rootIx: m.rootIx,
+    intervals: m.intervals,
+    chordTonePcs: m.chordTonePcs,
+    chordOverlayPcs: m.chordOverlayPcs,
+    chordRootPc: m.chordRootPc,
+    chordFit: m.chordFit,
   };
 }
 

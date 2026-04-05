@@ -112,7 +112,7 @@ export function useTheoryDomain({
     [chordRoot, pcFromName],
   );
 
-  const chordPCs = useMemo(
+  const chordOverlayPcs = useMemo(
     () =>
       showChord
         ? buildChordPCsFromPc(chordRootIx, chordType, system.divisions)
@@ -120,7 +120,7 @@ export function useTheoryDomain({
     [showChord, chordRootIx, chordType, system.divisions],
   );
 
-  const chordTonePCs = useMemo(
+  const chordTonePcs = useMemo(
     () => buildChordPCsFromPc(chordRootIx, chordType, system.divisions),
     [chordRootIx, chordType, system.divisions],
   );
@@ -176,8 +176,8 @@ export function useTheoryDomain({
       hideNonChord,
       setHideNonChord,
       chordRootIx,
-      chordPCs,
-      chordTonePCs,
+      chordOverlayPcs,
+      chordTonePcs,
     },
     handlers: {
       handleSelectNote,

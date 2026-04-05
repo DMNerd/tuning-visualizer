@@ -2,6 +2,7 @@ import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { memoWithShallowPick } from "@/utils/memo";
 import ToggleSwitch from "@/components/UI/ToggleSwitch";
+import NumberField from "@/components/UI/NumberField";
 
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
@@ -42,7 +43,7 @@ function MetronomeControls({ state, actions, meta }) {
   const barsPerScaleMax = meta?.barsPerScaleMax ?? 64;
 
   return (
-    <Section title="Metronome" size="sm">
+    <Section id="metronome-controls" title="Metronome" size="sm">
       <div className={clsx("tv-controls", "tv-controls--metronome")}>
         <div className="tv-controls__input-row">
           <button
@@ -72,7 +73,7 @@ function MetronomeControls({ state, actions, meta }) {
           <label className="tv-field__label" htmlFor="metronome-bpm">
             BPM
           </label>
-          <div className="tv-controls__input-row">
+          <div className="tv-controls__input-row tv-controls__input-row--align-input">
             <button
               type="button"
               className="tv-button tv-button--icon"
@@ -81,15 +82,15 @@ function MetronomeControls({ state, actions, meta }) {
             >
               −
             </button>
-            <input
+            <NumberField
               id="metronome-bpm"
-              name="metronome-bpm"
-              type="number"
+              label="BPM value"
+              value={bpm}
               min={bpmMin}
               max={bpmMax}
-              step={1}
-              value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value) || bpmMin)}
+              onSubmit={setBpm}
+              hideLabel
+              className="tv-field--inline-number tv-field--number-compact"
             />
             <button
               type="button"
@@ -161,28 +162,16 @@ function MetronomeControls({ state, actions, meta }) {
           Auto-advance scale
         </ToggleSwitch>
 
+        <NumberField
+          id="metronome-bars-per-scale"
+          label="Bars per scale"
+          value={barsPerScale}
+          min={barsPerScaleMin}
+          max={barsPerScaleMax}
+          onSubmit={setBarsPerScale}
+          className="tv-field--number-compact"
+        />
         <div className="tv-field">
-          <label className="tv-field__label" htmlFor="metronome-bars-per-scale">
-            Bars per scale
-          </label>
-          <input
-            id="metronome-bars-per-scale"
-            name="metronome-bars-per-scale"
-            type="number"
-            min={barsPerScaleMin}
-            max={barsPerScaleMax}
-            step={1}
-            value={barsPerScale}
-            onChange={(e) =>
-              setBarsPerScale(
-                Math.max(
-                  barsPerScaleMin,
-                  Number(e.target.value) || barsPerScaleMin,
-                ),
-              )
-            }
-            disabled={!autoAdvanceEnabled}
-          />
           {autoAdvanceEnabled ? (
             <small className="tv-field__hint">
               {barsRemaining} bar{barsRemaining === 1 ? "" : "s"} until next

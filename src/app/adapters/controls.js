@@ -109,3 +109,65 @@ export function buildDisplayControlModel({
     },
   };
 }
+
+export function buildTheoryControlModel({
+  system,
+  scale,
+  chord,
+  randomize,
+  defaults,
+}) {
+  const divisions = Number(system?.system?.divisions) || system?.sysNames?.length || 12;
+  const scaleIntervals = Array.isArray(scale?.intervals) ? scale.intervals : [];
+  const safeRootIx = Number.isFinite(system?.rootIx) ? system.rootIx : 0;
+
+  const scaleTonePcs = scaleIntervals.map(
+    (interval) => (((safeRootIx + interval) % divisions) + divisions) % divisions,
+  );
+  const scaleToneLabels = scaleTonePcs.map((pc) =>
+    typeof system?.nameForPc === "function" ? system.nameForPc(pc) : String(pc),
+  );
+
+  const chordTonePcs = chord?.chordTonePcs;
+  const chordOverlayPcs = chord?.chordOverlayPcs;
+
+  return {
+    state: {
+      root: scale?.root,
+      scale: scale?.scale,
+      intervals: scaleIntervals,
+      randomizeMode: randomize?.randomizeMode,
+      chordRoot: chord?.chordRoot,
+      chordType: chord?.chordType,
+      showChord: chord?.showChord,
+      hideNonChord: chord?.hideNonChord,
+      defaultRoot: defaults?.root,
+      defaultScale: defaults?.scale,
+      defaultChordRoot: defaults?.chordRoot,
+      defaultChordType: defaults?.chordType,
+    },
+    actions: {
+      setRoot: scale?.setRoot,
+      setScale: scale?.setScale,
+      setRandomizeMode: randomize?.setRandomizeMode,
+      onRandomize: randomize?.onRandomize,
+      onRootChange: chord?.setChordRoot,
+      onTypeChange: chord?.setChordType,
+      setShowChord: chord?.setShowChord,
+      setHideNonChord: chord?.setHideNonChord,
+    },
+    meta: {
+      sysNames: system?.sysNames ?? [],
+      scaleOptions: scale?.scaleOptions ?? [],
+      scaleTonePcs,
+      scaleToneLabels,
+      chordTonePcs,
+      chordOverlayPcs,
+      supportsMicrotonal: Number(system?.system?.divisions) > 12,
+      system: system?.system,
+      rootIx: safeRootIx,
+      nameForPc: system?.nameForPc,
+      chordRootPc: chord?.chordRootIx,
+    },
+  };
+}
