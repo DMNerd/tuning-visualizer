@@ -21,6 +21,7 @@ export default function usePracticePanelState({
   metronomeDefaults,
   randomizeConfig,
 }) {
+  const { selectedRoot, selectedScale } = randomizeConfig;
   const [randomizeMode, setRandomizeMode] = React.useState(
     RANDOMIZE_MODES.Both,
   );
@@ -65,6 +66,57 @@ export default function usePracticePanelState({
   const [barsRemaining, setBarsRemaining] = React.useState(safeBarsPerScale);
   const barsRemainingRef = React.useRef(safeBarsPerScale);
   const pendingRandomizedScaleRef = React.useRef(null);
+  const practiceStartSelectionRef = React.useRef(null);
+  const randomizedDuringPracticeRef = React.useRef(false);
+  const isPlayingRef = React.useRef(false);
+
+  const capturePracticeStartSelection = useCallback(() => {
+    if (practiceStartSelectionRef.current) return;
+    practiceStartSelectionRef.current = {
+      root: selectedRoot,
+      scale: selectedScale,
+    };
+  }, [selectedRoot, selectedScale]);
+
+  const markRandomizedDuringPractice = useCallback(() => {
+    if (!isPlayingRef.current) return;
+    capturePracticeStartSelection();
+    randomizedDuringPracticeRef.current = true;
+  }, [capturePracticeStartSelection]);
+
+  const restorePracticeStartSelection = useCallback(() => {
+    if (!randomizedDuringPracticeRef.current) return;
+
+    const originalSelection = practiceStartSelectionRef.current;
+    if (!originalSelection) return;
+
+    if (
+      typeof originalSelection.root === "string" &&
+      originalSelection.root.length
+    ) {
+      randomizeConfig.setRoot?.(originalSelection.root);
+    }
+    if (
+      typeof originalSelection.scale === "string" &&
+      originalSelection.scale.length
+    ) {
+      randomizeConfig.setScale?.(originalSelection.scale);
+    }
+  }, [randomizeConfig]);
+
+  const randomizeNowForPractice = useCallback(() => {
+    markRandomizedDuringPractice();
+    randomizeNow?.();
+  }, [markRandomizedDuringPractice, randomizeNow]);
+
+  const applyPickedScaleForPractice = useCallback(
+    (result) => {
+      markRandomizedDuringPractice();
+      applyPickedScale?.(result);
+    },
+    [applyPickedScale, markRandomizedDuringPractice],
+  );
+
   const handleMetronomeBeat = useCallback(
     ({ beat }) => {
       if (beat !== 1 || !autoAdvanceEnabled) return;
@@ -91,9 +143,9 @@ export default function usePracticePanelState({
         const pendingResult = pendingRandomizedScaleRef.current;
 
         if (pendingResult) {
-          applyPickedScale?.(pendingResult);
+          applyPickedScaleForPractice?.(pendingResult);
         } else {
-          randomizeNow?.();
+          randomizeNowForPractice?.();
         }
 
         pendingRandomizedScaleRef.current = null;
@@ -108,10 +160,10 @@ export default function usePracticePanelState({
     [
       announceCountInBeforeChange,
       autoAdvanceEnabled,
-      applyPickedScale,
+      applyPickedScaleForPractice,
       pickRandomizedScale,
       randomizeMode,
-      randomizeNow,
+      randomizeNowForPractice,
       safeBarsPerScale,
     ],
   );
@@ -129,12 +181,33 @@ export default function usePracticePanelState({
     onBeat: handleMetronomeBeat,
   });
 
+  React.useEffect(() => {
+    if (metronomeEngine.isPlaying && !isPlayingRef.current) {
+      practiceStartSelectionRef.current = null;
+      randomizedDuringPracticeRef.current = false;
+      capturePracticeStartSelection();
+    }
+
+    if (!metronomeEngine.isPlaying && isPlayingRef.current) {
+      restorePracticeStartSelection();
+      practiceStartSelectionRef.current = null;
+      randomizedDuringPracticeRef.current = false;
+      pendingRandomizedScaleRef.current = null;
+    }
+
+    isPlayingRef.current = metronomeEngine.isPlaying;
+  }, [
+    capturePracticeStartSelection,
+    metronomeEngine.isPlaying,
+    restorePracticeStartSelection,
+  ]);
+
   const practiceActions = usePracticeActions({
     isPlaying: metronomeEngine.isPlaying,
     startMetronome: metronomeEngine.start,
     stopMetronome: metronomeEngine.stop,
     setBpm: metronomeSetters.setBpm,
-    randomizeNow,
+    randomizeNow: randomizeNowForPractice,
     randomizeFromHotkey,
   });
 
@@ -152,10 +225,15 @@ export default function usePracticePanelState({
     () => ({
       randomizeMode,
       setRandomizeMode,
-      randomizeNow,
+      randomizeNow: randomizeNowForPractice,
       randomizeFromHotkey,
     }),
-    [randomizeMode, setRandomizeMode, randomizeNow, randomizeFromHotkey],
+    [
+      randomizeMode,
+      setRandomizeMode,
+      randomizeNowForPractice,
+      randomizeFromHotkey,
+    ],
   );
   const metronome = useMemo(
     () => ({

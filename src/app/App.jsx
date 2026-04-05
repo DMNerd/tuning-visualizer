@@ -115,6 +115,8 @@ export default function App() {
       scaleOptions: theoryDomain.scale.scaleOptions,
       setRoot: theoryDomain.system.setRoot,
       setScale: theoryDomain.scale.setScale,
+      selectedRoot: theoryDomain.system.root,
+      selectedScale: theoryDomain.scale.scale,
     },
   });
   const orchestration = useAppOrchestration({
