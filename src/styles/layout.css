@@ -581,6 +581,72 @@ html.is-fs {
   align-items: center;
 }
 
+.tv-toggle {
+  min-width: 0;
+}
+
+.tv-toggle__input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tv-toggle__switch {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--line) 36%, transparent);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  transition:
+    background var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.tv-toggle__thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--fg);
+  transition: transform var(--speed) var(--ease);
+}
+
+.tv-toggle__input:checked + .tv-toggle__switch {
+  background: color-mix(in oklab, var(--root) 45%, transparent);
+  border-color: color-mix(in oklab, var(--root) 58%, var(--line));
+}
+
+.tv-toggle__input:checked + .tv-toggle__switch .tv-toggle__thumb {
+  transform: translateX(12px);
+}
+
+.tv-toggle__input:focus-visible + .tv-toggle__switch {
+  outline: 2px solid color-mix(in oklab, var(--root) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.tv-toggle__input:disabled + .tv-toggle__switch {
+  opacity: 0.55;
+}
+
+.tv-toggle:has(.tv-toggle__input:disabled) {
+  opacity: 0.7;
+}
+
+.tv-toggle__label {
+  min-width: 0;
+}
+
 .tv-controls__grid--two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

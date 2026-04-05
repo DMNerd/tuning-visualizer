@@ -11,6 +11,7 @@ import { memoWithPick } from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
+import ToggleSwitch from "@/components/UI/ToggleSwitch";
 
 function ChordControls({
   root,
@@ -231,28 +232,24 @@ function ChordControls({
             aria-label="Chord overlay"
             aria-disabled={!showChord}
           >
-            <label className="tv-check" htmlFor="showChord">
-              <input
-                id="showChord"
-                name="showChord"
-                type="checkbox"
-                checked={showChord}
-                onChange={(e) => setShowChord(e.target.checked)}
-              />
+            <ToggleSwitch
+              id="showChord"
+              name="showChord"
+              checked={showChord}
+              onChange={(e) => setShowChord(e.target.checked)}
+            >
               Show chord
-            </label>
+            </ToggleSwitch>
 
-            <label className="tv-check" htmlFor="hideNonChord">
-              <input
-                id="hideNonChord"
-                name="hideNonChord"
-                type="checkbox"
-                checked={hideNonChord}
-                onChange={(e) => setHideNonChord(e.target.checked)}
-                disabled={!showChord}
-              />
+            <ToggleSwitch
+              id="hideNonChord"
+              name="hideNonChord"
+              checked={hideNonChord}
+              onChange={(e) => setHideNonChord(e.target.checked)}
+              disabled={!showChord}
+            >
               Hide non-chord tones
-            </label>
+            </ToggleSwitch>
           </div>
           {chordFit?.text ? (
             <small

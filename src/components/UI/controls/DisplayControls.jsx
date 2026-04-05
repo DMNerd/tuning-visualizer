@@ -7,6 +7,7 @@ import { Tooltip } from "react-tooltip";
 import { FiInfo } from "react-icons/fi";
 import { memoWithShallowPick } from "@/utils/memo";
 import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
+import ToggleSwitch from "@/components/UI/ToggleSwitch";
 
 function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
@@ -153,14 +154,12 @@ function DisplayControls({ state, actions, meta }) {
             </select>
           </div>
 
-          <label className="tv-check" htmlFor="colorByDegree">
-            <input
-              id="colorByDegree"
-              name="colorByDegree"
-              type="checkbox"
-              checked={colorByDegree}
-              onChange={(e) => setColorByDegree(e.target.checked)}
-            />{" "}
+          <ToggleSwitch
+            id="colorByDegree"
+            name="colorByDegree"
+            checked={colorByDegree}
+            onChange={(e) => setColorByDegree(e.target.checked)}
+          >
             Color notes by scale degree
             <span
               className="tv-tip"
@@ -175,7 +174,7 @@ function DisplayControls({ state, actions, meta }) {
             <Tooltip id="deg-colors-tip" clickable className="tv-tooltip">
               <DegreeLegend k={degreeCount} />
             </Tooltip>
-          </label>
+          </ToggleSwitch>
         </div>
 
         <div
@@ -191,16 +190,14 @@ function DisplayControls({ state, actions, meta }) {
               aria-label="Open note scope"
               className="tv-controls__radio-row"
             >
-              <label className="tv-check" htmlFor="showOpen">
-                <input
-                  id="showOpen"
-                  name="showOpen"
-                  type="checkbox"
-                  checked={showOpen}
-                  onChange={(e) => setShowOpen(e.target.checked)}
-                />{" "}
+              <ToggleSwitch
+                id="showOpen"
+                name="showOpen"
+                checked={showOpen}
+                onChange={(e) => setShowOpen(e.target.checked)}
+              >
                 Show open notes
-              </label>
+              </ToggleSwitch>
               <label className="tv-check" htmlFor="open-all">
                 <input
                   id="open-all"
@@ -232,16 +229,14 @@ function DisplayControls({ state, actions, meta }) {
           role="region"
           aria-label="Markers and sizing"
         >
-          <label className="tv-check" htmlFor="showFretNums">
-            <input
-              id="showFretNums"
-              name="showFretNums"
-              type="checkbox"
-              checked={showFretNums}
-              onChange={(e) => setShowFretNums(e.target.checked)}
-            />{" "}
+          <ToggleSwitch
+            id="showFretNums"
+            name="showFretNums"
+            checked={showFretNums}
+            onChange={(e) => setShowFretNums(e.target.checked)}
+          >
             Show fret numbers
-          </label>
+          </ToggleSwitch>
 
           <div className="tv-field">
             <span className="tv-field__label">Dot size</span>
@@ -256,16 +251,14 @@ function DisplayControls({ state, actions, meta }) {
             />
           </div>
 
-          <label className="tv-check" htmlFor="lefty">
-            <input
-              id="lefty"
-              name="lefty"
-              type="checkbox"
-              checked={lefty}
-              onChange={(e) => setLefty(e.target.checked)}
-            />{" "}
+          <ToggleSwitch
+            id="lefty"
+            name="lefty"
+            checked={lefty}
+            onChange={(e) => setLefty(e.target.checked)}
+          >
             Left-handed layout
-          </label>
+          </ToggleSwitch>
         </div>
       </div>
     </Section>

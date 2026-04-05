@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import { memoWithShallowPick } from "@/utils/memo";
+import ToggleSwitch from "@/components/UI/ToggleSwitch";
 
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
@@ -142,27 +143,23 @@ function MetronomeControls({ state, actions, meta }) {
           </div>
         </div>
 
-        <label className="tv-check" htmlFor="metronome-count-in">
-          <input
-            id="metronome-count-in"
-            name="metronome-count-in"
-            type="checkbox"
-            checked={countInEnabled}
-            onChange={(e) => setCountInEnabled(e.target.checked)}
-          />
+        <ToggleSwitch
+          id="metronome-count-in"
+          name="metronome-count-in"
+          checked={countInEnabled}
+          onChange={(e) => setCountInEnabled(e.target.checked)}
+        >
           Count-in enabled
-        </label>
+        </ToggleSwitch>
 
-        <label className="tv-check" htmlFor="metronome-auto-advance">
-          <input
-            id="metronome-auto-advance"
-            name="metronome-auto-advance"
-            type="checkbox"
-            checked={autoAdvanceEnabled}
-            onChange={(e) => setAutoAdvanceEnabled(e.target.checked)}
-          />
+        <ToggleSwitch
+          id="metronome-auto-advance"
+          name="metronome-auto-advance"
+          checked={autoAdvanceEnabled}
+          onChange={(e) => setAutoAdvanceEnabled(e.target.checked)}
+        >
           Auto-advance scale
-        </label>
+        </ToggleSwitch>
 
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="metronome-bars-per-scale">
@@ -194,17 +191,15 @@ function MetronomeControls({ state, actions, meta }) {
           ) : null}
         </div>
 
-        <label className="tv-check" htmlFor="metronome-announce-count-in">
-          <input
-            id="metronome-announce-count-in"
-            name="metronome-announce-count-in"
-            type="checkbox"
-            checked={announceCountInBeforeChange}
-            onChange={(e) => setAnnounceCountInBeforeChange(e.target.checked)}
-            disabled={!autoAdvanceEnabled}
-          />
+        <ToggleSwitch
+          id="metronome-announce-count-in"
+          name="metronome-announce-count-in"
+          checked={announceCountInBeforeChange}
+          onChange={(e) => setAnnounceCountInBeforeChange(e.target.checked)}
+          disabled={!autoAdvanceEnabled}
+        >
           Announce before change
-        </label>
+        </ToggleSwitch>
       </div>
     </Section>
   );
