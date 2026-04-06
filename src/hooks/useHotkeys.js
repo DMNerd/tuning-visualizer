@@ -1,3 +1,4 @@
+import { isHotkey } from "is-hotkey";
 import { useMemo } from "react";
 import { useKey } from "react-use";
 import { clamp } from "@/utils/math";
@@ -10,7 +11,7 @@ import {
   DOT_SIZE_MAX,
   DOT_SIZE_MIN,
 } from "@/lib/config/appDefaults";
-import { isTypingTarget, matchesCombo } from "@/hooks/hotkeyUtils";
+import { isTypingTarget, toHotkeyCombo } from "@/hooks/hotkeyUtils";
 
 const createShortcutHandler = (shortcuts) => (event) => {
   if (isTypingTarget(event.target)) return;
@@ -22,7 +23,7 @@ const createShortcutHandler = (shortcuts) => (event) => {
     const combos = Array.isArray(shortcut.combo)
       ? shortcut.combo
       : [shortcut.combo];
-    if (combos.some((combo) => matchesCombo(combo, event))) {
+    if (combos.some((combo) => isHotkey(toHotkeyCombo(combo), event))) {
       event.preventDefault();
       shortcut.handler(event);
       return;
