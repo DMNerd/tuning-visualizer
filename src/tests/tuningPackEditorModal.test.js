@@ -35,7 +35,10 @@ test("buildTemplatePack keeps spelling while normalizing template data", () => {
     spelling: "czech",
     system: { edo: 12 },
     tuning: {
-      strings: [{ label: "String 1", note: "H" }, { label: "String 2", note: "E" }],
+      strings: [
+        { label: "String 1", note: "H" },
+        { label: "String 2", note: "E" },
+      ],
     },
     meta: {},
   });

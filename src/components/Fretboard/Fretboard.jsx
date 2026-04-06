@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useLayoutEffect,
+  useEffect,
   useCallback,
   useMemo,
   useRef,
@@ -16,6 +17,13 @@ import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { memoWithPick } from "@/utils/memo";
 import { toStringMetaMap } from "@/lib/meta/meta";
+import {
+  normalizeHiddenFrets,
+  isHiddenFret,
+  buildRenderedFretIndices,
+  resolveVisibleCapoFret,
+  reconcileCapoState,
+} from "@/components/Fretboard/renderFilters";
 
 const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
 const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
@@ -75,7 +83,6 @@ const Fretboard = forwardRef(function Fretboard(
     startFretFor,
     stringStartX,
     openXForString,
-    noteX,
   } = useFretboardLayout({ frets, strings, dotSize, stringMeta });
 
   useLayoutEffect(() => {
@@ -96,6 +103,44 @@ const Fretboard = forwardRef(function Fretboard(
   const notePlacementMode =
     boardMeta?.notePlacement === "onFret" ? "onFret" : "between";
   const fretStyle = boardMeta?.fretStyle ?? "solid";
+  const hiddenFrets = useMemo(
+    () => normalizeHiddenFrets(boardMeta?.hiddenFrets),
+    [boardMeta?.hiddenFrets],
+  );
+
+  const isFretHidden = useCallback(
+    (fretIndex) => isHiddenFret(hiddenFrets, fretIndex),
+    [hiddenFrets],
+  );
+  const visibleFrets = useMemo(
+    () => buildRenderedFretIndices(frets, hiddenFrets),
+    [frets, hiddenFrets],
+  );
+  const safeCapoFret = useMemo(
+    () => resolveVisibleCapoFret(capoFret, visibleFrets),
+    [capoFret, visibleFrets],
+  );
+  const betweenVisibleFretsX = useCallback(
+    (f) => {
+      if (f === 0) return betweenFretsX(0);
+
+      let prevVisible = 0;
+      for (let i = 0; i < visibleFrets.length; i += 1) {
+        const current = visibleFrets[i];
+        if (current >= f) {
+          return (wireX(prevVisible) + wireX(f)) / 2;
+        }
+        prevVisible = current;
+      }
+
+      return betweenFretsX(f);
+    },
+    [betweenFretsX, visibleFrets, wireX],
+  );
+
+  useEffect(() => {
+    reconcileCapoState(capoFret, safeCapoFret, onSetCapo);
+  }, [capoFret, safeCapoFret, onSetCapo]);
 
   const chromaticIntervals = useMemo(
     () => Array.from({ length: Math.max(1, system.divisions) }, (_, i) => i),
@@ -151,6 +196,8 @@ const Fretboard = forwardRef(function Fretboard(
       const cy = yForString(s);
 
       for (let f = 0; f <= frets; f++) {
+        if (isFretHidden(f)) continue;
+
         const isOpen = f === 0;
         const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
         if (!isPlayable) continue;
@@ -179,7 +226,7 @@ const Fretboard = forwardRef(function Fretboard(
           ? openXForString(s)
           : notePlacementMode === "onFret"
             ? wireX(f)
-            : noteX(f, s);
+            : betweenVisibleFretsX(f);
 
         const isRoot = pc === rootIx;
         const isStandard = (f * 12) % N === 0;
@@ -246,7 +293,6 @@ const Fretboard = forwardRef(function Fretboard(
     startFretFor,
     yForString,
     openXForString,
-    noteX,
     pcForName,
     scaleSet,
     chordPCs,
@@ -263,6 +309,8 @@ const Fretboard = forwardRef(function Fretboard(
     microLabelOpts,
     notePlacementMode,
     wireX,
+    isFretHidden,
+    betweenVisibleFretsX,
   ]);
 
   const handleNoteInteraction = useCallback(
@@ -291,7 +339,7 @@ const Fretboard = forwardRef(function Fretboard(
 
         <rect
           className="tv-fretboard__nut"
-          x={wireX(capoFret)}
+          x={wireX(safeCapoFret)}
           y={padTop - NUT_VERTICAL_PADDING}
           width={nutW}
           height={height - padTop - padBottom + NUT_VERTICAL_PADDING * 2}
@@ -329,7 +377,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {Array.from({ length: frets + 1 }).map((_, f) => {
+        {visibleFrets.map((f) => {
           const isOctave = f % system.divisions === 0;
           const isStandard = (f * 12) % system.divisions === 0;
           const isMicro = !isStandard;
@@ -350,6 +398,8 @@ const Fretboard = forwardRef(function Fretboard(
         })}
 
         {inlaySingles.map((f) => {
+          if (isFretHidden(f)) return null;
+
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
           const cx = padLeft + nutW + (prev + curr) / 2;
@@ -366,6 +416,8 @@ const Fretboard = forwardRef(function Fretboard(
         })}
 
         {inlayDoubles.map((f) => {
+          if (isFretHidden(f)) return null;
+
           const prev = f === 1 ? 0 : fretXs[f - 2];
           const curr = fretXs[f - 1];
           const cx = padLeft + nutW + (prev + curr) / 2;
@@ -444,7 +496,7 @@ const Fretboard = forwardRef(function Fretboard(
       })}
 
       {showFretNums &&
-        Array.from({ length: frets + 1 }).map((_, f) => {
+        visibleFrets.map((f) => {
           const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
           const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
           const topY = padTop - FRETNUM_TOP_GAP;
@@ -461,13 +513,13 @@ const Fretboard = forwardRef(function Fretboard(
               }
             },
             className: clsx("tv-fretboard__marker", {
-              "tv-fretboard__marker--capo": f === capoFret,
+              "tv-fretboard__marker--capo": f === safeCapoFret,
               "tv-fretboard__marker--micro": !isStandard,
             }),
           };
 
           const xForFretNum =
-            notePlacementMode === "onFret" ? wireX(f) : betweenFretsX(f);
+            notePlacementMode === "onFret" ? wireX(f) : betweenVisibleFretsX(f);
 
           return (
             <text

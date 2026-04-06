@@ -118,12 +118,14 @@ export function buildTheoryControlModel({
   randomize,
   defaults,
 }) {
-  const divisions = Number(system?.system?.divisions) || system?.sysNames?.length || 12;
+  const divisions =
+    Number(system?.system?.divisions) || system?.sysNames?.length || 12;
   const scaleIntervals = Array.isArray(scale?.intervals) ? scale.intervals : [];
   const safeRootIx = Number.isFinite(system?.rootIx) ? system.rootIx : 0;
 
   const scaleTonePcs = scaleIntervals.map(
-    (interval) => (((safeRootIx + interval) % divisions) + divisions) % divisions,
+    (interval) =>
+      (((safeRootIx + interval) % divisions) + divisions) % divisions,
   );
   const scaleToneLabels = scaleTonePcs.map((pc) =>
     typeof system?.nameForPc === "function" ? system.nameForPc(pc) : String(pc),

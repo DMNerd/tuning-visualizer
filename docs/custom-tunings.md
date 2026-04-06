@@ -56,6 +56,7 @@
     "strings": 6,
     "frets": 22,
     "createdAt": "2025-09-13T10:00:00.000Z",
+    "board": { "hiddenFrets": [0, 1] },
     "stringMeta": [{ "index": 0, "startFret": 5, "greyBefore": true }]
   }
 }
@@ -86,6 +87,10 @@
 - `strings` (number): total strings (the UI may adopt this on import).
 - `frets` (number): number of frets (the UI may adopt this on import).
 - `createdAt` (ISO string): informational.
+- `board` (object): optional board-level rendering directives.
+  - `hiddenFrets` (number array): absolute rendered-fret indices to suppress.
+    - Indices are **0-based rendered fret indices** for the active EDO/N-TET system (not hardcoded 12‑TET scale degrees).
+    - Use explicit indices as shown (for example `[0, 1, 13]`). Pattern/modulo shorthand is not supported in JSON right now, so repeat values per octave manually if needed.
 - `stringMeta` (array): optional mirror of per‑string metadata with indices:
   - `index` (0‑based), `startFret` (number), `greyBefore` (boolean). If both the string and `meta.stringMeta` define the same property for the same index, **the per‑string field wins**.
 

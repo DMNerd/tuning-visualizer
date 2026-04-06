@@ -33,8 +33,7 @@ function InstrumentControls({ state, actions, meta }) {
     presetNames,
     customPresetNames,
     presetMetaMap,
-  } =
-    meta;
+  } = meta;
   const safeSystems = systems ?? {};
   const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
   const safeTuning = Array.isArray(tuning) ? tuning : [];
@@ -123,7 +122,9 @@ function InstrumentControls({ state, actions, meta }) {
             const noteValue = normalizeIntlNoteName(note, {
               translateGerman: noteNaming === "german",
             });
-            const hasOption = optionEntries.some((entry) => entry.value === noteValue);
+            const hasOption = optionEntries.some(
+              (entry) => entry.value === noteValue,
+            );
             return (
               <div key={i} className="tv-field">
                 <label htmlFor={`string-${stringNum}`}>
@@ -146,7 +147,10 @@ function InstrumentControls({ state, actions, meta }) {
                     </option>
                   )}
                   {optionEntries.map((entry) => (
-                    <option key={`${entry.value}:${entry.label}`} value={entry.value}>
+                    <option
+                      key={`${entry.value}:${entry.label}`}
+                      value={entry.value}
+                    >
                       {entry.label}
                     </option>
                   ))}

@@ -441,8 +441,20 @@ const COMMON_PRESET_META: CommonPresetMeta = {
   },
 } as const;
 
-const SYSTEM_PRESET_META_OVERRIDES =
-  {} as const satisfies SystemPresetMetaOverrides<SystemId>;
+const SYSTEM_PRESET_META_OVERRIDES = {
+  "24-TET": {
+    6: {
+      "King Gizzard (C#F#C#F#BE)": {
+        board: {
+          // 24-TET rendered-fret indices for enabled micro fret positions:
+          // 1.5→3, 3.5→7, 4.5→9, 6.5→13, 8.5→17, 10.5→21 (shown),
+          // while other micro frets in the octave are suppressed.
+          hiddenFrets: [1, 5, 11, 15, 19, 23],
+        },
+      },
+    },
+  },
+} as const satisfies SystemPresetMetaOverrides<SystemId>;
 
 export function buildPresetMetaStateForSystems(systems: readonly SystemId[]) {
   return buildPresetMetaMap(

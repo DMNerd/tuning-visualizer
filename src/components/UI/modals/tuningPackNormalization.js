@@ -108,8 +108,16 @@ export function buildNoteOptionsForPack(pack) {
 
   if (system && Number.isFinite(system.divisions) && system.divisions > 0) {
     for (let pc = 0; pc < system.divisions; pc += 1) {
-      pushUnique(options, seen, renderNoteName(system.nameForPc(pc, "sharp"), noteNaming));
-      pushUnique(options, seen, renderNoteName(system.nameForPc(pc, "flat"), noteNaming));
+      pushUnique(
+        options,
+        seen,
+        renderNoteName(system.nameForPc(pc, "sharp"), noteNaming),
+      );
+      pushUnique(
+        options,
+        seen,
+        renderNoteName(system.nameForPc(pc, "flat"), noteNaming),
+      );
     }
   } else if (Number.isFinite(edo) && edo > 0) {
     for (let pc = 0; pc < edo; pc += 1) {

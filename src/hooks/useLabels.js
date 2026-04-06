@@ -1,5 +1,4 @@
-import { useMemo, useCallback } from "react";
-import { useLatest } from "react-use";
+import { useMemo, useCallback, useEffect, useRef } from "react";
 
 export const LABEL_OPTIONS = [
   { value: "names", label: "Note names" },
@@ -11,6 +10,16 @@ export const LABEL_OPTIONS = [
 ];
 
 export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);
+
+function useLatestValue(value) {
+  const ref = useRef(value);
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
+}
 
 const INTERVAL_12 = [
   "P1",
@@ -83,8 +92,8 @@ export function useLabels({
     [system, rootIx, accidental],
   );
 
-  const degreeForPcRef = useLatest(degreeForPc);
-  const nameForPcRef = useLatest(nameForPc);
+  const degreeForPcRef = useLatestValue(degreeForPc);
+  const nameForPcRef = useLatestValue(nameForPc);
 
   const labelFor = useCallback(
     (pc, fret) => {

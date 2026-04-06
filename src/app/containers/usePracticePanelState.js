@@ -22,9 +22,7 @@ export default function usePracticePanelState({
   randomizeConfig,
 }) {
   const { selectedRoot, selectedScale } = randomizeConfig;
-  const [randomizeMode, setRandomizeMode] = useState(
-    RANDOMIZE_MODES.Both,
-  );
+  const [randomizeMode, setRandomizeMode] = useState(RANDOMIZE_MODES.Both);
   const {
     randomizeNow,
     randomizeFromHotkey,

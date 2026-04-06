@@ -10,6 +10,7 @@ export type StringMeta = {
 export type BoardMeta = {
   fretStyle?: "solid" | "dotted";
   notePlacement?: "between" | "onFret";
+  hiddenFrets?: number[];
 };
 
 export type TuningPresetMeta = {
@@ -140,7 +141,30 @@ export function normalizePresetMeta(
     return null;
   }
 
-  const board = isPlainObject(boardSource) ? (boardSource as BoardMeta) : null;
+  const board = isPlainObject(boardSource)
+    ? (() => {
+        const raw = boardSource;
+        const hiddenFrets = Array.isArray(raw.hiddenFrets)
+          ? raw.hiddenFrets.filter(
+              (value): value is number =>
+                typeof value === "number" &&
+                value >= 0 &&
+                Number.isFinite(value) &&
+                Number.isInteger(value),
+            )
+          : undefined;
+
+        const normalizedBoard: BoardMeta = {
+          ...(raw as BoardMeta),
+        };
+
+        if (hiddenFrets) {
+          normalizedBoard.hiddenFrets = hiddenFrets;
+        }
+
+        return normalizedBoard;
+      })()
+    : null;
   const stringMeta =
     format === "map"
       ? toStringMetaMapFromUnknown(stringMetaSource)

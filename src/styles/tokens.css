@@ -59,7 +59,11 @@
   --nut: #fffbe6;
   --note: var(--accent);
   --note-micro: #6fa8dc;
-  --chord-outside-fill: color-mix(in oklab, var(--note-micro) 40%, var(--panel) 60%);
+  --chord-outside-fill: color-mix(
+    in oklab,
+    var(--note-micro) 40%,
+    var(--panel) 60%
+  );
   --chord-outside-stroke: color-mix(in oklab, var(--fg) 55%, var(--panel) 45%);
   --fretboard-string: #8b929a;
   --fretboard-inlay: #cfd5dd;
@@ -105,7 +109,11 @@
       var(--note-micro) 45%,
       var(--panel) 55%
     );
-    --chord-outside-stroke: color-mix(in oklab, var(--fg) 48%, var(--panel) 52%);
+    --chord-outside-stroke: color-mix(
+      in oklab,
+      var(--fg) 48%,
+      var(--panel) 52%
+    );
     --fretboard-string: #8b929a;
     --fretboard-inlay: #3b4149;
     --fretboard-note-fill: #0b0b0b;

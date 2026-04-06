@@ -576,9 +576,9 @@ function TuningPackEditorModal({
                     </span>
                   ))}{" "}
                   to auto-translate notes to international spellings for
-                  internal logic (for example <code>Hih</code> → <code>B↑</code>,{" "}
-                  <code>Aeh</code> → <code>A↓</code>). Arrow forms are accepted
-                  too.
+                  internal logic (for example <code>Hih</code> → <code>B↑</code>
+                  , <code>Aeh</code> → <code>A↓</code>). Arrow forms are
+                  accepted too.
                 </li>
               </ul>
               <div className="tv-pack-helper__meta">
@@ -616,6 +616,15 @@ function TuningPackEditorModal({
                     <li>
                       <code>notePlacement</code>: <code>"between"</code> or{" "}
                       <code>"onFret"</code>.
+                    </li>
+                    <li>
+                      <code>hiddenFrets</code>: array of 0-based rendered fret
+                      indices to hide (N-TET safe). Example:{" "}
+                      <code>[0, 1, 13]</code>.
+                    </li>
+                    <li>
+                      Pattern/modulo shorthand is not supported here; repeat
+                      indices per octave manually when needed.
                     </li>
                   </ul>
                 </div>
