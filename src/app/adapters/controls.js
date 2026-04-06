@@ -14,6 +14,7 @@ export function buildInstrumentControlModel({
       tuning: instrument.tuning,
       systemId: instrument.systemId,
       selectedPreset: presets.selectedPreset,
+      kgNeckFilterEnabled: instrument.kgNeckFilterEnabled,
     },
     actions: {
       setFrets: handlers.setFretsPref,
@@ -22,6 +23,7 @@ export function buildInstrumentControlModel({
       handleStringsChange: handlers.handleStringsChange,
       setSelectedPreset: presets.setPreset,
       handleSaveDefault: handlers.handleSaveDefault,
+      setKgNeckFilterEnabled: handlers.setKgNeckFilterEnabled,
       handleResetFactoryDefault: reset.resetInstrumentFactory,
       onCreateCustomPack: handlers.openCreate,
       onEditCustomPack: handlers.openEditSelected,

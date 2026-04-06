@@ -10,11 +10,23 @@ import {
 import { withToastPromise } from "@/utils/toast";
 import { memoWithShallowPick } from "@/utils/memo";
 import NumberField from "@/components/UI/NumberField";
+import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
 import { renderNoteName } from "@/lib/theory/noteNaming";
 import { normalizeIntlNoteName } from "@/lib/theory/notation";
+import {
+  isFretlessBoardMeta,
+  shouldApplyKgNeckFilter,
+} from "@/lib/presets/kgNeckFilter";
 
 function InstrumentControls({ state, actions, meta }) {
-  const { strings, frets, tuning, systemId, selectedPreset } = state;
+  const {
+    strings,
+    frets,
+    tuning,
+    systemId,
+    selectedPreset,
+    kgNeckFilterEnabled,
+  } = state;
   const {
     setFrets,
     setSystemId,
@@ -22,6 +34,7 @@ function InstrumentControls({ state, actions, meta }) {
     handleStringsChange,
     setSelectedPreset,
     handleSaveDefault,
+    setKgNeckFilterEnabled,
     handleResetFactoryDefault,
     onCreateCustomPack,
     onEditCustomPack,
@@ -74,6 +87,19 @@ function InstrumentControls({ state, actions, meta }) {
   const isCustomPreset = Array.isArray(customPresetNames)
     ? customPresetNames.includes(selectedPreset)
     : false;
+  const selectedPresetMeta = presetMetaMap?.[selectedPreset] ?? null;
+  const selectedBoardMeta =
+    selectedPresetMeta && typeof selectedPresetMeta === "object"
+      ? selectedPresetMeta.board
+      : null;
+  const isFretlessPreset = isFretlessBoardMeta(selectedBoardMeta);
+  const canUseKgFilter = shouldApplyKgNeckFilter({
+    enabled: true,
+    edo: safeSystems?.[systemId]?.divisions,
+    strings,
+    boardMeta: isFretlessPreset ? selectedBoardMeta : null,
+  });
+  const kgFilterMode = kgNeckFilterEnabled ? "kg" : "none";
 
   return (
     <Section id="instrument-controls" title="Instrument">
@@ -191,6 +217,17 @@ function InstrumentControls({ state, actions, meta }) {
         </div>
 
         <div className="tv-controls__defaults">
+          <SegmentedRadioGroup
+            label="Neck filter"
+            name="kg-neck-filter"
+            className="tv-field--neck-filter"
+            value={kgFilterMode}
+            onChange={(value) => setKgNeckFilterEnabled?.(value === "kg")}
+            options={[
+              { value: "none", label: "None" },
+              { value: "kg", label: "KG", disabled: !canUseKgFilter },
+            ]}
+          />
           <button
             className="tv-button tv-button--block"
             onClick={onSaveDefault}
@@ -219,6 +256,7 @@ function pickInstrumentMemoProps(p) {
     tuning: s.tuning,
     systemId: s.systemId,
     selectedPreset: s.selectedPreset,
+    kgNeckFilterEnabled: s.kgNeckFilterEnabled,
     systems: m.systems,
     sysNames: m.sysNames,
     noteNaming: m.noteNaming,
@@ -231,6 +269,7 @@ function pickInstrumentMemoProps(p) {
     handleStringsChange: a.handleStringsChange,
     setSelectedPreset: a.setSelectedPreset,
     handleSaveDefault: a.handleSaveDefault,
+    setKgNeckFilterEnabled: a.setKgNeckFilterEnabled,
     handleResetFactoryDefault: a.handleResetFactoryDefault,
     onCreateCustomPack: a.onCreateCustomPack,
     onEditCustomPack: a.onEditCustomPack,

@@ -62,6 +62,7 @@ export function useInstrumentDomain({
     systemId,
     strings: instrumentState.strings,
     savedExists: instrumentDerived.savedExists,
+    kgNeckFilterEnabled: instrumentState.kgNeckFilterEnabled,
   });
 
   const customPackEditor = useCustomTuningPacks({
@@ -81,8 +82,13 @@ export function useInstrumentDomain({
 
   const { strings, frets, tuning } = instrumentState;
   const { divisions: systemDivisions } = system;
-  const { setFretsPref, setTuning, handleStringsChange, handleSaveDefault } =
-    instrumentActions;
+  const {
+    setFretsPref,
+    setTuning,
+    handleStringsChange,
+    handleSaveDefault,
+    setKgNeckFilterEnabled,
+  } = instrumentActions;
   const {
     mergedPresetNames,
     customPresetNames,
@@ -103,6 +109,7 @@ export function useInstrumentDomain({
         sysNames,
         tunings,
         noteNaming,
+        kgNeckFilterEnabled: instrumentState.kgNeckFilterEnabled,
       },
       presets: {
         mergedPresetNames,
@@ -117,6 +124,7 @@ export function useInstrumentDomain({
         setTuning,
         handleStringsChange,
         handleSaveDefault,
+        setKgNeckFilterEnabled,
         openCreate,
         openEditSelected,
       },
@@ -130,6 +138,7 @@ export function useInstrumentDomain({
       sysNames,
       tunings,
       noteNaming,
+      instrumentState.kgNeckFilterEnabled,
       mergedPresetNames,
       customPresetNames,
       mergedPresetMetaMap,
@@ -140,6 +149,7 @@ export function useInstrumentDomain({
       setTuning,
       handleStringsChange,
       handleSaveDefault,
+      setKgNeckFilterEnabled,
       openCreate,
       openEditSelected,
     ],

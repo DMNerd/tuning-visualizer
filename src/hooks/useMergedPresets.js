@@ -7,6 +7,7 @@ import {
   useMountedState,
 } from "react-use";
 import { normalizePresetMeta } from "@/lib/meta/meta";
+import { applyKgNeckFilterToBoardMeta } from "@/lib/presets/kgNeckFilter";
 import { isPlainObject } from "@/utils/object";
 import { coerceAnyTuning, usePresetBuilder } from "@/hooks/usePresetBuilder";
 import {
@@ -39,6 +40,7 @@ export function useMergedPresets({
   strings,
   savedExists,
   onInstrumentChange,
+  kgNeckFilterEnabled = false,
 }) {
   const isMounted = useMountedState();
   const onInstrumentChangeRef = useLatest(onInstrumentChange);
@@ -179,7 +181,13 @@ export function useMergedPresets({
         );
       if (meta?.stringMeta) setStringMeta(meta.stringMeta);
       else setStringMeta(null);
-      if (meta?.board) setBoardMeta(meta.board);
+
+      const nextBoardMeta = applyKgNeckFilterToBoardMeta(meta?.board, {
+        enabled: kgNeckFilterEnabled,
+        edo: currentEdo,
+        strings: currentStrings,
+      });
+      if (nextBoardMeta) setBoardMeta(nextBoardMeta);
       else setBoardMeta(null);
       setQueuedPresetName(null);
     },
@@ -192,6 +200,8 @@ export function useMergedPresets({
       setStringMeta,
       setBoardMeta,
       currentStrings,
+      currentEdo,
+      kgNeckFilterEnabled,
       currentTuningRef,
       selectedPreset,
       setSelectedPreset,
@@ -255,6 +265,20 @@ export function useMergedPresets({
     defaultPresetName,
     resetSelection,
     queuePresetByName,
+  ]);
+
+  useUpdateEffect(() => {
+    if (!selectedPreset) return;
+    const resolved = resolveTuningByName(selectedPreset);
+    if (!resolved?.length) return;
+    setPreset(selectedPreset);
+  }, [
+    kgNeckFilterEnabled,
+    currentEdo,
+    currentStrings,
+    selectedPreset,
+    resolveTuningByName,
+    setPreset,
   ]);
 
   useUpdateEffect(() => {

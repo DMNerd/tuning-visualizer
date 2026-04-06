@@ -30,6 +30,7 @@ function resolveAppVersion() {
 }
 
 const appVersion = resolveAppVersion();
+
 export default defineConfig(({ command, mode }) => {
   const isProductionBuild = command === "build" && mode === "production";
 
@@ -75,6 +76,15 @@ export default defineConfig(({ command, mode }) => {
 
     build: {
       cssMinify: "lightningcss",
+      rolldownOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              return "vendor";
+            }
+          },
+        },
+      },
     },
 
     resolve: {

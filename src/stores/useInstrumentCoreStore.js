@@ -97,6 +97,7 @@ export const useInstrumentCoreStore = create(
         tuning: [],
         stringMeta: null,
         boardMeta: null,
+        kgNeckFilterEnabled: false,
         userDefaultTuningMap: legacyDefaults.value,
 
         setStrings: (strings) => set({ strings }),
@@ -119,6 +120,8 @@ export const useInstrumentCoreStore = create(
             applyValueOrUpdaterOnDraft(state, "stringMeta", draftUpdater);
           }),
         setBoardMeta: (boardMeta) => set({ boardMeta }),
+        setKgNeckFilterEnabled: (kgNeckFilterEnabled) =>
+          set({ kgNeckFilterEnabled }),
         updateBoardMeta: (draftUpdater) =>
           set((state) => {
             applyValueOrUpdaterOnDraft(state, "boardMeta", draftUpdater);
@@ -153,13 +156,14 @@ export const useInstrumentCoreStore = create(
             tuning: [],
             stringMeta: null,
             boardMeta: null,
+            kgNeckFilterEnabled: false,
             userDefaultTuningMap: {},
           }),
       };
     }),
     {
       name: STORAGE_KEYS.INSTRUMENT_CORE,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => globalThis.localStorage),
       migrate: (persistedState) => {
         const hasPersisted =
@@ -208,6 +212,10 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.value,
           ),
+          kgNeckFilterEnabled:
+            typeof persistedState.kgNeckFilterEnabled === "boolean"
+              ? persistedState.kgNeckFilterEnabled
+              : false,
           userDefaultTuningMap: isValidPersistedMap(
             persistedState.userDefaultTuningMap,
           )
@@ -218,6 +226,7 @@ export const useInstrumentCoreStore = create(
       partialize: (state) => ({
         strings: state.strings,
         frets: state.frets,
+        kgNeckFilterEnabled: state.kgNeckFilterEnabled,
         userDefaultTuningMap: state.userDefaultTuningMap,
       }),
       merge: (persisted, current) => {
@@ -258,6 +267,10 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.found ? legacyFrets.value : FRETS_FACTORY,
           ),
+          kgNeckFilterEnabled:
+            typeof persisted?.kgNeckFilterEnabled === "boolean"
+              ? persisted.kgNeckFilterEnabled
+              : false,
           userDefaultTuningMap: isValidPersistedMap(
             persisted?.userDefaultTuningMap,
           )
@@ -284,6 +297,7 @@ export const selectInstrumentCoreState = (state) => ({
   tuning: state.tuning,
   stringMeta: state.stringMeta,
   boardMeta: state.boardMeta,
+  kgNeckFilterEnabled: state.kgNeckFilterEnabled,
   userDefaultTuningMap: state.userDefaultTuningMap,
 });
 
@@ -296,6 +310,7 @@ export const selectInstrumentCoreActions = (state) => ({
   setStringMeta: state.setStringMeta,
   updateStringMeta: state.updateStringMeta,
   setBoardMeta: state.setBoardMeta,
+  setKgNeckFilterEnabled: state.setKgNeckFilterEnabled,
   updateBoardMeta: state.updateBoardMeta,
   setUserDefaultTuningMap: state.setUserDefaultTuningMap,
   updateUserDefaultTuningMap: state.updateUserDefaultTuningMap,
@@ -311,3 +326,5 @@ export const selectInstrumentStringMeta = (state) => state.stringMeta;
 export const selectInstrumentBoardMeta = (state) => state.boardMeta;
 export const selectInstrumentDefaultTuningMap = (state) =>
   state.userDefaultTuningMap;
+
+export const selectKgNeckFilterEnabled = (state) => state.kgNeckFilterEnabled;

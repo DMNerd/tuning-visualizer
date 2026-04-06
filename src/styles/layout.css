@@ -663,6 +663,11 @@ html.is-fs {
   outline-offset: 1px;
 }
 
+.tv-field--neck-filter .tv-binary-toggle {
+  display: grid;
+  width: 100%;
+}
+
 .tv-check {
   font-size: 0.75rem;
   color: var(--muted);
@@ -811,6 +816,11 @@ html.is-fs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.tv-controls__defaults .tv-field--neck-filter {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .tv-controls--chord .tv-field .tv-check {

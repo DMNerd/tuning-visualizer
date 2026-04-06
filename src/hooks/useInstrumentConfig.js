@@ -12,6 +12,7 @@ import {
   selectInstrumentCoreActions,
   selectInstrumentBoardMeta,
   selectInstrumentDefaultTuningMap,
+  selectKgNeckFilterEnabled,
   selectInstrumentFrets,
   selectInstrumentFretsTouched,
   selectInstrumentStringMeta,
@@ -55,6 +56,7 @@ export function useInstrumentConfig({
   const userDefaultTuningMap = useInstrumentCoreStore(
     selectInstrumentDefaultTuningMap,
   );
+  const kgNeckFilterEnabled = useInstrumentCoreStore(selectKgNeckFilterEnabled);
 
   const {
     setStrings,
@@ -63,6 +65,7 @@ export function useInstrumentConfig({
     setTuning,
     setStringMeta,
     setBoardMeta,
+    setKgNeckFilterEnabled,
     updateUserDefaultTuningMap,
     resetInstrumentPrefs,
   } = useInstrumentCoreStore(useShallow(selectInstrumentCoreActions));
@@ -228,8 +231,15 @@ export function useInstrumentConfig({
   });
 
   const state = useMemo(
-    () => ({ strings, frets, tuning, stringMeta, boardMeta }),
-    [strings, frets, tuning, stringMeta, boardMeta],
+    () => ({
+      strings,
+      frets,
+      tuning,
+      stringMeta,
+      boardMeta,
+      kgNeckFilterEnabled,
+    }),
+    [strings, frets, tuning, stringMeta, boardMeta, kgNeckFilterEnabled],
   );
   const actions = useMemo(
     () => ({
@@ -239,6 +249,7 @@ export function useInstrumentConfig({
       setTuning,
       setStringMeta,
       setBoardMeta,
+      setKgNeckFilterEnabled,
       resetInstrumentPrefs,
       setFretsPref: setFretsUI,
       handleSaveDefault,
@@ -251,6 +262,7 @@ export function useInstrumentConfig({
       setTuning,
       setStringMeta,
       setBoardMeta,
+      setKgNeckFilterEnabled,
       resetInstrumentPrefs,
       handleSaveDefault,
       handleStringsChange,
