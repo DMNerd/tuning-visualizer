@@ -14,6 +14,7 @@ export type StringMeta = {
 
 export type TuningPack = {
   name: string;
+  spelling?: string;
   system: { edo: number }; // accidentals removed
   tuning: { strings: TuningString[] };
   meta?: { stringMeta?: StringMeta[]; [k: string]: unknown };

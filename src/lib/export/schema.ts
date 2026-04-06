@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
+import { normalizeSpellingHint } from "@/lib/theory/notation";
 
 export const TuningStringSchema = v.pipe(
   v.object({
@@ -17,6 +18,7 @@ export const TuningStringSchema = v.pipe(
 
 export const TuningPackSchema = v.object({
   name: v.string(),
+  spelling: v.optional(v.string()),
   system: v.object({
     edo: v.pipe(
       v.number(),
@@ -73,9 +75,12 @@ export function parseTuningPack(pack: unknown): TuningPack {
   if (!normalizedName) {
     throw new Error("Custom tuning must include a name.");
   }
+  const normalizedSpelling = normalizeSpellingHint(res.output.spelling);
+  const { spelling: _rawSpelling, ...rest } = res.output;
 
   return {
-    ...res.output,
+    ...rest,
     name: normalizedName,
+    ...(normalizedSpelling ? { spelling: normalizedSpelling } : {}),
   };
 }

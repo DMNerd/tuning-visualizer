@@ -24,6 +24,7 @@ export function useInstrumentDomain({
   defaultTunings,
   presetTunings,
   confirm,
+  noteNaming = "english",
 }) {
   const instrument = useInstrumentConfig({
     system,
@@ -101,6 +102,7 @@ export function useInstrumentDomain({
         systemDivisions,
         sysNames,
         tunings,
+        noteNaming,
       },
       presets: {
         mergedPresetNames,
@@ -127,6 +129,7 @@ export function useInstrumentDomain({
       systemDivisions,
       sysNames,
       tunings,
+      noteNaming,
       mergedPresetNames,
       customPresetNames,
       mergedPresetMetaMap,

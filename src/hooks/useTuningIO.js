@@ -368,7 +368,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         throw new Error(msg);
       }
 
-      const parsed = res.output;
+      const parsed = res.output.map((pack) => parsePack(pack));
 
       const existing = getExistingCustomTunings();
       const takenNames = new Set(
@@ -394,7 +394,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const nextTunings = [...existing, ...newTunings];
       updateCustomTunings(() => nextTunings);
     },
-    [getExistingCustomTunings, updateCustomTunings],
+    [getExistingCustomTunings, parsePack, updateCustomTunings],
   );
 
   const importFromJson = useCallback(

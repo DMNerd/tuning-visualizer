@@ -10,6 +10,8 @@ import {
 import { withToastPromise } from "@/utils/toast";
 import { memoWithShallowPick } from "@/utils/memo";
 import NumberField from "@/components/UI/NumberField";
+import { renderNoteName } from "@/lib/theory/noteNaming";
+import { normalizeIntlNoteName } from "@/lib/theory/notation";
 
 function InstrumentControls({ state, actions, meta }) {
   const { strings, frets, tuning, systemId, selectedPreset } = state;
@@ -24,11 +26,29 @@ function InstrumentControls({ state, actions, meta }) {
     onCreateCustomPack,
     onEditCustomPack,
   } = actions;
-  const { systems, sysNames, presetNames, customPresetNames, presetMetaMap } =
+  const {
+    systems,
+    sysNames,
+    noteNaming,
+    presetNames,
+    customPresetNames,
+    presetMetaMap,
+  } =
     meta;
   const safeSystems = systems ?? {};
   const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
   const safeTuning = Array.isArray(tuning) ? tuning : [];
+
+  const optionEntries = Array.from(
+    new Map(
+      safeSysNames.map((displayName) => [
+        normalizeIntlNoteName(displayName, {
+          translateGerman: noteNaming === "german",
+        }),
+        displayName,
+      ]),
+    ),
+  ).map(([value, label]) => ({ value, label }));
 
   const onSaveDefault = () =>
     withToastPromise(
@@ -100,7 +120,10 @@ function InstrumentControls({ state, actions, meta }) {
         <div className="tv-controls__strings-grid">
           {safeTuning.map((note, i) => {
             const stringNum = strings - i;
-            const hasOption = safeSysNames.includes(note);
+            const noteValue = normalizeIntlNoteName(note, {
+              translateGerman: noteNaming === "german",
+            });
+            const hasOption = optionEntries.some((entry) => entry.value === noteValue);
             return (
               <div key={i} className="tv-field">
                 <label htmlFor={`string-${stringNum}`}>
@@ -109,7 +132,7 @@ function InstrumentControls({ state, actions, meta }) {
                 <select
                   id={`string-${stringNum}`}
                   name={`string-${stringNum}`}
-                  value={note}
+                  value={noteValue}
                   onChange={(e) => {
                     const value = e.target.value;
                     setTuning((d) => {
@@ -117,10 +140,14 @@ function InstrumentControls({ state, actions, meta }) {
                     });
                   }}
                 >
-                  {!hasOption && <option value={note}>{note}</option>}
-                  {safeSysNames.map((n) => (
-                    <option key={n} value={n}>
-                      {n}
+                  {!hasOption && (
+                    <option value={noteValue}>
+                      {renderNoteName(noteValue, noteNaming)}
+                    </option>
+                  )}
+                  {optionEntries.map((entry) => (
+                    <option key={`${entry.value}:${entry.label}`} value={entry.value}>
+                      {entry.label}
                     </option>
                   ))}
                 </select>
@@ -190,6 +217,7 @@ function pickInstrumentMemoProps(p) {
     selectedPreset: s.selectedPreset,
     systems: m.systems,
     sysNames: m.sysNames,
+    noteNaming: m.noteNaming,
     presetNames: m.presetNames,
     customPresetNames: m.customPresetNames,
     presetMetaMap: m.presetMetaMap,

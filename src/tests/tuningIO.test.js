@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 import { parseTuningPack } from "@/lib/export/schema";
 import { removePackByIdentifier } from "@/lib/export/tuningIO";
+import { coerceAnyTuning } from "@/hooks/usePresetBuilder";
 
 const basePack = {
   name: "Example Tuning",
@@ -101,6 +102,48 @@ test("parseTuningPack accepts packs that meet string requirements", () => {
   };
 
   assert.doesNotThrow(() => parseTuningPack(valid));
+});
+
+test("parseTuningPack preserves optional top-level spelling field", () => {
+  const withSpelling = {
+    ...basePack,
+    spelling: "de-h/b",
+  };
+
+  const parsed = parseTuningPack(withSpelling);
+
+  assert.equal(parsed.spelling, "de-h/b");
+});
+
+test("parseTuningPack trims top-level spelling and omits blank values", () => {
+  const spaced = parseTuningPack({
+    ...basePack,
+    spelling: "  czech  ",
+  });
+  assert.equal(spaced.spelling, "czech");
+
+  const blank = parseTuningPack({
+    ...basePack,
+    spelling: "   ",
+  });
+  assert.equal(Object.prototype.hasOwnProperty.call(blank, "spelling"), false);
+});
+
+test("parsed custom pack spelling hint is preserved for downstream coercion", () => {
+  const parsed = parseTuningPack({
+    ...basePack,
+    spelling: "czech",
+    tuning: {
+      strings: [
+        { note: "H" },
+        { note: "B" },
+        ...Array.from({ length: STR_MIN - 2 }, () => ({ note: "E" })),
+      ],
+    },
+  });
+
+  const normalized = coerceAnyTuning(parsed);
+  assert.deepEqual(normalized.slice(0, 2), ["B", "Bb"]);
 });
 
 test("removePackByIdentifier removes packs with empty names using meta id", () => {

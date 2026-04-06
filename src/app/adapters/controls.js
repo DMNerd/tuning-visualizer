@@ -29,6 +29,7 @@ export function buildInstrumentControlModel({
     meta: {
       systems: instrument.tunings,
       sysNames: instrument.sysNames,
+      noteNaming: instrument.noteNaming,
       presetNames: presets.mergedPresetNames,
       customPresetNames: presets.customPresetNames,
       presetMetaMap: presets.mergedPresetMetaMap,

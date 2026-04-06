@@ -38,6 +38,7 @@
 {
   "version": 2,
   "name": "My Custom Tuning",
+  "spelling": "german",
   "system": { "edo": 12 },
   "tuning": {
     "strings": [
@@ -66,6 +67,7 @@
 
 - `version` (number, optional for parsing, exporter writes `2`): tag for your own bookkeeping.
 - `name` (string, required): shown in the UI.
+- `spelling` (string, optional): spelling hint for note parsing. If set to a Germanic/Czech marker (`"german"`, `"germanic"`, `"czech"`, `"cz"`, `"de"`, `"de h/b"`, `"de-h/b"`, `"de_h/b"`, `"h/b"`), note tokens are translated to international spellings internally (for example `H` → `B`, `B` → `Bb`, `Fis` → `F#`, `Hih` → `B↑`, `Aeh` → `A↓`).
 - `system.edo` (number, required): equal divisions of the octave (12 for 12‑TET, 19 for 19‑TET, etc.).
 
 **Strings (array, required, ≥1)**
@@ -121,8 +123,23 @@ This example models the short 5th string starting at fret 5 and showing a grey s
 ## Tips & gotchas
 
 - **Octaves are ignored.** Use `E`, not `E2`. Use `F#` or `Gb` — whichever you prefer; import does not change your accidental spelling.
+- **German/Czech preset spelling.** If your JSON uses `H/B/Fis/Es/...`, set top-level `spelling` to a Germanic/Czech value (for example `"german"`, `"czech"`, or `"cz"`). Internally the app stores/uses international spellings and only localizes at display time.
+- **Microtonal German suffixes work too.** With `spelling: "german"` or `spelling: "czech"`, both `ih/eh` suffixes and arrow forms are accepted (`Hih` or `B↑`, `Aeh` or `A↓`).
 - **Order matters.** Strings are read top‑to‑bottom in the JSON array the same way they’re drawn in the UI.
 - **Short strings (banjo, etc.).** Put `startFret` and `greyBefore: true` on that string (and optionally mirror in `meta.stringMeta`).
+
+Microtonal example:
+
+```json
+{
+  "name": "24-TET Germanic micro example",
+  "spelling": "german",
+  "system": { "edo": 24 },
+  "tuning": {
+    "strings": [{ "note": "Hih" }, { "note": "Aeh" }, { "note": "Fis" }]
+  }
+}
+```
 
 ---
 

@@ -90,6 +90,7 @@ export default function App() {
     defaultTunings: DEFAULT_TUNINGS,
     presetTunings: PRESET_TUNINGS,
     confirm,
+    noteNaming: displayPrefs.noteNaming,
   });
   const { instrumentState, instrumentDerived, capo } = instrumentDomain;
   const { strings, tuning, stringMeta, boardMeta } = instrumentState;

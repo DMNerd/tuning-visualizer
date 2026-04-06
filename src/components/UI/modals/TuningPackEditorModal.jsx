@@ -12,12 +12,6 @@ import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
 import { memoWithPick } from "@/utils/memo";
 import {
-  TUNINGS,
-  nameFallback,
-  findSystemByEdo,
-  getSystemLabel,
-} from "@/lib/theory/tuning";
-import {
   FiPlus,
   FiEdit2,
   FiTrash2,
@@ -28,9 +22,15 @@ import {
   FiAlertTriangle,
   FiRefreshCcw,
 } from "react-icons/fi";
-import { isPlainObject } from "@/utils/object";
 import ModalFrame from "@/components/UI/modals/ModalFrame";
 import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
+import { SPELLING_MARKER_DISPLAY } from "@/lib/theory/notation";
+import {
+  buildNoteOptionsForPack,
+  ensurePack,
+  buildTemplatePack,
+  togglePackSpelling,
+} from "@/components/UI/modals/tuningPackNormalization";
 
 function clonePack(pack) {
   if (!pack) return null;
@@ -38,65 +38,6 @@ function clonePack(pack) {
     return structuredClone(pack);
   }
   return JSON.parse(JSON.stringify(pack));
-}
-
-function ensurePack(pack) {
-  const base = {
-    name: "",
-    system: { edo: 12 },
-    tuning: { strings: [] },
-    meta: {},
-  };
-
-  if (!isPlainObject(pack)) {
-    return base;
-  }
-
-  const name = typeof pack.name === "string" ? pack.name : "";
-
-  const edo = Number(pack?.system?.edo);
-  const system = Number.isFinite(edo) && edo > 0 ? { edo } : { edo: 12 };
-
-  const strings = Array.isArray(pack?.tuning?.strings)
-    ? pack.tuning.strings
-    : [];
-
-  const meta = isPlainObject(pack.meta) ? pack.meta : {};
-
-  return {
-    name,
-    system,
-    tuning: { strings },
-    meta,
-  };
-}
-
-const TEMPLATE_STRINGS = [
-  { label: "String 1", note: "E4" },
-  { label: "String 2", note: "B3" },
-  { label: "String 3", note: "G3" },
-  { label: "String 4", note: "D3" },
-];
-
-function buildTemplatePack(pack) {
-  const base = ensurePack(pack);
-  const edo = Number(base?.system?.edo);
-  const normalizedEdo = Number.isFinite(edo) ? Math.max(12, edo) : 12;
-
-  const strings = Array.isArray(base?.tuning?.strings)
-    ? base.tuning.strings.slice(0, STR_MAX)
-    : [];
-
-  const seededStrings = strings.length >= STR_MIN ? strings : TEMPLATE_STRINGS;
-
-  const meta = isPlainObject(base?.meta) ? base.meta : {};
-
-  return {
-    name: base?.name?.trim?.() || "New tuning pack",
-    system: { edo: normalizedEdo },
-    tuning: { strings: seededStrings },
-    meta,
-  };
 }
 
 function getSeedSnapshot(pack, mode) {
@@ -110,42 +51,6 @@ function pushUnique(list, seen, value) {
   if (!normalized.length || seen.has(normalized)) return;
   seen.add(normalized);
   list.push(normalized);
-}
-
-function buildNoteNodeMetadata(pack) {
-  const strings = Array.isArray(pack?.tuning?.strings)
-    ? pack.tuning.strings
-    : [];
-  const edo = Number(pack?.system?.edo);
-  const metaSystemId =
-    typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
-  const systemMatch = findSystemByEdo(TUNINGS, edo, metaSystemId);
-  const system = systemMatch?.system ?? null;
-  const seen = new Set();
-  const options = [];
-
-  if (system && Number.isFinite(system.divisions) && system.divisions > 0) {
-    for (let pc = 0; pc < system.divisions; pc += 1) {
-      pushUnique(options, seen, system.nameForPc(pc, "sharp"));
-      pushUnique(options, seen, system.nameForPc(pc, "flat"));
-    }
-  } else if (Number.isFinite(edo) && edo > 0) {
-    for (let pc = 0; pc < edo; pc += 1) {
-      pushUnique(options, seen, nameFallback(pc));
-    }
-  }
-
-  strings.forEach((entry) => {
-    pushUnique(options, seen, entry?.note);
-  });
-
-  const systemLabel = getSystemLabel({
-    match: systemMatch,
-    edo,
-    metaSystemId,
-  });
-
-  return { noteOptions: options, systemLabel };
 }
 
 function isTuningNoteNode({ key, path }) {
@@ -469,7 +374,7 @@ function TuningPackEditorModal({
     };
   }, [isDark]);
 
-  const noteMeta = useMemo(() => buildNoteNodeMetadata(draft), [draft]);
+  const noteMeta = useMemo(() => buildNoteOptionsForPack(draft), [draft]);
 
   const noteNodeDefinitions = useMemo(() => {
     if (!noteMeta.noteOptions.length) return [];
@@ -544,6 +449,20 @@ function TuningPackEditorModal({
     setPointer(null);
   }, [draft, handleDataChange]);
 
+  const hasSpellingHint =
+    typeof draft?.spelling === "string" && draft.spelling.trim().length > 0;
+
+  const handleToggleSpellingHint = useCallback(() => {
+    const nextPack = togglePackSpelling(draft, "de-h/b");
+    handleDataChange(nextPack);
+    setPointer("spelling");
+    toast.success(
+      hasSpellingHint
+        ? "Removed spelling hint."
+        : 'Set spelling hint to "de-h/b".',
+    );
+  }, [draft, handleDataChange, hasSpellingHint]);
+
   const handleToggleHelper = useCallback(() => {
     toggleHelper();
   }, [toggleHelper]);
@@ -553,13 +472,14 @@ function TuningPackEditorModal({
       JSON.stringify(
         {
           name: "Custom pack example",
+          spelling: "german",
           system: { edo: 12 },
           tuning: {
             strings: [
-              { label: "String 1", note: "E4" },
-              { label: "String 2", note: "B3" },
+              { label: "String 1", note: "E" },
+              { label: "String 2", note: "Hih" },
               { label: "String 3", midi: 55 },
-              { label: "String 4", note: "D3" },
+              { label: "String 4", note: "Aeh" },
             ],
           },
           meta: {
@@ -647,6 +567,19 @@ function TuningPackEditorModal({
                   <strong>Each string:</strong> include a <code>note</code> or{" "}
                   <code>midi</code> value (labels optional).
                 </li>
+                <li>
+                  <strong>spelling</strong> (optional): set to{" "}
+                  {SPELLING_MARKER_DISPLAY.map((marker, idx) => (
+                    <span key={marker}>
+                      {idx > 0 ? ", " : ""}
+                      <code>"{marker}"</code>
+                    </span>
+                  ))}{" "}
+                  to auto-translate notes to international spellings for
+                  internal logic (for example <code>Hih</code> → <code>B↑</code>,{" "}
+                  <code>Aeh</code> → <code>A↓</code>). Arrow forms are accepted
+                  too.
+                </li>
               </ul>
               <div className="tv-pack-helper__meta">
                 <div className="tv-pack-helper__meta-section">
@@ -705,6 +638,16 @@ function TuningPackEditorModal({
                   onClick={handleResetTemplate}
                 >
                   {icons.reset} Reload template
+                </button>
+                <button
+                  type="button"
+                  className="tv-button tv-button--ghost"
+                  onClick={handleToggleSpellingHint}
+                >
+                  {hasSpellingHint ? icons.cancel : icons.ok}{" "}
+                  {hasSpellingHint
+                    ? "Remove spelling hint"
+                    : 'Set spelling: "de-h/b"'}
                 </button>
               </div>
               <div className="tv-pack-helper__example">
