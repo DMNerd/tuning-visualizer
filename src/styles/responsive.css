@@ -18,10 +18,6 @@
       animation: none !important;
       transition: none !important;
     }
-
-    .tv-tooltip {
-      transition: none !important;
-    }
   }
 
   @media (--bp-xl) {

@@ -4,7 +4,6 @@ import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
-import { Tooltip } from "react-tooltip";
 import { FiInfo } from "react-icons/fi";
 import { memoWithShallowPick } from "@/utils/memo";
 import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
@@ -15,7 +14,11 @@ function DegreeLegend({ k = 7 }) {
   if (!Number.isFinite(k) || k < 1) return null;
 
   return (
-    <div className="tv-legend">
+    <div className="tv-legend" aria-live="polite">
+      <p>
+        <FiInfo className="tv-legend__info-icon" aria-hidden="true" />
+        <span>Degree palette</span>
+      </p>
       <div className="tv-legend__swatches">
         {Array.from({ length: k }, (_, i) => {
           const degree = i + 1;
@@ -29,18 +32,18 @@ function DegreeLegend({ k = 7 }) {
               <svg
                 className="tv-legend__dot"
                 aria-hidden
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
               >
-                <circle cx="9" cy="9" r="8" fill={color} stroke="var(--line)" />
+                <circle cx="7" cy="7" r="6" fill={color} stroke="var(--line)" />
               </svg>
               <small>{degree}</small>
             </div>
           );
         })}
       </div>
-      <p>1 = tonic (root color).</p>
+      <small>1 = tonic (root)</small>
     </div>
   );
 }
@@ -151,20 +154,9 @@ function DisplayControls({ state, actions, meta }) {
             onChange={(e) => setColorByDegree(e.target.checked)}
           >
             Color notes by scale degree
-            <span
-              className="tv-tip"
-              data-tooltip-id="deg-colors-tip"
-              data-tooltip-place="right"
-              aria-label="Explain scale-degree colors"
-              role="button"
-              tabIndex={0}
-            >
-              <FiInfo size={14} aria-hidden="true" />
-            </span>
-            <Tooltip id="deg-colors-tip" clickable className="tv-tooltip">
-              <DegreeLegend k={degreeCount} />
-            </Tooltip>
           </ToggleSwitch>
+
+          {colorByDegree ? <DegreeLegend k={degreeCount} /> : null}
         </div>
 
         <div
