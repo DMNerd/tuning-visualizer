@@ -79,7 +79,12 @@ export default function ChordTypePicker({
       getOptionKey={getOptionKey}
       getOptionLabel={getOptionLabel}
       getFilterTerms={getFilterTerms}
-      renderList={({ options, listProps, renderOptionItem, virtualization }) => {
+      renderList={({
+        options,
+        listProps,
+        renderOptionItem,
+        virtualization,
+      }) => {
         const available = new Set(options.map((opt) => opt.type));
         const optionIndexByType = new Map(
           options.map((option, index) => [option.type, index]),
@@ -133,7 +138,10 @@ export default function ChordTypePicker({
                     {sectionOptions.map((option) => {
                       const originalIndex = optionIndexByType.get(option.type);
                       if (typeof originalIndex !== "number") return null;
-                      if (visibleIndexes && !visibleIndexes.has(originalIndex)) {
+                      if (
+                        visibleIndexes &&
+                        !visibleIndexes.has(originalIndex)
+                      ) {
                         return null;
                       }
                       return renderOptionItem(option, originalIndex, {

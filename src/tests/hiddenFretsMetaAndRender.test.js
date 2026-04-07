@@ -12,6 +12,7 @@ import {
   resolveVisibleCapoFret,
   reconcileCapoState,
 } from "@/components/Fretboard/renderFilters";
+import { buildFretLabel } from "@/utils/fretLabels";
 
 test("King Gizzard 24-TET preset meta includes hidden fret board config", () => {
   const meta = PRESET_TUNING_META["24-TET"]?.[6]?.["King Gizzard (C#F#C#F#BE)"];
@@ -229,4 +230,105 @@ test("integration: hidden capo fret is remapped to a visible fallback", () => {
     hiddenCapoMarkup,
     /tv-fretboard__marker tv-fretboard__marker--capo">3</,
   );
+});
+
+test("integration: micro fret marker abbreviations preserve multi-part identity cues", () => {
+  const nineteenTet = findSystemByEdo(TUNINGS, 19)?.system;
+  assert.ok(nineteenTet, "expected 19-TET system to resolve");
+
+  const markup = renderToStaticMarkup(
+    React.createElement(Fretboard, {
+      strings: 1,
+      frets: 36,
+      tuning: ["E"],
+      rootIx: 0,
+      intervals: [0, 1, 2, 3, 4, 5, 6, 7],
+      accidental: "sharp",
+      noteNaming: "english",
+      microLabelStyle: "fractions",
+      show: "fret",
+      showOpen: true,
+      showFretNums: true,
+      dotSize: 8,
+      lefty: false,
+      system: nineteenTet,
+      chordPCs: null,
+      chordRootPc: null,
+      openOnlyInScale: false,
+      colorByDegree: false,
+      hideNonChord: false,
+      stringMeta: null,
+      boardMeta: null,
+      capoFret: 0,
+      onSetCapo: () => {},
+    }),
+  );
+
+  const microMarkerTexts = Array.from(
+    markup.matchAll(
+      /class="[^"]*\btv-fretboard__marker\b[^"]*\btv-fretboard__marker--micro\b[^"]*"[^>]*>([^<]+)</g,
+    ),
+    (match) => match[1],
+  );
+
+  assert.ok(
+    microMarkerTexts.length > 0,
+    "expected rendered micro fret markers",
+  );
+  microMarkerTexts.forEach((text) => {
+    assert.ok(
+      text.length > 1,
+      `expected micro marker "${text}" to keep multi-character identity`,
+    );
+  });
+});
+
+test("integration: dense marker overlap hides non-capo labels while preserving capo marker", () => {
+  const nineteenTet = findSystemByEdo(TUNINGS, 19)?.system;
+  assert.ok(nineteenTet, "expected 19-TET system to resolve");
+
+  const capoFret = 9;
+  const markup = renderToStaticMarkup(
+    React.createElement(Fretboard, {
+      strings: 1,
+      frets: 48,
+      tuning: ["E"],
+      rootIx: 0,
+      intervals: [0, 1, 2, 3, 4, 5, 6, 7],
+      accidental: "sharp",
+      noteNaming: "english",
+      microLabelStyle: "fractions",
+      show: "fret",
+      showOpen: true,
+      showFretNums: true,
+      dotSize: 8,
+      lefty: false,
+      system: nineteenTet,
+      chordPCs: null,
+      chordRootPc: null,
+      openOnlyInScale: false,
+      colorByDegree: false,
+      hideNonChord: false,
+      stringMeta: null,
+      boardMeta: null,
+      capoFret,
+      onSetCapo: () => {},
+    }),
+  );
+
+  const markerCount = (
+    markup.match(/class="[^"]*\btv-fretboard__marker\b[^"]*"/g) ?? []
+  ).length;
+  assert.ok(
+    markerCount < 49,
+    `expected overlap filtering to hide at least one marker, got ${markerCount}`,
+  );
+
+  const capoLabel = buildFretLabel(capoFret, nineteenTet.divisions, {
+    microStyle: "fractions",
+    accidental: "sharp",
+  });
+
+  assert.match(markup, /tv-fretboard__marker tv-fretboard__marker--capo/);
+  assert.ok(markup.includes(`>${capoLabel}<`));
 });

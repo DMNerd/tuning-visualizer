@@ -41,7 +41,12 @@ export default function ScalePicker({
           ) : null}
         </>
       )}
-      renderList={({ options, listProps, renderOptionItem, virtualization }) => {
+      renderList={({
+        options,
+        listProps,
+        renderOptionItem,
+        virtualization,
+      }) => {
         const shouldVirtualize = virtualization?.shouldVirtualize;
         const virtualItems = shouldVirtualize
           ? virtualization.getVirtualItems()

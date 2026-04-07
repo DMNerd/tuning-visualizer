@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@chenglou/pretext':
+        specifier: ^0.0.4
+        version: 0.0.4
       '@tanstack/react-virtual':
         specifier: ^3.13.23
         version: 3.13.23(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -123,6 +126,9 @@ packages:
 
   '@bufbuild/protobuf@2.11.0':
     resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+
+  '@chenglou/pretext@0.0.4':
+    resolution: {integrity: sha512-FnPAFMid1/p1j2V2gRPUVBarGUIb2PhkkC9YNnTOfPtTDgHKh8siO8PP9pCxpFfYlcodWPJpE1UbSHGQqt8pQQ==}
 
   '@emnapi/core@1.9.1':
     resolution: {integrity: sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA==}
@@ -2186,6 +2192,8 @@ snapshots:
 
   '@bufbuild/protobuf@2.11.0':
     optional: true
+
+  '@chenglou/pretext@0.0.4': {}
 
   '@emnapi/core@1.9.1':
     dependencies:

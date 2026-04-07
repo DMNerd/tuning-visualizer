@@ -1,18 +1,16 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
 import useFilteredOptions from "@/hooks/useFilteredOptions";
+import { createTextFit } from "@/utils/textFit";
 
 const DEFAULT_VIRTUALIZATION_THRESHOLD = 100;
 const DEFAULT_OPTION_HEIGHT = 40;
+const OPTION_FONT_FAMILY =
+  'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const OPTION_FONT_SIZE = 13;
 
 function assignRef(ref, value) {
   if (!ref) return;
@@ -41,7 +39,13 @@ export default function BaseCombobox({
   enableVirtualization = true,
 }) {
   const [listViewportHeight, setListViewportHeight] = useState(0);
+  const [listViewportWidth, setListViewportWidth] = useState(0);
   const listElementRef = useRef(null);
+  const rowHeightCacheRef = useRef(new Map());
+  const textFit = useMemo(
+    () => createTextFit({ fontFamily: OPTION_FONT_FAMILY }),
+    [],
+  );
 
   const selectedOption = useMemo(() => {
     if (value == null) return null;
@@ -219,6 +223,41 @@ export default function BaseCombobox({
     [listProps],
   );
 
+  const estimateOptionHeight = useCallback(
+    (index) => {
+      const option = filteredOptions[index];
+      if (!option) return DEFAULT_OPTION_HEIGHT;
+
+      const optionKey = getOptionKey(option);
+      const label = getOptionLabel(option);
+      if (!label) return DEFAULT_OPTION_HEIGHT;
+
+      const contentWidth = Math.max(60, listViewportWidth - 20);
+      const widthBucket = Math.max(8, Math.round(contentWidth / 8) * 8);
+      const cacheKey = `${optionKey}|${widthBucket}|${OPTION_FONT_SIZE}|${OPTION_FONT_FAMILY}`;
+      const cached = rowHeightCacheRef.current.get(cacheKey);
+      if (cached != null) return cached;
+
+      const lineCount = textFit.estimateWrappedLines(label, contentWidth, {
+        lineHeight: 17,
+        fontWeight: 500,
+        fontSize: OPTION_FONT_SIZE,
+        widthBucket: 8,
+      });
+      const estimatedHeight = Math.max(
+        DEFAULT_OPTION_HEIGHT,
+        16 + lineCount * 17,
+      );
+      rowHeightCacheRef.current.set(cacheKey, estimatedHeight);
+      return estimatedHeight;
+    },
+    [filteredOptions, getOptionKey, getOptionLabel, listViewportWidth, textFit],
+  );
+
+  useEffect(() => {
+    rowHeightCacheRef.current.clear();
+  }, [filteredOptions]);
+
   const shouldVirtualize =
     enableVirtualization &&
     filteredOptions.length > virtualizationThreshold &&
@@ -227,7 +266,7 @@ export default function BaseCombobox({
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
     getScrollElement: () => listElementRef.current,
-    estimateSize: () => DEFAULT_OPTION_HEIGHT,
+    estimateSize: estimateOptionHeight,
     overscan: 6,
     enabled: shouldVirtualize,
   });
@@ -302,7 +341,8 @@ export default function BaseCombobox({
         <FloatingListbox
           anchorRef={rootRef}
           isOpen={isOpen}
-          onMeasure={({ height }) => {
+          onMeasure={({ width, height }) => {
+            setListViewportWidth(width ?? 0);
             setListViewportHeight(height ?? 0);
           }}
         >

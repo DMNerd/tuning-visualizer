@@ -16,6 +16,7 @@ import { getDegreeColor } from "@/utils/degreeColors";
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { memoWithPick } from "@/utils/memo";
+import { createTextFit } from "@/utils/textFit";
 import {
   maybePreventContextMenu,
   parseDatasetNumber,
@@ -38,6 +39,48 @@ const PANEL_CORNER_RADIUS = 14;
 const INLAY_RADIUS = 6.5;
 const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
 const NUT_VERTICAL_PADDING = 8;
+const NOTE_FONT_MIN = 6;
+const NOTE_FONT_MAX = 11.5;
+const MARKER_FONT_MIN = 6;
+const MARKER_FONT_MAX = 11.5;
+const APP_FONT_STACK =
+  'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+
+function buildLabelVariants(label, { kind, allowSingleCharFallback = true }) {
+  const compact = label.replace(/\s+/g, "");
+  const variants = [compact];
+
+  if (kind === "note") {
+    if (compact.includes("/")) {
+      variants.push(compact.split("/")[0]);
+    }
+    variants.push(compact.slice(0, 2));
+    if (allowSingleCharFallback) variants.push(compact.slice(0, 1));
+    return Array.from(new Set(variants.filter(Boolean)));
+  }
+
+  if (compact.includes("+")) {
+    const [base, fracRaw] = compact.split("+");
+    const frac = fracRaw ?? "";
+    const slashChar = frac.includes("⁄") ? "⁄" : frac.includes("/") ? "/" : "";
+    if (slashChar) {
+      const [num = "", den = ""] = frac.split(slashChar);
+      variants.push(`${base}+${num}${slashChar}${den}`);
+      variants.push(`${base}+${num}${slashChar}…`);
+      variants.push(`${base}+…${slashChar}${den}`);
+      variants.push(`${base}+${num}`);
+    }
+  } else if (compact.includes("/") || compact.includes("⁄")) {
+    const slashChar = compact.includes("⁄") ? "⁄" : "/";
+    const [left = "", right = ""] = compact.split(slashChar);
+    variants.push(`${left}${slashChar}…`);
+    variants.push(`…${slashChar}${right}`);
+  }
+
+  variants.push(compact.slice(0, 2));
+  if (allowSingleCharFallback) variants.push(compact.slice(0, 1));
+  return Array.from(new Set(variants.filter(Boolean)));
+}
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -188,6 +231,10 @@ const Fretboard = forwardRef(function Fretboard(
     }),
     [microLabelStyle, accidental],
   );
+  const textFit = useMemo(
+    () => createTextFit({ fontFamily: APP_FONT_STACK }),
+    [],
+  );
 
   const notes = useMemo(() => {
     if (!activeIntervals.length) return [];
@@ -316,6 +363,184 @@ const Fretboard = forwardRef(function Fretboard(
     wireX,
     isFretHidden,
     betweenVisibleFretsX,
+  ]);
+
+  const renderedNotes = useMemo(() => {
+    const sorted = [...notes].sort((a, b) => {
+      if (a.isRoot !== b.isRoot) return a.isRoot ? -1 : 1;
+      if (a.inChord !== b.inChord) return a.inChord ? -1 : 1;
+      return b.r - a.r;
+    });
+    const acceptedBounds = [];
+    const computed = new Map();
+
+    for (let i = 0; i < sorted.length; i += 1) {
+      const note = sorted[i];
+      const noteVariants = buildLabelVariants(note.label ?? "", {
+        kind: "note",
+        allowSingleCharFallback: note.isRoot,
+      });
+      const fit = textFit.fitLabel(noteVariants, note.r * 1.65, {
+        sizeRange: {
+          min: NOTE_FONT_MIN,
+          max: NOTE_FONT_MAX,
+          step: 0.5,
+        },
+        fontWeight: 700,
+        allowSingleCharFallback: note.isRoot,
+      });
+
+      if (!fit) {
+        computed.set(note.key, { ...note, renderedLabel: null });
+        continue;
+      }
+
+      const width = textFit.measureWidth(fit.text, {
+        fontSize: fit.fontSize,
+        fontWeight: 700,
+      });
+      const halfW = width / 2 + 1;
+      const halfH = fit.fontSize / 2 + 1;
+      const bounds = {
+        left: note.cx - halfW,
+        right: note.cx + halfW,
+        top: note.cy - halfH,
+        bottom: note.cy + halfH,
+      };
+      const collides = acceptedBounds.some(
+        (b) =>
+          bounds.left < b.right &&
+          bounds.right > b.left &&
+          bounds.top < b.bottom &&
+          bounds.bottom > b.top,
+      );
+
+      if (collides && !note.isRoot) {
+        computed.set(note.key, { ...note, renderedLabel: null });
+        continue;
+      }
+
+      acceptedBounds.push(bounds);
+      computed.set(note.key, {
+        ...note,
+        renderedLabel: fit.text,
+        noteFontSize: fit.fontSize,
+      });
+    }
+
+    return notes.map((note) => computed.get(note.key) ?? note);
+  }, [notes, textFit]);
+
+  const fretMarkers = useMemo(() => {
+    const baseMarkers = visibleFrets.map((f, index) => {
+      const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
+      const xForFretNum =
+        notePlacementMode === "onFret" ? wireX(f) : betweenVisibleFretsX(f);
+
+      const leftBoundary =
+        index === 0 ? padLeft : (wireX(visibleFrets[index - 1]) + wireX(f)) / 2;
+      const rightBoundary =
+        index === visibleFrets.length - 1
+          ? boardEndX
+          : (wireX(f) + wireX(visibleFrets[index + 1])) / 2;
+      const fit = textFit.fitLabel(
+        buildLabelVariants(labelNum, {
+          kind: "fret",
+          allowSingleCharFallback: false,
+        }),
+        Math.max(6, (rightBoundary - leftBoundary) * 0.9),
+        {
+          sizeRange: {
+            min: MARKER_FONT_MIN,
+            max: MARKER_FONT_MAX,
+            step: 0.5,
+          },
+          fontWeight: 500,
+          allowSingleCharFallback: false,
+        },
+      );
+
+      return {
+        fret: f,
+        xForFretNum,
+        maxWidth: Math.max(6, (rightBoundary - leftBoundary) * 0.9),
+        labelNum: fit?.text ?? null,
+        markerFontSize: fit?.fontSize ?? MARKER_FONT_MIN,
+      };
+    });
+
+    const acceptedBounds = [];
+    return baseMarkers.map((marker) => {
+      if (!marker.labelNum) return marker;
+      const buildBounds = (label, fontSize) => {
+        const width = textFit.measureWidth(label, {
+          fontSize,
+          fontWeight: 500,
+        });
+        return {
+          left: marker.xForFretNum - width / 2 - 1,
+          right: marker.xForFretNum + width / 2 + 1,
+        };
+      };
+
+      let nextLabel = marker.labelNum;
+      let nextSize = marker.markerFontSize;
+      let bounds = buildBounds(nextLabel, nextSize);
+      let collides = acceptedBounds.some(
+        (b) => bounds.left < b.right && bounds.right > b.left,
+      );
+
+      if (collides && marker.fret !== safeCapoFret) {
+        const downgradedFit = textFit.fitLabel(
+          buildLabelVariants(marker.labelNum, {
+            kind: "fret",
+            allowSingleCharFallback: false,
+          }),
+          marker.maxWidth,
+          {
+            sizeRange: {
+              min: MARKER_FONT_MIN,
+              max: Math.max(MARKER_FONT_MIN, marker.markerFontSize - 1.5),
+              step: 0.5,
+            },
+            fontWeight: 500,
+            allowSingleCharFallback: false,
+          },
+        );
+
+        if (!downgradedFit) {
+          return { ...marker, labelNum: null };
+        }
+
+        nextLabel = downgradedFit.text;
+        nextSize = downgradedFit.fontSize;
+        bounds = buildBounds(nextLabel, nextSize);
+        collides = acceptedBounds.some(
+          (b) => bounds.left < b.right && bounds.right > b.left,
+        );
+        if (collides) {
+          return { ...marker, labelNum: null };
+        }
+      }
+
+      acceptedBounds.push(bounds);
+      return {
+        ...marker,
+        labelNum: nextLabel,
+        markerFontSize: nextSize,
+      };
+    });
+  }, [
+    visibleFrets,
+    system.divisions,
+    microLabelOpts,
+    notePlacementMode,
+    wireX,
+    betweenVisibleFretsX,
+    padLeft,
+    boardEndX,
+    textFit,
+    safeCapoFret,
   ]);
 
   const resolveNotePcFromTarget = useCallback((target) => {
@@ -502,8 +727,8 @@ const Fretboard = forwardRef(function Fretboard(
         ))}
       </g>
 
-      {notes.map((n) => {
-        if (!n.label) return null;
+      {renderedNotes.map((n) => {
+        if (!n.renderedLabel) return null;
         return (
           <text
             key={`noteText-${n.key}`}
@@ -512,52 +737,53 @@ const Fretboard = forwardRef(function Fretboard(
               "tv-fretboard__note--root": n.isRoot,
             })}
             x={displayX(n.cx)}
-            y={n.cy + 4}
+            y={n.cy + (n.noteFontSize ?? NOTE_FONT_MAX) * 0.33}
             textAnchor="middle"
+            fontSize={n.noteFontSize ?? undefined}
           >
-            {n.label}
+            {n.renderedLabel}
           </text>
         );
       })}
 
       {showFretNums &&
-        visibleFrets.map((f) => {
-          const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
-          const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
-          const topY = padTop - FRETNUM_TOP_GAP;
-          const isStandard = (f * 12) % system.divisions === 0;
+        fretMarkers.map(
+          ({ fret: f, xForFretNum, labelNum, markerFontSize }) => {
+            if (!labelNum) return null;
+            const bottomY = height - padBottom + FRETNUM_BOTTOM_GAP;
+            const topY = padTop - FRETNUM_TOP_GAP;
+            const isStandard = (f * 12) % system.divisions === 0;
 
-          const commonProps = {
-            role: "button",
-            tabIndex: 0,
-            onClick: () => onSetCapo(f),
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSetCapo(f);
-              }
-            },
-            className: clsx("tv-fretboard__marker", {
-              "tv-fretboard__marker--capo": f === safeCapoFret,
-              "tv-fretboard__marker--micro": !isStandard,
-            }),
-          };
+            const commonProps = {
+              role: "button",
+              tabIndex: 0,
+              onClick: () => onSetCapo(f),
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSetCapo(f);
+                }
+              },
+              className: clsx("tv-fretboard__marker", {
+                "tv-fretboard__marker--capo": f === safeCapoFret,
+                "tv-fretboard__marker--micro": !isStandard,
+              }),
+            };
 
-          const xForFretNum =
-            notePlacementMode === "onFret" ? wireX(f) : betweenVisibleFretsX(f);
-
-          return (
-            <text
-              key={`num-${f}`}
-              x={displayX(xForFretNum)}
-              y={isStandard ? bottomY : topY}
-              textAnchor="middle"
-              {...commonProps}
-            >
-              {labelNum}
-            </text>
-          );
-        })}
+            return (
+              <text
+                key={`num-${f}`}
+                x={displayX(xForFretNum)}
+                y={isStandard ? bottomY : topY}
+                textAnchor="middle"
+                fontSize={markerFontSize}
+                {...commonProps}
+              >
+                {labelNum}
+              </text>
+            );
+          },
+        )}
 
       {showNoScaleMessage && (
         <text
