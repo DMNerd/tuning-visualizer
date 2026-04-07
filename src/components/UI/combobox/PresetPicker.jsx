@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import clsx from "clsx";
 import { normalizeStringList } from "@/utils/normalizeStringList";
 import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
@@ -84,6 +84,24 @@ export default function PresetPicker({
     return map;
   }, [allPresetNames, customPresetSet, presetMetaMap]);
 
+  const options = useMemo(
+    () =>
+      allPresetNames.map((name) => ({
+        value: name,
+        label: name,
+      })),
+    [allPresetNames],
+  );
+  const getOptionKey = useCallback((opt) => opt.value, []);
+  const getOptionLabel = useCallback((opt) => opt.label, []);
+  const getFilterTerms = useCallback(
+    (opt) => {
+      const badges = badgesByName.get(opt.value) ?? [];
+      return [opt.label, opt.value, ...badges.map((badge) => badge.label)];
+    },
+    [badgesByName],
+  );
+
   return (
     <BaseCombobox
       id={id}
@@ -92,16 +110,10 @@ export default function PresetPicker({
         if (typeof option?.value !== "string") return;
         onSelect?.(option.value);
       }}
-      options={allPresetNames.map((name) => ({
-        value: name,
-        label: name,
-      }))}
-      getOptionKey={(opt) => opt.value}
-      getOptionLabel={(opt) => opt.label}
-      getFilterTerms={(opt) => {
-        const badges = badgesByName.get(opt.value) ?? [];
-        return [opt.label, opt.value, ...badges.map((badge) => badge.label)];
-      }}
+      options={options}
+      getOptionKey={getOptionKey}
+      getOptionLabel={getOptionLabel}
+      getFilterTerms={getFilterTerms}
       renderOption={(opt, { isActive }) => {
         const badges = badgesByName.get(opt.value) ?? [];
         return (

@@ -1,8 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import FloatingListbox from "@/components/UI/combobox/FloatingListbox";
 import useCombobox from "@/hooks/useCombobox";
 import useFilteredOptions from "@/hooks/useFilteredOptions";
+
+const DEFAULT_VIRTUALIZATION_THRESHOLD = 100;
+const DEFAULT_OPTION_HEIGHT = 40;
+
+function assignRef(ref, value) {
+  if (!ref) return;
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  ref.current = value;
+}
 
 export default function BaseCombobox({
   id,
@@ -18,7 +37,12 @@ export default function BaseCombobox({
   "aria-labelledby": ariaLabelledby,
   className,
   listClassName,
+  virtualizationThreshold = DEFAULT_VIRTUALIZATION_THRESHOLD,
+  enableVirtualization = true,
 }) {
+  const [listViewportHeight, setListViewportHeight] = useState(0);
+  const listElementRef = useRef(null);
+
   const selectedOption = useMemo(() => {
     if (value == null) return null;
     return (
@@ -187,6 +211,70 @@ export default function BaseCombobox({
     ],
   );
 
+  const setListRef = useCallback(
+    (node) => {
+      listElementRef.current = node ?? null;
+      assignRef(listProps?.ref, node ?? null);
+    },
+    [listProps],
+  );
+
+  const shouldVirtualize =
+    enableVirtualization &&
+    filteredOptions.length > virtualizationThreshold &&
+    listViewportHeight > 0;
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredOptions.length,
+    getScrollElement: () => listElementRef.current,
+    estimateSize: () => DEFAULT_OPTION_HEIGHT,
+    overscan: 6,
+    enabled: shouldVirtualize,
+  });
+
+  useEffect(() => {
+    if (!isOpen || !shouldVirtualize || activeIndex < 0) return;
+    rowVirtualizer.scrollToIndex(activeIndex, {
+      align: "auto",
+    });
+  }, [isOpen, shouldVirtualize, activeIndex, rowVirtualizer]);
+
+  const virtualItems = shouldVirtualize ? rowVirtualizer.getVirtualItems() : [];
+  const virtualPaddingTop = virtualItems[0]?.start ?? 0;
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+  const virtualPaddingBottom =
+    shouldVirtualize && lastVirtualItem
+      ? rowVirtualizer.getTotalSize() - lastVirtualItem.end
+      : 0;
+
+  const virtualization = useMemo(
+    () => ({
+      enabled: enableVirtualization,
+      threshold: virtualizationThreshold,
+      shouldVirtualize,
+      viewportHeight: listViewportHeight,
+      rowVirtualizer,
+      listRef: setListRef,
+      getVirtualItems: () => rowVirtualizer.getVirtualItems(),
+    }),
+    [
+      enableVirtualization,
+      virtualizationThreshold,
+      shouldVirtualize,
+      listViewportHeight,
+      rowVirtualizer,
+      setListRef,
+    ],
+  );
+
+  const mergedListProps = useMemo(
+    () => ({
+      ...listProps,
+      ref: setListRef,
+    }),
+    [listProps, setListRef],
+  );
+
   return (
     <div
       {...rootProps}
@@ -211,7 +299,13 @@ export default function BaseCombobox({
         aria-labelledby={ariaLabelledby}
       />
       {isOpen && (
-        <FloatingListbox anchorRef={rootRef} isOpen={isOpen}>
+        <FloatingListbox
+          anchorRef={rootRef}
+          isOpen={isOpen}
+          onMeasure={({ height }) => {
+            setListViewportHeight(height ?? 0);
+          }}
+        >
           {typeof renderList === "function" ? (
             renderList({
               options: filteredOptions,
@@ -219,21 +313,49 @@ export default function BaseCombobox({
               getOptionProps,
               getOptionId,
               listId,
-              listProps,
+              listProps: mergedListProps,
               normalizedQuery,
               commitSelection,
               closeList,
               renderOptionItem,
+              virtualization,
             })
           ) : (
             <ul
-              {...listProps}
+              {...mergedListProps}
               className={clsx("tv-combobox__list", listClassName)}
+              style={shouldVirtualize ? { gap: 0 } : undefined}
             >
               {filteredOptions.length === 0 ? (
                 <li className="tv-combobox__empty" role="presentation">
                   No matches.
                 </li>
+              ) : shouldVirtualize ? (
+                <>
+                  {virtualPaddingTop > 0 ? (
+                    <li
+                      role="presentation"
+                      aria-hidden="true"
+                      style={{ height: virtualPaddingTop, padding: 0 }}
+                    />
+                  ) : null}
+                  {virtualItems.map((item) =>
+                    renderOptionItem(filteredOptions[item.index], item.index, {
+                      key: getOptionKey(filteredOptions[item.index]),
+                      optionProps: {
+                        ref: rowVirtualizer.measureElement,
+                        "data-index": item.index,
+                      },
+                    }),
+                  )}
+                  {virtualPaddingBottom > 0 ? (
+                    <li
+                      role="presentation"
+                      aria-hidden="true"
+                      style={{ height: virtualPaddingBottom, padding: 0 }}
+                    />
+                  ) : null}
+                </>
               ) : (
                 filteredOptions.map((option, index) =>
                   renderOptionItem(option, index),

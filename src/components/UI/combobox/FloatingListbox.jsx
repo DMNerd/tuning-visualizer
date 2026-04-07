@@ -1,5 +1,11 @@
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 const SCROLL_LISTENER_OPTIONS = { passive: true, capture: true };
 
@@ -10,9 +16,11 @@ export default function FloatingListbox({
   className,
   offset = 4,
   style: styleProp,
+  onMeasure,
 }) {
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState(null);
+  const wrapperRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -69,8 +77,38 @@ export default function FloatingListbox({
   useEffect(() => {
     if (!isOpen) {
       setPosition(null);
+      if (typeof onMeasure === "function") {
+        onMeasure({ width: 0, height: 0 });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, onMeasure]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || typeof onMeasure !== "function") return undefined;
+    const node = wrapperRef.current;
+    if (!node) return undefined;
+
+    const reportMeasure = () => {
+      onMeasure({
+        width: node.clientWidth,
+        height: node.clientHeight,
+      });
+    };
+
+    reportMeasure();
+
+    if (typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver(() => {
+      reportMeasure();
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [isOpen, onMeasure]);
 
   if (typeof document === "undefined") {
     return null;
@@ -90,6 +128,7 @@ export default function FloatingListbox({
 
   return createPortal(
     <div
+      ref={wrapperRef}
       className={classes}
       style={{
         position: "absolute",

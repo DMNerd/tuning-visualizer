@@ -16,6 +16,11 @@ import { getDegreeColor } from "@/utils/degreeColors";
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { memoWithPick } from "@/utils/memo";
+import {
+  maybePreventContextMenu,
+  parseDatasetNumber,
+  resolveClosestDatasetElement,
+} from "@/utils/svgDelegation";
 import { toStringMetaMap } from "@/lib/meta/meta";
 import {
   normalizeHiddenFrets,
@@ -313,20 +318,42 @@ const Fretboard = forwardRef(function Fretboard(
     betweenVisibleFretsX,
   ]);
 
-  const handleNoteInteraction = useCallback(
-    (type, note) => (event) => {
+  const resolveNotePcFromTarget = useCallback((target) => {
+    const noteElement = resolveClosestDatasetElement(target, "[data-note-pc]");
+    return parseDatasetNumber(noteElement, "notePc");
+  }, []);
+
+  const handleDelegatedNoteClick = useCallback(
+    (event) => {
       if (!onSelectNote) return;
-      if (type === "contextmenu") {
-        event.preventDefault();
-      }
-      const noteName = nameForPc(note.pc);
-      onSelectNote(note.pc, noteName, event);
+      const pc = resolveNotePcFromTarget(event.target);
+      if (pc == null) return;
+      const noteName = nameForPc(pc);
+      onSelectNote(pc, noteName, event);
     },
-    [nameForPc, onSelectNote],
+    [nameForPc, onSelectNote, resolveNotePcFromTarget],
+  );
+
+  const handleDelegatedNoteContextMenu = useCallback(
+    (event) => {
+      if (!onSelectNote) return;
+      const pc = resolveNotePcFromTarget(event.target);
+      if (pc == null) return;
+      maybePreventContextMenu(event, true);
+      const noteName = nameForPc(pc);
+      onSelectNote(pc, noteName, event);
+    },
+    [nameForPc, onSelectNote, resolveNotePcFromTarget],
   );
 
   return (
-    <svg ref={svgRef} width="100%" preserveAspectRatio="xMidYMid meet">
+    <svg
+      ref={svgRef}
+      width="100%"
+      preserveAspectRatio="xMidYMid meet"
+      onClick={handleDelegatedNoteClick}
+      onContextMenu={handleDelegatedNoteContextMenu}
+    >
       <g transform={lefty ? `scale(-1,1) translate(-${width},0)` : undefined}>
         <rect
           x="0"
@@ -450,6 +477,7 @@ const Fretboard = forwardRef(function Fretboard(
         {notes.map((n) => (
           <circle
             key={`noteCirc-${n.key}`}
+            data-note-pc={n.pc}
             cx={n.cx}
             cy={n.cy}
             r={n.r}
@@ -470,8 +498,6 @@ const Fretboard = forwardRef(function Fretboard(
                     : CHORD_NOTE_STROKE_WIDTH
                   : 0
             }
-            onClick={handleNoteInteraction("click", n)}
-            onContextMenu={handleNoteInteraction("contextmenu", n)}
           />
         ))}
       </g>
@@ -481,14 +507,13 @@ const Fretboard = forwardRef(function Fretboard(
         return (
           <text
             key={`noteText-${n.key}`}
+            data-note-pc={n.pc}
             className={clsx("tv-fretboard__note", {
               "tv-fretboard__note--root": n.isRoot,
             })}
             x={displayX(n.cx)}
             y={n.cy + 4}
             textAnchor="middle"
-            onClick={handleNoteInteraction("click", n)}
-            onContextMenu={handleNoteInteraction("contextmenu", n)}
           >
             {n.label}
           </text>
