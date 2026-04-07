@@ -12,6 +12,7 @@ export function useThrottledTrigger({ callback, throttleMs = 150 }) {
 
   useThrottleFn(
     () => {
+      if (triggerVersion === 0) return;
       if (skipNextThrottledCallRef.current) {
         skipNextThrottledCallRef.current = false;
         return;

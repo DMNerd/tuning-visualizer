@@ -6,14 +6,15 @@ import { usePracticeActions } from "@/hooks/usePracticeActions";
 import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
 import {
   useRandomScale,
-  RANDOMIZE_MODES,
   formatRandomizedScaleAnnouncement,
 } from "@/hooks/useRandomScale";
 import {
   useMetronomePrefsStore,
   selectMetronomeHydrateWithDefaults,
   selectMetronomePrefs,
+  selectMetronomeRandomizeMode,
   selectMetronomeSetPrefs,
+  selectMetronomeSetRandomizeMode,
   selectMetronomeSetters,
 } from "@/stores/useMetronomePrefsStore";
 
@@ -22,7 +23,23 @@ export default function usePracticePanelState({
   randomizeConfig,
 }) {
   const { selectedRoot, selectedScale } = randomizeConfig;
-  const [randomizeMode, setRandomizeMode] = useState(RANDOMIZE_MODES.Both);
+  const {
+    metronomePrefs,
+    randomizeMode,
+    setRandomizeMode,
+    setMetronomePrefs,
+    metronomeSetters,
+    hydrateWithDefaults,
+  } = useMetronomePrefsStore(
+    useShallow((state) => ({
+      metronomePrefs: selectMetronomePrefs(state),
+      randomizeMode: selectMetronomeRandomizeMode(state),
+      setRandomizeMode: selectMetronomeSetRandomizeMode(state),
+      setMetronomePrefs: selectMetronomeSetPrefs(state),
+      metronomeSetters: selectMetronomeSetters(state),
+      hydrateWithDefaults: selectMetronomeHydrateWithDefaults(state),
+    })),
+  );
   const {
     randomizeNow,
     randomizeFromHotkey,
@@ -33,20 +50,6 @@ export default function usePracticePanelState({
     mode: randomizeMode,
     throttleMs: 150,
   });
-
-  const {
-    metronomePrefs,
-    setMetronomePrefs,
-    metronomeSetters,
-    hydrateWithDefaults,
-  } = useMetronomePrefsStore(
-    useShallow((state) => ({
-      metronomePrefs: selectMetronomePrefs(state),
-      setMetronomePrefs: selectMetronomeSetPrefs(state),
-      metronomeSetters: selectMetronomeSetters(state),
-      hydrateWithDefaults: selectMetronomeHydrateWithDefaults(state),
-    })),
-  );
 
   useEffect(() => {
     hydrateWithDefaults(metronomeDefaults);

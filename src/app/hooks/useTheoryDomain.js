@@ -71,10 +71,25 @@ export function useTheoryDomain({
     setRoot((prev) => {
       const current = prev ?? defaultRoot ?? ROOT_DEFAULT;
       if (sysNames.includes(current)) return current;
-      if (defaultRoot && sysNames.includes(defaultRoot)) return defaultRoot;
+
+      const currentPc = pcFromName(current);
+      if (Number.isFinite(currentPc)) {
+        const normalizedCurrent = nameForPc(currentPc);
+        if (sysNames.includes(normalizedCurrent)) return normalizedCurrent;
+      }
+
+      if (defaultRoot) {
+        if (sysNames.includes(defaultRoot)) return defaultRoot;
+        const defaultPc = pcFromName(defaultRoot);
+        if (Number.isFinite(defaultPc)) {
+          const normalizedDefault = nameForPc(defaultPc);
+          if (sysNames.includes(normalizedDefault)) return normalizedDefault;
+        }
+      }
+
       return sysNames[0];
     });
-  }, [setRoot, sysNames, defaultRoot]);
+  }, [setRoot, sysNames, defaultRoot, pcFromName, nameForPc]);
 
   const scaleOptions = useMemo(() => {
     if (!system?.id) return [];

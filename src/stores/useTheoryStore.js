@@ -120,6 +120,7 @@ export const useTheoryStore = create(
       partialize: (state) => ({
         systemId: state.systemId,
         root: state.root,
+        scale: state.scale,
       }),
       merge: (persisted, current) => {
         if (!persisted) {
