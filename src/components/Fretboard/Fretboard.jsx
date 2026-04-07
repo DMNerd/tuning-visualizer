@@ -578,7 +578,7 @@ function pickRenderProps(p) {
     stringMeta: p.stringMeta,
     boardMeta: p.boardMeta,
     onSelectNote: p.onSelectNote,
-    onSetCapo: p.onSetCap,
+    onSetCapo: p.onSetCapo,
   };
 }
 
