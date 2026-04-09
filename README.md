@@ -1,4 +1,4 @@
-# Tuning Visualizer aka TuningViz
+# TuningViz (Tuning Visualizer)
 
 An interactive fretboard visualizer for exploring scales, tunings, and microtonal systems.
 Built with React.

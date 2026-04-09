@@ -81,11 +81,21 @@ function ExportControls({
     });
 
     if (!result.ok) {
-      if (result.error.code !== IMPORT_PIPELINE_ERROR_CODES.IMPORT_FAILED) {
-        toast.error(getImportPipelineErrorMessage(result.error), {
-          id: "import-tunings",
-        });
+      const toastMessage = getImportPipelineErrorMessage(result.error);
+
+      switch (result.error.code) {
+        case IMPORT_PIPELINE_ERROR_CODES.INVALID_FILE_TYPE:
+        case IMPORT_PIPELINE_ERROR_CODES.FILE_TOO_LARGE:
+        case IMPORT_PIPELINE_ERROR_CODES.NO_FILE:
+        case IMPORT_PIPELINE_ERROR_CODES.FILE_READ_FAILED:
+        case IMPORT_PIPELINE_ERROR_CODES.INVALID_JSON:
+          toast.error(toastMessage, { id: "import-tunings" });
+          break;
+        case IMPORT_PIPELINE_ERROR_CODES.IMPORT_FAILED:
+        default:
+          break;
       }
+
       if (result.error.cause) {
         console.error(result.error.cause);
       }

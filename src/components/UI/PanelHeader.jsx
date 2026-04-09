@@ -18,7 +18,7 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   return (
     <div className="tv-header">
       <h1 className="tv-header__title">
-        TunningViz <span className="tv-header__version">{appVersion}</span>
+        TuningViz <span className="tv-header__version">{appVersion}</span>
       </h1>
 
       <div className="tv-header__actions">
