@@ -152,6 +152,7 @@
 .tv-beat-indicator__meta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 0.75rem;
 }
@@ -159,6 +160,7 @@
 .tv-beat-indicator__beats {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 

@@ -98,7 +98,9 @@ test("metronome cursor updates beat/bar atomically", async () => {
     selectMetronomeCurrentBar,
   );
 
-  useMetronomeEngineStore.getState().setCursor({ currentBeat: 2, currentBar: 3 });
+  useMetronomeEngineStore
+    .getState()
+    .setCursor({ currentBeat: 2, currentBar: 3 });
 
   assert.equal(trackedBeat.getSelected(), 2);
   assert.equal(trackedBar.getSelected(), 3);
@@ -108,7 +110,6 @@ test("metronome cursor updates beat/bar atomically", async () => {
   trackedBeat.unsubscribe();
   trackedBar.unsubscribe();
 });
-
 
 test("display controls selector only changes when selected pref changes", async () => {
   const { useDisplayPrefsStore } = await importFresh(

@@ -15,7 +15,8 @@ export const useMetronomeEngineStore = create(
     setIsPlaying: (isPlaying) => set({ isPlaying }),
     setCurrentBeat: (currentBeat) => set({ currentBeat }),
     setCurrentBar: (currentBar) => set({ currentBar }),
-    setCursor: ({ currentBeat, currentBar }) => set({ currentBeat, currentBar }),
+    setCursor: ({ currentBeat, currentBar }) =>
+      set({ currentBeat, currentBar }),
     setAudioReady: (audioReady) => set({ audioReady }),
     setAudioError: (audioError) => set({ audioError }),
     resetCursorState: () =>

@@ -32,7 +32,6 @@ function MetronomeControls({ state, actions, meta }) {
     bpmUp,
     bpmDown,
     tapTempo,
-    randomizeScaleNow,
   } = actions;
 
   const timeSignatures = meta?.timeSignatures ?? TIME_SIGNATURES;
@@ -59,13 +58,6 @@ function MetronomeControls({ state, actions, meta }) {
             onClick={() => tapTempo?.()}
           >
             Tap tempo
-          </button>
-          <button
-            type="button"
-            className="tv-button"
-            onClick={() => randomizeScaleNow?.()}
-          >
-            Next scale now
           </button>
         </div>
 
@@ -225,7 +217,6 @@ function pickMetronomeMemoProps(p) {
     bpmUp: a.bpmUp,
     bpmDown: a.bpmDown,
     tapTempo: a.tapTempo,
-    randomizeScaleNow: a.randomizeScaleNow,
   };
 }
 

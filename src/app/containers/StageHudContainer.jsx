@@ -24,11 +24,11 @@ export default function StageHudContainer({
   const audioReady = useMetronomeEngineStore(selectMetronomeAudioReady);
   const audioError = useMetronomeEngineStore(selectMetronomeAudioError);
 
-  const timeSig = useMetronomePrefsStore((state) =>
-    selectMetronomePrefs(state).timeSig,
+  const timeSig = useMetronomePrefsStore(
+    (state) => selectMetronomePrefs(state).timeSig,
   );
-  const countInEnabled = useMetronomePrefsStore((state) =>
-    selectMetronomePrefs(state).countInEnabled,
+  const countInEnabled = useMetronomePrefsStore(
+    (state) => selectMetronomePrefs(state).countInEnabled,
   );
 
   return (
