@@ -1,14 +1,55 @@
 import { memo, type ComponentType } from "react";
-import { dequal } from "dequal";
 
 export function memoWithPick<P>(
   Component: ComponentType<P>,
   pick: (props: P) => unknown,
 ) {
-  return memo(Component, (prev, next) => dequal(pick(prev), pick(next)));
+  return memo(Component, (prev, next) =>
+    pickedSliceEqual(pick(prev), pick(next)),
+  );
 }
 
 type AnyRecord = Record<string, unknown>;
+
+function isPlainObject(value: unknown): value is AnyRecord {
+  if (value === null || typeof value !== "object") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function pickedArrayEqual(prev: unknown[], next: unknown[]) {
+  if (prev.length !== next.length) return false;
+  for (let i = 0; i < prev.length; i += 1) {
+    if (!pickedSliceEqual(prev[i], next[i])) return false;
+  }
+  return true;
+}
+
+function pickedSetEqual(prev: Set<unknown>, next: Set<unknown>) {
+  if (prev.size !== next.size) return false;
+  for (const value of prev) {
+    if (!next.has(value)) return false;
+  }
+  return true;
+}
+
+function pickedSliceEqual(prev: unknown, next: unknown): boolean {
+  if (Object.is(prev, next)) return true;
+
+  if (Array.isArray(prev) && Array.isArray(next)) {
+    return pickedArrayEqual(prev, next);
+  }
+
+  if (prev instanceof Set && next instanceof Set) {
+    return pickedSetEqual(prev, next);
+  }
+
+  if (isPlainObject(prev) && isPlainObject(next)) {
+    return shallowEqualObjects(prev, next);
+  }
+
+  return false;
+}
 
 // Comparator guideline:
 // Prefer primitive and reference checks first; use deep compare only when
