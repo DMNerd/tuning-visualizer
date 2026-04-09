@@ -3,7 +3,8 @@ import { useShallow } from "zustand/react/shallow";
 import {
   useMetronomeEngineStore,
   selectMetronomeEngineActions,
-  selectMetronomeEngineState,
+  selectMetronomeEnginePlaybackState,
+  selectMetronomeEngineCursorState,
 } from "@/stores/useMetronomeEngineStore";
 
 const LOOKAHEAD_MS = 25;
@@ -51,9 +52,16 @@ function scheduleClick(
   osc.stop(when + CLICK_DURATION_SEC + 0.01);
 }
 
-export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
-  const { isPlaying, currentBeat, currentBar, audioReady, audioError } =
-    useMetronomeEngineStore(useShallow(selectMetronomeEngineState));
+export function useMetronomePlaybackStatus() {
+  return useMetronomeEngineStore(useShallow(selectMetronomeEnginePlaybackState));
+}
+
+export function useMetronomeTickCursor() {
+  return useMetronomeEngineStore(useShallow(selectMetronomeEngineCursorState));
+}
+
+export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
+  const { isPlaying, audioReady, audioError } = useMetronomePlaybackStatus();
   const {
     setIsPlaying,
     setCursor,
@@ -229,9 +237,9 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
     start,
     stop,
     isPlaying,
-    currentBeat,
-    currentBar,
     audioReady,
     audioError,
   };
 }
+
+export const useMetronomeEngine = useMetronomePlayback;

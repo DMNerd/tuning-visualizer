@@ -3,7 +3,7 @@ import { toast } from "react-hot-toast";
 import { useShallow } from "zustand/react/shallow";
 
 import { usePracticeActions } from "@/hooks/usePracticeActions";
-import { useMetronomeEngine } from "@/hooks/useMetronomeEngine";
+import { useMetronomePlayback } from "@/hooks/useMetronomeEngine";
 import {
   useRandomScale,
   formatRandomizedScaleAnnouncement,
@@ -175,7 +175,7 @@ export default function usePracticePanelState({
     setBarsRemaining(safeBarsPerScale);
   }, [safeBarsPerScale, autoAdvanceEnabled]);
 
-  const metronomeEngine = useMetronomeEngine({
+  const metronomeEngine = useMetronomePlayback({
     bpm,
     timeSig,
     subdivision,

@@ -40,6 +40,15 @@ export const selectMetronomeEngineState = (state) => ({
   audioReady: state.audioReady,
   audioError: state.audioError,
 });
+export const selectMetronomeEnginePlaybackState = (state) => ({
+  isPlaying: state.isPlaying,
+  audioReady: state.audioReady,
+  audioError: state.audioError,
+});
+export const selectMetronomeEngineCursorState = (state) => ({
+  currentBeat: state.currentBeat,
+  currentBar: state.currentBar,
+});
 
 export const selectMetronomeEngineActions = (state) => ({
   setIsPlaying: state.setIsPlaying,

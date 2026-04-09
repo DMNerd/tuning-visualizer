@@ -1,12 +1,8 @@
 import StageHud from "@/components/UI/StageHud";
 import {
-  useMetronomeEngineStore,
-  selectMetronomeCurrentBeat,
-  selectMetronomeCurrentBar,
-  selectMetronomeIsPlaying,
-  selectMetronomeAudioReady,
-  selectMetronomeAudioError,
-} from "@/stores/useMetronomeEngineStore";
+  useMetronomePlaybackStatus,
+  useMetronomeTickCursor,
+} from "@/hooks/useMetronomeEngine";
 import {
   useMetronomePrefsStore,
   selectMetronomePrefs,
@@ -18,11 +14,8 @@ export default function StageHudContainer({
   onResetAll,
   showPracticeHud,
 }) {
-  const currentBeat = useMetronomeEngineStore(selectMetronomeCurrentBeat);
-  const currentBar = useMetronomeEngineStore(selectMetronomeCurrentBar);
-  const isPlaying = useMetronomeEngineStore(selectMetronomeIsPlaying);
-  const audioReady = useMetronomeEngineStore(selectMetronomeAudioReady);
-  const audioError = useMetronomeEngineStore(selectMetronomeAudioError);
+  const { currentBeat, currentBar } = useMetronomeTickCursor();
+  const { isPlaying, audioReady, audioError } = useMetronomePlaybackStatus();
 
   const timeSig = useMetronomePrefsStore(
     (state) => selectMetronomePrefs(state).timeSig,
