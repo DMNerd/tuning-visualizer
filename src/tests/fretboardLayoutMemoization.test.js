@@ -27,7 +27,7 @@ function renderLayoutSnapshot(stringMeta) {
     }),
   );
 
-  const payload = markup.match(/data-layout-snapshot=\"([^\"]+)\"/)?.[1];
+  const payload = markup.match(/data-layout-snapshot="([^"]+)"/)?.[1];
   assert.ok(payload, "expected JSON payload from LayoutProbe");
   const decoded = payload
     .replaceAll("&quot;", '"')
