@@ -53,7 +53,9 @@ function scheduleClick(
 }
 
 export function useMetronomePlaybackStatus() {
-  return useMetronomeEngineStore(useShallow(selectMetronomeEnginePlaybackState));
+  return useMetronomeEngineStore(
+    useShallow(selectMetronomeEnginePlaybackState),
+  );
 }
 
 export function useMetronomeTickCursor() {

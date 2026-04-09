@@ -8,6 +8,8 @@ import { createTextFit } from "@/utils/textFit";
 
 const DEFAULT_VIRTUALIZATION_THRESHOLD = 100;
 const DEFAULT_OPTION_HEIGHT = 40;
+const MEASUREMENT_DELTA_PX = 2;
+const WIDTH_BUCKET_SIZE = 8;
 const OPTION_FONT_FAMILY =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 const OPTION_FONT_SIZE = 13;
@@ -41,6 +43,10 @@ export default function BaseCombobox({
   const [listViewportHeight, setListViewportHeight] = useState(0);
   const [listViewportWidth, setListViewportWidth] = useState(0);
   const listElementRef = useRef(null);
+  const measurementFrameRef = useRef(null);
+  const pendingMeasurementRef = useRef(null);
+  const latestViewportRef = useRef({ width: 0, height: 0 });
+  const widthBucketRef = useRef(0);
   const rowHeightCacheRef = useRef(new Map());
   const textFit = useMemo(
     () => createTextFit({ fontFamily: OPTION_FONT_FAMILY }),
@@ -235,6 +241,71 @@ export default function BaseCombobox({
     [listProps],
   );
 
+  const listContentWidth = Math.max(60, listViewportWidth - 20);
+  const viewportWidthBucket = Math.max(
+    WIDTH_BUCKET_SIZE,
+    Math.round(listContentWidth / WIDTH_BUCKET_SIZE) * WIDTH_BUCKET_SIZE,
+  );
+
+  const applyMeasurement = useCallback((nextWidth, nextHeight) => {
+    const previous = latestViewportRef.current;
+    const hasWidthDelta =
+      Math.abs(previous.width - nextWidth) >= MEASUREMENT_DELTA_PX;
+    const hasHeightDelta =
+      Math.abs(previous.height - nextHeight) >= MEASUREMENT_DELTA_PX;
+
+    if (!hasWidthDelta && !hasHeightDelta) {
+      return;
+    }
+
+    const nextViewport = {
+      width: hasWidthDelta ? nextWidth : previous.width,
+      height: hasHeightDelta ? nextHeight : previous.height,
+    };
+
+    latestViewportRef.current = nextViewport;
+
+    if (hasWidthDelta) {
+      setListViewportWidth(nextViewport.width);
+    }
+    if (hasHeightDelta) {
+      setListViewportHeight(nextViewport.height);
+    }
+  }, []);
+
+  const handleListMeasure = useCallback(
+    ({ width, height }) => {
+      pendingMeasurementRef.current = {
+        width: width ?? 0,
+        height: height ?? 0,
+      };
+
+      if (measurementFrameRef.current != null) {
+        return;
+      }
+
+      measurementFrameRef.current = window.requestAnimationFrame(() => {
+        measurementFrameRef.current = null;
+        const measurement = pendingMeasurementRef.current;
+        pendingMeasurementRef.current = null;
+
+        if (!measurement) return;
+
+        applyMeasurement(measurement.width, measurement.height);
+      });
+    },
+    [applyMeasurement],
+  );
+
+  useEffect(
+    () => () => {
+      if (measurementFrameRef.current != null) {
+        window.cancelAnimationFrame(measurementFrameRef.current);
+      }
+    },
+    [],
+  );
+
   const estimateOptionHeight = useCallback(
     (index) => {
       const option = filteredOptions[index];
@@ -244,17 +315,15 @@ export default function BaseCombobox({
       const label = getOptionLabel(option);
       if (!label) return DEFAULT_OPTION_HEIGHT;
 
-      const contentWidth = Math.max(60, listViewportWidth - 20);
-      const widthBucket = Math.max(8, Math.round(contentWidth / 8) * 8);
-      const cacheKey = `${optionKey}|${widthBucket}|${OPTION_FONT_SIZE}|${OPTION_FONT_FAMILY}`;
+      const cacheKey = `${optionKey}|${viewportWidthBucket}|${OPTION_FONT_SIZE}|${OPTION_FONT_FAMILY}`;
       const cached = rowHeightCacheRef.current.get(cacheKey);
       if (cached != null) return cached;
 
-      const lineCount = textFit.estimateWrappedLines(label, contentWidth, {
+      const lineCount = textFit.estimateWrappedLines(label, listContentWidth, {
         lineHeight: 17,
         fontWeight: 500,
         fontSize: OPTION_FONT_SIZE,
-        widthBucket: 8,
+        widthBucket: WIDTH_BUCKET_SIZE,
       });
       const estimatedHeight = Math.max(
         DEFAULT_OPTION_HEIGHT,
@@ -263,17 +332,31 @@ export default function BaseCombobox({
       rowHeightCacheRef.current.set(cacheKey, estimatedHeight);
       return estimatedHeight;
     },
-    [filteredOptions, getOptionKey, getOptionLabel, listViewportWidth, textFit],
+    [
+      filteredOptions,
+      getOptionKey,
+      getOptionLabel,
+      listContentWidth,
+      viewportWidthBucket,
+      textFit,
+    ],
   );
 
   useEffect(() => {
     rowHeightCacheRef.current.clear();
   }, [filteredOptions]);
 
+  useEffect(() => {
+    if (widthBucketRef.current === viewportWidthBucket) return;
+    widthBucketRef.current = viewportWidthBucket;
+    rowHeightCacheRef.current.clear();
+  }, [viewportWidthBucket]);
+
   const shouldVirtualize =
     enableVirtualization &&
     filteredOptions.length > virtualizationThreshold &&
-    listViewportHeight > 0;
+    listViewportHeight > 0 &&
+    listViewportWidth > 0;
 
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
@@ -353,10 +436,7 @@ export default function BaseCombobox({
         <FloatingListbox
           anchorRef={rootRef}
           isOpen={isOpen}
-          onMeasure={({ width, height }) => {
-            setListViewportWidth(width ?? 0);
-            setListViewportHeight(height ?? 0);
-          }}
+          onMeasure={handleListMeasure}
         >
           {typeof renderList === "function" ? (
             renderList({
