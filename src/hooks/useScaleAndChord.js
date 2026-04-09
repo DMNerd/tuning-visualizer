@@ -21,6 +21,14 @@ export function useScaleAndChord({
   chordPCs,
   chordRootPc,
 }) {
+  const degreeMap = useMemo(() => {
+    const map = new Map();
+    intervals.forEach((interval, ix) => {
+      map.set(interval, ix + 1);
+    });
+    return map;
+  }, [intervals]);
+
   const scaleSet = useMemo(() => {
     const N = system.divisions;
     return new Set(intervals.map((v) => (v + rootIx) % N));
@@ -30,10 +38,9 @@ export function useScaleAndChord({
     (pc) => {
       const N = system.divisions;
       const rel = (pc - rootIx + N) % N;
-      const ix = intervals.indexOf(rel);
-      return ix >= 0 ? ix + 1 : null;
+      return degreeMap.get(rel) ?? null;
     },
-    [system, rootIx, intervals],
+    [system, rootIx, degreeMap],
   );
 
   return useMemo(

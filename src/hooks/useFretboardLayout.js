@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import { toStringMetaMap } from "@/lib/meta/meta";
 
 /**
@@ -10,13 +10,7 @@ export function useFretboardLayout({
   dotSize = 14,
   stringMeta = null,
 }) {
-  const [metaByIndex, setMetaByIndex] = useState(() =>
-    toStringMetaMap(stringMeta),
-  );
-
-  useEffect(() => {
-    setMetaByIndex(toStringMetaMap(stringMeta));
-  }, [stringMeta]);
+  const metaByIndex = useMemo(() => toStringMetaMap(stringMeta), [stringMeta]);
 
   return useMemo(() => {
     const NUT_W = 16;
