@@ -10,7 +10,7 @@ import {
 import { parseTuningPack } from "@/lib/export/schema";
 import { useConfirm } from "@/hooks/useConfirm";
 import { toast } from "react-hot-toast";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithShallowPick } from "@/utils/memo";
 import {
   FiPlus,
   FiEdit2,
@@ -727,6 +727,11 @@ function pick(p) {
   };
 }
 
-const TuningPackEditorModalMemo = memoWithPick(TuningPackEditorModal, pick);
+// Comparator strategy: shallow/reference-first checks for large modal payloads.
+// Upstream should keep initialPack and submit/cancel handlers referentially stable.
+const TuningPackEditorModalMemo = memoWithShallowPick(
+  TuningPackEditorModal,
+  pick,
+);
 
 export default TuningPackEditorModalMemo;

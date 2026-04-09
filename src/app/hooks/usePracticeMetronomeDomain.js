@@ -56,12 +56,27 @@ export function usePracticeMetronomeDomain({
     [practicePanel.metronome, practicePanel.controls],
   );
 
-  return buildPracticeMetronomeDomainReturn({
-    randomize,
-    metronome,
-    practiceActions,
-    reset,
-    practicePanel,
-    metronomeControlModel,
-  });
+  // Memoize construction, not passthrough references.
+
+  const practiceDomain = useMemo(
+    () =>
+      buildPracticeMetronomeDomainReturn({
+        randomize,
+        metronome,
+        practiceActions,
+        reset,
+        practicePanel,
+        metronomeControlModel,
+      }),
+    [
+      randomize,
+      metronome,
+      practiceActions,
+      reset,
+      practicePanel,
+      metronomeControlModel,
+    ],
+  );
+
+  return practiceDomain;
 }

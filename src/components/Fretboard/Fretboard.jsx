@@ -1,4 +1,5 @@
 import {
+  memo,
   forwardRef,
   useLayoutEffect,
   useEffect,
@@ -15,7 +16,11 @@ import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
 import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
-import { memoWithPick } from "@/utils/memo";
+import {
+  arrayRefAndLengthEqual,
+  objectRefAndKeyEqual,
+  setRefAndSizeEqual,
+} from "@/utils/memo";
 import { createTextFit } from "@/utils/textFit";
 import {
   maybePreventContextMenu,
@@ -244,22 +249,34 @@ const Fretboard = forwardRef(function Fretboard(
     () => resolveVisibleCapoFret(capoFret, visibleFrets),
     [capoFret, visibleFrets],
   );
-  const betweenVisibleFretsX = useCallback(
-    (f) => {
-      if (f === 0) return betweenFretsX(0);
 
-      let prevVisible = 0;
-      for (let i = 0; i < visibleFrets.length; i += 1) {
-        const current = visibleFrets[i];
-        if (current >= f) {
-          return (wireX(prevVisible) + wireX(f)) / 2;
-        }
-        prevVisible = current;
+  const betweenVisibleFretsXByFret = useMemo(() => {
+    const xByFret = Array.from({ length: frets + 1 }, (_, fret) =>
+      betweenFretsX(fret),
+    );
+    if (frets < 1) return xByFret;
+
+    let prevVisible = 0;
+    let visibleIndex = 0;
+    const visibleCount = visibleFrets.length;
+
+    for (let fret = 1; fret <= frets; fret += 1) {
+      while (visibleIndex < visibleCount && visibleFrets[visibleIndex] < fret) {
+        prevVisible = visibleFrets[visibleIndex];
+        visibleIndex += 1;
       }
 
-      return betweenFretsX(f);
-    },
-    [betweenFretsX, visibleFrets, wireX],
+      if (visibleIndex < visibleCount && visibleFrets[visibleIndex] === fret) {
+        xByFret[fret] = (wireX(prevVisible) + wireX(fret)) / 2;
+      }
+    }
+
+    return xByFret;
+  }, [frets, betweenFretsX, visibleFrets, wireX]);
+
+  const betweenVisibleFretsX = useCallback(
+    (fret) => betweenVisibleFretsXByFret[fret] ?? betweenFretsX(fret),
+    [betweenVisibleFretsXByFret, betweenFretsX],
   );
 
   useEffect(() => {
@@ -311,6 +328,17 @@ const Fretboard = forwardRef(function Fretboard(
     () => createTextFit({ fontFamily: APP_FONT_STACK }),
     [],
   );
+  const openPcByString = useMemo(() => {
+    const N = Math.max(1, system.divisions);
+    const out = Array.from({ length: strings }, () => 0);
+
+    for (let s = 0; s < strings; s += 1) {
+      const sf = startFretFor(s);
+      out[s] = (pcForName(tuning[s]) + sf) % N;
+    }
+
+    return out;
+  }, [strings, tuning, startFretFor, system.divisions, pcForName]);
 
   const noteGeometry = useMemo(() => {
     const out = [];
@@ -327,11 +355,13 @@ const Fretboard = forwardRef(function Fretboard(
           : notePlacementMode === "onFret"
             ? wireX(f)
             : betweenVisibleFretsX(f);
+        const step = isOpen ? 0 : sf === 0 ? f : f - sf;
         out.push({
           key: `${s}-${f}`,
           s,
           f,
           sf,
+          step,
           cy,
           cx,
           isOpen,
@@ -358,9 +388,7 @@ const Fretboard = forwardRef(function Fretboard(
 
     for (let i = 0; i < noteGeometry.length; i += 1) {
       const slot = noteGeometry[i];
-      const openPc = (pcForName(tuning[slot.s]) + slot.sf) % N;
-      const step = slot.isOpen ? 0 : slot.sf === 0 ? slot.f : slot.f - slot.sf;
-      const pc = (openPc + step) % N;
+      const pc = (openPcByString[slot.s] + slot.step) % N;
       const inScale = scaleSet.has(pc);
       const inChord = chordPCs ? chordPCs.has(pc) : false;
       const isOverlayOutsideScaleChord =
@@ -492,8 +520,7 @@ const Fretboard = forwardRef(function Fretboard(
     activeIntervals,
     system.divisions,
     noteGeometry,
-    tuning,
-    pcForName,
+    openPcByString,
     scaleSet,
     chordPCs,
     chordRootPc,
@@ -883,39 +910,53 @@ const Fretboard = forwardRef(function Fretboard(
   );
 });
 
-/* =========================
-  Memo comparator using dequal
-========================= */
+function areFretboardPropsEqual(prev, next) {
+  if (!Object.is(prev.strings, next.strings)) return false;
+  if (!Object.is(prev.frets, next.frets)) return false;
+  if (!Object.is(prev.rootIx, next.rootIx)) return false;
+  if (!Object.is(prev.accidental, next.accidental)) return false;
+  if (!Object.is(prev.noteNaming, next.noteNaming)) return false;
+  if (!Object.is(prev.microLabelStyle, next.microLabelStyle)) return false;
+  if (!Object.is(prev.show, next.show)) return false;
+  if (!Object.is(prev.showOpen, next.showOpen)) return false;
+  if (!Object.is(prev.showFretNums, next.showFretNums)) return false;
+  if (!Object.is(prev.dotSize, next.dotSize)) return false;
+  if (!Object.is(prev.lefty, next.lefty)) return false;
+  if (!Object.is(prev.openOnlyInScale, next.openOnlyInScale)) return false;
+  if (!Object.is(prev.colorByDegree, next.colorByDegree)) return false;
+  if (!Object.is(prev.hideNonChord, next.hideNonChord)) return false;
+  if (!Object.is(prev.capoFret, next.capoFret)) return false;
+  if (!Object.is(prev.chordRootPc, next.chordRootPc)) return false;
+  if (!Object.is(prev.onSelectNote, next.onSelectNote)) return false;
+  if (!Object.is(prev.onSetCapo, next.onSetCapo)) return false;
 
-function pickRenderProps(p) {
-  return {
-    strings: p.strings,
-    frets: p.frets,
-    rootIx: p.rootIx,
-    accidental: p.accidental,
-    noteNaming: p.noteNaming,
-    microLabelStyle: p.microLabelStyle,
-    show: p.show,
-    showOpen: p.showOpen,
-    showFretNums: p.showFretNums,
-    dotSize: p.dotSize,
-    lefty: p.lefty,
-    openOnlyInScale: p.openOnlyInScale,
-    colorByDegree: p.colorByDegree,
-    hideNonChord: p.hideNonChord,
-    capoFret: p.capoFret,
-    system: p.system,
-    tuning: p.tuning,
-    intervals: p.intervals,
-    chordPCs: p.chordPCs,
-    chordRootPc: p.chordRootPc,
-    stringMeta: p.stringMeta,
-    boardMeta: p.boardMeta,
-    onSelectNote: p.onSelectNote,
-    onSetCapo: p.onSetCapo,
-  };
+  if (!objectRefAndKeyEqual(prev.system, next.system, "id")) return false;
+  if (!objectRefAndKeyEqual(prev.system, next.system, "divisions")) {
+    return false;
+  }
+  if (!arrayRefAndLengthEqual(prev.intervals, next.intervals)) return false;
+  if (!arrayRefAndLengthEqual(prev.tuning, next.tuning)) return false;
+  if (!arrayRefAndLengthEqual(prev.stringMeta, next.stringMeta)) return false;
+
+  if (!objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "notePlacement")) {
+    return false;
+  }
+  if (!objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "fretStyle")) {
+    return false;
+  }
+  if (
+    !arrayRefAndLengthEqual(
+      prev.boardMeta?.hiddenFrets,
+      next.boardMeta?.hiddenFrets,
+    )
+  ) {
+    return false;
+  }
+  if (!setRefAndSizeEqual(prev.chordPCs, next.chordPCs)) return false;
+
+  return true;
 }
 
-const FretboardMemo = memoWithPick(Fretboard, pickRenderProps);
+const FretboardMemo = memo(Fretboard, areFretboardPropsEqual);
 
 export default FretboardMemo;

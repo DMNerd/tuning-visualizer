@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useLatest, useWindowSize } from "react-use";
 import { findSystemByEdo, getSystemLabel } from "@/lib/theory/tuning";
-import { memoWithPick } from "@/utils/memo";
+import { memoWithShallowPick } from "@/utils/memo";
 import ModalFrame from "@/components/UI/modals/ModalFrame";
 import {
   formatStringsCount,
@@ -248,9 +248,11 @@ function TuningPackManagerModal({
 }
 
 function pick(p) {
+  const tuningsLength = Array.isArray(p.tunings) ? p.tunings.length : 0;
   return {
     isOpen: p.isOpen,
     tunings: p.tunings,
+    tuningsLength,
     systems: p.systems,
     onClose: p.onClose,
     onEdit: p.onEdit,
@@ -258,6 +260,11 @@ function pick(p) {
   };
 }
 
-const TuningPackManagerModalMemo = memoWithPick(TuningPackManagerModal, pick);
+// Comparator strategy: shallow/reference-first checks to avoid deep modal prop diffs.
+// Upstream should provide stable refs for tunings/systems and action callbacks.
+const TuningPackManagerModalMemo = memoWithShallowPick(
+  TuningPackManagerModal,
+  pick,
+);
 
 export default TuningPackManagerModalMemo;

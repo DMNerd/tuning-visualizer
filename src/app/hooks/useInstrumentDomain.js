@@ -177,16 +177,35 @@ export function useInstrumentDomain({
     [sharedPayload],
   );
 
-  return buildInstrumentDomainReturn({
-    instrumentState,
-    instrumentActions,
-    instrumentDerived,
-    fretsSlice,
-    capo,
-    presets,
-    customTunings,
-    customPackEditor,
-    buildInstrumentPanel,
-    buildInstrumentControlModelWithReset,
-  });
+  // Memoize construction, not passthrough references.
+
+  const instrumentDomain = useMemo(
+    () =>
+      buildInstrumentDomainReturn({
+        instrumentState,
+        instrumentActions,
+        instrumentDerived,
+        fretsSlice,
+        capo,
+        presets,
+        customTunings,
+        customPackEditor,
+        buildInstrumentPanel,
+        buildInstrumentControlModelWithReset,
+      }),
+    [
+      instrumentState,
+      instrumentActions,
+      instrumentDerived,
+      fretsSlice,
+      capo,
+      presets,
+      customTunings,
+      customPackEditor,
+      buildInstrumentPanel,
+      buildInstrumentControlModelWithReset,
+    ],
+  );
+
+  return instrumentDomain;
 }

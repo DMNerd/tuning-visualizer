@@ -1,6 +1,6 @@
 import BaseCombobox from "@/components/UI/combobox/BaseCombobox";
 import clsx from "clsx";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 export default function ScalePicker({
   id,
@@ -14,7 +14,7 @@ export default function ScalePicker({
     (opt) => `${opt.systemId ?? "sys"}-${opt.label}`,
     [],
   );
-  const options = useMemo(() => scaleOptions, [scaleOptions]);
+  const options = scaleOptions;
   const getOptionLabel = useCallback((opt) => opt.label, []);
   const getFilterTerms = useCallback((opt) => [opt.label, opt.systemId], []);
   const handleSelect = useCallback(

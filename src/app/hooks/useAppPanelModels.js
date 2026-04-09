@@ -20,6 +20,33 @@ export function useAppPanelModels({
 }) {
   const { buildInstrumentPanel, buildInstrumentControlModelWithReset } =
     instrumentDomain;
+  const {
+    system: theorySystem,
+    scale: theoryScale,
+    chord: theoryChord,
+  } = theoryDomain;
+  const { randomize, practiceActions, practicePanel, metronomeControlModel } =
+    practiceDomain;
+
+  const { systemId, system, sysNames, nameForPc, rootIx, root, setRoot } =
+    theorySystem;
+  const { scale, setScale, scaleOptions, intervals, defaultScale } =
+    theoryScale;
+  const {
+    chordRoot,
+    setChordRoot,
+    chordType,
+    setChordType,
+    showChord,
+    setShowChord,
+    hideNonChord,
+    setHideNonChord,
+    chordRootIx,
+    chordOverlayPcs,
+    chordTonePcs,
+  } = theoryChord;
+  const { randomizeMode, setRandomizeMode } = randomize;
+  const { randomizeScaleNow } = practiceActions;
 
   const instrumentPanel = useMemo(
     () => buildInstrumentPanel(resetInstrumentFactory),
@@ -35,50 +62,72 @@ export function useAppPanelModels({
     () =>
       buildTheoryControlModel({
         system: {
-          systemId: theoryDomain.system.systemId,
-          system: theoryDomain.system.system,
-          sysNames: theoryDomain.system.sysNames,
-          nameForPc: theoryDomain.system.nameForPc,
-          rootIx: theoryDomain.system.rootIx,
+          systemId,
+          system,
+          sysNames,
+          nameForPc,
+          rootIx,
         },
         scale: {
-          root: theoryDomain.system.root,
-          setRoot: theoryDomain.system.setRoot,
-          scale: theoryDomain.scale.scale,
-          setScale: theoryDomain.scale.setScale,
-          scaleOptions: theoryDomain.scale.scaleOptions,
-          intervals: theoryDomain.scale.intervals,
+          root,
+          setRoot,
+          scale,
+          setScale,
+          scaleOptions,
+          intervals,
         },
-        chord: theoryDomain.chord,
+        chord: {
+          chordRoot,
+          setChordRoot,
+          chordType,
+          setChordType,
+          showChord,
+          setShowChord,
+          hideNonChord,
+          setHideNonChord,
+          chordRootIx,
+          chordOverlayPcs,
+          chordTonePcs,
+        },
         randomize: {
-          randomizeMode: practiceDomain.randomize.randomizeMode,
-          setRandomizeMode: practiceDomain.randomize.setRandomizeMode,
-          onRandomize: practiceDomain.practiceActions.randomizeScaleNow,
+          randomizeMode,
+          setRandomizeMode,
+          onRandomize: randomizeScaleNow,
         },
         defaults: {
           root: ROOT_DEFAULT,
-          scale: theoryDomain.scale.defaultScale ?? SCALE_DEFAULT,
+          scale: defaultScale ?? SCALE_DEFAULT,
           chordRoot: ROOT_DEFAULT,
           chordType: CHORD_DEFAULT,
         },
       }),
     [
-      theoryDomain.system.systemId,
-      theoryDomain.system.system,
-      theoryDomain.system.sysNames,
-      theoryDomain.system.nameForPc,
-      theoryDomain.system.rootIx,
-      theoryDomain.system.root,
-      theoryDomain.system.setRoot,
-      theoryDomain.scale.scale,
-      theoryDomain.scale.setScale,
-      theoryDomain.scale.scaleOptions,
-      theoryDomain.scale.intervals,
-      theoryDomain.scale.defaultScale,
-      theoryDomain.chord,
-      practiceDomain.randomize.randomizeMode,
-      practiceDomain.randomize.setRandomizeMode,
-      practiceDomain.practiceActions.randomizeScaleNow,
+      systemId,
+      system,
+      sysNames,
+      nameForPc,
+      rootIx,
+      root,
+      setRoot,
+      scale,
+      setScale,
+      scaleOptions,
+      intervals,
+      defaultScale,
+      chordRoot,
+      setChordRoot,
+      chordType,
+      setChordType,
+      showChord,
+      setShowChord,
+      hideNonChord,
+      setHideNonChord,
+      chordRootIx,
+      chordOverlayPcs,
+      chordTonePcs,
+      randomizeMode,
+      setRandomizeMode,
+      randomizeScaleNow,
     ],
   );
 
@@ -95,17 +144,17 @@ export function useAppPanelModels({
       buildDisplayControlModel({
         displayPrefs,
         displaySetters,
-        degreeCount: theoryDomain.scale.intervals.length,
+        degreeCount: intervals.length,
       }),
-    [displayPrefs, displaySetters, theoryDomain.scale.intervals.length],
+    [displayPrefs, displaySetters, intervals.length],
   );
 
   return {
     instrumentPanel,
     instrumentControlModel,
     theoryPanel,
-    practicePanel: practiceDomain.practicePanel,
-    metronomeControlModel: practiceDomain.metronomeControlModel,
+    practicePanel,
+    metronomeControlModel,
     displayControlModel,
   };
 }

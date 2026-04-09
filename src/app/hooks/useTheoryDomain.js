@@ -162,8 +162,8 @@ export function useTheoryDomain({
     [nameForPc, sysNames, setChordRoot, setRoot],
   );
 
-  return buildTheoryDomainReturn({
-    system: {
+  const systemSlice = useMemo(
+    () => ({
       systemId,
       setSystemId,
       system,
@@ -173,15 +173,33 @@ export function useTheoryDomain({
       root,
       setRoot,
       pcFromName,
-    },
-    scale: {
+    }),
+    [
+      systemId,
+      setSystemId,
+      system,
+      rootIx,
+      nameForPc,
+      sysNames,
+      root,
+      setRoot,
+      pcFromName,
+    ],
+  );
+
+  const scaleSlice = useMemo(
+    () => ({
       scale,
       setScale,
       scaleOptions,
       intervals,
       defaultScale,
-    },
-    chord: {
+    }),
+    [scale, setScale, scaleOptions, intervals, defaultScale],
+  );
+
+  const chordSlice = useMemo(
+    () => ({
       chordRoot,
       setChordRoot,
       chordType,
@@ -193,9 +211,39 @@ export function useTheoryDomain({
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,
-    },
-    handlers: {
+    }),
+    [
+      chordRoot,
+      setChordRoot,
+      chordType,
+      setChordType,
+      showChord,
+      setShowChord,
+      hideNonChord,
+      setHideNonChord,
+      chordRootIx,
+      chordOverlayPcs,
+      chordTonePcs,
+    ],
+  );
+
+  const handlersSlice = useMemo(
+    () => ({
       handleSelectNote,
-    },
-  });
+    }),
+    [handleSelectNote],
+  );
+
+  const theoryDomain = useMemo(
+    () =>
+      buildTheoryDomainReturn({
+        system: systemSlice,
+        scale: scaleSlice,
+        chord: chordSlice,
+        handlers: handlersSlice,
+      }),
+    [systemSlice, scaleSlice, chordSlice, handlersSlice],
+  );
+
+  return theoryDomain;
 }

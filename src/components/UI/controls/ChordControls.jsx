@@ -1,4 +1,4 @@
-import { useId, useMemo } from "react";
+import { memo, useId, useMemo } from "react";
 import clsx from "clsx";
 import Section from "@/components/UI/Section";
 import {
@@ -7,7 +7,11 @@ import {
   STANDARD_CHORD_TYPES,
 } from "@/lib/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
-import { memoWithPick } from "@/utils/memo";
+import {
+  arrayRefAndLengthEqual,
+  objectRefAndKeyEqual,
+  setRefAndSizeEqual,
+} from "@/utils/memo";
 import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
@@ -289,35 +293,62 @@ function ChordControls({ state, actions, meta }) {
   );
 }
 
-function pick(p) {
-  const s = p.state ?? {};
-  const a = p.actions ?? {};
-  const m = p.meta ?? {};
+function areChordControlsPropsEqual(prev, next) {
+  const prevState = prev.state ?? {};
+  const nextState = next.state ?? {};
+  if (!Object.is(prevState.root, nextState.root)) return false;
+  if (!Object.is(prevState.type, nextState.type)) return false;
+  if (!Object.is(prevState.showChord, nextState.showChord)) return false;
+  if (!Object.is(prevState.hideNonChord, nextState.hideNonChord)) return false;
+  if (!Object.is(prevState.defaultRoot, nextState.defaultRoot)) return false;
+  if (!Object.is(prevState.defaultType, nextState.defaultType)) return false;
 
-  return {
-    root: s.root,
-    type: s.type,
-    showChord: s.showChord,
-    hideNonChord: s.hideNonChord,
-    defaultRoot: s.defaultRoot,
-    defaultType: s.defaultType,
-    onRootChange: a.onRootChange,
-    onTypeChange: a.onTypeChange,
-    setShowChord: a.setShowChord,
-    setHideNonChord: a.setHideNonChord,
-    sysNames: m.sysNames,
-    nameForPc: m.nameForPc,
-    supportsMicrotonal: m.supportsMicrotonal,
-    system: m.system,
-    rootIx: m.rootIx,
-    intervals: m.intervals,
-    chordTonePcs: m.chordTonePcs,
-    chordOverlayPcs: m.chordOverlayPcs,
-    chordRootPc: m.chordRootPc,
-    chordFit: m.chordFit,
-  };
+  const prevActions = prev.actions ?? {};
+  const nextActions = next.actions ?? {};
+  if (!Object.is(prevActions.onRootChange, nextActions.onRootChange)) {
+    return false;
+  }
+  if (!Object.is(prevActions.onTypeChange, nextActions.onTypeChange)) {
+    return false;
+  }
+  if (!Object.is(prevActions.setShowChord, nextActions.setShowChord)) {
+    return false;
+  }
+  if (!Object.is(prevActions.setHideNonChord, nextActions.setHideNonChord)) {
+    return false;
+  }
+
+  const prevMeta = prev.meta ?? {};
+  const nextMeta = next.meta ?? {};
+  if (!Object.is(prevMeta.sysNames, nextMeta.sysNames)) return false;
+  if (!Object.is(prevMeta.nameForPc, nextMeta.nameForPc)) return false;
+  if (!Object.is(prevMeta.supportsMicrotonal, nextMeta.supportsMicrotonal)) {
+    return false;
+  }
+  if (!objectRefAndKeyEqual(prevMeta.system, nextMeta.system, "id")) {
+    return false;
+  }
+  if (!objectRefAndKeyEqual(prevMeta.system, nextMeta.system, "divisions")) {
+    return false;
+  }
+  if (!Object.is(prevMeta.rootIx, nextMeta.rootIx)) return false;
+  if (!arrayRefAndLengthEqual(prevMeta.intervals, nextMeta.intervals)) {
+    return false;
+  }
+  if (!setRefAndSizeEqual(prevMeta.chordTonePcs, nextMeta.chordTonePcs)) {
+    return false;
+  }
+  if (!setRefAndSizeEqual(prevMeta.chordOverlayPcs, nextMeta.chordOverlayPcs)) {
+    return false;
+  }
+  if (!Object.is(prevMeta.chordRootPc, nextMeta.chordRootPc)) return false;
+  if (!Object.is(prevMeta.chordFit, nextMeta.chordFit)) return false;
+
+  return true;
 }
 
-const ChordControlsMemo = memoWithPick(ChordControls, pick);
+// Comparator strategy: shallow/reference-first checks keep comparator cost low.
+// Upstream should keep stable references for system/interval/chord set props.
+const ChordControlsMemo = memo(ChordControls, areChordControlsPropsEqual);
 
 export default ChordControlsMemo;

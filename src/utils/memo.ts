@@ -10,6 +10,41 @@ export function memoWithPick<P>(
 
 type AnyRecord = Record<string, unknown>;
 
+// Comparator guideline:
+// Prefer primitive and reference checks first; use deep compare only when
+// unavoidable for correctness.
+
+function lengthOfArray(value: unknown) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+function sizeOfSet(value: unknown) {
+  return value instanceof Set ? value.size : 0;
+}
+
+export function arrayRefAndLengthEqual(
+  prev: unknown[] | null | undefined,
+  next: unknown[] | null | undefined,
+) {
+  return (
+    Object.is(prev, next) && Object.is(lengthOfArray(prev), lengthOfArray(next))
+  );
+}
+
+export function setRefAndSizeEqual<T>(
+  prev: Set<T> | null | undefined,
+  next: Set<T> | null | undefined,
+) {
+  return Object.is(prev, next) && Object.is(sizeOfSet(prev), sizeOfSet(next));
+}
+
+export function objectRefAndKeyEqual<
+  T extends Record<string, unknown>,
+  K extends keyof T,
+>(prev: T | null | undefined, next: T | null | undefined, key: K) {
+  return Object.is(prev, next) && Object.is(prev?.[key], next?.[key]);
+}
+
 function shallowEqualObjects(a: AnyRecord, b: AnyRecord) {
   if (a === b) return true;
   const aKeys = Object.keys(a);
@@ -49,7 +84,9 @@ type GroupedPanelProps = {
 export function memoPanel<P extends GroupedPanelProps>(
   Component: ComponentType<P>,
 ) {
-  return memoWithPick(Component, (props) => ({
+  // Grouped panel props should rely on stable upstream references.
+  // Keep comparator shallow/reference-first for predictable low-cost checks.
+  return memoWithShallowPick(Component, (props) => ({
     state: props.state,
     actions: props.actions,
     meta: props.meta,
