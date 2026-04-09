@@ -79,9 +79,35 @@ export default defineConfig(({ command, mode }) => {
       rolldownOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes("node_modules")) {
-              return "vendor";
+            if (!id.includes("node_modules")) {
+              return;
             }
+
+            if (id.includes("/react/") || id.includes("/react-dom/")) {
+              return "react-core";
+            }
+
+            if (
+              id.includes("/react-icons/") ||
+              id.includes("/react-hot-toast/") ||
+              id.includes("/clsx/")
+            ) {
+              return "ui-kit";
+            }
+
+            if (id.includes("/fuse.js/")) {
+              return "search";
+            }
+
+            if (id.includes("/json-edit-react/")) {
+              return "editor";
+            }
+
+            if (id.includes("/zustand/")) {
+              return "state";
+            }
+
+            return "vendor";
           },
         },
       },
