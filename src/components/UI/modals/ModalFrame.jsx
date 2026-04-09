@@ -1,9 +1,31 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useClickAway, useKey, useLatest, useLockBodyScroll } from "react-use";
 import clsx from "clsx";
 
 const DEFAULT_CARD_CLASS = "tv-modal__card";
+const FOCUSABLE_SELECTOR = [
+  "button:not([disabled])",
+  "a[href]",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+  "[contenteditable='true']",
+].join(", ");
+
+function isVisible(element) {
+  if (!element || !(element instanceof HTMLElement)) return false;
+  if (element.hidden) return false;
+  return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+}
+
+function getFocusableElements(container) {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (element) => element instanceof HTMLElement && !element.hasAttribute("disabled") && isVisible(element),
+  );
+}
 
 function normalizeShortcuts(closeHotkeys) {
   if (!Array.isArray(closeHotkeys)) return [];
@@ -40,6 +62,7 @@ function ModalFrame({
 }) {
   const onCloseRef = useLatest(onClose);
   const cardRef = useRef(null);
+  const previousActiveElementRef = useRef(null);
 
   const shortcuts = useMemo(
     () => normalizeShortcuts(closeHotkeys),
@@ -96,6 +119,61 @@ function ModalFrame({
     ["mousedown", "touchstart"],
   );
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const card = cardRef.current;
+    if (!card) return undefined;
+
+    previousActiveElementRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const focusableElements = getFocusableElements(card);
+    const fallbackTarget = card;
+    const initialFocusTarget = focusableElements[0] ?? fallbackTarget;
+    initialFocusTarget?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key !== "Tab") return;
+
+      const currentFocusable = getFocusableElements(card);
+      if (currentFocusable.length === 0) {
+        event.preventDefault();
+        fallbackTarget.focus();
+        return;
+      }
+
+      const firstFocusable = currentFocusable[0];
+      const lastFocusable = currentFocusable[currentFocusable.length - 1];
+      const activeElement = document.activeElement;
+      const isShiftTab = event.shiftKey;
+
+      if (isShiftTab) {
+        if (activeElement === firstFocusable || !card.contains(activeElement)) {
+          event.preventDefault();
+          lastFocusable.focus();
+        }
+        return;
+      }
+
+      if (activeElement === lastFocusable || !card.contains(activeElement)) {
+        event.preventDefault();
+        firstFocusable.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      const previousActiveElement = previousActiveElementRef.current;
+      if (previousActiveElement && document.contains(previousActiveElement)) {
+        previousActiveElement.focus();
+      }
+      previousActiveElementRef.current = null;
+    };
+  }, [isOpen]);
+
   const target = resolvePortalTarget(portalTarget);
   if (!isOpen || !target) return null;
 
@@ -114,6 +192,7 @@ function ModalFrame({
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledby}
         {...cardProps}
+        tabIndex={cardProps.tabIndex ?? -1}
       >
         {content}
       </div>
