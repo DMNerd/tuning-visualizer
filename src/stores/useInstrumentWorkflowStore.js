@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createGlobalStorage } from "@/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
@@ -134,7 +135,7 @@ export const useInstrumentWorkflowStore = create(
     {
       name: STORAGE_KEYS.CUSTOM_TUNINGS,
       version: 1,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createGlobalStorage()),
       migrate: (persistedState) => {
         if (Array.isArray(persistedState)) {
           didHydrateLegacyWorkflowPayload = true;

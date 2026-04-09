@@ -9,6 +9,7 @@ import {
   SYSTEM_DEFAULT,
 } from "@/lib/config/appDefaults";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createGlobalStorage } from "@/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 
 function isNonEmptyString(value) {
@@ -98,7 +99,7 @@ export const useTheoryStore = create(
     {
       name: STORAGE_KEYS.THEORY_PREFS,
       version: 1,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createGlobalStorage()),
       migrate: (persistedState) => {
         if (hasValidPersistedTheory(persistedState)) {
           return persistedState;

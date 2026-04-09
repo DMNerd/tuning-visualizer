@@ -2,10 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { scopeKey } from "@/lib/storage/windowScope";
 
 class MemoryStorage {
   constructor() {
     this.map = new Map();
+    this.setItemCounts = new Map();
   }
 
   getItem(key) {
@@ -14,6 +16,7 @@ class MemoryStorage {
 
   setItem(key, value) {
     this.map.set(key, String(value));
+    this.setItemCounts.set(key, (this.setItemCounts.get(key) || 0) + 1);
   }
 
   removeItem(key) {
@@ -22,11 +25,28 @@ class MemoryStorage {
 
   clear() {
     this.map.clear();
+    this.setItemCounts.clear();
+  }
+
+  getSetItemCount(key) {
+    return this.setItemCounts.get(key) || 0;
   }
 }
 
 const storage = new MemoryStorage();
+const sessionStorage = new MemoryStorage();
 globalThis.localStorage = storage;
+globalThis.sessionStorage = sessionStorage;
+
+function setActiveWindowId(windowId) {
+  if (windowId === null) {
+    sessionStorage.removeItem("tv.windowId");
+    delete globalThis.__TV_WINDOW_ID__;
+    return;
+  }
+  sessionStorage.setItem("tv.windowId", windowId);
+  globalThis.__TV_WINDOW_ID__ = windowId;
+}
 
 async function importFresh(relativePath) {
   const url = new URL(relativePath, import.meta.url);
@@ -36,6 +56,10 @@ async function importFresh(relativePath) {
 function readStoredJson(key) {
   const raw = storage.getItem(key);
   return raw ? JSON.parse(raw) : null;
+}
+
+function scopedKeyForWindow(baseKey, windowId) {
+  return `${baseKey}:${windowId}`;
 }
 
 test("legacy metronome prefs shape hydrates into normalized prefs store shape", async () => {
@@ -182,10 +206,10 @@ test("instrument core migration clamps strings/frets and reset action restores f
   assert.equal(state.fretsTouched, false);
 });
 
-test("instrument core prefers valid persisted payload over legacy keys", async () => {
+test("instrument core keeps global default tunings while using persisted strings/frets", async () => {
   storage.clear();
   storage.setItem(
-    STORAGE_KEYS.INSTRUMENT_CORE,
+    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
     JSON.stringify({
       state: {
         strings: 7,
@@ -214,11 +238,11 @@ test("instrument core prefers valid persisted payload over legacy keys", async (
   assert.equal(state.strings, 7);
   assert.equal(state.frets, 22);
   assert.deepEqual(state.userDefaultTuningMap, {
-    "12-TET:7": ["A", "D", "G", "C", "E", "A", "D"],
+    legacy: ["E", "A", "D", "G", "B", "E"],
   });
   assert.equal(storage.getItem(STORAGE_KEYS.STRINGS), null);
   assert.equal(storage.getItem(STORAGE_KEYS.FRETS), null);
-  assert.equal(storage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING), null);
+  assert.notEqual(storage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING), null);
 });
 
 test("instrument core store preserves tuning/stringMeta/boardMeta mutation semantics", async () => {
@@ -257,6 +281,26 @@ test("instrument core store preserves tuning/stringMeta/boardMeta mutation seman
     "D",
     "G",
   ]);
+  const globalDefaults = readStoredJson(STORAGE_KEYS.USER_DEFAULT_TUNING);
+  assert.deepEqual(globalDefaults?.["12-TET:4"], ["D", "A", "D", "G"]);
+});
+
+test("instrument core avoids redundant global default tuning writes for no-op updates", async () => {
+  storage.clear();
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+
+  useInstrumentCoreStore.getState().updateUserDefaultTuningMap(() => {});
+  useInstrumentCoreStore.getState().updateUserDefaultTuningMap(() => {});
+  useInstrumentCoreStore.getState().setUserDefaultTuningMap((draft) => draft);
+  assert.equal(storage.getSetItemCount(STORAGE_KEYS.USER_DEFAULT_TUNING), 0);
+
+  useInstrumentCoreStore.getState().updateUserDefaultTuningMap((draft) => {
+    draft["12-TET:6"] = ["E", "A", "D", "G", "B", "E"];
+  });
+  useInstrumentCoreStore.getState().updateUserDefaultTuningMap(() => {});
+  assert.equal(storage.getSetItemCount(STORAGE_KEYS.USER_DEFAULT_TUNING), 1);
 });
 
 test("instrument core setTuning updater recovers from invalid tuning shape", async () => {
@@ -277,6 +321,7 @@ test("instrument core setTuning updater recovers from invalid tuning shape", asy
 
 test("display prefs store hydrates via globalThis localStorage adapter", async () => {
   storage.clear();
+  sessionStorage.clear();
   storage.setItem(
     STORAGE_KEYS.DISPLAY_PREFS,
     JSON.stringify({
@@ -293,6 +338,27 @@ test("display prefs store hydrates via globalThis localStorage adapter", async (
   const state = useDisplayPrefsStore.getState();
   assert.equal(state.prefs.accidental, "flat");
   assert.equal(state.prefs.dotSize, 28);
+});
+
+test("global stores migrate scoped payloads back to unscoped keys", async () => {
+  storage.clear();
+  sessionStorage.clear();
+  storage.setItem(
+    scopeKey(STORAGE_KEYS.THEME),
+    JSON.stringify({
+      state: { theme: "dark" },
+      version: 0,
+    }),
+  );
+
+  const { useThemeStore } = await importFresh("../stores/useThemeStore.js");
+  await useThemeStore.persist.rehydrate();
+
+  const unscopedPersisted = readStoredJson(STORAGE_KEYS.THEME);
+  assert.equal(useThemeStore.getState().theme, "dark");
+  assert.equal(typeof unscopedPersisted, "object");
+  assert.equal(unscopedPersisted?.state?.theme, "dark");
+  assert.equal(storage.getItem(scopeKey(STORAGE_KEYS.THEME)), null);
 });
 
 test("value-or-updater setters preserve direct assignment and updater semantics", async () => {
@@ -453,8 +519,18 @@ test("theory and workflow action names and behaviors remain stable", async () =>
 
 test("resetAllStores restores defaults and clears only app-owned keys", async () => {
   storage.clear();
+  sessionStorage.clear();
+  setActiveWindowId("window-main");
   storage.setItem("third.party", "keep-me");
   storage.setItem("tv.random", "keep-me-too");
+  storage.setItem(STORAGE_KEYS.STRINGS, "8");
+  storage.setItem(STORAGE_KEYS.FRETS, "24");
+  storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
+  storage.setItem(STORAGE_KEYS.ROOT, "D");
+  storage.setItem(
+    STORAGE_KEYS.USER_DEFAULT_TUNING,
+    JSON.stringify({ "12-TET:6": ["E", "A", "D", "G", "B", "E"] }),
+  );
 
   const { resetAllStores } = await importFresh("../stores/resetAllStores.js");
   const { useDisplayPrefsStore } =
@@ -507,7 +583,7 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   assert.equal(useThemeStore.getState().theme, "auto");
 
   assert.equal(storage.getItem(STORAGE_KEYS.THEORY_PREFS), null);
-  assert.equal(storage.getItem(STORAGE_KEYS.INSTRUMENT_CORE), null);
+  assert.equal(storage.getItem(scopeKey(STORAGE_KEYS.INSTRUMENT_CORE)), null);
   assert.equal(storage.getItem(STORAGE_KEYS.DISPLAY_PREFS), null);
   assert.equal(storage.getItem(STORAGE_KEYS.METRONOME_PREFS), null);
   assert.equal(storage.getItem(STORAGE_KEYS.THEME), null);
@@ -519,6 +595,40 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
   assert.equal(storage.getItem(STORAGE_KEYS.ROOT), null);
   assert.equal(storage.getItem("third.party"), "keep-me");
   assert.equal(storage.getItem("tv.random"), "keep-me-too");
+});
+
+test("resetAllStores only clears instrument scoped keys for the active window", async () => {
+  storage.clear();
+  sessionStorage.clear();
+
+  const windowA = "window-a";
+  const windowB = "window-b";
+  setActiveWindowId(windowA);
+
+  storage.setItem(
+    scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowA),
+    JSON.stringify({ state: { strings: 7 }, version: 2 }),
+  );
+  storage.setItem(
+    scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowB),
+    JSON.stringify({ state: { strings: 5 }, version: 2 }),
+  );
+  storage.setItem(STORAGE_KEYS.DISPLAY_PREFS, JSON.stringify({ state: {} }));
+  storage.setItem(STORAGE_KEYS.CUSTOM_TUNINGS, JSON.stringify({ state: [] }));
+
+  const { resetAllStores } = await importFresh("../stores/resetAllStores.js");
+  resetAllStores();
+
+  assert.equal(
+    storage.getItem(scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowA)),
+    null,
+  );
+  assert.notEqual(
+    storage.getItem(scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowB)),
+    null,
+  );
+  assert.equal(storage.getItem(STORAGE_KEYS.DISPLAY_PREFS), null);
+  assert.equal(storage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS), null);
 });
 
 test("generated immer setters preserve non-target keys on full-store drafts", async () => {

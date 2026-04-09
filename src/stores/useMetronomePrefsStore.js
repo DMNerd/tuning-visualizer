@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 
 import { METRONOME_DEFAULTS } from "@/lib/config/appDefaults";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createGlobalStorage } from "@/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
 
@@ -96,7 +97,7 @@ export const useMetronomePrefsStore = create(
     {
       name: STORAGE_KEYS.METRONOME_PREFS,
       version: 1,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createGlobalStorage()),
       migrate: (persistedState) => {
         const normalized = normalizeLegacyShape(persistedState);
         if (normalized && !persistedState?.prefs) {

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createGlobalStorage } from "@/lib/storage/scopedStorage";
 
 export const useThemeStore = create(
   persist(
@@ -12,7 +13,7 @@ export const useThemeStore = create(
     }),
     {
       name: STORAGE_KEYS.THEME,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createGlobalStorage()),
       partialize: (state) => ({ theme: state.theme }),
     },
   ),

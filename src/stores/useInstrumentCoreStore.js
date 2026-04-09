@@ -11,8 +11,11 @@ import {
   FRETS_MAX,
 } from "@/lib/config/appDefaults";
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createScopedStorage } from "@/lib/storage/scopedStorage";
 import { clamp } from "@/utils/math";
 import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
+
+let lastSerializedGlobalDefaultTuningMap = null;
 
 function clampMaybeNumber(value, min, max, fallback) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -48,6 +51,9 @@ function readLegacyDefaultTuningMap() {
     );
     if (!raw) return { value: {}, found: false };
     const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      lastSerializedGlobalDefaultTuningMap = raw;
+    }
     return {
       value:
         parsed && typeof parsed === "object" && !Array.isArray(parsed)
@@ -60,15 +66,34 @@ function readLegacyDefaultTuningMap() {
   }
 }
 
+function serializeDefaultTuningMap(value) {
+  return JSON.stringify(
+    value && typeof value === "object" && !Array.isArray(value) ? value : {},
+  );
+}
+
+function syncGlobalDefaultTunings(value) {
+  if (typeof globalThis.localStorage === "undefined") return;
+  const serialized = serializeDefaultTuningMap(value);
+  if (serialized === lastSerializedGlobalDefaultTuningMap) {
+    return;
+  }
+  try {
+    globalThis.localStorage.setItem(
+      STORAGE_KEYS.USER_DEFAULT_TUNING,
+      serialized,
+    );
+    lastSerializedGlobalDefaultTuningMap = serialized;
+  } catch {
+    // Ignore write failures.
+  }
+}
+
 function isValidPersistedMap(value) {
   return !!(value && typeof value === "object" && !Array.isArray(value));
 }
 
-const LEGACY_CORE_KEYS = [
-  STORAGE_KEYS.STRINGS,
-  STORAGE_KEYS.FRETS,
-  STORAGE_KEYS.USER_DEFAULT_TUNING,
-];
+const LEGACY_CORE_KEYS = [STORAGE_KEYS.STRINGS, STORAGE_KEYS.FRETS];
 let shouldCleanupLegacyInstrumentCoreKeys = false;
 
 export const useInstrumentCoreStore = create(
@@ -87,6 +112,9 @@ export const useInstrumentCoreStore = create(
         FRETS_FACTORY,
       );
       const legacyDefaults = readLegacyDefaultTuningMap();
+      lastSerializedGlobalDefaultTuningMap = serializeDefaultTuningMap(
+        legacyDefaults.value,
+      );
       if (legacyStrings.found || legacyFrets.found || legacyDefaults.found) {
         shouldCleanupLegacyInstrumentCoreKeys = true;
       }
@@ -133,6 +161,7 @@ export const useInstrumentCoreStore = create(
               "userDefaultTuningMap",
               valueOrUpdater,
             );
+            syncGlobalDefaultTunings(state.userDefaultTuningMap);
           }),
         updateUserDefaultTuningMap: (draftUpdater) =>
           set((state) => {
@@ -141,6 +170,7 @@ export const useInstrumentCoreStore = create(
               "userDefaultTuningMap",
               draftUpdater,
             );
+            syncGlobalDefaultTunings(state.userDefaultTuningMap);
           }),
         resetInstrumentPrefs: (nextStringsFactory, nextFretsFactory) =>
           set({
@@ -149,22 +179,23 @@ export const useInstrumentCoreStore = create(
             fretsTouched: false,
           }),
         resetCore: () =>
-          set({
-            strings: STR_FACTORY,
-            frets: FRETS_FACTORY,
-            fretsTouched: false,
-            tuning: [],
-            stringMeta: null,
-            boardMeta: null,
-            kgNeckFilterEnabled: false,
-            userDefaultTuningMap: {},
+          set((state) => {
+            state.strings = STR_FACTORY;
+            state.frets = FRETS_FACTORY;
+            state.fretsTouched = false;
+            state.tuning = [];
+            state.stringMeta = null;
+            state.boardMeta = null;
+            state.kgNeckFilterEnabled = false;
+            state.userDefaultTuningMap = {};
+            syncGlobalDefaultTunings(state.userDefaultTuningMap);
           }),
       };
     }),
     {
       name: STORAGE_KEYS.INSTRUMENT_CORE,
       version: 2,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createScopedStorage()),
       migrate: (persistedState) => {
         const hasPersisted =
           persistedState &&
@@ -216,11 +247,11 @@ export const useInstrumentCoreStore = create(
             typeof persistedState.kgNeckFilterEnabled === "boolean"
               ? persistedState.kgNeckFilterEnabled
               : false,
-          userDefaultTuningMap: isValidPersistedMap(
-            persistedState.userDefaultTuningMap,
-          )
-            ? persistedState.userDefaultTuningMap
-            : legacyDefaults.value,
+          userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
+            ? legacyDefaults.value
+            : isValidPersistedMap(persistedState.userDefaultTuningMap)
+              ? persistedState.userDefaultTuningMap
+              : legacyDefaults.value,
         };
       },
       partialize: (state) => ({
@@ -271,11 +302,11 @@ export const useInstrumentCoreStore = create(
             typeof persisted?.kgNeckFilterEnabled === "boolean"
               ? persisted.kgNeckFilterEnabled
               : false,
-          userDefaultTuningMap: isValidPersistedMap(
-            persisted?.userDefaultTuningMap,
-          )
-            ? persisted.userDefaultTuningMap
-            : legacyDefaults.value,
+          userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
+            ? legacyDefaults.value
+            : isValidPersistedMap(persisted?.userDefaultTuningMap)
+              ? persisted.userDefaultTuningMap
+              : legacyDefaults.value,
         };
       },
       onRehydrateStorage: () => (_state, error) => {

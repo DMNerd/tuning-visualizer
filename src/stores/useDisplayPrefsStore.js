@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
+import { createGlobalStorage } from "@/lib/storage/scopedStorage";
 import { DISPLAY_DEFAULTS } from "@/lib/config/appDefaults";
 import { makeImmerSetters } from "@/utils/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
@@ -43,7 +44,7 @@ export const useDisplayPrefsStore = create(
     }),
     {
       name: STORAGE_KEYS.DISPLAY_PREFS,
-      storage: createJSONStorage(() => globalThis.localStorage),
+      storage: createJSONStorage(() => createGlobalStorage()),
       partialize: (state) => ({ prefs: state.prefs }),
       merge: (persisted, current) => ({
         ...current,
