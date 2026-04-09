@@ -56,8 +56,7 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
     useMetronomeEngineStore(useShallow(selectMetronomeEngineState));
   const {
     setIsPlaying,
-    setCurrentBeat,
-    setCurrentBar,
+    setCursor,
     setAudioReady,
     setAudioError,
     resetCursorState,
@@ -138,13 +137,12 @@ export function useMetronomeEngine({ bpm, timeSig, subdivision, onBeat }) {
       const now = performance.now();
       const delayMs = Math.max(0, when * 1000 - now);
       const id = window.setTimeout(() => {
-        setCurrentBeat(beatNumber);
-        setCurrentBar(barNumber);
+        setCursor({ currentBeat: beatNumber, currentBar: barNumber });
         onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
       }, delayMs);
       uiTimerIdsRef.current.push(id);
     },
-    [setCurrentBeat, setCurrentBar],
+    [setCursor],
   );
 
   const scheduler = useCallback(() => {

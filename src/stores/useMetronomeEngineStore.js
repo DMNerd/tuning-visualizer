@@ -15,6 +15,7 @@ export const useMetronomeEngineStore = create(
     setIsPlaying: (isPlaying) => set({ isPlaying }),
     setCurrentBeat: (currentBeat) => set({ currentBeat }),
     setCurrentBar: (currentBar) => set({ currentBar }),
+    setCursor: ({ currentBeat, currentBar }) => set({ currentBeat, currentBar }),
     setAudioReady: (audioReady) => set({ audioReady }),
     setAudioError: (audioError) => set({ audioError }),
     resetCursorState: () =>
@@ -43,6 +44,7 @@ export const selectMetronomeEngineActions = (state) => ({
   setIsPlaying: state.setIsPlaying,
   setCurrentBeat: state.setCurrentBeat,
   setCurrentBar: state.setCurrentBar,
+  setCursor: state.setCursor,
   setAudioReady: state.setAudioReady,
   setAudioError: state.setAudioError,
   resetCursorState: state.resetCursorState,

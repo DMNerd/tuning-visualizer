@@ -10,7 +10,7 @@ import { Toaster, ToastBar } from "react-hot-toast";
 
 import { downloadPNG, downloadSVG, printFretboard } from "@/lib/export/scales";
 import Fretboard from "@/components/Fretboard/Fretboard";
-import StageHud from "@/components/UI/StageHud";
+import StageHudContainer from "@/app/containers/StageHudContainer";
 
 import { TUNINGS } from "@/lib/theory/tuning";
 import { ALL_SCALES } from "@/lib/theory/scales";
@@ -172,18 +172,11 @@ export default function App() {
         className={clsx("tv-stage__surface", { "is-lefty": lefty })}
         onDoubleClick={() => toggleFs()}
       >
-        <StageHud
+        <StageHudContainer
           isFs={isFs}
-          onToggleFs={() => toggleFs()}
+          onToggleFs={toggleFs}
           onResetAll={() => resetAll({ confirm: true })}
-          currentBeat={practiceDomain.metronome.engine.currentBeat}
-          currentBar={practiceDomain.metronome.engine.currentBar}
-          timeSig={practiceDomain.metronome.prefs.timeSig}
-          isPlaying={practiceDomain.metronome.engine.isPlaying}
           showPracticeHud={showPracticeHud}
-          countInEnabled={practiceDomain.metronome.prefs.countInEnabled}
-          audioReady={practiceDomain.metronome.engine.audioReady}
-          audioError={practiceDomain.metronome.engine.audioError}
         />
         <SafeSection onReset={orchestration.onResetCapo}>
           <Fretboard

@@ -74,6 +74,42 @@ test("metronome HUD selector ignores unrelated engine updates", async () => {
   tracked.unsubscribe();
 });
 
+test("metronome cursor updates beat/bar atomically", async () => {
+  const {
+    useMetronomeEngineStore,
+    selectMetronomeCurrentBeat,
+    selectMetronomeCurrentBar,
+  } = await importFresh("../stores/useMetronomeEngineStore.js");
+
+  useMetronomeEngineStore.setState({
+    isPlaying: false,
+    currentBeat: 1,
+    currentBar: 1,
+    audioReady: false,
+    audioError: "",
+  });
+
+  const trackedBeat = trackSelectorChanges(
+    useMetronomeEngineStore,
+    selectMetronomeCurrentBeat,
+  );
+  const trackedBar = trackSelectorChanges(
+    useMetronomeEngineStore,
+    selectMetronomeCurrentBar,
+  );
+
+  useMetronomeEngineStore.getState().setCursor({ currentBeat: 2, currentBar: 3 });
+
+  assert.equal(trackedBeat.getSelected(), 2);
+  assert.equal(trackedBar.getSelected(), 3);
+  assert.equal(trackedBeat.getChanges(), 1);
+  assert.equal(trackedBar.getChanges(), 1);
+
+  trackedBeat.unsubscribe();
+  trackedBar.unsubscribe();
+});
+
+
 test("display controls selector only changes when selected pref changes", async () => {
   const { useDisplayPrefsStore } = await importFresh(
     "../stores/useDisplayPrefsStore.js",
