@@ -52,6 +52,25 @@ function scheduleClick(
   osc.stop(when + CLICK_DURATION_SEC + 0.01);
 }
 
+export function scheduleBeatUiUpdateWithAudioClock({
+  ctx,
+  when,
+  beatNumber,
+  barNumber,
+  setCursor,
+  onBeatRef,
+  uiTimerIdsRef,
+  setTimeoutFn = window.setTimeout,
+}) {
+  const delayMs = Math.max(0, (when - ctx.currentTime) * 1000);
+  const id = setTimeoutFn(() => {
+    setCursor({ currentBeat: beatNumber, currentBar: barNumber });
+    onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
+  }, delayMs);
+  uiTimerIdsRef.current.push(id);
+  return { id, delayMs };
+}
+
 export function useMetronomePlaybackStatus() {
   return useMetronomeEngineStore(
     useShallow(selectMetronomeEnginePlaybackState),
@@ -143,14 +162,16 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
   }, [resetCursorState]);
 
   const scheduleBeatUiUpdate = useCallback(
-    (when, beatNumber, barNumber) => {
-      const now = performance.now();
-      const delayMs = Math.max(0, when * 1000 - now);
-      const id = window.setTimeout(() => {
-        setCursor({ currentBeat: beatNumber, currentBar: barNumber });
-        onBeatRef.current?.({ beat: beatNumber, bar: barNumber, when });
-      }, delayMs);
-      uiTimerIdsRef.current.push(id);
+    (ctx, when, beatNumber, barNumber) => {
+      scheduleBeatUiUpdateWithAudioClock({
+        ctx,
+        when,
+        beatNumber,
+        barNumber,
+        setCursor,
+        onBeatRef,
+        uiTimerIdsRef,
+      });
     },
     [setCursor],
   );
@@ -179,6 +200,7 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
 
       if (isMainBeat) {
         scheduleBeatUiUpdate(
+          ctx,
           nextNoteTimeRef.current,
           beatNumber,
           barNumber || barCursorRef.current,
