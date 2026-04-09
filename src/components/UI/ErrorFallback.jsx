@@ -13,6 +13,7 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import { useConfirm } from "@/hooks/useConfirm";
+import { performFactoryReset } from "@/components/UI/errorFallbackReset";
 
 export default function ErrorFallback({ error, resetErrorBoundary }) {
   const [open, toggleOpen] = useToggle(false);
@@ -58,22 +59,15 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
   };
 
   const factoryReset = async () => {
-    const ok = await confirm({
-      title: "Clear saved settings?",
-      message:
-        "This will clear saved settings and custom tunings for this app in this browser.",
-      confirmText: "Clear saved settings",
-      cancelText: "Cancel",
-      toastId: "confirm-clear-storage",
+    await performFactoryReset({
+      confirm,
+      onSuccess: () => {
+        toast.success("Saved settings cleared.");
+      },
+      onError: () => {
+        toast.error("Failed to clear saved settings.");
+      },
     });
-    if (!ok) return;
-    try {
-      localStorage.clear();
-      toast.success("Saved settings cleared.");
-      window.location.reload();
-    } catch {
-      toast.error("Failed to clear saved settings.");
-    }
   };
 
   return (
