@@ -76,6 +76,8 @@ export default function BaseCombobox({
     label: selectedLabel,
   });
 
+  const [debouncedInputValue, setDebouncedInputValue] = useState("");
+
   const {
     rootRef,
     rootProps,
@@ -101,9 +103,19 @@ export default function BaseCombobox({
     initialInputValue: selectedLabel,
   });
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedInputValue(inputValue);
+    }, 75);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [inputValue]);
+
   const { filteredOptions, normalizedQuery } = useFilteredOptions({
     options,
-    inputValue,
+    inputValue: debouncedInputValue,
     isFiltering,
     getFilterTerms,
   });

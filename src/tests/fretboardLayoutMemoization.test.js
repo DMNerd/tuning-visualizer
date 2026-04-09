@@ -14,11 +14,7 @@ function LayoutProbe(props) {
     openX: layout.openXForString(0),
   });
 
-  return React.createElement(
-    "div",
-    { "data-layout-snapshot": snapshot },
-    null,
-  );
+  return React.createElement("div", { "data-layout-snapshot": snapshot }, null);
 }
 
 function renderLayoutSnapshot(stringMeta) {
@@ -56,7 +52,10 @@ test("useFretboardLayout derives metaByIndex during render via useMemo", () => {
   const hookPath = path.resolve("src/hooks/useFretboardLayout.js");
   const source = fs.readFileSync(hookPath, "utf8");
 
-  assert.match(source, /const metaByIndex = useMemo\(\(\) => toStringMetaMap\(stringMeta\), \[stringMeta\]\);/);
+  assert.match(
+    source,
+    /const metaByIndex = useMemo\(\(\) => toStringMetaMap\(stringMeta\), \[stringMeta\]\);/,
+  );
   assert.doesNotMatch(source, /useEffect\(/);
   assert.doesNotMatch(source, /useState\(/);
 });

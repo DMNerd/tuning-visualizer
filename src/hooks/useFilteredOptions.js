@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import Fuse from "fuse.js";
 
 function normalizeText(value) {
@@ -51,33 +51,72 @@ function defaultNormalize(value) {
   return normalizeText(value);
 }
 
+function defaultGetOptionIdentity(option, index) {
+  if (option && typeof option === "object") {
+    return option;
+  }
+
+  return `${typeof option}:${String(option ?? "")}:${index}`;
+}
+
 export default function useFilteredOptions({
   options,
   inputValue,
   isFiltering,
   getQuery = defaultNormalize,
   getFilterTerms = defaultGetFilterTerms,
+  getOptionIdentity = defaultGetOptionIdentity,
+  optionsVersion,
 } = {}) {
   const normalizedQuery = useMemo(() => {
     if (!isFiltering) return "";
     return getQuery(inputValue ?? "");
   }, [getQuery, inputValue, isFiltering]);
 
+  const termCacheRef = useRef({
+    weak: new WeakMap(),
+    strong: new Map(),
+  });
+
   const indexedOptions = useMemo(() => {
     if (!Array.isArray(options)) return [];
+    void optionsVersion;
 
-    return options.map((option) => {
+    const weakCache = termCacheRef.current.weak;
+    const strongCache = termCacheRef.current.strong;
+
+    return options.map((option, index) => {
+      const identity = getOptionIdentity(option, index);
+      const isObjectIdentity = identity && typeof identity === "object";
+      const cache = isObjectIdentity ? weakCache : strongCache;
+      const cached = cache.get(identity);
+
+      if (cached?.source === option) {
+        return {
+          option,
+          terms: cached.terms,
+        };
+      }
+
       const terms = getFilterTerms(option);
       const list = Array.isArray(terms) ? terms : [terms];
+      const expandedTerms = expandTerms(
+        list.filter((term) => typeof term === "string"),
+      );
+
+      cache.set(identity, {
+        source: option,
+        terms: expandedTerms,
+      });
+
       return {
         option,
-        terms: expandTerms(list.filter((term) => typeof term === "string")),
+        terms: expandedTerms,
       };
     });
-  }, [options, getFilterTerms]);
+  }, [options, getFilterTerms, getOptionIdentity, optionsVersion]);
 
   const fuse = useMemo(() => {
-    if (!isFiltering) return null;
     if (!indexedOptions.length) return null;
 
     return new Fuse(indexedOptions, {
@@ -90,7 +129,7 @@ export default function useFilteredOptions({
       minMatchCharLength: 1,
       distance: 100,
     });
-  }, [indexedOptions, isFiltering]);
+  }, [indexedOptions]);
 
   const filteredOptions = useMemo(() => {
     if (!Array.isArray(options)) {

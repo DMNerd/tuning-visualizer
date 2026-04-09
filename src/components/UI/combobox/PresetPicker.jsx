@@ -101,47 +101,55 @@ export default function PresetPicker({
     },
     [badgesByName],
   );
+  const handleOptionSelect = useCallback(
+    (option) => {
+      if (typeof option?.value !== "string") return;
+      onSelect?.(option.value);
+    },
+    [onSelect],
+  );
+  const renderOption = useCallback(
+    (opt, { isActive }) => {
+      const badges = badgesByName.get(opt.value) ?? [];
+      return (
+        <div
+          className={clsx("tv-preset-picker__option", {
+            "is-active": isActive,
+            "is-custom": customPresetSet.has(opt.value),
+          })}
+        >
+          <span className="tv-combobox__option-title">{opt.label}</span>
+          {badges.length > 0 && (
+            <span className="tv-preset-picker__option-meta">
+              {badges.map((badge) => (
+                <span
+                  key={badge.key}
+                  className={clsx("tv-preset-picker__meta-badge", {
+                    "tv-preset-picker__meta-badge--accent":
+                      badge.variant === "accent",
+                  })}
+                >
+                  {badge.label}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
+      );
+    },
+    [badgesByName, customPresetSet],
+  );
 
   return (
     <BaseCombobox
       id={id}
       value={selectedPreset ?? ""}
-      onSelect={(option) => {
-        if (typeof option?.value !== "string") return;
-        onSelect?.(option.value);
-      }}
+      onSelect={handleOptionSelect}
       options={options}
       getOptionKey={getOptionKey}
       getOptionLabel={getOptionLabel}
       getFilterTerms={getFilterTerms}
-      renderOption={(opt, { isActive }) => {
-        const badges = badgesByName.get(opt.value) ?? [];
-        return (
-          <div
-            className={clsx("tv-preset-picker__option", {
-              "is-active": isActive,
-              "is-custom": customPresetSet.has(opt.value),
-            })}
-          >
-            <span className="tv-combobox__option-title">{opt.label}</span>
-            {badges.length > 0 && (
-              <span className="tv-preset-picker__option-meta">
-                {badges.map((badge) => (
-                  <span
-                    key={badge.key}
-                    className={clsx("tv-preset-picker__meta-badge", {
-                      "tv-preset-picker__meta-badge--accent":
-                        badge.variant === "accent",
-                    })}
-                  >
-                    {badge.label}
-                  </span>
-                ))}
-              </span>
-            )}
-          </div>
-        );
-      }}
+      renderOption={renderOption}
       placeholder={placeholder}
       aria-labelledby={ariaLabelledBy}
       className="tv-preset-picker"
