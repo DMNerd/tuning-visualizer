@@ -45,6 +45,82 @@ const MARKER_FONT_MIN = 6;
 const MARKER_FONT_MAX = 11.5;
 const APP_FONT_STACK =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const SPATIAL_BUCKET_SIZE = 36;
+
+function forEachBucketKey2D(bounds, bucketSize, visit) {
+  const startX = Math.floor(bounds.left / bucketSize);
+  const endX = Math.floor(bounds.right / bucketSize);
+  const startY = Math.floor(bounds.top / bucketSize);
+  const endY = Math.floor(bounds.bottom / bucketSize);
+  for (let bx = startX; bx <= endX; bx += 1) {
+    for (let by = startY; by <= endY; by += 1) {
+      visit(`${bx}:${by}`);
+    }
+  }
+}
+
+function collides2D(bounds, bucketStore, bucketSize) {
+  let collided = false;
+  forEachBucketKey2D(bounds, bucketSize, (key) => {
+    if (collided) return;
+    const bucket = bucketStore.get(key);
+    if (!bucket) return;
+    for (let i = 0; i < bucket.length; i += 1) {
+      const b = bucket[i];
+      if (
+        bounds.left < b.right &&
+        bounds.right > b.left &&
+        bounds.top < b.bottom &&
+        bounds.bottom > b.top
+      ) {
+        collided = true;
+        return;
+      }
+    }
+  });
+  return collided;
+}
+
+function addBounds2D(bounds, bucketStore, bucketSize) {
+  forEachBucketKey2D(bounds, bucketSize, (key) => {
+    const bucket = bucketStore.get(key);
+    if (bucket) bucket.push(bounds);
+    else bucketStore.set(key, [bounds]);
+  });
+}
+
+function forEachBucketKey1D(bounds, bucketSize, visit) {
+  const startX = Math.floor(bounds.left / bucketSize);
+  const endX = Math.floor(bounds.right / bucketSize);
+  for (let bx = startX; bx <= endX; bx += 1) {
+    visit(String(bx));
+  }
+}
+
+function collides1D(bounds, bucketStore, bucketSize) {
+  let collided = false;
+  forEachBucketKey1D(bounds, bucketSize, (key) => {
+    if (collided) return;
+    const bucket = bucketStore.get(key);
+    if (!bucket) return;
+    for (let i = 0; i < bucket.length; i += 1) {
+      const b = bucket[i];
+      if (bounds.left < b.right && bounds.right > b.left) {
+        collided = true;
+        return;
+      }
+    }
+  });
+  return collided;
+}
+
+function addBounds1D(bounds, bucketStore, bucketSize) {
+  forEachBucketKey1D(bounds, bucketSize, (key) => {
+    const bucket = bucketStore.get(key);
+    if (bucket) bucket.push(bounds);
+    else bucketStore.set(key, [bounds]);
+  });
+}
 
 function buildLabelVariants(label, { kind, allowSingleCharFallback = true }) {
   const compact = label.replace(/\s+/g, "");
@@ -236,142 +312,127 @@ const Fretboard = forwardRef(function Fretboard(
     [],
   );
 
-  const notes = useMemo(() => {
-    if (!activeIntervals.length) return [];
+  const noteGeometry = useMemo(() => {
     const out = [];
-    const N = system.divisions;
-
-    for (let s = 0; s < tuning.length; s++) {
-      const openName = tuning[s];
+    for (let s = 0; s < strings; s += 1) {
       const sf = startFretFor(s);
-      const openPc = (pcForName(openName) + sf) % N;
       const cy = yForString(s);
-
-      for (let f = 0; f <= frets; f++) {
+      for (let f = 0; f <= frets; f += 1) {
         if (isFretHidden(f)) continue;
-
         const isOpen = f === 0;
         const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
         if (!isPlayable) continue;
-
-        const step = isOpen ? 0 : sf === 0 ? f : f - sf;
-        const pc = (openPc + step) % N;
-
-        const inScale = scaleSet.has(pc);
-        const inChord = chordPCs ? chordPCs.has(pc) : false;
-        const isOverlayOutsideScaleChord =
-          Boolean(chordPCs) && !hideNonChord && inChord && !inScale;
-
-        let visible;
-        if (hideNonChord && chordPCs) {
-          const baselineVisible = isOpen ? showOpen : true;
-          visible = baselineVisible && inChord;
-        } else {
-          const baselineVisible = isOpen
-            ? showOpen && (!openOnlyInScale || inScale)
-            : inScale;
-          visible = baselineVisible || isOverlayOutsideScaleChord;
-        }
-        if (!visible) continue;
-
         const cx = isOpen
           ? openXForString(s)
           : notePlacementMode === "onFret"
             ? wireX(f)
             : betweenVisibleFretsX(f);
-
-        const isRoot = pc === rootIx;
-        const isStandard = (f * 12) % N === 0;
-        const isMicro = !isStandard;
-
-        const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * dotSize;
-        const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
-
-        let fill;
-        if (colorByDegree) {
-          const deg = degreeForPc(pc);
-          if (deg != null) {
-            fill = getDegreeColor(deg, activeIntervals.length);
-          } else {
-            fill = isMicro ? "var(--note-micro)" : "var(--note)";
-          }
-        } else {
-          fill = isRoot
-            ? "var(--root)"
-            : isMicro
-              ? "var(--note-micro)"
-              : "var(--note)";
-        }
-
-        const isChordRoot = inChord && chordRootPc === pc;
-        const isChordOutsideScale = inChord && !inScale;
-        if (isChordOutsideScale) {
-          fill = "var(--chord-outside-fill)";
-        }
-
-        const globalFretForLabel = isOpen ? sf : f;
-        const raw = labelFor(pc, f);
-        const label =
-          show === "fret"
-            ? buildFretLabel(globalFretForLabel, N, microLabelOpts)
-            : raw;
-
         out.push({
           key: `${s}-${f}`,
           s,
           f,
-          pc,
-          cx,
+          sf,
           cy,
-          isRoot,
-          isStandard,
-          isMicro,
-          inChord,
-          isChordRoot,
-          isChordOutsideScale,
-          r,
-          fill,
-          label,
+          cx,
+          isOpen,
         });
       }
     }
-
     return out;
   }, [
-    activeIntervals,
-    tuning,
+    strings,
     frets,
-    system.divisions,
     startFretFor,
     yForString,
+    isFretHidden,
     openXForString,
-    pcForName,
-    scaleSet,
-    chordPCs,
-    chordRootPc,
-    showOpen,
-    openOnlyInScale,
-    hideNonChord,
-    rootIx,
-    dotSize,
-    colorByDegree,
-    degreeForPc,
-    labelFor,
-    show,
-    microLabelOpts,
     notePlacementMode,
     wireX,
-    isFretHidden,
     betweenVisibleFretsX,
   ]);
 
   const renderedNotes = useMemo(() => {
-    const sorted = [...notes].sort((a, b) => {
+    if (!activeIntervals.length) return [];
+    const N = system.divisions;
+    const baseNotes = [];
+
+    for (let i = 0; i < noteGeometry.length; i += 1) {
+      const slot = noteGeometry[i];
+      const openPc = (pcForName(tuning[slot.s]) + slot.sf) % N;
+      const step = slot.isOpen ? 0 : slot.sf === 0 ? slot.f : slot.f - slot.sf;
+      const pc = (openPc + step) % N;
+      const inScale = scaleSet.has(pc);
+      const inChord = chordPCs ? chordPCs.has(pc) : false;
+      const isOverlayOutsideScaleChord =
+        Boolean(chordPCs) && !hideNonChord && inChord && !inScale;
+
+      let visible;
+      if (hideNonChord && chordPCs) {
+        const baselineVisible = slot.isOpen ? showOpen : true;
+        visible = baselineVisible && inChord;
+      } else {
+        const baselineVisible = slot.isOpen
+          ? showOpen && (!openOnlyInScale || inScale)
+          : inScale;
+        visible = baselineVisible || isOverlayOutsideScaleChord;
+      }
+      if (!visible) continue;
+
+      const isRoot = pc === rootIx;
+      const isStandard = (slot.f * 12) % N === 0;
+      const isMicro = !isStandard;
+      const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * dotSize;
+      const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
+
+      let fill;
+      if (colorByDegree) {
+        const deg = degreeForPc(pc);
+        fill =
+          deg != null
+            ? getDegreeColor(deg, activeIntervals.length)
+            : isMicro
+              ? "var(--note-micro)"
+              : "var(--note)";
+      } else {
+        fill = isRoot
+          ? "var(--root)"
+          : isMicro
+            ? "var(--note-micro)"
+            : "var(--note)";
+      }
+
+      const isChordRoot = inChord && chordRootPc === pc;
+      const isChordOutsideScale = inChord && !inScale;
+      if (isChordOutsideScale) fill = "var(--chord-outside-fill)";
+
+      const globalFretForLabel = slot.isOpen ? slot.sf : slot.f;
+      const raw = labelFor(pc, slot.f);
+      const label =
+        show === "fret"
+          ? buildFretLabel(globalFretForLabel, N, microLabelOpts)
+          : raw;
+
+      baseNotes.push({
+        ...slot,
+        pc,
+        isRoot,
+        isStandard,
+        isMicro,
+        inChord,
+        isChordRoot,
+        isChordOutsideScale,
+        r,
+        fill,
+        label,
+      });
+    }
+
+    const sorted = [...baseNotes].sort((a, b) => {
       if (a.isRoot !== b.isRoot) return a.isRoot ? -1 : 1;
       if (a.inChord !== b.inChord) return a.inChord ? -1 : 1;
       return b.r - a.r;
     });
-    const acceptedBounds = [];
+    const acceptedBoundsBuckets = new Map();
     const computed = new Map();
 
     for (let i = 0; i < sorted.length; i += 1) {
@@ -407,12 +468,10 @@ const Fretboard = forwardRef(function Fretboard(
         top: note.cy - halfH,
         bottom: note.cy + halfH,
       };
-      const collides = acceptedBounds.some(
-        (b) =>
-          bounds.left < b.right &&
-          bounds.right > b.left &&
-          bounds.top < b.bottom &&
-          bounds.bottom > b.top,
+      const collides = collides2D(
+        bounds,
+        acceptedBoundsBuckets,
+        SPATIAL_BUCKET_SIZE,
       );
 
       if (collides && !note.isRoot) {
@@ -420,7 +479,7 @@ const Fretboard = forwardRef(function Fretboard(
         continue;
       }
 
-      acceptedBounds.push(bounds);
+      addBounds2D(bounds, acceptedBoundsBuckets, SPATIAL_BUCKET_SIZE);
       computed.set(note.key, {
         ...note,
         renderedLabel: fit.text,
@@ -428,8 +487,28 @@ const Fretboard = forwardRef(function Fretboard(
       });
     }
 
-    return notes.map((note) => computed.get(note.key) ?? note);
-  }, [notes, textFit]);
+    return baseNotes.map((note) => computed.get(note.key) ?? note);
+  }, [
+    activeIntervals,
+    system.divisions,
+    noteGeometry,
+    tuning,
+    pcForName,
+    scaleSet,
+    chordPCs,
+    chordRootPc,
+    showOpen,
+    openOnlyInScale,
+    hideNonChord,
+    rootIx,
+    dotSize,
+    colorByDegree,
+    degreeForPc,
+    labelFor,
+    show,
+    microLabelOpts,
+    textFit,
+  ]);
 
   const fretMarkers = useMemo(() => {
     const baseMarkers = visibleFrets.map((f, index) => {
@@ -469,7 +548,7 @@ const Fretboard = forwardRef(function Fretboard(
       };
     });
 
-    const acceptedBounds = [];
+    const acceptedBoundsBuckets = new Map();
     return baseMarkers.map((marker) => {
       if (!marker.labelNum) return marker;
       const buildBounds = (label, fontSize) => {
@@ -486,8 +565,10 @@ const Fretboard = forwardRef(function Fretboard(
       let nextLabel = marker.labelNum;
       let nextSize = marker.markerFontSize;
       let bounds = buildBounds(nextLabel, nextSize);
-      let collides = acceptedBounds.some(
-        (b) => bounds.left < b.right && bounds.right > b.left,
+      let collides = collides1D(
+        bounds,
+        acceptedBoundsBuckets,
+        SPATIAL_BUCKET_SIZE,
       );
 
       if (collides && marker.fret !== safeCapoFret) {
@@ -515,15 +596,17 @@ const Fretboard = forwardRef(function Fretboard(
         nextLabel = downgradedFit.text;
         nextSize = downgradedFit.fontSize;
         bounds = buildBounds(nextLabel, nextSize);
-        collides = acceptedBounds.some(
-          (b) => bounds.left < b.right && bounds.right > b.left,
+        collides = collides1D(
+          bounds,
+          acceptedBoundsBuckets,
+          SPATIAL_BUCKET_SIZE,
         );
         if (collides) {
           return { ...marker, labelNum: null };
         }
       }
 
-      acceptedBounds.push(bounds);
+      addBounds1D(bounds, acceptedBoundsBuckets, SPATIAL_BUCKET_SIZE);
       return {
         ...marker,
         labelNum: nextLabel,
@@ -699,7 +782,7 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {notes.map((n) => (
+        {renderedNotes.map((n) => (
           <circle
             key={`noteCirc-${n.key}`}
             data-note-pc={n.pc}
