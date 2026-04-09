@@ -142,6 +142,7 @@ export function useAppOrchestration({
     maxStrings: STR_MAX,
     minFrets: FRETS_MIN,
     maxFrets: FRETS_MAX,
+    enabled: !customPackEditor.editorState && !customPackEditor.isManagerOpen,
   });
 
   const resets = useResets({

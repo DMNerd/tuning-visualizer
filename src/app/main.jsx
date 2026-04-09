@@ -7,7 +7,15 @@ import ErrorFallback from "@/components/UI/ErrorFallback";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary
+      fallbackRender={({ error, resetErrorBoundary }) => (
+        <ErrorFallback
+          error={error}
+          resetErrorBoundary={resetErrorBoundary}
+          scope="app"
+        />
+      )}
+    >
       <App />
     </ErrorBoundary>
   </StrictMode>,

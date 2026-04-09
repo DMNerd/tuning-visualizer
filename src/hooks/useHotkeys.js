@@ -1,4 +1,3 @@
-import { isHotkey } from "is-hotkey";
 import { useMemo } from "react";
 import { useKey } from "react-use";
 import { clamp } from "@/utils/math";
@@ -11,25 +10,7 @@ import {
   DOT_SIZE_MAX,
   DOT_SIZE_MIN,
 } from "@/lib/config/appDefaults";
-import { isTypingTarget, toHotkeyCombo } from "@/hooks/hotkeyUtils";
-
-const createShortcutHandler = (shortcuts) => (event) => {
-  if (isTypingTarget(event.target)) return;
-
-  for (const shortcut of shortcuts) {
-    if (!shortcut?.combo || typeof shortcut.handler !== "function") continue;
-    if (typeof shortcut.when === "function" && !shortcut.when()) continue;
-
-    const combos = Array.isArray(shortcut.combo)
-      ? shortcut.combo
-      : [shortcut.combo];
-    if (combos.some((combo) => isHotkey(toHotkeyCombo(combo), event))) {
-      event.preventDefault();
-      shortcut.handler(event);
-      return;
-    }
-  }
-};
+import { createShortcutHandler } from "@/hooks/hotkeyHandler";
 
 export function useHotkeys(options) {
   const {
@@ -51,6 +32,7 @@ export function useHotkeys(options) {
     onRandomizeScale,
     onCreateCustomPack,
     practiceActions,
+    enabled = true,
   } = options;
 
   const labelValues = useMemo(
@@ -240,6 +222,9 @@ export function useHotkeys(options) {
     toggleFs,
   ]);
 
-  const onKey = useMemo(() => createShortcutHandler(SHORTCUTS), [SHORTCUTS]);
+  const onKey = useMemo(
+    () => createShortcutHandler(SHORTCUTS, { enabled }),
+    [SHORTCUTS, enabled],
+  );
   useKey(true, onKey, undefined, [onKey]);
 }

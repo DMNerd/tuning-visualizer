@@ -1224,9 +1224,7 @@ svg {
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 8px 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .tv-fallback__details {
@@ -1258,6 +1256,33 @@ svg {
   align-items: center;
   gap: 8px;
   width: auto;
+}
+
+.tv-fallback--app {
+  width: min(100%, 760px);
+  max-height: min(100dvh - 24px, 920px);
+  margin: 12px auto;
+  overflow: auto;
+}
+
+.tv-fallback--app .tv-fallback__actions .tv-button {
+  min-width: min(220px, 100%);
+}
+
+@media (max-width: 720px) {
+  .tv-fallback--app {
+    margin: 8px;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .tv-fallback--app .tv-fallback__actions {
+    flex-direction: column;
+  }
+
+  .tv-fallback--app .tv-fallback__actions .tv-button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 /* =========================

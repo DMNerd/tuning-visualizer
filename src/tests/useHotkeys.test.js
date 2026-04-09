@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { isHotkey } from "is-hotkey";
 
 import { toHotkeyCombo } from "@/hooks/hotkeyUtils";
+import { createShortcutHandler } from "@/hooks/hotkeyHandler";
 
 const KEY_CODES = {
   " ": 32,
@@ -63,4 +64,82 @@ test("is-hotkey matcher is compatible with existing shortcut combos", () => {
   for (const [combo, event] of cases) {
     assert.equal(isHotkey(toHotkeyCombo(combo), event), true, combo);
   }
+});
+
+test("shortcut handler fires in normal app context", () => {
+  let callCount = 0;
+  let prevented = false;
+  const handler = createShortcutHandler([
+    {
+      combo: "f",
+      handler: () => {
+        callCount += 1;
+      },
+    },
+  ]);
+
+  handler({
+    ...makeKeyboardEvent({ key: "f" }),
+    target: { closest: () => null },
+    preventDefault: () => {
+      prevented = true;
+    },
+  });
+
+  assert.equal(callCount, 1);
+  assert.equal(prevented, true);
+});
+
+test("shortcut handler ignores events from dialog/modal targets", () => {
+  let callCount = 0;
+  let prevented = false;
+  const handler = createShortcutHandler([
+    {
+      combo: "f",
+      handler: () => {
+        callCount += 1;
+      },
+    },
+  ]);
+
+  handler({
+    ...makeKeyboardEvent({ key: "f" }),
+    target: {
+      closest: (selector) =>
+        selector === "[role='dialog'], .tv-modal" ? {} : null,
+    },
+    preventDefault: () => {
+      prevented = true;
+    },
+  });
+
+  assert.equal(callCount, 0);
+  assert.equal(prevented, false);
+});
+
+test("shortcut handler can be globally disabled via enabled=false", () => {
+  let callCount = 0;
+  let prevented = false;
+  const handler = createShortcutHandler(
+    [
+      {
+        combo: "f",
+        handler: () => {
+          callCount += 1;
+        },
+      },
+    ],
+    { enabled: false },
+  );
+
+  handler({
+    ...makeKeyboardEvent({ key: "f" }),
+    target: { closest: () => null },
+    preventDefault: () => {
+      prevented = true;
+    },
+  });
+
+  assert.equal(callCount, 0);
+  assert.equal(prevented, false);
 });

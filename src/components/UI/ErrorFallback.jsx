@@ -15,7 +15,11 @@ import {
 import { useConfirm } from "@/hooks/useConfirm";
 import { performFactoryReset } from "@/components/UI/errorFallbackReset";
 
-export default function ErrorFallback({ error, resetErrorBoundary }) {
+export default function ErrorFallback({
+  error,
+  resetErrorBoundary,
+  scope = "section",
+}) {
   const [open, toggleOpen] = useToggle(false);
   const [, copy] = useCopyToClipboard();
   const { confirm } = useConfirm();
@@ -70,8 +74,13 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
     });
   };
 
+  const isAppFallback = scope === "app";
+
   return (
-    <div role="alert" className="tv-fallback">
+    <div
+      role="alert"
+      className={isAppFallback ? "tv-fallback tv-fallback--app" : "tv-fallback"}
+    >
       <div className="tv-fallback__header">
         <FiAlertTriangle size={20} aria-hidden="true" />
         <span>Something went wrong</span>
