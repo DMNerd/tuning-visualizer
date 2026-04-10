@@ -32,7 +32,12 @@ export const useDisplayPrefsStore = create(
 
       return {
         prefs: DISPLAY_DEFAULTS,
+        // Generic persist-rehydrate lifecycle flag for app bootstrap/UI timing.
+        // Not consumed by URL-share hydration flow.
+        isHydrated: false,
         setPrefs,
+        setHydrated: (isHydrated = true) =>
+          set({ isHydrated: Boolean(isHydrated) }),
         resetPrefs: () => set({ prefs: DISPLAY_DEFAULTS }),
         setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
         hydrateWithDefaults: (defaults) => {
@@ -54,6 +59,9 @@ export const useDisplayPrefsStore = create(
           ...(persisted?.prefs || {}),
         },
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated?.(true);
+      },
     },
   ),
 );
@@ -64,3 +72,4 @@ export const selectDisplayResetPrefs = (state) => state.resetPrefs;
 export const selectDisplaySetters = (state) => state.setters;
 export const selectDisplayHydrateWithDefaults = (state) =>
   state.hydrateWithDefaults;
+export const selectDisplayIsHydrated = (state) => state.isHydrated;

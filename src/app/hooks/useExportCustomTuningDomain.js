@@ -5,6 +5,7 @@ import { buildExportCustomTuningDomainReturn } from "@/app/hooks/domainReturnBui
 
 export function useExportCustomTuningDomain({
   boardRef,
+  shareState,
   tunings,
   themeMode,
   root,
@@ -69,6 +70,7 @@ export function useExportCustomTuningDomain({
       contract: PANEL_CONTRACTS.export,
       fileBase,
       boardRef,
+      shareState,
       exporters: {
         downloadPNG,
         downloadSVG,
@@ -83,6 +85,7 @@ export function useExportCustomTuningDomain({
     [
       fileBase,
       boardRef,
+      shareState,
       downloadPNG,
       downloadSVG,
       printFretboard,

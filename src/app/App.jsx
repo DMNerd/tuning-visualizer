@@ -49,6 +49,7 @@ import { usePracticeMetronomeDomain } from "@/app/hooks/usePracticeMetronomeDoma
 import { useExportCustomTuningDomain } from "@/app/hooks/useExportCustomTuningDomain";
 import { useAppOrchestration } from "@/app/hooks/useAppOrchestration";
 import { useAppPanelModels } from "@/app/hooks/useAppPanelModels";
+import { useUrlShareHydration } from "@/app/hooks/useUrlShareHydration";
 
 export default function App() {
   const boardRef = useRef(null);
@@ -120,6 +121,12 @@ export default function App() {
       selectedScale: theoryDomain.scale.scale,
     },
   });
+
+  useUrlShareHydration({
+    theoryDomain,
+    instrumentDomain,
+  });
+
   const orchestration = useAppOrchestration({
     displayPrefs,
     setDisplayPrefs,
@@ -142,8 +149,27 @@ export default function App() {
   const { resetInstrumentFactory, resetDisplay, resetAll, resetMusicalState } =
     orchestration.resets;
 
+  const {
+    instrumentPanel,
+    instrumentControlModel,
+    theoryPanel,
+    practicePanel,
+    metronomeControlModel,
+    displayControlModel,
+    shareState,
+  } = useAppPanelModels({
+    theoryDomain,
+    practiceDomain,
+    instrumentDomain,
+    resetInstrumentFactory,
+    resetMusicalState,
+    displayPrefs,
+    displaySetters,
+  });
+
   const exportCustomDomain = useExportCustomTuningDomain({
     boardRef,
+    shareState,
     tunings: TUNINGS,
     themeMode,
     root: theoryDomain.system.root,
@@ -210,23 +236,6 @@ export default function App() {
       </div>
     </div>
   );
-
-  const {
-    instrumentPanel,
-    instrumentControlModel,
-    theoryPanel,
-    practicePanel,
-    metronomeControlModel,
-    displayControlModel,
-  } = useAppPanelModels({
-    theoryDomain,
-    practiceDomain,
-    instrumentDomain,
-    resetInstrumentFactory,
-    resetMusicalState,
-    displayPrefs,
-    displaySetters,
-  });
 
   const controls = useMemo(
     () => (

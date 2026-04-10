@@ -121,6 +121,7 @@ export const useInstrumentCoreStore = create(
       return {
         strings: legacyStrings.value,
         frets: legacyFrets.value,
+        isHydrated: false,
         fretsTouched: false,
         tuning: [],
         stringMeta: null,
@@ -129,6 +130,8 @@ export const useInstrumentCoreStore = create(
         userDefaultTuningMap: legacyDefaults.value,
 
         setStrings: (strings) => set({ strings }),
+        setHydrated: (isHydrated = true) =>
+          set({ isHydrated: Boolean(isHydrated) }),
         setFrets: (frets) => set({ frets }),
         setFretsTouched: (fretsTouched) => set({ fretsTouched }),
         setFretsUI: (frets) => set({ frets, fretsTouched: true }),
@@ -310,6 +313,7 @@ export const useInstrumentCoreStore = create(
         };
       },
       onRehydrateStorage: () => (_state, error) => {
+        _state?.setHydrated?.(true);
         if (error || !shouldCleanupLegacyInstrumentCoreKeys) return;
         shouldCleanupLegacyInstrumentCoreKeys = false;
         if (typeof globalThis.localStorage === "undefined") return;
@@ -324,6 +328,7 @@ export const useInstrumentCoreStore = create(
 export const selectInstrumentCoreState = (state) => ({
   strings: state.strings,
   frets: state.frets,
+  isHydrated: state.isHydrated,
   fretsTouched: state.fretsTouched,
   tuning: state.tuning,
   stringMeta: state.stringMeta,
@@ -359,3 +364,4 @@ export const selectInstrumentDefaultTuningMap = (state) =>
   state.userDefaultTuningMap;
 
 export const selectKgNeckFilterEnabled = (state) => state.kgNeckFilterEnabled;
+export const selectInstrumentCoreIsHydrated = (state) => state.isHydrated;

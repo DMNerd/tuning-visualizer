@@ -17,13 +17,20 @@ const FOCUSABLE_SELECTOR = [
 function isVisible(element) {
   if (!element || !(element instanceof HTMLElement)) return false;
   if (element.hidden) return false;
-  return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+  return !!(
+    element.offsetWidth ||
+    element.offsetHeight ||
+    element.getClientRects().length
+  );
 }
 
 function getFocusableElements(container) {
   if (!container) return [];
   return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-    (element) => element instanceof HTMLElement && !element.hasAttribute("disabled") && isVisible(element),
+    (element) =>
+      element instanceof HTMLElement &&
+      !element.hasAttribute("disabled") &&
+      isVisible(element),
   );
 }
 
@@ -126,7 +133,9 @@ function ModalFrame({
     if (!card) return undefined;
 
     previousActiveElementRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
 
     const focusableElements = getFocusableElements(card);
     const fallbackTarget = card;

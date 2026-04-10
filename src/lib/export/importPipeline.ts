@@ -66,7 +66,9 @@ function hasAllowedMimeType(mimeType: string): boolean {
 
 function formatMaxFileSizeForDisplay(sizeInBytes: number): string {
   const sizeInMb = sizeInBytes / (1024 * 1024);
-  return Number.isInteger(sizeInMb) ? `${sizeInMb} MB` : `${sizeInMb.toFixed(1)} MB`;
+  return Number.isInteger(sizeInMb)
+    ? `${sizeInMb} MB`
+    : `${sizeInMb.toFixed(1)} MB`;
 }
 
 export function getImportPipelineErrorMessage(

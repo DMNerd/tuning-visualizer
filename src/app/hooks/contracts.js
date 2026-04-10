@@ -2,6 +2,7 @@ export const THEORY_DOMAIN_RETURN_KEYS = [
   "system",
   "scale",
   "chord",
+  "hydration",
   "handlers",
 ];
 

@@ -3,6 +3,7 @@ import {
   buildDisplayControlModel,
   buildTheoryControlModel,
 } from "@/app/adapters/controls";
+import { buildShareDomainState } from "@/app/adapters/shareState";
 import {
   CHORD_DEFAULT,
   ROOT_DEFAULT,
@@ -149,6 +150,15 @@ export function useAppPanelModels({
     [displayPrefs, displaySetters, intervals.length],
   );
 
+  const shareState = useMemo(
+    () =>
+      buildShareDomainState({
+        theoryDomain,
+        instrumentDomain,
+      }),
+    [theoryDomain, instrumentDomain],
+  );
+
   return {
     instrumentPanel,
     instrumentControlModel,
@@ -156,5 +166,6 @@ export function useAppPanelModels({
     practicePanel,
     metronomeControlModel,
     displayControlModel,
+    shareState,
   };
 }

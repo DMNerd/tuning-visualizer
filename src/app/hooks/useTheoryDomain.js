@@ -16,6 +16,7 @@ import {
   selectTheoryChordRoot,
   selectTheoryChordType,
   selectTheoryHideNonChord,
+  selectTheoryIsHydrated,
   selectTheoryRoot,
   selectTheoryScale,
   selectTheoryShowChord,
@@ -38,6 +39,7 @@ export function useTheoryDomain({
   const chordType = useTheoryStore(selectTheoryChordType);
   const showChord = useTheoryStore(selectTheoryShowChord);
   const hideNonChord = useTheoryStore(selectTheoryHideNonChord);
+  const isHydrated = useTheoryStore(selectTheoryIsHydrated);
   const {
     setSystemId,
     setRoot,
@@ -240,9 +242,10 @@ export function useTheoryDomain({
         system: systemSlice,
         scale: scaleSlice,
         chord: chordSlice,
+        hydration: { isHydrated },
         handlers: handlersSlice,
       }),
-    [systemSlice, scaleSlice, chordSlice, handlersSlice],
+    [systemSlice, scaleSlice, chordSlice, isHydrated, handlersSlice],
   );
 
   return theoryDomain;

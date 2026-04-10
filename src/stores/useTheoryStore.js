@@ -69,11 +69,16 @@ export const useTheoryStore = create(
         systemId: legacy.found ? legacy.systemId : SYSTEM_DEFAULT,
         root: legacy.found ? legacy.root : ROOT_DEFAULT,
         scale: SCALE_DEFAULT,
+        isHydrated: false,
         chordRoot: ROOT_DEFAULT,
         chordType: CHORD_DEFAULT,
         showChord: false,
         hideNonChord: false,
         ...baseSetters,
+        setHydrated: (isHydrated = true) =>
+          set((state) => {
+            state.isHydrated = Boolean(isHydrated);
+          }),
         setShowChord: (value) =>
           set((state) => {
             state.showChord =
@@ -148,6 +153,7 @@ export const useTheoryStore = create(
         };
       },
       onRehydrateStorage: () => (_state, error) => {
+        _state?.setHydrated?.(true);
         if (error || !shouldCleanupLegacyTheoryKeys) return;
         shouldCleanupLegacyTheoryKeys = false;
         if (typeof globalThis.localStorage === "undefined") return;
@@ -187,3 +193,4 @@ export const selectTheoryChordRoot = (state) => state.chordRoot;
 export const selectTheoryChordType = (state) => state.chordType;
 export const selectTheoryShowChord = (state) => state.showChord;
 export const selectTheoryHideNonChord = (state) => state.hideNonChord;
+export const selectTheoryIsHydrated = (state) => state.isHydrated;

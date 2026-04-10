@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState } from "react";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
 import Section from "@/components/UI/Section";
@@ -10,6 +10,7 @@ import {
   IMPORT_PIPELINE_ERROR_CODES,
   runImportFilePipeline,
 } from "@/lib/export/importPipeline";
+import ShareConfigModal from "@/components/UI/modals/ShareConfigModal";
 
 function ExportControls({
   boardRef,
@@ -23,8 +24,10 @@ function ExportControls({
   importFromJson,
   onClearCustom,
   onManageCustom,
+  shareState,
 }) {
   const fileInputRef = useRef(null);
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
 
   const doDownloadPNG = () =>
@@ -71,6 +74,7 @@ function ExportControls({
   const doExportAll = () => exportAll?.();
   const doClearCustom = () => onClearCustom?.();
   const doManageCustom = () => onManageCustom?.();
+  const doOpenShareModal = () => setShareModalOpen(true);
   const triggerImport = () => fileInputRef.current?.click();
 
   const onFileChange = async (e) => {
@@ -167,6 +171,14 @@ function ExportControls({
           >
             Import tunings (.json)
           </button>
+          <button
+            type="button"
+            className="tv-button tv-button--block"
+            onClick={doOpenShareModal}
+            disabled={!shareState}
+          >
+            Quickshare
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -176,6 +188,11 @@ function ExportControls({
           />
         </div>
       </div>
+      <ShareConfigModal
+        isOpen={isShareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        appShareState={shareState}
+      />
     </Section>
   );
 }
@@ -194,6 +211,7 @@ const ExportControlsMemo = memoWithKeys(ExportControls, [
   "importFromJson",
   "onClearCustom",
   "onManageCustom",
+  "shareState",
 ]);
 
 export default ExportControlsMemo;

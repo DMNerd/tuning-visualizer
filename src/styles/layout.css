@@ -1866,6 +1866,56 @@ svg {
   min-width: 120px;
 }
 
+.tv-share-modal__body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+.tv-share-modal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.tv-share-modal__panel {
+  border: 1px solid color-mix(in oklab, var(--line) 90%, transparent);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--panel) 92%, var(--bg) 8%);
+  padding: 12px;
+  min-width: 0;
+}
+
+.tv-share-modal__panel--qr {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.tv-share-modal__qr-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(220px, 100%);
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--line) 88%, transparent);
+  background: color-mix(in oklab, var(--panel) 90%, var(--bg) 10%);
+}
+
+.tv-share-modal__qr-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 860px) {
+  .tv-share-modal__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .tv-modal-suspense {
   position: fixed;
   top: 50%;

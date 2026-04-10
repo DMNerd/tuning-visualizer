@@ -15,7 +15,10 @@ void test("runImportFilePipeline rejects files with unsupported metadata", async
 
   assert.equal(result.ok, false);
   if (result.ok) return;
-  assert.equal(result.error.code, IMPORT_PIPELINE_ERROR_CODES.INVALID_FILE_TYPE);
+  assert.equal(
+    result.error.code,
+    IMPORT_PIPELINE_ERROR_CODES.INVALID_FILE_TYPE,
+  );
   assert.equal(result.error.fileName, "tunings.txt");
 });
 

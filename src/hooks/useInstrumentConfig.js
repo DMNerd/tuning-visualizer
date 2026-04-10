@@ -11,6 +11,7 @@ import {
   useInstrumentCoreStore,
   selectInstrumentCoreActions,
   selectInstrumentBoardMeta,
+  selectInstrumentCoreIsHydrated,
   selectInstrumentDefaultTuningMap,
   selectKgNeckFilterEnabled,
   selectInstrumentFrets,
@@ -50,6 +51,7 @@ export function useInstrumentConfig({
   const strings = useInstrumentCoreStore(selectInstrumentStrings);
   const frets = useInstrumentCoreStore(selectInstrumentFrets);
   const fretsTouched = useInstrumentCoreStore(selectInstrumentFretsTouched);
+  const isHydrated = useInstrumentCoreStore(selectInstrumentCoreIsHydrated);
   const tuning = useInstrumentCoreStore(selectInstrumentTuning);
   const stringMeta = useInstrumentCoreStore(selectInstrumentStringMeta);
   const boardMeta = useInstrumentCoreStore(selectInstrumentBoardMeta);
@@ -234,12 +236,21 @@ export function useInstrumentConfig({
     () => ({
       strings,
       frets,
+      isHydrated,
       tuning,
       stringMeta,
       boardMeta,
       kgNeckFilterEnabled,
     }),
-    [strings, frets, tuning, stringMeta, boardMeta, kgNeckFilterEnabled],
+    [
+      strings,
+      frets,
+      isHydrated,
+      tuning,
+      stringMeta,
+      boardMeta,
+      kgNeckFilterEnabled,
+    ],
   );
   const actions = useMemo(
     () => ({

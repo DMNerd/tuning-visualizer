@@ -9,6 +9,7 @@ export default function ExportPanelContainer({
   boardRef,
   exporters,
   packActions,
+  shareState,
 }) {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[fileBase]}>
@@ -24,6 +25,7 @@ export default function ExportPanelContainer({
         importFromJson={exporters.importFromJson}
         onClearCustom={packActions.clearAllPacks}
         onManageCustom={packActions.openManager}
+        shareState={shareState}
       />
     </ErrorBoundary>
   );

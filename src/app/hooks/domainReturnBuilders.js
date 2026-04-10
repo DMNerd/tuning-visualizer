@@ -1,5 +1,11 @@
-export function buildTheoryDomainReturn({ system, scale, chord, handlers }) {
-  return { system, scale, chord, handlers };
+export function buildTheoryDomainReturn({
+  system,
+  scale,
+  chord,
+  hydration = { isHydrated: false },
+  handlers,
+}) {
+  return { system, scale, chord, hydration, handlers };
 }
 
 export function buildInstrumentDomainReturn({

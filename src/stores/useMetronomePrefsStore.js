@@ -69,8 +69,13 @@ export const useMetronomePrefsStore = create(
       return {
         prefs: METRONOME_DEFAULTS,
         randomizeMode: RANDOMIZE_MODE_DEFAULT,
+        // Generic persist-rehydrate lifecycle flag for practice/bootstrap flows.
+        // Not consumed by URL-share hydration flow.
+        isHydrated: false,
         _rehydrateRevision: 0,
         setPrefs,
+        setHydrated: (isHydrated = true) =>
+          set({ isHydrated: Boolean(isHydrated) }),
         setRandomizeMode: (randomizeMode) =>
           set({
             randomizeMode: isValidRandomizeMode(randomizeMode)
@@ -130,6 +135,7 @@ export const useMetronomePrefsStore = create(
         };
       },
       onRehydrateStorage: () => (state, error) => {
+        state?.setHydrated?.(true);
         if (error || !state || !didHydrateLegacyMetronomePayload) return;
         didHydrateLegacyMetronomePayload = false;
         state.touchMetronomePrefsState();
@@ -147,3 +153,4 @@ export const selectMetronomeSetRandomizeMode = (state) =>
 export const selectMetronomeSetters = (state) => state.setters;
 export const selectMetronomeHydrateWithDefaults = (state) =>
   state.hydrateWithDefaults;
+export const selectMetronomeIsHydrated = (state) => state.isHydrated;
