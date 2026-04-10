@@ -13,7 +13,7 @@ type AnyRecord = Record<string, unknown>;
 
 function isPlainObject(value: unknown): value is AnyRecord {
   if (value === null || typeof value !== "object") return false;
-  const proto = Object.getPrototypeOf(value);
+  const proto = Object.getPrototypeOf(value) as object | null;
   return proto === Object.prototype || proto === null;
 }
 
