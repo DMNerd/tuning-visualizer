@@ -45,7 +45,7 @@
     "globals": "^16.5.0",
     "knip": "^6.3.1",
     "lightningcss": "^1.32.0",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "sharp": "^0.34.5",
     "svgo": "^4.0.1",
     "tsx": "^4.21.0",
