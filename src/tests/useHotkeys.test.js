@@ -5,6 +5,7 @@ import { isHotkey } from "is-hotkey";
 
 import { toHotkeyCombo } from "@/hooks/hotkeyUtils";
 import { createShortcutHandler } from "@/hooks/hotkeyHandler";
+import { buildShortcutTableFromRefs } from "@/hooks/hotkeysTable";
 
 const KEY_CODES = {
   " ": 32,
@@ -142,4 +143,121 @@ test("shortcut handler can be globally disabled via enabled=false", () => {
 
   assert.equal(callCount, 0);
   assert.equal(prevented, false);
+});
+
+test("hotkey table uses latest strings/frets and callbacks via refs", () => {
+  const calls = [];
+  const liveRef = {
+    current: {
+      toggleFs: null,
+      setDisplayPrefs: null,
+      setFrets: (next) => calls.push(["frets", next]),
+      handleStringsChange: (next) => calls.push(["strings", next]),
+      setShowChord: null,
+      setHideNonChord: null,
+      strings: 6,
+      frets: 24,
+      onShowCheatsheet: null,
+      minStrings: 4,
+      maxStrings: 8,
+      minFrets: 12,
+      maxFrets: 30,
+      minDot: 8,
+      maxDot: 24,
+      labelValues: [],
+      onRandomizeScale: null,
+      onCreateCustomPack: null,
+      practiceActions: null,
+      enabled: true,
+    },
+  };
+
+  const shortcuts = buildShortcutTableFromRefs(liveRef);
+  const handler = createShortcutHandler(shortcuts, { enabled: true });
+  const fretsDownShortcut = shortcuts.find((entry) => entry.combo === "-");
+  assert.ok(fretsDownShortcut);
+
+  handler({
+    ...makeKeyboardEvent({ key: "]" }),
+    target: { closest: () => null },
+    preventDefault: () => {},
+  });
+  fretsDownShortcut.handler();
+
+  liveRef.current.strings = 7;
+  liveRef.current.frets = 25;
+
+  handler({
+    ...makeKeyboardEvent({ key: "]" }),
+    target: { closest: () => null },
+    preventDefault: () => {},
+  });
+  fretsDownShortcut.handler();
+
+  assert.deepEqual(calls, [
+    ["strings", 7],
+    ["frets", 23],
+    ["strings", 8],
+    ["frets", 24],
+  ]);
+});
+
+test("hotkey table preserves modal gating and supports updated practice actions via refs", () => {
+  let initialToggleCalls = 0;
+  let latestToggleCalls = 0;
+  const liveRef = {
+    current: {
+      toggleFs: null,
+      setDisplayPrefs: null,
+      setFrets: null,
+      handleStringsChange: null,
+      setShowChord: null,
+      setHideNonChord: null,
+      strings: 6,
+      frets: 24,
+      onShowCheatsheet: null,
+      minStrings: 4,
+      maxStrings: 8,
+      minFrets: 12,
+      maxFrets: 30,
+      minDot: 8,
+      maxDot: 24,
+      labelValues: [],
+      onRandomizeScale: null,
+      onCreateCustomPack: null,
+      practiceActions: {
+        toggleMetronome: () => {
+          initialToggleCalls += 1;
+        },
+      },
+      enabled: true,
+    },
+  };
+
+  const shortcuts = buildShortcutTableFromRefs(liveRef);
+  const handler = createShortcutHandler(shortcuts, { enabled: true });
+
+  handler({
+    ...makeKeyboardEvent({ key: "m" }),
+    target: {
+      closest: (selector) =>
+        selector === "[role='dialog'], .tv-modal" ? {} : null,
+    },
+    preventDefault: () => {},
+  });
+  assert.equal(initialToggleCalls, 0);
+
+  liveRef.current.practiceActions = {
+    toggleMetronome: () => {
+      latestToggleCalls += 1;
+    },
+  };
+  handler({
+    ...makeKeyboardEvent({ key: "m" }),
+    target: { closest: () => null },
+    preventDefault: () => {},
+  });
+
+  assert.equal(initialToggleCalls, 0);
+  assert.equal(latestToggleCalls, 1);
 });

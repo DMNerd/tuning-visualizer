@@ -1,9 +1,7 @@
-import { useCallback, useMemo } from "react";
 import { toast } from "react-hot-toast";
 
 import ModalFrame from "@/components/UI/modals/ModalFrame";
-import { buildSharePayload, serializeSharePayload } from "@/lib/url/shareCodec";
-import { evaluateShareUrlSize } from "@/lib/url/shareLimits";
+import { buildShareConfigModalModel } from "@/components/UI/modals/shareConfigModalModel";
 import ShareQrCode from "@/components/UI/qr/ShareQrCode";
 
 async function copyTextWithFallback(text) {
@@ -33,27 +31,22 @@ async function copyTextWithFallback(text) {
 }
 
 export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
-  const canonicalUrl = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    const payload = buildSharePayload(appShareState);
-    const query = serializeSharePayload(payload).toString();
-    const base = `${window.location.origin}${window.location.pathname}`;
-    return query ? `${base}?${query}` : base;
-  }, [appShareState]);
+  const model = buildShareConfigModalModel({
+    isOpen,
+    appShareState,
+    locationLike: typeof window === "undefined" ? null : window.location,
+  });
+  if (!model) return null;
+  const { canonicalUrl, sizeEvaluation, presentableUrl } = model;
 
-  const sizeEvaluation = useMemo(
-    () => evaluateShareUrlSize(canonicalUrl),
-    [canonicalUrl],
-  );
-
-  const copyLink = useCallback(async () => {
+  const copyLink = async () => {
     try {
       await copyTextWithFallback(canonicalUrl);
       toast.success("Quickshare link copied.", { id: "quickshare-copy" });
     } catch {
       toast.error("Could not copy quickshare link.", { id: "quickshare-copy" });
     }
-  }, [canonicalUrl]);
+  };
 
   return (
     <ModalFrame
@@ -84,12 +77,12 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
           >
             <label className="tv-field">
               <span className="tv-field__label">Quickshare URL</span>
-              <textarea
-                className="tv-textarea"
-                readOnly
-                rows={4}
-                value={canonicalUrl}
-              />
+              <pre className="tv-textarea" aria-label="Quickshare URL preview">
+                {presentableUrl}
+              </pre>
+              <span className="tv-field__help">
+                Display matches the canonical link; copy uses the same URL.
+              </span>
               <span
                 className="tv-field__help"
                 data-warn={sizeEvaluation.warn ? "true" : "false"}

@@ -162,6 +162,43 @@ function stableStringify(value: unknown): string {
     .join(",")}}`;
 }
 
+function isJsonLike(value: string) {
+  const first = value.trim().charAt(0);
+  return first === "[" || first === "{";
+}
+
+export function encodeTuning(notes: unknown[]): string {
+  const canUseCompactDottedEncoding =
+    Array.isArray(notes) &&
+    notes.length > 0 &&
+    notes.every(
+      (entry) =>
+        typeof entry === "string" &&
+        entry.length > 0 &&
+        !entry.includes(".") &&
+        !entry.includes("%"),
+    );
+
+  if (
+    canUseCompactDottedEncoding
+  ) {
+    return notes.join(".");
+  }
+
+  return stableStringify(notes);
+}
+
+export function decodeTuning(raw: string): unknown[] | undefined {
+  if (typeof raw !== "string" || !raw.trim()) return undefined;
+
+  if (!isJsonLike(raw)) {
+    return raw.split(".").filter((entry) => entry.length > 0);
+  }
+
+  const parsed = parseJson(raw);
+  return Array.isArray(parsed) ? parsed : undefined;
+}
+
 function normalizeValues(values: ShareValues): ShareValues {
   const next: ShareValues = {};
 
@@ -267,6 +304,11 @@ export function serializeSharePayload(payload: SharePayload): URLSearchParams {
       continue;
     }
 
+    if (key === "tuning" && Array.isArray(value)) {
+      params.set(SHARE_QUERY_KEYS[key], encodeTuning(value));
+      continue;
+    }
+
     params.set(SHARE_QUERY_KEYS[key], stableStringify(value));
   }
 
@@ -302,7 +344,7 @@ export function parseSharePayload(
 
   const tuning = searchParams.get(SHARE_QUERY_KEYS.tuning);
   if (tuning) {
-    const parsed = parseJson(tuning);
+    const parsed = decodeTuning(tuning);
     if (Array.isArray(parsed)) rawValues.tuning = parsed;
     matchedKnownValue = true;
   }

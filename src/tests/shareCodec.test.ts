@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   buildSharePayload,
+  decodeTuning,
+  encodeTuning,
   parseSharePayload,
   resolveInstrumentHydrationValues,
   serializeSharePayload,
@@ -56,7 +58,7 @@ void test("serializeSharePayload emits compact canonical params", () => {
       systemId: "24-TET",
       strings: 6,
       frets: 24,
-      tuning: [{ note: "E2", startFret: 0 }],
+      tuning: ["E", "B", "G", "D", "A", "E"],
       neckFilterMode: "fretless",
       presetName: "My Shared Pack",
       packId: "pack-123",
@@ -82,7 +84,96 @@ void test("serializeSharePayload emits compact canonical params", () => {
     params.get("pp"),
     '{"name":"My Shared Pack","system":{"edo":24},"tuning":{"strings":[{"note":"C"}]}}',
   );
+  assert.equal(params.get("tn"), "E.B.G.D.A.E");
+});
+
+void test("serializeSharePayload falls back to JSON tuning for object entries", () => {
+  const params = serializeSharePayload({
+    version: 1,
+    values: {
+      tuning: [{ note: "E2", startFret: 0 }],
+    },
+  });
+
   assert.equal(params.get("tn"), '[{"note":"E2","startFret":0}]');
+});
+
+void test("decodeTuning handles compact and legacy JSON formats", () => {
+  assert.deepEqual(decodeTuning("E.B.G.D.A.E"), ["E", "B", "G", "D", "A", "E"]);
+  assert.deepEqual(decodeTuning('["E","B","G","D","A","E"]'), [
+    "E",
+    "B",
+    "G",
+    "D",
+    "A",
+    "E",
+  ]);
+  assert.deepEqual(decodeTuning('[{"note":"E2","startFret":0}]'), [
+    { note: "E2", startFret: 0 },
+  ]);
+});
+
+void test("encodeTuning emits compact dotted strings for plain string arrays", () => {
+  assert.equal(encodeTuning(["E", "B", "G", "D", "A", "E"]), "E.B.G.D.A.E");
+});
+
+void test("encodeTuning falls back to JSON for unsafe compact tokens", () => {
+  assert.equal(encodeTuning(["E.", "B", "G"]), '["E.","B","G"]');
+  assert.equal(encodeTuning(["E%2", "B", "G"]), '["E%2","B","G"]');
+  assert.equal(encodeTuning(["", "B", "G"]), '["","B","G"]');
+});
+
+void test("parseSharePayload accepts compact and JSON tuning query values", () => {
+  const compact = parseSharePayload(new URLSearchParams("tn=E.B.G.D.A.E"));
+  const legacy = parseSharePayload(
+    new URLSearchParams(
+      "tn=%5B%22E%22%2C%22B%22%2C%22G%22%2C%22D%22%2C%22A%22%2C%22E%22%5D",
+    ),
+  );
+
+  assert.deepEqual(compact?.values.tuning, ["E", "B", "G", "D", "A", "E"]);
+  assert.deepEqual(legacy?.values.tuning, ["E", "B", "G", "D", "A", "E"]);
+});
+
+void test("tuning round-trip remains stable for compact and object-based tunings", () => {
+  const compactParams = serializeSharePayload({
+    version: 1,
+    values: { tuning: ["E", "B", "G", "D", "A", "E"] },
+  });
+  const compactParsed = parseSharePayload(compactParams);
+  assert.deepEqual(compactParsed?.values.tuning, [
+    "E",
+    "B",
+    "G",
+    "D",
+    "A",
+    "E",
+  ]);
+
+  const objectParams = serializeSharePayload({
+    version: 1,
+    values: { tuning: [{ note: "E2", startFret: 0 }] },
+  });
+  const objectParsed = parseSharePayload(objectParams);
+  assert.deepEqual(objectParsed?.values.tuning, [{ note: "E2", startFret: 0 }]);
+});
+
+void test("unsafe tuning tokens round-trip losslessly via JSON fallback", () => {
+  const unsafeDotParams = serializeSharePayload({
+    version: 1,
+    values: { tuning: ["E.", "B", "G"] },
+  });
+  assert.equal(unsafeDotParams.get("tn"), '["E.","B","G"]');
+  const unsafeDotParsed = parseSharePayload(unsafeDotParams);
+  assert.deepEqual(unsafeDotParsed?.values.tuning, ["E.", "B", "G"]);
+
+  const unsafePercentParams = serializeSharePayload({
+    version: 1,
+    values: { tuning: ["E%2", "B", "G"] },
+  });
+  assert.equal(unsafePercentParams.get("tn"), '["E%2","B","G"]');
+  const unsafePercentParsed = parseSharePayload(unsafePercentParams);
+  assert.deepEqual(unsafePercentParsed?.values.tuning, ["E%2", "B", "G"]);
 });
 
 void test("parseSharePayload ignores unknown/unsupported keys", () => {

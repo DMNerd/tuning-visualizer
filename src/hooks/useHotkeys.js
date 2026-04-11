@@ -1,16 +1,18 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useKey } from "react-use";
-import { clamp } from "@/utils/math";
 import {
   FRETS_MAX,
   FRETS_MIN,
   STR_MAX,
   STR_MIN,
-  DOT_SIZE_DEFAULT,
   DOT_SIZE_MAX,
   DOT_SIZE_MIN,
 } from "@/lib/config/appDefaults";
 import { createShortcutHandler } from "@/hooks/hotkeyHandler";
+import { buildShortcutTableFromRefs } from "@/hooks/hotkeysTable";
+
+/** @typedef {import("@/hooks/hotkeys.types").HotkeysLiveState} HotkeysLiveState */
+/** @typedef {import("@/hooks/hotkeys.types").HotkeysLiveRef} HotkeysLiveRef */
 
 export function useHotkeys(options) {
   const {
@@ -40,167 +42,58 @@ export function useHotkeys(options) {
     [options.labelValues, options.LABEL_VALUES],
   );
 
-  const SHORTCUTS = useMemo(() => {
-    const display = [
-      {
-        combo: ["shift+/", "ctrl+/", "F1"],
-        handler: () => onShowCheatsheet?.(),
-        when: () => typeof onShowCheatsheet === "function",
-      },
-      {
-        combo: "f",
-        handler: () => toggleFs?.(),
-        when: () => typeof toggleFs === "function",
-      },
-      {
-        combo: "l",
-        handler: () => {
-          setDisplayPrefs?.((d) => {
-            if (!labelValues.length) return;
-            const ix = labelValues.findIndex((v) => v === d.show);
-            d.show = labelValues[(ix + 1) % labelValues.length];
-          });
-        },
-        when: () => typeof setDisplayPrefs === "function",
-      },
-      {
-        combo: "o",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.showOpen = !d.showOpen;
-          }),
-      },
-      {
-        combo: "n",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.showFretNums = !d.showFretNums;
-          }),
-      },
-      {
-        combo: "d",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.colorByDegree = !d.colorByDegree;
-          }),
-      },
-      {
-        combo: "a",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.accidental = d.accidental === "sharp" ? "flat" : "sharp";
-          }),
-      },
-      {
-        combo: "g",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.lefty = !d.lefty;
-          }),
-      },
-      {
-        combo: ",",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.dotSize = clamp(
-              (d.dotSize ?? DOT_SIZE_DEFAULT) - 1,
-              minDot,
-              maxDot,
-            );
-          }),
-      },
-      {
-        combo: ".",
-        handler: () =>
-          setDisplayPrefs?.((d) => {
-            d.dotSize = clamp(
-              (d.dotSize ?? DOT_SIZE_DEFAULT) + 1,
-              minDot,
-              maxDot,
-            );
-          }),
-      },
-    ];
+  /** @type {HotkeysLiveState} */
+  const initialLive = {
+    toggleFs,
+    setDisplayPrefs,
+    setFrets,
+    handleStringsChange,
+    setShowChord,
+    setHideNonChord,
+    strings,
+    frets,
+    onShowCheatsheet,
+    minStrings,
+    maxStrings,
+    minFrets,
+    maxFrets,
+    minDot,
+    maxDot,
+    labelValues,
+    onRandomizeScale,
+    onCreateCustomPack,
+    practiceActions,
+    enabled,
+  };
 
-    const instrument = [
-      {
-        combo: "c",
-        handler: () => setShowChord?.(),
-      },
-      {
-        combo: "h",
-        handler: () => setHideNonChord?.(),
-      },
-      {
-        combo: "[",
-        handler: () =>
-          handleStringsChange?.(
-            clamp((strings ?? 0) - 1, minStrings, maxStrings),
-          ),
-      },
-      {
-        combo: "]",
-        handler: () =>
-          handleStringsChange?.(
-            clamp((strings ?? 0) + 1, minStrings, maxStrings),
-          ),
-      },
-      {
-        combo: "-",
-        handler: () => setFrets?.(clamp((frets ?? 0) - 1, minFrets, maxFrets)),
-      },
-      {
-        combo: "=",
-        handler: () => setFrets?.(clamp((frets ?? 0) + 1, minFrets, maxFrets)),
-      },
-    ];
+  /** @type {HotkeysLiveRef} */
+  const liveRef = useRef(initialLive);
 
-    const practice = [
-      {
-        combo: "r",
-        handler: () => {
-          if (typeof practiceActions?.randomizeScaleFromHotkey === "function") {
-            practiceActions.randomizeScaleFromHotkey();
-            return;
-          }
-          onRandomizeScale?.();
-        },
-        when: () =>
-          typeof practiceActions?.randomizeScaleFromHotkey === "function" ||
-          typeof onRandomizeScale === "function",
-      },
-      {
-        combo: ["m", "space"],
-        handler: () => practiceActions?.toggleMetronome?.(),
-        when: () => typeof practiceActions?.toggleMetronome === "function",
-      },
-      {
-        combo: ["alt+[", "arrowdown"],
-        handler: () => practiceActions?.bpmDown?.(),
-        when: () => typeof practiceActions?.bpmDown === "function",
-      },
-      {
-        combo: ["alt+]", "arrowup"],
-        handler: () => practiceActions?.bpmUp?.(),
-        when: () => typeof practiceActions?.bpmUp === "function",
-      },
-      {
-        combo: ["t", "enter"],
-        handler: () => practiceActions?.tapTempo?.(),
-        when: () => typeof practiceActions?.tapTempo === "function",
-      },
-    ];
-
-    const tuningPacks = [
-      {
-        combo: ["ctrl+n", "meta+n"],
-        handler: () => onCreateCustomPack?.(),
-        when: () => typeof onCreateCustomPack === "function",
-      },
-    ];
-
-    return [...display, ...instrument, ...practice, ...tuningPacks];
+  useEffect(() => {
+    liveRef.current = {
+      toggleFs,
+      setDisplayPrefs,
+      setFrets,
+      handleStringsChange,
+      setShowChord,
+      setHideNonChord,
+      strings,
+      frets,
+      onShowCheatsheet,
+      minStrings,
+      maxStrings,
+      minFrets,
+      maxFrets,
+      minDot,
+      maxDot,
+      labelValues,
+      onRandomizeScale,
+      onCreateCustomPack,
+      practiceActions,
+      enabled,
+    };
   }, [
+    enabled,
     frets,
     handleStringsChange,
     labelValues,
@@ -222,9 +115,18 @@ export function useHotkeys(options) {
     toggleFs,
   ]);
 
-  const onKey = useMemo(
-    () => createShortcutHandler(SHORTCUTS, { enabled }),
-    [SHORTCUTS, enabled],
+  const shortcuts = useMemo(() => buildShortcutTableFromRefs(liveRef), []);
+  const shortcutHandler = useMemo(
+    () => createShortcutHandler(shortcuts, { enabled: true }),
+    [shortcuts],
   );
-  useKey(true, onKey, undefined, [onKey]);
+  const onKey = useCallback(
+    (event) => {
+      if (!liveRef.current.enabled) return;
+      shortcutHandler(event);
+    },
+    [shortcutHandler],
+  );
+
+  useKey(true, onKey, undefined, []);
 }

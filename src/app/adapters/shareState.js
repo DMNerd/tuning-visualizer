@@ -55,50 +55,71 @@ function normalizeNumber(value, fallback = 0) {
 }
 
 /**
- * Build a single share-relevant shape sourced from app domain hooks.
- * This avoids deep store reads in UI and keeps codec input serializable.
+ * Build a single share-relevant shape sourced from selected app domain slices.
+ * This keeps panel-model state cheap and stable (no deep serialization here).
  */
-export function buildShareDomainState({ theoryDomain, instrumentDomain }) {
-  const theory = theoryDomain || {};
-  const instrument = instrumentDomain || {};
-
-  const theorySystem = theory.system || {};
-
-  const instrumentState = instrument.instrumentState || {};
-  const instrumentPresets = instrument.presets || {};
-  const instrumentCustomTunings = instrument.customTunings || {};
+export function buildRawShareState({
+  systemId,
+  strings,
+  frets,
+  tuning,
+  stringMeta,
+  boardMeta,
+  neckFilterMode,
+  selectedPreset,
+  customTunings,
+}) {
+  const coercedNeckFilterMode = coerceNeckFilterMode(neckFilterMode);
 
   return {
     theory: {
       system: {
-        systemId:
-          typeof theorySystem.systemId === "string"
-            ? theorySystem.systemId
-            : undefined,
+        systemId: typeof systemId === "string" ? systemId : undefined,
       },
     },
     instrument: {
       instrumentState: {
-        strings: normalizeNumber(instrumentState.strings, undefined),
-        frets: normalizeNumber(instrumentState.frets, undefined),
+        strings: normalizeNumber(strings, undefined),
+        frets: normalizeNumber(frets, undefined),
+        tuning: Array.isArray(tuning) ? tuning : undefined,
+        stringMeta,
+        boardMeta,
+        neckFilterMode:
+          coercedNeckFilterMode === NECK_FILTER_MODES.NONE
+            ? undefined
+            : coercedNeckFilterMode,
+      },
+      presets: {
+        selectedPreset:
+          typeof selectedPreset === "string" ? selectedPreset : undefined,
+      },
+      customTunings: Array.isArray(customTunings) ? customTunings : undefined,
+    },
+  };
+}
+
+/**
+ * Convert raw share state into plain JSON-serializable values for share/export.
+ */
+export function serializeShareState(rawShareState) {
+  const state = rawShareState || {};
+  const instrument = state.instrument || {};
+  const instrumentState = instrument.instrumentState || {};
+
+  return {
+    ...state,
+    instrument: {
+      ...instrument,
+      instrumentState: {
+        ...instrumentState,
         tuning: Array.isArray(instrumentState.tuning)
           ? toPlainSerializable(instrumentState.tuning)
           : undefined,
         stringMeta: toPlainSerializable(instrumentState.stringMeta),
         boardMeta: toPlainSerializable(instrumentState.boardMeta),
-        neckFilterMode: (() => {
-          const mode = coerceNeckFilterMode(instrumentState.neckFilterMode);
-          return mode === NECK_FILTER_MODES.NONE ? undefined : mode;
-        })(),
       },
-      presets: {
-        selectedPreset:
-          typeof instrumentPresets.selectedPreset === "string"
-            ? instrumentPresets.selectedPreset
-            : undefined,
-      },
-      customTunings: Array.isArray(instrumentCustomTunings.customTunings)
-        ? toPlainSerializable(instrumentCustomTunings.customTunings)
+      customTunings: Array.isArray(instrument.customTunings)
+        ? toPlainSerializable(instrument.customTunings)
         : undefined,
     },
   };

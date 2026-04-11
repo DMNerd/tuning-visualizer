@@ -21,6 +21,19 @@ import {
   selectInstrumentTuning,
 } from "@/stores/useInstrumentCoreStore";
 
+const selectInstrumentConfigStore = (state) => ({
+  strings: selectInstrumentStrings(state),
+  frets: selectInstrumentFrets(state),
+  fretsTouched: selectInstrumentFretsTouched(state),
+  isHydrated: selectInstrumentCoreIsHydrated(state),
+  tuning: selectInstrumentTuning(state),
+  stringMeta: selectInstrumentStringMeta(state),
+  boardMeta: selectInstrumentBoardMeta(state),
+  userDefaultTuningMap: selectInstrumentDefaultTuningMap(state),
+  neckFilterMode: selectNeckFilterMode(state),
+  ...selectInstrumentCoreActions(state),
+});
+
 function keyOf(systemId, strings) {
   return `${systemId}:${strings}`;
 }
@@ -48,19 +61,19 @@ export function useInstrumentConfig({
   defaultTunings,
   presetTunings,
 }) {
-  const strings = useInstrumentCoreStore(selectInstrumentStrings);
-  const frets = useInstrumentCoreStore(selectInstrumentFrets);
-  const fretsTouched = useInstrumentCoreStore(selectInstrumentFretsTouched);
-  const isHydrated = useInstrumentCoreStore(selectInstrumentCoreIsHydrated);
-  const tuning = useInstrumentCoreStore(selectInstrumentTuning);
-  const stringMeta = useInstrumentCoreStore(selectInstrumentStringMeta);
-  const boardMeta = useInstrumentCoreStore(selectInstrumentBoardMeta);
-  const userDefaultTuningMap = useInstrumentCoreStore(
-    selectInstrumentDefaultTuningMap,
+  const instrumentStore = useInstrumentCoreStore(
+    useShallow(selectInstrumentConfigStore),
   );
-  const neckFilterMode = useInstrumentCoreStore(selectNeckFilterMode);
-
   const {
+    strings,
+    frets,
+    fretsTouched,
+    isHydrated,
+    tuning,
+    stringMeta,
+    boardMeta,
+    userDefaultTuningMap,
+    neckFilterMode,
     setStrings,
     setFrets,
     setFretsUI,
@@ -70,7 +83,7 @@ export function useInstrumentConfig({
     setNeckFilterMode,
     updateUserDefaultTuningMap,
     resetInstrumentPrefs,
-  } = useInstrumentCoreStore(useShallow(selectInstrumentCoreActions));
+  } = instrumentStore;
 
   const minStrings = stringsRange.min;
   const maxStrings = stringsRange.max;

@@ -23,6 +23,18 @@ import {
   selectTheorySystemId,
 } from "@/stores/useTheoryStore";
 
+const selectTheoryDomainStore = (state) => ({
+  systemId: selectTheorySystemId(state),
+  root: selectTheoryRoot(state),
+  scale: selectTheoryScale(state),
+  chordRoot: selectTheoryChordRoot(state),
+  chordType: selectTheoryChordType(state),
+  showChord: selectTheoryShowChord(state),
+  hideNonChord: selectTheoryHideNonChord(state),
+  isHydrated: selectTheoryIsHydrated(state),
+  ...selectTheoryActions(state),
+});
+
 export function useTheoryDomain({
   tunings,
   defaultSystemId,
@@ -32,15 +44,16 @@ export function useTheoryDomain({
   allScales,
   defaultScale,
 }) {
-  const systemId = useTheoryStore(selectTheorySystemId);
-  const root = useTheoryStore(selectTheoryRoot);
-  const scale = useTheoryStore(selectTheoryScale);
-  const chordRoot = useTheoryStore(selectTheoryChordRoot);
-  const chordType = useTheoryStore(selectTheoryChordType);
-  const showChord = useTheoryStore(selectTheoryShowChord);
-  const hideNonChord = useTheoryStore(selectTheoryHideNonChord);
-  const isHydrated = useTheoryStore(selectTheoryIsHydrated);
+  const theoryStore = useTheoryStore(useShallow(selectTheoryDomainStore));
   const {
+    systemId,
+    root,
+    scale,
+    chordRoot,
+    chordType,
+    showChord,
+    hideNonChord,
+    isHydrated,
     setSystemId,
     setRoot,
     setScale,
@@ -48,7 +61,7 @@ export function useTheoryDomain({
     setChordType,
     setShowChord,
     setHideNonChord,
-  } = useTheoryStore(useShallow(selectTheoryActions));
+  } = theoryStore;
 
   const system = useMemo(
     () => tunings[systemId] ?? tunings[defaultSystemId],

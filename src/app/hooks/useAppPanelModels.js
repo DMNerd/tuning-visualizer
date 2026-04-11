@@ -3,7 +3,7 @@ import {
   buildDisplayControlModel,
   buildTheoryControlModel,
 } from "@/app/adapters/controls";
-import { buildShareDomainState } from "@/app/adapters/shareState";
+import { buildRawShareState } from "@/app/adapters/shareState";
 import {
   CHORD_DEFAULT,
   ROOT_DEFAULT,
@@ -152,11 +152,28 @@ export function useAppPanelModels({
 
   const shareState = useMemo(
     () =>
-      buildShareDomainState({
-        theoryDomain,
-        instrumentDomain,
+      buildRawShareState({
+        systemId,
+        strings: instrumentDomain.instrumentState?.strings,
+        frets: instrumentDomain.instrumentState?.frets,
+        tuning: instrumentDomain.instrumentState?.tuning,
+        stringMeta: instrumentDomain.instrumentState?.stringMeta,
+        boardMeta: instrumentDomain.instrumentState?.boardMeta,
+        neckFilterMode: instrumentDomain.instrumentState?.neckFilterMode,
+        selectedPreset: instrumentDomain.presets?.selectedPreset,
+        customTunings: instrumentDomain.customTunings?.customTunings,
       }),
-    [theoryDomain, instrumentDomain],
+    [
+      systemId,
+      instrumentDomain.instrumentState?.strings,
+      instrumentDomain.instrumentState?.frets,
+      instrumentDomain.instrumentState?.tuning,
+      instrumentDomain.instrumentState?.stringMeta,
+      instrumentDomain.instrumentState?.boardMeta,
+      instrumentDomain.instrumentState?.neckFilterMode,
+      instrumentDomain.presets?.selectedPreset,
+      instrumentDomain.customTunings?.customTunings,
+    ],
   );
 
   return {
