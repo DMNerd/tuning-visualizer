@@ -23,7 +23,7 @@ type ShareValues = Partial<{
   tuning: unknown[];
   stringMeta: unknown;
   boardMeta: unknown;
-  neckFilterMode: "kg" | "fretless";
+  neckFilterMode: "none" | "kg" | "fretless";
   presetName: string;
   packId: string;
   packPayloadVersion: number;
@@ -31,6 +31,11 @@ type ShareValues = Partial<{
   customTunings: unknown[];
   selectedPreset: string;
 }>;
+
+type NormalizedPackPayload = Record<string, unknown> & {
+  name: string;
+  meta?: Record<string, unknown>;
+};
 
 export type SharePayload = {
   version: number;
@@ -68,7 +73,7 @@ const FIELD_TO_VALUE_KEY = {
 const SHARE_PACK_PAYLOAD_VERSION = 1;
 const SHARE_SELECTORS = SHARE_FIELD_SELECTORS;
 
-function normalizePackPayload(value: unknown) {
+function normalizePackPayload(value: unknown): NormalizedPackPayload | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const pack = value as Record<string, unknown>;
   const name =
@@ -102,10 +107,7 @@ function resolveSelectedCustomPack(values: ShareValues) {
   if (!normalized) return null;
 
   const packId =
-    typeof (normalized.meta as Record<string, unknown> | undefined)?.id ===
-    "string"
-      ? ((normalized.meta as Record<string, unknown>).id as string)
-      : "";
+    typeof normalized.meta?.id === "string" ? normalized.meta.id : "";
   return {
     presetName: selectedPreset,
     packId: packId.trim() || selectedPreset,

@@ -15,6 +15,7 @@ export type NeckFilterModeId =
   (typeof NECK_FILTER_MODES)[keyof typeof NECK_FILTER_MODES];
 
 export type NeckFilterContext = {
+  mode?: unknown;
   edo?: number | null;
   strings?: number | null;
   boardMeta?: unknown;
