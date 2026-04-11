@@ -179,9 +179,7 @@ export function encodeTuning(notes: unknown[]): string {
         !entry.includes("%"),
     );
 
-  if (
-    canUseCompactDottedEncoding
-  ) {
+  if (canUseCompactDottedEncoding) {
     return notes.join(".");
   }
 
