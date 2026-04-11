@@ -1,3 +1,4 @@
+import css from "@eslint/css";
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -12,6 +13,26 @@ const __dirname = dirname(__filename);
 
 export default defineConfig([
   globalIgnores(["dist", "build"]),
+  {
+    files: ["**/*.css"],
+    plugins: { css },
+    language: "css/css",
+    languageOptions: {
+      tolerant: true,
+      customSyntax: defaultSyntax => ({
+        ...defaultSyntax,
+        atrules: {
+          ...defaultSyntax.atrules,
+          "custom-media": {
+            prelude: "<any-value>",
+          },
+        },
+      }),
+    },
+    rules: {
+      "css/no-duplicate-imports": "error",
+    },
+  },
 
   {
     files: ["**/*.{js,jsx}"],
