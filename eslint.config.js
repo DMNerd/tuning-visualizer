@@ -19,7 +19,7 @@ export default defineConfig([
     language: "css/css",
     languageOptions: {
       tolerant: true,
-      customSyntax: defaultSyntax => ({
+      customSyntax: (defaultSyntax) => ({
         ...defaultSyntax,
         atrules: {
           ...defaultSyntax.atrules,

@@ -4,5 +4,3 @@ export function normalizeStringList(value: unknown): string[] {
     (item): item is string => typeof item === "string" && item.length > 0,
   );
 }
-
-export default normalizeStringList;

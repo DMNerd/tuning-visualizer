@@ -14,7 +14,6 @@ import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { useInlays } from "@/hooks/useInlays";
 import { useLabels } from "@/hooks/useLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
-import { makeDisplayX } from "@/utils/displayX";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import {
   arrayRefAndLengthEqual,
@@ -163,6 +162,34 @@ function buildLabelVariants(label, { kind, allowSingleCharFallback = true }) {
   return Array.from(new Set(variants.filter(Boolean)));
 }
 
+function buildFitCacheKey({
+  variants,
+  maxWidth,
+  minFontSize,
+  maxFontSize,
+  step,
+  fontWeight,
+  allowSingleCharFallback,
+}) {
+  return [
+    variants.join("\u241F"),
+    Number(maxWidth).toFixed(3),
+    Number(minFontSize).toFixed(3),
+    Number(maxFontSize).toFixed(3),
+    Number(step).toFixed(3),
+    fontWeight,
+    allowSingleCharFallback ? "1" : "0",
+  ].join("|");
+}
+
+function buildWidthCacheKey({ label, fontSize, fontWeight }) {
+  return [
+    label,
+    Number(fontSize).toFixed(3),
+    Number(fontWeight).toFixed(3),
+  ].join("|");
+}
+
 const Fretboard = forwardRef(function Fretboard(
   {
     strings,
@@ -221,7 +248,7 @@ const Fretboard = forwardRef(function Fretboard(
     else if (ref) ref.current = svgRef.current;
   }, [ref, width, height]);
 
-  const displayX = makeDisplayX(lefty, width);
+  const displayX = (x) => (lefty ? width - x : x);
 
   const { pcFromName, nameForPc } = useSystemNoteNames(
     system,
@@ -327,6 +354,59 @@ const Fretboard = forwardRef(function Fretboard(
   const textFit = useMemo(
     () => createTextFit({ fontFamily: APP_FONT_STACK }),
     [],
+  );
+  const typographyCaches = useMemo(
+    () => ({
+      fitByConfig: new Map(),
+      widthByTextStyle: new Map(),
+    }),
+    [
+      microLabelStyle,
+      system.divisions,
+      width,
+      frets,
+      strings,
+      dotSize,
+      notePlacementMode,
+    ],
+  );
+
+  const fitLabelCached = useCallback(
+    (variants, maxWidth, options) => {
+      const cacheKey = buildFitCacheKey({
+        variants,
+        maxWidth,
+        minFontSize: options.sizeRange.min,
+        maxFontSize: options.sizeRange.max,
+        step: options.sizeRange.step,
+        fontWeight: options.fontWeight,
+        allowSingleCharFallback: options.allowSingleCharFallback,
+      });
+      if (typographyCaches.fitByConfig.has(cacheKey)) {
+        return typographyCaches.fitByConfig.get(cacheKey);
+      }
+      const fit = textFit.fitLabel(variants, maxWidth, options);
+      typographyCaches.fitByConfig.set(cacheKey, fit ?? null);
+      return fit;
+    },
+    [textFit, typographyCaches],
+  );
+
+  const measureWidthCached = useCallback(
+    (label, options) => {
+      const cacheKey = buildWidthCacheKey({
+        label,
+        fontSize: options.fontSize,
+        fontWeight: options.fontWeight,
+      });
+      if (typographyCaches.widthByTextStyle.has(cacheKey)) {
+        return typographyCaches.widthByTextStyle.get(cacheKey);
+      }
+      const measuredWidth = textFit.measureWidth(label, options);
+      typographyCaches.widthByTextStyle.set(cacheKey, measuredWidth);
+      return measuredWidth;
+    },
+    [textFit, typographyCaches],
   );
   const openPcByString = useMemo(() => {
     const N = Math.max(1, system.divisions);
@@ -469,7 +549,7 @@ const Fretboard = forwardRef(function Fretboard(
         kind: "note",
         allowSingleCharFallback: note.isRoot,
       });
-      const fit = textFit.fitLabel(noteVariants, note.r * 1.65, {
+      const fit = fitLabelCached(noteVariants, note.r * 1.65, {
         sizeRange: {
           min: NOTE_FONT_MIN,
           max: NOTE_FONT_MAX,
@@ -484,7 +564,7 @@ const Fretboard = forwardRef(function Fretboard(
         continue;
       }
 
-      const width = textFit.measureWidth(fit.text, {
+      const width = measureWidthCached(fit.text, {
         fontSize: fit.fontSize,
         fontWeight: 700,
       });
@@ -534,14 +614,14 @@ const Fretboard = forwardRef(function Fretboard(
     labelFor,
     show,
     microLabelOpts,
-    textFit,
+    fitLabelCached,
+    measureWidthCached,
   ]);
 
   const fretMarkers = useMemo(() => {
     const baseMarkers = visibleFrets.map((f, index) => {
       const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
-      const xForFretNum =
-        notePlacementMode === "onFret" ? wireX(f) : betweenVisibleFretsX(f);
+      const xForFretNum = betweenVisibleFretsX(f);
 
       const leftBoundary =
         index === 0 ? padLeft : (wireX(visibleFrets[index - 1]) + wireX(f)) / 2;
@@ -549,7 +629,7 @@ const Fretboard = forwardRef(function Fretboard(
         index === visibleFrets.length - 1
           ? boardEndX
           : (wireX(f) + wireX(visibleFrets[index + 1])) / 2;
-      const fit = textFit.fitLabel(
+      const fit = fitLabelCached(
         buildLabelVariants(labelNum, {
           kind: "fret",
           allowSingleCharFallback: false,
@@ -579,7 +659,7 @@ const Fretboard = forwardRef(function Fretboard(
     return baseMarkers.map((marker) => {
       if (!marker.labelNum) return marker;
       const buildBounds = (label, fontSize) => {
-        const width = textFit.measureWidth(label, {
+        const width = measureWidthCached(label, {
           fontSize,
           fontWeight: 500,
         });
@@ -599,7 +679,7 @@ const Fretboard = forwardRef(function Fretboard(
       );
 
       if (collides && marker.fret !== safeCapoFret) {
-        const downgradedFit = textFit.fitLabel(
+        const downgradedFit = fitLabelCached(
           buildLabelVariants(marker.labelNum, {
             kind: "fret",
             allowSingleCharFallback: false,
@@ -644,12 +724,11 @@ const Fretboard = forwardRef(function Fretboard(
     visibleFrets,
     system.divisions,
     microLabelOpts,
-    notePlacementMode,
-    wireX,
     betweenVisibleFretsX,
     padLeft,
     boardEndX,
-    textFit,
+    fitLabelCached,
+    measureWidthCached,
     safeCapoFret,
   ]);
 
