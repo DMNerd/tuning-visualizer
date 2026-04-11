@@ -144,10 +144,7 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
       safeInvoke(instrumentActions.setTuning, values.tuning);
       safeInvoke(instrumentActions.setStringMeta, values.stringMeta);
       safeInvoke(instrumentActions.setBoardMeta, values.boardMeta);
-      safeInvoke(
-        instrumentActions.setKgNeckFilterEnabled,
-        values.kgNeckFilterEnabled,
-      );
+      safeInvoke(instrumentActions.setNeckFilterMode, values.neckFilterMode);
 
       const presetName =
         typeof values.presetName === "string" ? values.presetName.trim() : "";

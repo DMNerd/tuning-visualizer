@@ -21,6 +21,7 @@ import {
   selectInstrumentWorkflowActions,
   selectWorkflowCustomTunings,
 } from "@/stores/useInstrumentWorkflowStore";
+import { sanitizeBoardMetaForModeStorage } from "@/lib/presets/neckFilterModes";
 
 function ensureUniqueName(desiredName, takenNames) {
   const base = normalizePackName(desiredName);
@@ -276,7 +277,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const cleanStringMeta = Array.isArray(stringMeta) ? stringMeta : null;
       const cleanBoardMeta =
         boardMeta && typeof boardMeta === "object" && !Array.isArray(boardMeta)
-          ? boardMeta
+          ? sanitizeBoardMetaForModeStorage(boardMeta)
           : null;
 
       const pack = buildTuningPack({

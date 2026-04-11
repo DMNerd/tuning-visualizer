@@ -10,6 +10,11 @@ import {
 import { TUNINGS } from "@/lib/theory/tuning";
 import { SHARE_FIELD_SELECTORS } from "@/lib/url/shareScopes";
 import { SHARE_QUERY_KEYS, SHARE_SCHEMA_VERSION } from "@/lib/url/shareSchema";
+import {
+  coerceNeckFilterMode,
+  isNeckFilterMode,
+  NECK_FILTER_MODES,
+} from "@/lib/presets/neckFilterModes";
 
 type ShareValues = Partial<{
   systemId: string;
@@ -18,7 +23,7 @@ type ShareValues = Partial<{
   tuning: unknown[];
   stringMeta: unknown;
   boardMeta: unknown;
-  kgNeckFilterEnabled: boolean;
+  neckFilterMode: "kg" | "fretless";
   presetName: string;
   packId: string;
   packPayloadVersion: number;
@@ -41,7 +46,7 @@ export type InstrumentHydrationValues = {
   tuning: unknown[];
   stringMeta: unknown;
   boardMeta: unknown;
-  kgNeckFilterEnabled: boolean;
+  neckFilterMode: "none" | "kg" | "fretless";
   presetName: string;
   packId?: string;
   packPayloadVersion?: number;
@@ -55,7 +60,7 @@ const FIELD_TO_VALUE_KEY = {
   tuning: "tuning",
   stringMeta: "stringMeta",
   boardMeta: "boardMeta",
-  kgNeckFilterEnabled: "kgNeckFilterEnabled",
+  neckFilterMode: "neckFilterMode",
   selectedPreset: "selectedPreset",
   customTunings: "customTunings",
 } as const;
@@ -131,12 +136,6 @@ function clampInt(value: unknown, min: number, max: number) {
   return Math.min(max, Math.max(min, Math.round(numeric)));
 }
 
-function parseBoolean(value: string) {
-  if (value === "1" || value === "true") return true;
-  if (value === "0" || value === "false") return false;
-  return undefined;
-}
-
 function parseJson(value: string) {
   try {
     const parsed: unknown = JSON.parse(value);
@@ -189,10 +188,13 @@ function normalizeValues(values: ShareValues): ShareValues {
   if (values.boardMeta && typeof values.boardMeta === "object") {
     next.boardMeta = values.boardMeta;
   }
-  if (values.kgNeckFilterEnabled === true) {
-    next.kgNeckFilterEnabled = true;
+  if (
+    isNeckFilterMode(values.neckFilterMode) &&
+    values.neckFilterMode !== NECK_FILTER_MODES.NONE
+  ) {
+    // Canonical persisted/share payload field. Legacy `kg` is parse-only fallback.
+    next.neckFilterMode = values.neckFilterMode;
   }
-
   const selectedCustomPack = resolveSelectedCustomPack(values);
   if (selectedCustomPack) {
     next.presetName = selectedCustomPack.presetName;
@@ -317,10 +319,16 @@ export function parseSharePayload(
     matchedKnownValue = true;
   }
 
-  const kg = searchParams.get(SHARE_QUERY_KEYS.kgNeckFilterEnabled);
-  if (kg) {
-    const parsed = parseBoolean(kg);
-    if (typeof parsed === "boolean") rawValues.kgNeckFilterEnabled = parsed;
+  const hasCanonicalNm = searchParams.has(SHARE_QUERY_KEYS.neckFilterMode);
+  const neckFilterMode = searchParams.get(SHARE_QUERY_KEYS.neckFilterMode);
+  if (hasCanonicalNm) {
+    const resolvedMode = coerceNeckFilterMode(
+      neckFilterMode,
+      NECK_FILTER_MODES.NONE,
+    );
+    if (resolvedMode !== NECK_FILTER_MODES.NONE) {
+      rawValues.neckFilterMode = resolvedMode;
+    }
     matchedKnownValue = true;
   }
 
@@ -389,10 +397,10 @@ export function resolveInstrumentHydrationValues(
       values.boardMeta && typeof values.boardMeta === "object"
         ? values.boardMeta
         : null,
-    kgNeckFilterEnabled:
-      typeof values.kgNeckFilterEnabled === "boolean"
-        ? values.kgNeckFilterEnabled
-        : false,
+    neckFilterMode: coerceNeckFilterMode(
+      values.neckFilterMode,
+      NECK_FILTER_MODES.NONE,
+    ),
     presetName:
       typeof values.presetName === "string" ? values.presetName.trim() : "",
     ...(typeof values.packId === "string" && values.packId.trim()

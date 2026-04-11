@@ -1,4 +1,5 @@
 import { isPlainObject } from "@/utils/object";
+import { isNeckFilterMode } from "@/lib/presets/neckFilterModes";
 
 export type StringMeta = {
   index: number;
@@ -11,6 +12,7 @@ export type BoardMeta = {
   fretStyle?: "solid" | "dotted";
   notePlacement?: "between" | "onFret";
   hiddenFrets?: number[];
+  neckFilterMode?: "none" | "kg" | "fretless";
 };
 
 export type TuningPresetMeta = {
@@ -157,6 +159,10 @@ export function normalizePresetMeta(
         const normalizedBoard: BoardMeta = {
           ...(raw as BoardMeta),
         };
+
+        if (isNeckFilterMode(raw.neckFilterMode)) {
+          normalizedBoard.neckFilterMode = raw.neckFilterMode;
+        }
 
         if (hiddenFrets) {
           normalizedBoard.hiddenFrets = hiddenFrets;

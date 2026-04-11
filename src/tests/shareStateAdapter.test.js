@@ -22,7 +22,6 @@ void test("buildShareDomainState emits only codec-consumed share shape", () => {
         tuning: [{ note: "E2", formatter: () => "skip" }],
         stringMeta: { 0: { startFret: 0 } },
         boardMeta: { hiddenFrets: new Set([1, 2]) },
-        kgNeckFilterEnabled: true,
       },
       presets: { selectedPreset: "Drop D" },
       customTunings: {

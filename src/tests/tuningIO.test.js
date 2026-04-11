@@ -5,6 +5,7 @@ import { STR_MAX, STR_MIN } from "@/lib/config/appDefaults";
 import { parseTuningPack } from "@/lib/export/schema";
 import { removePackByIdentifier } from "@/lib/export/tuningIO";
 import { coerceAnyTuning } from "@/hooks/usePresetBuilder";
+import { sanitizeBoardMetaForModeStorage } from "@/lib/presets/neckFilterModes";
 
 const basePack = {
   name: "Example Tuning",
@@ -172,4 +173,30 @@ test("removePackByIdentifier removes only the targeted duplicate-named pack", ()
     result.map((pack) => pack.meta.id),
     ["pack-1", "pack-3"],
   );
+});
+
+test("sanitizeBoardMetaForModeStorage omits default fretless style fields when mode intent is fretless", () => {
+  const sanitized = sanitizeBoardMetaForModeStorage({
+    neckFilterMode: "fretless",
+    fretStyle: "dotted",
+    notePlacement: "onFret",
+    marker: "keep",
+  });
+
+  assert.deepEqual(sanitized, {
+    neckFilterMode: "fretless",
+    marker: "keep",
+  });
+});
+
+test("sanitizeBoardMetaForModeStorage preserves notePlacement meta without fretless mode", () => {
+  const sanitized = sanitizeBoardMetaForModeStorage({
+    notePlacement: "onFret",
+    fretStyle: "solid",
+  });
+
+  assert.deepEqual(sanitized, {
+    notePlacement: "onFret",
+    fretStyle: "solid",
+  });
 });

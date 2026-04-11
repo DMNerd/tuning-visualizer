@@ -72,7 +72,7 @@ void test("instrument hydration defaults converge recipient divergent state", ()
     systemId: "24-TET",
     strings: 8,
     frets: 30,
-    kgNeckFilterEnabled: true,
+    neckFilterMode: "kg",
   };
 
   const payload = parseSharePayload(new URLSearchParams("v=1"));
@@ -87,7 +87,13 @@ void test("instrument hydration defaults converge recipient divergent state", ()
   assert.equal(applied.systemId, "12-TET");
   assert.equal(applied.strings, 6);
   assert.equal(applied.frets, 24);
-  assert.equal(applied.kgNeckFilterEnabled, false);
+  assert.equal(applied.neckFilterMode, "none");
+});
+
+void test("instrument hydration resolves fretless neck filter mode from URL payload", () => {
+  const payload = parseSharePayload(new URLSearchParams("nm=fretless"));
+  const resolved = resolveInstrumentHydrationValues(payload);
+  assert.equal(resolved?.neckFilterMode, "fretless");
 });
 
 void test("evaluateUrlShareNoticeState distinguishes valid/invalid/none", () => {

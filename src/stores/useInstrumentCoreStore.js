@@ -14,6 +14,10 @@ import { STORAGE_KEYS } from "@/lib/storage/storageKeys";
 import { createScopedStorage } from "@/lib/storage/scopedStorage";
 import { clamp } from "@/utils/math";
 import { applyValueOrUpdaterOnDraft } from "@/utils/applyValueOrUpdaterOnDraft";
+import {
+  coerceNeckFilterMode,
+  NECK_FILTER_MODES,
+} from "@/lib/presets/neckFilterModes";
 
 let lastSerializedGlobalDefaultTuningMap = null;
 
@@ -93,6 +97,12 @@ function isValidPersistedMap(value) {
   return !!(value && typeof value === "object" && !Array.isArray(value));
 }
 
+function resolvePersistedNeckFilterMode(persistedState) {
+  return coerceNeckFilterMode(
+    persistedState?.neckFilterMode ?? NECK_FILTER_MODES.NONE,
+  );
+}
+
 const LEGACY_CORE_KEYS = [STORAGE_KEYS.STRINGS, STORAGE_KEYS.FRETS];
 let shouldCleanupLegacyInstrumentCoreKeys = false;
 
@@ -126,7 +136,7 @@ export const useInstrumentCoreStore = create(
         tuning: [],
         stringMeta: null,
         boardMeta: null,
-        kgNeckFilterEnabled: false,
+        neckFilterMode: NECK_FILTER_MODES.NONE,
         userDefaultTuningMap: legacyDefaults.value,
 
         setStrings: (strings) => set({ strings }),
@@ -151,8 +161,13 @@ export const useInstrumentCoreStore = create(
             applyValueOrUpdaterOnDraft(state, "stringMeta", draftUpdater);
           }),
         setBoardMeta: (boardMeta) => set({ boardMeta }),
-        setKgNeckFilterEnabled: (kgNeckFilterEnabled) =>
-          set({ kgNeckFilterEnabled }),
+        setNeckFilterMode: (neckFilterMode) =>
+          set(() => {
+            const nextMode = coerceNeckFilterMode(neckFilterMode);
+            return {
+              neckFilterMode: nextMode,
+            };
+          }),
         updateBoardMeta: (draftUpdater) =>
           set((state) => {
             applyValueOrUpdaterOnDraft(state, "boardMeta", draftUpdater);
@@ -189,7 +204,7 @@ export const useInstrumentCoreStore = create(
             state.tuning = [];
             state.stringMeta = null;
             state.boardMeta = null;
-            state.kgNeckFilterEnabled = false;
+            state.neckFilterMode = NECK_FILTER_MODES.NONE;
             state.userDefaultTuningMap = {};
             syncGlobalDefaultTunings(state.userDefaultTuningMap);
           }),
@@ -197,7 +212,7 @@ export const useInstrumentCoreStore = create(
     }),
     {
       name: STORAGE_KEYS.INSTRUMENT_CORE,
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => createScopedStorage()),
       migrate: (persistedState) => {
         const hasPersisted =
@@ -231,6 +246,8 @@ export const useInstrumentCoreStore = create(
             userDefaultTuningMap: legacyDefaults.value,
           };
         }
+        const persistedNeckFilterMode =
+          resolvePersistedNeckFilterMode(persistedState);
 
         return {
           ...persistedState,
@@ -246,10 +263,7 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.value,
           ),
-          kgNeckFilterEnabled:
-            typeof persistedState.kgNeckFilterEnabled === "boolean"
-              ? persistedState.kgNeckFilterEnabled
-              : false,
+          neckFilterMode: persistedNeckFilterMode,
           userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
             ? legacyDefaults.value
             : isValidPersistedMap(persistedState.userDefaultTuningMap)
@@ -260,7 +274,7 @@ export const useInstrumentCoreStore = create(
       partialize: (state) => ({
         strings: state.strings,
         frets: state.frets,
-        kgNeckFilterEnabled: state.kgNeckFilterEnabled,
+        neckFilterMode: state.neckFilterMode,
         userDefaultTuningMap: state.userDefaultTuningMap,
       }),
       merge: (persisted, current) => {
@@ -285,6 +299,7 @@ export const useInstrumentCoreStore = create(
         if (hasLegacyKeys) {
           shouldCleanupLegacyInstrumentCoreKeys = true;
         }
+        const mergedNeckFilterMode = resolvePersistedNeckFilterMode(persisted);
 
         return {
           ...current,
@@ -301,10 +316,7 @@ export const useInstrumentCoreStore = create(
             FRETS_MAX,
             legacyFrets.found ? legacyFrets.value : FRETS_FACTORY,
           ),
-          kgNeckFilterEnabled:
-            typeof persisted?.kgNeckFilterEnabled === "boolean"
-              ? persisted.kgNeckFilterEnabled
-              : false,
+          neckFilterMode: mergedNeckFilterMode,
           userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
             ? legacyDefaults.value
             : isValidPersistedMap(persisted?.userDefaultTuningMap)
@@ -333,7 +345,7 @@ export const selectInstrumentCoreState = (state) => ({
   tuning: state.tuning,
   stringMeta: state.stringMeta,
   boardMeta: state.boardMeta,
-  kgNeckFilterEnabled: state.kgNeckFilterEnabled,
+  neckFilterMode: state.neckFilterMode,
   userDefaultTuningMap: state.userDefaultTuningMap,
 });
 
@@ -346,7 +358,7 @@ export const selectInstrumentCoreActions = (state) => ({
   setStringMeta: state.setStringMeta,
   updateStringMeta: state.updateStringMeta,
   setBoardMeta: state.setBoardMeta,
-  setKgNeckFilterEnabled: state.setKgNeckFilterEnabled,
+  setNeckFilterMode: state.setNeckFilterMode,
   updateBoardMeta: state.updateBoardMeta,
   setUserDefaultTuningMap: state.setUserDefaultTuningMap,
   updateUserDefaultTuningMap: state.updateUserDefaultTuningMap,
@@ -362,6 +374,5 @@ export const selectInstrumentStringMeta = (state) => state.stringMeta;
 export const selectInstrumentBoardMeta = (state) => state.boardMeta;
 export const selectInstrumentDefaultTuningMap = (state) =>
   state.userDefaultTuningMap;
-
-export const selectKgNeckFilterEnabled = (state) => state.kgNeckFilterEnabled;
+export const selectNeckFilterMode = (state) => state.neckFilterMode;
 export const selectInstrumentCoreIsHydrated = (state) => state.isHydrated;

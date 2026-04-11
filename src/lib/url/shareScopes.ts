@@ -16,7 +16,7 @@ export const SHARE_FIELD_SELECTORS = {
   tuning: "instrument.instrumentState.tuning",
   stringMeta: "instrument.instrumentState.stringMeta",
   boardMeta: "instrument.instrumentState.boardMeta",
-  kgNeckFilterEnabled: "instrument.instrumentState.kgNeckFilterEnabled",
+  neckFilterMode: "instrument.instrumentState.neckFilterMode",
   selectedPreset: "instrument.presets.selectedPreset",
   customTunings: "instrument.customTunings",
 } as const;

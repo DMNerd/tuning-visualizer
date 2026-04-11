@@ -13,7 +13,7 @@ export const SHARE_QUERY_KEYS = {
   tuning: "tn",
   stringMeta: "sm",
   boardMeta: "bm",
-  kgNeckFilterEnabled: "kg",
+  neckFilterMode: "nm",
   presetName: "pn",
   packId: "pid",
   packPayloadVersion: "pv",

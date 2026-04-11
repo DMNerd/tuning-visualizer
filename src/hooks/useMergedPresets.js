@@ -7,7 +7,12 @@ import {
   useMountedState,
 } from "react-use";
 import { normalizePresetMeta } from "@/lib/meta/meta";
-import { applyKgNeckFilterToBoardMeta } from "@/lib/presets/kgNeckFilter";
+import {
+  applyNeckFilterModeToBoardMeta,
+  NECK_FILTER_MODES,
+  resolvePresetNeckFilterMode,
+  resolveNeckFilterModeIntentFromBoardMeta,
+} from "@/lib/presets/neckFilterModes";
 import { isPlainObject } from "@/utils/object";
 import { coerceAnyTuning, usePresetBuilder } from "@/hooks/usePresetBuilder";
 import {
@@ -40,7 +45,8 @@ export function useMergedPresets({
   strings,
   savedExists,
   onInstrumentChange,
-  kgNeckFilterEnabled = false,
+  neckFilterMode = NECK_FILTER_MODES.NONE,
+  setNeckFilterMode,
 }) {
   const isMounted = useMountedState();
   const onInstrumentChangeRef = useLatest(onInstrumentChange);
@@ -153,7 +159,11 @@ export function useMergedPresets({
   );
 
   const setPreset = useCallback(
-    (name) => {
+    (name, options = {}) => {
+      // syncNeckFilterFromPresetMeta=true when user selects a preset so preset
+      // metadata can set the mode; false when reapplying after manual mode
+      // toggles so we preserve the user's current mode choice.
+      const { syncNeckFilterFromPresetMeta = true } = options;
       if (typeof name !== "string" || !name) return;
       if (!isMounted()) return;
       if (selectedPreset !== name) {
@@ -182,8 +192,18 @@ export function useMergedPresets({
       if (meta?.stringMeta) setStringMeta(meta.stringMeta);
       else setStringMeta(null);
 
-      const nextBoardMeta = applyKgNeckFilterToBoardMeta(meta?.board, {
-        enabled: kgNeckFilterEnabled,
+      const presetMode = resolveNeckFilterModeIntentFromBoardMeta(meta?.board);
+      const resolvedNeckFilterMode = resolvePresetNeckFilterMode({
+        presetMode,
+        syncFromPresetMeta: syncNeckFilterFromPresetMeta,
+        currentMode: neckFilterMode,
+        currentEdo,
+        boardMeta: meta?.board ?? null,
+      });
+      setNeckFilterMode?.(resolvedNeckFilterMode);
+
+      const nextBoardMeta = applyNeckFilterModeToBoardMeta(meta?.board, {
+        mode: resolvedNeckFilterMode,
         edo: currentEdo,
         strings: currentStrings,
       });
@@ -201,7 +221,8 @@ export function useMergedPresets({
       setBoardMeta,
       currentStrings,
       currentEdo,
-      kgNeckFilterEnabled,
+      neckFilterMode,
+      setNeckFilterMode,
       currentTuningRef,
       selectedPreset,
       setSelectedPreset,
@@ -271,9 +292,9 @@ export function useMergedPresets({
     if (!selectedPreset) return;
     const resolved = resolveTuningByName(selectedPreset);
     if (!resolved?.length) return;
-    setPreset(selectedPreset);
+    setPreset(selectedPreset, { syncNeckFilterFromPresetMeta: false });
   }, [
-    kgNeckFilterEnabled,
+    neckFilterMode,
     currentEdo,
     currentStrings,
     selectedPreset,

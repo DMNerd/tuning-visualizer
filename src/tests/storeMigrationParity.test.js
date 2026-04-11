@@ -319,6 +319,89 @@ test("instrument core setTuning updater recovers from invalid tuning shape", asy
   assert.deepEqual(state.tuning, ["E", "A"]);
 });
 
+test("instrument core migration defaults neckFilterMode to none when mode is absent", async () => {
+  storage.clear();
+  storage.setItem(
+    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
+    JSON.stringify({
+      state: {
+        strings: 6,
+        frets: 24,
+      },
+      version: 2,
+    }),
+  );
+
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+  await useInstrumentCoreStore.persist.rehydrate();
+  const state = useInstrumentCoreStore.getState();
+
+  assert.equal(state.neckFilterMode, "none");
+});
+
+test("instrument core migration keeps explicit canonical neckFilterMode", async () => {
+  storage.clear();
+  storage.setItem(
+    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
+    JSON.stringify({
+      state: {
+        strings: 6,
+        frets: 24,
+        neckFilterMode: "fretless",
+      },
+      version: 3,
+    }),
+  );
+
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+  await useInstrumentCoreStore.persist.rehydrate();
+  const state = useInstrumentCoreStore.getState();
+
+  assert.equal(state.neckFilterMode, "fretless");
+});
+
+test("instrument core migration preserves explicit fretless neck filter mode", async () => {
+  storage.clear();
+  storage.setItem(
+    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
+    JSON.stringify({
+      state: {
+        strings: 7,
+        frets: 22,
+        neckFilterMode: "fretless",
+      },
+      version: 3,
+    }),
+  );
+
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+  await useInstrumentCoreStore.persist.rehydrate();
+  const state = useInstrumentCoreStore.getState();
+
+  assert.equal(state.neckFilterMode, "fretless");
+});
+
+test("instrument core setNeckFilterMode updates canonical mode", async () => {
+  storage.clear();
+  const { useInstrumentCoreStore } = await importFresh(
+    "../stores/useInstrumentCoreStore.js",
+  );
+
+  useInstrumentCoreStore.getState().setNeckFilterMode("kg");
+  let state = useInstrumentCoreStore.getState();
+  assert.equal(state.neckFilterMode, "kg");
+
+  useInstrumentCoreStore.getState().setNeckFilterMode("fretless");
+  state = useInstrumentCoreStore.getState();
+  assert.equal(state.neckFilterMode, "fretless");
+});
+
 test("display prefs store hydrates via globalThis localStorage adapter", async () => {
   storage.clear();
   sessionStorage.clear();

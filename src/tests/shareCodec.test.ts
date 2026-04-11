@@ -18,7 +18,7 @@ void test("buildSharePayload only keeps instrument scope + systemId", () => {
         strings: 12,
         frets: 100,
         tuning: [],
-        kgNeckFilterEnabled: false,
+        neckFilterMode: "fretless",
       },
       presets: {
         selectedPreset: "My Shared Pack",
@@ -42,7 +42,7 @@ void test("buildSharePayload only keeps instrument scope + systemId", () => {
   assert.equal(payload.values.systemId, "24-TET");
   assert.equal(payload.values.strings, 8);
   assert.equal(payload.values.frets, 30);
-  assert.equal(payload.values.kgNeckFilterEnabled, undefined);
+  assert.equal(payload.values.neckFilterMode, "fretless");
   assert.equal(payload.values.presetName, "My Shared Pack");
   assert.equal(payload.values.packId, "pack-123");
   assert.equal(payload.values.packPayloadVersion, 1);
@@ -57,7 +57,7 @@ void test("serializeSharePayload emits compact canonical params", () => {
       strings: 6,
       frets: 24,
       tuning: [{ note: "E2", startFret: 0 }],
-      kgNeckFilterEnabled: true,
+      neckFilterMode: "fretless",
       presetName: "My Shared Pack",
       packId: "pack-123",
       packPayloadVersion: 1,
@@ -74,7 +74,7 @@ void test("serializeSharePayload emits compact canonical params", () => {
   assert.equal(params.get("sys"), "24-TET");
   assert.equal(params.get("fr"), null);
   assert.equal(params.get("str"), null);
-  assert.equal(params.get("kg"), "1");
+  assert.equal(params.get("nm"), "fretless");
   assert.equal(params.get("pn"), "My Shared Pack");
   assert.equal(params.get("pid"), "pack-123");
   assert.equal(params.get("pv"), "1");
@@ -87,17 +87,36 @@ void test("serializeSharePayload emits compact canonical params", () => {
 
 void test("parseSharePayload ignores unknown/unsupported keys", () => {
   const parsed = parseSharePayload(
-    new URLSearchParams(
-      "sys=bad-system&str=-99&fr=1000&lefty=1&show=names&kg=0",
-    ),
+    new URLSearchParams("sys=bad-system&str=-99&fr=1000&lefty=1&show=names"),
   );
 
   assert.ok(parsed);
   assert.equal(parsed?.values.systemId, undefined);
   assert.equal(parsed?.values.strings, 4);
   assert.equal(parsed?.values.frets, 30);
-  assert.equal(parsed?.values.kgNeckFilterEnabled, undefined);
   assert.equal((parsed?.values as Record<string, unknown>).lefty, undefined);
+});
+
+void test("parseSharePayload resolves canonical nm=fretless", () => {
+  const parsed = parseSharePayload(new URLSearchParams("nm=fretless"));
+  assert.equal(parsed?.values.neckFilterMode, "fretless");
+});
+
+void test("parseSharePayload resolves canonical nm=kg", () => {
+  const parsed = parseSharePayload(new URLSearchParams("nm=kg"));
+  assert.equal(parsed?.values.neckFilterMode, "kg");
+});
+
+void test("parseSharePayload resolves canonical nm=none", () => {
+  const parsed = parseSharePayload(new URLSearchParams("nm=none"));
+  const resolved = resolveInstrumentHydrationValues(parsed);
+  assert.equal(resolved?.neckFilterMode, "none");
+});
+
+void test("parseSharePayload coerces invalid nm to none", () => {
+  const parsed = parseSharePayload(new URLSearchParams("nm=legacy"));
+  const resolved = resolveInstrumentHydrationValues(parsed);
+  assert.equal(resolved?.neckFilterMode, "none");
 });
 
 void test("parseSharePayload preserves pack references/payload", () => {
@@ -128,7 +147,7 @@ void test("resolveInstrumentHydrationValues fills deterministic defaults", () =>
   assert.deepEqual(resolved?.tuning, []);
   assert.equal(resolved?.stringMeta, null);
   assert.equal(resolved?.boardMeta, null);
-  assert.equal(resolved?.kgNeckFilterEnabled, false);
+  assert.equal(resolved?.neckFilterMode, "none");
 });
 
 void test("parseSharePayload no longer accepts legacy alias keys", () => {

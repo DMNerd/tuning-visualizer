@@ -14,19 +14,12 @@ import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
 import { renderNoteName } from "@/lib/theory/noteNaming";
 import { normalizeIntlNoteName } from "@/lib/theory/notation";
 import {
-  isFretlessBoardMeta,
-  shouldApplyKgNeckFilter,
-} from "@/lib/presets/kgNeckFilter";
-
+  coerceNeckFilterMode,
+  getNeckFilterOptions,
+} from "@/lib/presets/neckFilterModes";
 function InstrumentControls({ state, actions, meta }) {
-  const {
-    strings,
-    frets,
-    tuning,
-    systemId,
-    selectedPreset,
-    kgNeckFilterEnabled,
-  } = state;
+  const { strings, frets, tuning, systemId, selectedPreset, neckFilterMode } =
+    state;
   const {
     setFrets,
     setSystemId,
@@ -34,7 +27,7 @@ function InstrumentControls({ state, actions, meta }) {
     handleStringsChange,
     setSelectedPreset,
     handleSaveDefault,
-    setKgNeckFilterEnabled,
+    setNeckFilterMode,
     handleResetFactoryDefault,
     onCreateCustomPack,
     onEditCustomPack,
@@ -87,19 +80,11 @@ function InstrumentControls({ state, actions, meta }) {
   const isCustomPreset = Array.isArray(customPresetNames)
     ? customPresetNames.includes(selectedPreset)
     : false;
-  const selectedPresetMeta = presetMetaMap?.[selectedPreset] ?? null;
-  const selectedBoardMeta =
-    selectedPresetMeta && typeof selectedPresetMeta === "object"
-      ? selectedPresetMeta.board
-      : null;
-  const isFretlessPreset = isFretlessBoardMeta(selectedBoardMeta);
-  const canUseKgFilter = shouldApplyKgNeckFilter({
-    enabled: true,
+  const selectedNeckFilterMode = coerceNeckFilterMode(neckFilterMode);
+  const neckFilterOptions = getNeckFilterOptions({
     edo: safeSystems?.[systemId]?.divisions,
-    strings,
-    boardMeta: isFretlessPreset ? selectedBoardMeta : null,
+    boardMeta: null,
   });
-  const kgFilterMode = kgNeckFilterEnabled ? "kg" : "none";
 
   return (
     <Section id="instrument-controls" title="Instrument">
@@ -219,14 +204,11 @@ function InstrumentControls({ state, actions, meta }) {
         <div className="tv-controls__defaults">
           <SegmentedRadioGroup
             label="Neck filter"
-            name="kg-neck-filter"
+            name="neck-filter-mode"
             className="tv-field--neck-filter"
-            value={kgFilterMode}
-            onChange={(value) => setKgNeckFilterEnabled?.(value === "kg")}
-            options={[
-              { value: "none", label: "None" },
-              { value: "kg", label: "KG", disabled: !canUseKgFilter },
-            ]}
+            value={selectedNeckFilterMode}
+            onChange={(value) => setNeckFilterMode?.(value)}
+            options={neckFilterOptions}
           />
           <button
             className="tv-button tv-button--block"
@@ -256,7 +238,7 @@ function pickInstrumentMemoProps(p) {
     tuning: s.tuning,
     systemId: s.systemId,
     selectedPreset: s.selectedPreset,
-    kgNeckFilterEnabled: s.kgNeckFilterEnabled,
+    neckFilterMode: s.neckFilterMode,
     systems: m.systems,
     sysNames: m.sysNames,
     noteNaming: m.noteNaming,
@@ -269,7 +251,7 @@ function pickInstrumentMemoProps(p) {
     handleStringsChange: a.handleStringsChange,
     setSelectedPreset: a.setSelectedPreset,
     handleSaveDefault: a.handleSaveDefault,
-    setKgNeckFilterEnabled: a.setKgNeckFilterEnabled,
+    setNeckFilterMode: a.setNeckFilterMode,
     handleResetFactoryDefault: a.handleResetFactoryDefault,
     onCreateCustomPack: a.onCreateCustomPack,
     onEditCustomPack: a.onEditCustomPack,

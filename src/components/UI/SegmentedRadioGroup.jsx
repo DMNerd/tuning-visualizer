@@ -20,7 +20,7 @@ function SegmentedRadioGroup({
         {label}
       </span>
       <div
-        role="group"
+        role="radiogroup"
         aria-labelledby={groupLabelId}
         className={clsx("tv-binary-toggle", {
           "tv-binary-toggle--ternary": optionCount === 3,

@@ -1,3 +1,8 @@
+import {
+  coerceNeckFilterMode,
+  NECK_FILTER_MODES,
+} from "@/lib/presets/neckFilterModes";
+
 function toPlainSerializable(value) {
   if (value === null) return null;
 
@@ -81,10 +86,10 @@ export function buildShareDomainState({ theoryDomain, instrumentDomain }) {
           : undefined,
         stringMeta: toPlainSerializable(instrumentState.stringMeta),
         boardMeta: toPlainSerializable(instrumentState.boardMeta),
-        kgNeckFilterEnabled:
-          typeof instrumentState.kgNeckFilterEnabled === "boolean"
-            ? instrumentState.kgNeckFilterEnabled
-            : undefined,
+        neckFilterMode: (() => {
+          const mode = coerceNeckFilterMode(instrumentState.neckFilterMode);
+          return mode === NECK_FILTER_MODES.NONE ? undefined : mode;
+        })(),
       },
       presets: {
         selectedPreset:
