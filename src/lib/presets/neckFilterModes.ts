@@ -252,11 +252,19 @@ export function resolvePresetNeckFilterMode({
 export function getNeckFilterOptions(
   context: NeckFilterContext = {},
 ): NeckFilterOption[] {
-  return NECK_FILTER_MODE_DEFS.map((def) => ({
-    value: def.id,
-    label: def.label,
-    disabled: !def.isApplicable(context),
-  }));
+  const optionOrder: readonly NeckFilterModeId[] = [
+    NECK_FILTER_MODES.NONE,
+    NECK_FILTER_MODES.FRETLESS,
+    NECK_FILTER_MODES.KG,
+  ];
+  return optionOrder.map((modeId) => {
+    const def = MODE_DEF_MAP[modeId];
+    return {
+      value: def.id,
+      label: def.label,
+      disabled: !def.isApplicable(context),
+    };
+  });
 }
 
 export function sanitizeBoardMetaForModeStorage(

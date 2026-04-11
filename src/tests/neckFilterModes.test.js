@@ -165,7 +165,7 @@ test("mode registry exposes UI options with context-aware disabled state", () =>
 
   assert.deepEqual(
     options12.map((option) => option.value),
-    ["none", "kg", "fretless"],
+    ["none", "fretless", "kg"],
   );
   assert.equal(
     options12.find((option) => option.value === "kg")?.disabled,

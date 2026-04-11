@@ -629,6 +629,10 @@ html.is-fs {
   min-width: 0;
 }
 
+.tv-binary-toggle__option:not([aria-disabled="true"]) .tv-binary-toggle__label {
+  cursor: pointer;
+}
+
 .tv-binary-toggle__input {
   position: absolute;
   inline-size: 1px;
@@ -658,6 +662,24 @@ html.is-fs {
 .tv-binary-toggle__input:checked + .tv-binary-toggle__label {
   background: var(--tv-binary-toggle-active-bg);
   color: var(--fg);
+}
+
+.tv-binary-toggle__input:disabled + .tv-binary-toggle__label {
+  cursor: not-allowed;
+  color: color-mix(in oklab, var(--muted) 78%, var(--line));
+  border: 1px solid color-mix(in oklab, var(--line) 82%, transparent);
+  background: color-mix(in oklab, var(--line) 14%, transparent);
+  opacity: 0.68;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}
+
+.tv-binary-toggle__input:disabled:checked + .tv-binary-toggle__label {
+  color: color-mix(in oklab, var(--fg) 78%, var(--muted));
+  border-color: color-mix(in oklab, var(--root) 38%, var(--line));
+  background: color-mix(in oklab, var(--root) 22%, var(--line));
+  opacity: 0.82;
 }
 
 .tv-binary-toggle__input:focus-visible + .tv-binary-toggle__label {
