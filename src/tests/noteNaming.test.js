@@ -6,7 +6,7 @@ import {
   germanToEnglishNoteName,
   renderNoteName,
   buildNoteAliases,
-} from "@/lib/theory/noteNaming";
+} from "@/lib/theory/notation";
 
 test("german note naming converts B and H correctly", () => {
   assert.equal(toGermanNoteName("Bb"), "B");

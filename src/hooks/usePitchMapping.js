@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { buildNoteAliases, renderNoteName } from "@/lib/theory/noteNaming";
+import { buildNoteAliases, renderNoteName } from "@/lib/theory/notation";
 
 export function buildNameToPcMap(
   system,

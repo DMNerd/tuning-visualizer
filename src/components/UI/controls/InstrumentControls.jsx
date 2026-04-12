@@ -11,7 +11,7 @@ import { withToastPromise } from "@/utils/toast";
 import { memoWithShallowPick } from "@/utils/memo";
 import NumberField from "@/components/UI/NumberField";
 import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
-import { renderNoteName } from "@/lib/theory/noteNaming";
+import { renderNoteName } from "@/lib/theory/notation";
 import { normalizeIntlNoteName } from "@/lib/theory/notation";
 import {
   coerceNeckFilterMode,
