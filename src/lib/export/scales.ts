@@ -240,6 +240,7 @@ function formatHeaderSingleLine(h: ExportHeader): string {
   }
   if (h.accidental === "flat") meta.push("♭");
   if (h.accidental === "sharp") meta.push("♯");
+  if (h.accidental === "both") meta.push("♯/♭");
   if (h.spelling) meta.push(h.spelling);
 
   if (meta.length) primary.push(meta.join(" · "));

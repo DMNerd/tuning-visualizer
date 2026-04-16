@@ -98,6 +98,7 @@ function DisplayControls({ state, actions, meta }) {
             options={[
               { value: "sharp", label: "Sharps (C, C#, D…)" },
               { value: "flat", label: "Flats (C, Db, D…)" },
+              { value: "both", label: "Both (C#, Db)" },
             ]}
           />
 

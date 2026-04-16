@@ -261,3 +261,29 @@ test("hotkey table preserves modal gating and supports updated practice actions 
   assert.equal(initialToggleCalls, 0);
   assert.equal(latestToggleCalls, 1);
 });
+
+test("accidental hotkey cycles sharp -> flat -> both -> sharp", () => {
+  const state = { accidental: "sharp" };
+  const liveRef = {
+    current: {
+      setDisplayPrefs: (updater) => updater(state),
+      minDot: 8,
+      maxDot: 24,
+      minStrings: 4,
+      maxStrings: 8,
+      minFrets: 12,
+      maxFrets: 30,
+    },
+  };
+
+  const shortcuts = buildShortcutTableFromRefs(liveRef);
+  const toggleAccidental = shortcuts.find((entry) => entry.combo === "a");
+  assert.ok(toggleAccidental);
+
+  toggleAccidental.handler();
+  assert.equal(state.accidental, "flat");
+  toggleAccidental.handler();
+  assert.equal(state.accidental, "both");
+  toggleAccidental.handler();
+  assert.equal(state.accidental, "sharp");
+});

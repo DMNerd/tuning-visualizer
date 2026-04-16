@@ -76,7 +76,9 @@ export function buildShortcutTableFromRefs(liveRef) {
       handler: () => {
         const live = liveRef.current || {};
         live.setDisplayPrefs?.((d) => {
-          d.accidental = d.accidental === "sharp" ? "flat" : "sharp";
+          const cycle = ["sharp", "flat", "both"];
+          const currentIndex = cycle.indexOf(d.accidental);
+          d.accidental = cycle[(currentIndex + 1) % cycle.length];
         });
       },
     },

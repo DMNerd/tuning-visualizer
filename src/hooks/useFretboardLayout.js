@@ -14,9 +14,10 @@ export function useFretboardLayout({
 
   return useMemo(() => {
     const NUT_W = 16;
-    const BASE_FRET_W = 54;
-    const MIN_FRET_W = 42;
-    const MAX_FRET_W = 64;
+    const dotScale = Math.max(0.65, dotSize / 14);
+    const BASE_FRET_W = 54 * dotScale;
+    const MIN_FRET_W = 42 * dotScale;
+    const MAX_FRET_W = 64 * dotScale;
     const scale = 18 / Math.max(frets, 18);
     const FRET_W = Math.round(
       Math.min(MAX_FRET_W, Math.max(MIN_FRET_W, BASE_FRET_W * scale)),

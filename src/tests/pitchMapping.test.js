@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { TUNINGS } from "@/lib/theory/tuning";
-import { buildNameToPcMap } from "@/hooks/usePitchMapping";
+import {
+  buildNameToPcMap,
+  nameForPcWithDisplayAccidentals,
+} from "@/hooks/usePitchMapping";
 
 test("german naming keeps B/H pitch classes distinct", () => {
   const map = buildNameToPcMap(TUNINGS["12-TET"], "german", "flat");
@@ -22,4 +25,11 @@ test("english naming still treats B as pitch class 11", () => {
   const map = buildNameToPcMap(TUNINGS["12-TET"], "english", "sharp");
 
   assert.equal(map.get("B"), 11);
+});
+
+test("both accidental display emits slash names while preserving natural notes", () => {
+  const system = TUNINGS["12-TET"];
+
+  assert.equal(nameForPcWithDisplayAccidentals(system, 6, "both"), "F#/Gb");
+  assert.equal(nameForPcWithDisplayAccidentals(system, 0, "both"), "C");
 });

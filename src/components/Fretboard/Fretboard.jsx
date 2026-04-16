@@ -45,11 +45,54 @@ const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
 const NUT_VERTICAL_PADDING = 8;
 const NOTE_FONT_MIN = 6;
 const NOTE_FONT_MAX = 11.5;
+const SPLIT_NOTE_FONT_MIN = 5.5;
+const SPLIT_NOTE_FONT_MAX = 9.5;
 const MARKER_FONT_MIN = 6;
 const MARKER_FONT_MAX = 11.5;
 const APP_FONT_STACK =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 const SPATIAL_BUCKET_SIZE = 36;
+const NOTE_TEXT_PADDING = 2;
+
+function estimateMinimumDotSize({
+  textFit,
+  divisions,
+  nameForPc,
+  accidental,
+}) {
+  if (!textFit || typeof nameForPc !== "function") return 8;
+  let requiredRadius = 8;
+
+  for (let pc = 0; pc < divisions; pc += 1) {
+    const label = String(nameForPc(pc) ?? "");
+    if (!label) continue;
+
+    if (accidental === "both" && label.includes("/")) {
+      const [upper = "", lower = ""] = label.split("/");
+      const upperW = textFit.measureWidth(upper, {
+        fontWeight: 700,
+        fontSize: SPLIT_NOTE_FONT_MAX,
+      });
+      const lowerW = textFit.measureWidth(lower, {
+        fontWeight: 700,
+        fontSize: SPLIT_NOTE_FONT_MAX,
+      });
+      requiredRadius = Math.max(
+        requiredRadius,
+        Math.max(upperW, lowerW) / 1.7 + NOTE_TEXT_PADDING,
+      );
+      continue;
+    }
+
+    const width = textFit.measureWidth(label, {
+      fontWeight: 700,
+      fontSize: NOTE_FONT_MAX,
+    });
+    requiredRadius = Math.max(requiredRadius, width / 1.65 + NOTE_TEXT_PADDING);
+  }
+
+  return Math.ceil(requiredRadius);
+}
 
 function forEachBucketKey2D(bounds, bucketSize, visit) {
   const startX = Math.floor(bounds.left / bucketSize);
@@ -221,6 +264,27 @@ const Fretboard = forwardRef(function Fretboard(
   ref,
 ) {
   const svgRef = useRef(null);
+  const textFit = useMemo(
+    () => createTextFit({ fontFamily: APP_FONT_STACK }),
+    [],
+  );
+
+  const { pcFromName, nameForPc } = useSystemNoteNames(
+    system,
+    accidental,
+    noteNaming,
+  );
+  const minimumDotSize = useMemo(
+    () =>
+      estimateMinimumDotSize({
+        textFit,
+        divisions: Math.max(1, system.divisions),
+        nameForPc,
+        accidental,
+      }),
+    [textFit, system.divisions, nameForPc, accidental],
+  );
+  const effectiveDotSize = Math.max(dotSize, minimumDotSize);
 
   const {
     width,
@@ -239,7 +303,12 @@ const Fretboard = forwardRef(function Fretboard(
     startFretFor,
     stringStartX,
     openXForString,
-  } = useFretboardLayout({ frets, strings, dotSize, stringMeta });
+  } = useFretboardLayout({
+    frets,
+    strings,
+    dotSize: effectiveDotSize,
+    stringMeta,
+  });
 
   useLayoutEffect(() => {
     if (!svgRef.current) return;
@@ -250,11 +319,6 @@ const Fretboard = forwardRef(function Fretboard(
 
   const displayX = (x) => (lefty ? width - x : x);
 
-  const { pcFromName, nameForPc } = useSystemNoteNames(
-    system,
-    accidental,
-    noteNaming,
-  );
   const pcForName = pcFromName;
   const notePlacementMode =
     boardMeta?.notePlacement === "onFret" ? "onFret" : "between";
@@ -351,10 +415,6 @@ const Fretboard = forwardRef(function Fretboard(
     }),
     [microLabelStyle, accidental],
   );
-  const textFit = useMemo(
-    () => createTextFit({ fontFamily: APP_FONT_STACK }),
-    [],
-  );
   const typographyCaches = useMemo(
     () => ({
       fitByConfig: new Map(),
@@ -366,7 +426,7 @@ const Fretboard = forwardRef(function Fretboard(
       width,
       frets,
       strings,
-      dotSize,
+      effectiveDotSize,
       notePlacementMode,
     ],
   );
@@ -489,7 +549,7 @@ const Fretboard = forwardRef(function Fretboard(
       const isRoot = pc === rootIx;
       const isStandard = (slot.f * 12) % N === 0;
       const isMicro = !isStandard;
-      const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * dotSize;
+      const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
       const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
 
       let fill;
@@ -545,36 +605,102 @@ const Fretboard = forwardRef(function Fretboard(
 
     for (let i = 0; i < sorted.length; i += 1) {
       const note = sorted[i];
-      const noteVariants = buildLabelVariants(note.label ?? "", {
-        kind: "note",
-        allowSingleCharFallback: note.isRoot,
-      });
-      const fit = fitLabelCached(noteVariants, note.r * 1.65, {
-        sizeRange: {
-          min: NOTE_FONT_MIN,
-          max: NOTE_FONT_MAX,
-          step: 0.5,
-        },
-        fontWeight: 700,
-        allowSingleCharFallback: note.isRoot,
-      });
+      const shouldSplitEnharmonicLabel =
+        accidental === "both" &&
+        show === "names" &&
+        typeof note.label === "string" &&
+        note.label.includes("/");
+      let renderedLabel = null;
+      let renderedLabelLines = null;
+      let noteFontSize = NOTE_FONT_MIN;
+      let width = 0;
+      let halfH = 0;
 
-      if (!fit) {
-        computed.set(note.key, { ...note, renderedLabel: null });
-        continue;
+      if (shouldSplitEnharmonicLabel) {
+        const [upperRaw = "", lowerRaw = ""] = note.label.split("/");
+        const upperFit = fitLabelCached(
+          buildLabelVariants(upperRaw, {
+            kind: "note",
+            allowSingleCharFallback: note.isRoot,
+          }),
+          note.r * 1.5,
+          {
+            sizeRange: {
+              min: SPLIT_NOTE_FONT_MIN,
+              max: SPLIT_NOTE_FONT_MAX,
+              step: 0.5,
+            },
+            fontWeight: 700,
+            allowSingleCharFallback: note.isRoot,
+          },
+        );
+        const lowerFit = fitLabelCached(
+          buildLabelVariants(lowerRaw, {
+            kind: "note",
+            allowSingleCharFallback: note.isRoot,
+          }),
+          note.r * 1.5,
+          {
+            sizeRange: {
+              min: SPLIT_NOTE_FONT_MIN,
+              max: SPLIT_NOTE_FONT_MAX,
+              step: 0.5,
+            },
+            fontWeight: 700,
+            allowSingleCharFallback: note.isRoot,
+          },
+        );
+        if (!upperFit || !lowerFit) {
+          computed.set(note.key, { ...note, renderedLabel: null });
+          continue;
+        }
+        renderedLabelLines = [upperFit.text, lowerFit.text];
+        noteFontSize = Math.min(upperFit.fontSize, lowerFit.fontSize);
+        width = Math.max(
+          measureWidthCached(upperFit.text, {
+            fontSize: noteFontSize,
+            fontWeight: 700,
+          }),
+          measureWidthCached(lowerFit.text, {
+            fontSize: noteFontSize,
+            fontWeight: 700,
+          }),
+        );
+        halfH = noteFontSize * 1.4;
+      } else {
+        const noteVariants = buildLabelVariants(note.label ?? "", {
+          kind: "note",
+          allowSingleCharFallback: note.isRoot,
+        });
+        const fit = fitLabelCached(noteVariants, note.r * 1.65, {
+          sizeRange: {
+            min: NOTE_FONT_MIN,
+            max: NOTE_FONT_MAX,
+            step: 0.5,
+          },
+          fontWeight: 700,
+          allowSingleCharFallback: note.isRoot,
+        });
+
+        if (!fit) {
+          computed.set(note.key, { ...note, renderedLabel: null });
+          continue;
+        }
+        renderedLabel = fit.text;
+        noteFontSize = fit.fontSize;
+        width = measureWidthCached(fit.text, {
+          fontSize: fit.fontSize,
+          fontWeight: 700,
+        });
+        halfH = fit.fontSize / 2 + 1;
       }
 
-      const width = measureWidthCached(fit.text, {
-        fontSize: fit.fontSize,
-        fontWeight: 700,
-      });
       const halfW = width / 2 + 1;
-      const halfH = fit.fontSize / 2 + 1;
       const bounds = {
         left: note.cx - halfW,
         right: note.cx + halfW,
-        top: note.cy - halfH,
-        bottom: note.cy + halfH,
+        top: note.cy - halfH - 1,
+        bottom: note.cy + halfH + 1,
       };
       const collides = collides2D(
         bounds,
@@ -590,8 +716,10 @@ const Fretboard = forwardRef(function Fretboard(
       addBounds2D(bounds, acceptedBoundsBuckets, SPATIAL_BUCKET_SIZE);
       computed.set(note.key, {
         ...note,
-        renderedLabel: fit.text,
-        noteFontSize: fit.fontSize,
+        renderedLabel,
+        renderedLabelLines,
+        noteFontSize,
+        splitEnharmonic: shouldSplitEnharmonicLabel,
       });
     }
 
@@ -608,12 +736,13 @@ const Fretboard = forwardRef(function Fretboard(
     openOnlyInScale,
     hideNonChord,
     rootIx,
-    dotSize,
+    effectiveDotSize,
     colorByDegree,
     degreeForPc,
     labelFor,
     show,
     microLabelOpts,
+    accidental,
     fitLabelCached,
     measureWidthCached,
   ]);
@@ -888,36 +1017,117 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {renderedNotes.map((n) => (
-          <circle
-            key={`noteCirc-${n.key}`}
-            data-note-pc={n.pc}
-            cx={n.cx}
-            cy={n.cy}
-            r={n.r}
-            fill={n.fill}
-            stroke={
-              n.inChord
-                ? n.isChordOutsideScale
-                  ? "var(--chord-outside-stroke)"
-                  : "var(--fg)"
-                : "none"
-            }
-            strokeWidth={
-              n.isChordRoot
-                ? CHORD_ROOT_STROKE_WIDTH
-                : n.inChord
-                  ? n.isChordOutsideScale
-                    ? CHORD_NOTE_STROKE_WIDTH * 0.7
-                    : CHORD_NOTE_STROKE_WIDTH
-                  : 0
-            }
-          />
-        ))}
+        {renderedNotes.map((n) => {
+          const chordStroke = n.inChord
+            ? n.isChordOutsideScale
+              ? "var(--chord-outside-stroke)"
+              : "var(--fg)"
+            : "none";
+          const chordStrokeWidth = n.isChordRoot
+            ? CHORD_ROOT_STROKE_WIDTH
+            : n.inChord
+              ? n.isChordOutsideScale
+                ? CHORD_NOTE_STROKE_WIDTH * 0.7
+                : CHORD_NOTE_STROKE_WIDTH
+              : 0;
+
+          if (!n.splitEnharmonic) {
+            return (
+              <circle
+                key={`noteCirc-${n.key}`}
+                data-note-pc={n.pc}
+                cx={n.cx}
+                cy={n.cy}
+                r={n.r}
+                fill={n.fill}
+                stroke={chordStroke}
+                strokeWidth={chordStrokeWidth}
+              />
+            );
+          }
+
+          const clipTopId = `note-top-${n.key}`;
+          const clipBottomId = `note-bottom-${n.key}`;
+          const topFill = n.fill;
+          const bottomFill = `color-mix(in srgb, ${topFill} 68%, var(--panel))`;
+
+          return (
+            <g key={`noteCirc-${n.key}`} data-note-pc={n.pc}>
+              <defs>
+                <clipPath id={clipTopId}>
+                  <rect
+                    x={n.cx - n.r}
+                    y={n.cy - n.r}
+                    width={n.r * 2}
+                    height={n.r}
+                  />
+                </clipPath>
+                <clipPath id={clipBottomId}>
+                  <rect x={n.cx - n.r} y={n.cy} width={n.r * 2} height={n.r} />
+                </clipPath>
+              </defs>
+              <circle
+                cx={n.cx}
+                cy={n.cy}
+                r={n.r}
+                fill={topFill}
+                clipPath={`url(#${clipTopId})`}
+              />
+              <circle
+                cx={n.cx}
+                cy={n.cy}
+                r={n.r}
+                fill={bottomFill}
+                clipPath={`url(#${clipBottomId})`}
+              />
+              <line
+                x1={n.cx - n.r * 0.72}
+                y1={n.cy}
+                x2={n.cx + n.r * 0.72}
+                y2={n.cy}
+                stroke="var(--line)"
+                strokeWidth="0.8"
+                opacity="0.8"
+              />
+              <circle
+                cx={n.cx}
+                cy={n.cy}
+                r={n.r}
+                fill="none"
+                stroke={chordStroke}
+                strokeWidth={chordStrokeWidth}
+              />
+            </g>
+          );
+        })}
       </g>
 
       {renderedNotes.map((n) => {
-        if (!n.renderedLabel) return null;
+        if (!n.renderedLabel && !n.renderedLabelLines) return null;
+        if (n.renderedLabelLines) {
+          const [upper = "", lower = ""] = n.renderedLabelLines;
+          const splitFontSize = n.noteFontSize ?? SPLIT_NOTE_FONT_MIN;
+          return (
+            <text
+              key={`noteText-${n.key}`}
+              data-note-pc={n.pc}
+              className={clsx("tv-fretboard__note", {
+                "tv-fretboard__note--root": n.isRoot,
+              })}
+              x={displayX(n.cx)}
+              y={n.cy}
+              textAnchor="middle"
+              fontSize={splitFontSize}
+            >
+              <tspan x={displayX(n.cx)} dy={-splitFontSize * 0.2}>
+                {upper}
+              </tspan>
+              <tspan x={displayX(n.cx)} dy={splitFontSize * 1.05}>
+                {lower}
+              </tspan>
+            </text>
+          );
+        }
         return (
           <text
             key={`noteText-${n.key}`}

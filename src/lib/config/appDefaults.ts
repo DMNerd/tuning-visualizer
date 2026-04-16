@@ -49,7 +49,7 @@ export const DISPLAY_DEFAULTS = {
   lefty: false,
   openOnlyInScale: false,
   colorByDegree: false,
-  accidental: "sharp" as "sharp" | "flat",
+  accidental: "sharp" as "sharp" | "flat" | "both",
   noteNaming: "english" as "english" | "german",
   microLabelStyle: "letters" as "letters" | "unicode" | "none",
 };

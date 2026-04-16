@@ -1,6 +1,29 @@
 import { useMemo, useCallback } from "react";
 import { buildNoteAliases, renderNoteName } from "@/lib/theory/notation";
 
+function getDisplayAccidentals(accidental) {
+  if (accidental === "both") return ["sharp", "flat"];
+  return accidental === "flat" ? ["flat", "sharp"] : ["sharp", "flat"];
+}
+
+export function nameForPcWithDisplayAccidentals(
+  system,
+  pc,
+  accidental = "sharp",
+  noteNaming = "english",
+) {
+  const [primaryAccidental, secondaryAccidental] =
+    getDisplayAccidentals(accidental);
+  const primary = renderNoteName(system.nameForPc(pc, primaryAccidental), noteNaming);
+  if (accidental !== "both") return primary;
+
+  const alternate = renderNoteName(
+    system.nameForPc(pc, secondaryAccidental),
+    noteNaming,
+  );
+  return primary === alternate ? primary : `${primary}/${alternate}`;
+}
+
 export function buildNameToPcMap(
   system,
   noteNaming = "english",
@@ -20,7 +43,7 @@ export function buildNameToPcMap(
   // We apply both accidental spellings so parsing remains stable if persisted values
   // were saved under a different accidental preference.
   for (let pc = 0; pc < system.divisions; pc++) {
-    for (const acc of [accidental, accidental === "flat" ? "sharp" : "flat"]) {
+    for (const acc of getDisplayAccidentals(accidental)) {
       const preferred = renderNoteName(system.nameForPc(pc, acc), noteNaming);
       map.set(preferred, pc);
     }
@@ -49,7 +72,7 @@ export function usePitchMapping(system, accidental, noteNaming = "english") {
   );
 
   const nameForPc = useCallback(
-    (pc) => renderNoteName(system.nameForPc(pc, accidental), noteNaming),
+    (pc) => nameForPcWithDisplayAccidentals(system, pc, accidental, noteNaming),
     [system, accidental, noteNaming],
   );
 

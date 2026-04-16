@@ -332,3 +332,38 @@ test("integration: dense marker overlap hides non-capo labels while preserving c
   assert.match(markup, /tv-fretboard__marker tv-fretboard__marker--capo/);
   assert.ok(markup.includes(`>${capoLabel}<`));
 });
+
+test("integration: both accidental mode uses split note rendering for enharmonics", () => {
+  const markup = renderToStaticMarkup(
+    React.createElement(Fretboard, {
+      strings: 1,
+      frets: 2,
+      tuning: ["F"],
+      rootIx: 5,
+      intervals: [0, 1],
+      accidental: "both",
+      noteNaming: "english",
+      microLabelStyle: "letters",
+      show: "names",
+      showOpen: true,
+      showFretNums: false,
+      dotSize: 10,
+      lefty: false,
+      system: TUNINGS["12-TET"],
+      chordPCs: null,
+      chordRootPc: null,
+      openOnlyInScale: false,
+      colorByDegree: false,
+      hideNonChord: false,
+      stringMeta: null,
+      boardMeta: null,
+      capoFret: 0,
+      onSetCapo: () => {},
+    }),
+  );
+
+  assert.match(markup, /note-top-/);
+  assert.match(markup, /note-bottom-/);
+  assert.match(markup, /<tspan[^>]*>F#<\/tspan>/);
+  assert.match(markup, /<tspan[^>]*>Gb<\/tspan>/);
+});

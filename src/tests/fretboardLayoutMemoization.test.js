@@ -12,17 +12,18 @@ function LayoutProbe(props) {
     startFret: layout.startFretFor(0),
     stringStartX: layout.stringStartX(0),
     openX: layout.openXForString(0),
+    fretDelta: layout.wireX(2) - layout.wireX(1),
   });
 
   return React.createElement("div", { "data-layout-snapshot": snapshot }, null);
 }
 
-function renderLayoutSnapshot(stringMeta) {
+function renderLayoutSnapshot(stringMeta, dotSize = 14) {
   const markup = renderToStaticMarkup(
     React.createElement(LayoutProbe, {
       frets: 12,
       strings: 1,
-      dotSize: 14,
+      dotSize,
       stringMeta,
     }),
   );
@@ -58,4 +59,11 @@ test("useFretboardLayout derives metaByIndex during render via useMemo", () => {
   );
   assert.doesNotMatch(source, /useEffect\(/);
   assert.doesNotMatch(source, /useState\(/);
+});
+
+test("dot size scales equal fret spacing", () => {
+  const compact = renderLayoutSnapshot(null, 10);
+  const roomy = renderLayoutSnapshot(null, 22);
+
+  assert.ok(roomy.fretDelta > compact.fretDelta);
 });
