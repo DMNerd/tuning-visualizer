@@ -106,6 +106,7 @@ export default function App() {
     lefty,
     openOnlyInScale,
     colorByDegree,
+    colorByShape,
     accidental,
     microLabelStyle,
   } = displayPrefs;
@@ -225,6 +226,7 @@ export default function App() {
             chordRootPc={theoryDomain.chord.chordRootIx}
             openOnlyInScale={openOnlyInScale}
             colorByDegree={colorByDegree}
+            colorByShape={colorByShape}
             hideNonChord={theoryDomain.chord.hideNonChord}
             stringMeta={effectiveStringMeta}
             boardMeta={boardMeta}

@@ -4,6 +4,7 @@ import Section from "@/components/UI/Section";
 import { LABEL_OPTIONS } from "@/hooks/useLabels";
 import { MICRO_LABEL_STYLES } from "@/utils/fretLabels";
 import { getDegreeColor } from "@/utils/degreeColors";
+import { getShapeColor } from "@/utils/shapeColors";
 import { FiInfo } from "react-icons/fi";
 import { memoWithShallowPick } from "@/utils/memo";
 import { DOT_SIZE_MAX, DOT_SIZE_MIN } from "@/lib/config/appDefaults";
@@ -48,6 +49,42 @@ function DegreeLegend({ k = 7 }) {
   );
 }
 
+function ShapeLegend({ count = 5 }) {
+  if (!Number.isFinite(count) || count < 1) return null;
+
+  return (
+    <div className="tv-legend" aria-live="polite">
+      <p>
+        <FiInfo className="tv-legend__info-icon" aria-hidden="true" />
+        <span>Shape palette</span>
+      </p>
+      <div className="tv-legend__swatches">
+        {Array.from({ length: count }, (_, i) => (
+          <div className="tv-legend__swatch" key={i} title={`Shape ${i + 1}`}>
+            <svg
+              className="tv-legend__dot"
+              aria-hidden
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+            >
+              <circle
+                cx="7"
+                cy="7"
+                r="6"
+                fill={getShapeColor(i)}
+                stroke="var(--line)"
+              />
+            </svg>
+            <small>{i + 1}</small>
+          </div>
+        ))}
+      </div>
+      <small>Colors follow detected shape windows across the fretboard.</small>
+    </div>
+  );
+}
+
 function DisplayControls({ state, actions, meta }) {
   const {
     show,
@@ -59,6 +96,7 @@ function DisplayControls({ state, actions, meta }) {
     noteNaming,
     microLabelStyle,
     colorByDegree,
+    colorByShape,
     lefty,
   } = state;
   const {
@@ -71,6 +109,7 @@ function DisplayControls({ state, actions, meta }) {
     setNoteNaming,
     setMicroLabelStyle,
     setColorByDegree,
+    setColorByShape,
     setLefty,
   } = actions;
   const degreeCount = meta?.degreeCount ?? 7;
@@ -152,12 +191,30 @@ function DisplayControls({ state, actions, meta }) {
             id="colorByDegree"
             name="colorByDegree"
             checked={colorByDegree}
-            onChange={(e) => setColorByDegree(e.target.checked)}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setColorByDegree(checked);
+              if (checked) setColorByShape(false);
+            }}
           >
             Color notes by scale degree
           </ToggleSwitch>
 
+          <ToggleSwitch
+            id="colorByShape"
+            name="colorByShape"
+            checked={colorByShape}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setColorByShape(checked);
+              if (checked) setColorByDegree(false);
+            }}
+          >
+            Color notes by detected shapes
+          </ToggleSwitch>
+
           {colorByDegree ? <DegreeLegend k={degreeCount} /> : null}
+          {colorByShape ? <ShapeLegend /> : null}
         </div>
 
         <div
@@ -253,6 +310,7 @@ function pickDisplayMemoProps(p) {
     noteNaming: s.noteNaming,
     microLabelStyle: s.microLabelStyle,
     colorByDegree: s.colorByDegree,
+    colorByShape: s.colorByShape,
     lefty: s.lefty,
     degreeCount: m.degreeCount,
     setShow: a.setShow,
@@ -264,6 +322,7 @@ function pickDisplayMemoProps(p) {
     setNoteNaming: a.setNoteNaming,
     setMicroLabelStyle: a.setMicroLabelStyle,
     setColorByDegree: a.setColorByDegree,
+    setColorByShape: a.setColorByShape,
     setLefty: a.setLefty,
   };
 }

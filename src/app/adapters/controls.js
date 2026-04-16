@@ -93,6 +93,7 @@ export function buildDisplayControlModel({
       noteNaming: displayPrefs.noteNaming,
       microLabelStyle: displayPrefs.microLabelStyle,
       colorByDegree: displayPrefs.colorByDegree,
+      colorByShape: displayPrefs.colorByShape,
       lefty: displayPrefs.lefty,
     },
     actions: {
@@ -105,6 +106,7 @@ export function buildDisplayControlModel({
       setNoteNaming: displaySetters.setNoteNaming,
       setMicroLabelStyle: displaySetters.setMicroLabelStyle,
       setColorByDegree: displaySetters.setColorByDegree,
+      setColorByShape: displaySetters.setColorByShape,
       setLefty: displaySetters.setLefty,
     },
     meta: {

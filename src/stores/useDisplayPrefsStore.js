@@ -18,6 +18,7 @@ const SETTER_KEYS = [
   "microLabelStyle",
   "openOnlyInScale",
   "colorByDegree",
+  "colorByShape",
   "lefty",
 ];
 

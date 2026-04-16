@@ -232,6 +232,67 @@ test("integration: hidden capo fret is remapped to a visible fallback", () => {
   );
 });
 
+test("integration: colorByShape applies multiple palette colors across the neck", () => {
+  const sharedProps = {
+    strings: 6,
+    frets: 24,
+    tuning: ["E", "B", "G", "D", "A", "E"],
+    rootIx: 0,
+    intervals: [0, 2, 4, 5, 7, 9, 11],
+    accidental: "sharp",
+    noteNaming: "english",
+    microLabelStyle: "letters",
+    show: "names",
+    showOpen: true,
+    showFretNums: true,
+    dotSize: 12,
+    lefty: false,
+    system: TUNINGS["12-TET"],
+    chordPCs: null,
+    chordRootPc: null,
+    openOnlyInScale: false,
+    hideNonChord: false,
+    stringMeta: null,
+    boardMeta: null,
+    capoFret: 0,
+    onSetCapo: () => {},
+  };
+
+  const shapeMarkup = renderToStaticMarkup(
+    React.createElement(Fretboard, {
+      ...sharedProps,
+      colorByDegree: false,
+      colorByShape: true,
+    }),
+  );
+  const plainMarkup = renderToStaticMarkup(
+    React.createElement(Fretboard, {
+      ...sharedProps,
+      colorByDegree: false,
+      colorByShape: false,
+    }),
+  );
+
+  const fillsFromMarkup = (markup) =>
+    Array.from(
+      markup.matchAll(/<circle data-note-pc="[^"]+"[^>]*fill="([^"]+)"/g),
+    ).map((match) => match[1]);
+
+  const shapeFillCount = new Set(fillsFromMarkup(shapeMarkup)).size;
+  const plainFillCount = new Set(fillsFromMarkup(plainMarkup)).size;
+  const splitCountShape = (shapeMarkup.match(/id="note-top-/g) ?? []).length;
+  const splitCountPlain = (plainMarkup.match(/id="note-top-/g) ?? []).length;
+
+  assert.ok(
+    shapeFillCount > plainFillCount,
+    `expected shape mode to increase color variety (shape=${shapeFillCount}, plain=${plainFillCount})`,
+  );
+  assert.ok(
+    splitCountShape > splitCountPlain,
+    `expected shape mode to render split-color notes (shape=${splitCountShape}, plain=${splitCountPlain})`,
+  );
+});
+
 test("integration: micro fret marker abbreviations preserve multi-part identity cues", () => {
   const nineteenTet = findSystemByEdo(TUNINGS, 19)?.system;
   assert.ok(nineteenTet, "expected 19-TET system to resolve");

@@ -14,7 +14,10 @@ export function nameForPcWithDisplayAccidentals(
 ) {
   const [primaryAccidental, secondaryAccidental] =
     getDisplayAccidentals(accidental);
-  const primary = renderNoteName(system.nameForPc(pc, primaryAccidental), noteNaming);
+  const primary = renderNoteName(
+    system.nameForPc(pc, primaryAccidental),
+    noteNaming,
+  );
   if (accidental !== "both") return primary;
 
   const alternate = renderNoteName(

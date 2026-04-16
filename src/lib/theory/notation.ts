@@ -9,7 +9,10 @@ function normalizeToken(token: unknown): string {
     .replace(FLAT_EQUIVALENTS, "b");
 }
 
-function splitArrowDecorations(note: unknown): { core: string; suffix: string } {
+function splitArrowDecorations(note: unknown): {
+  core: string;
+  suffix: string;
+} {
   if (typeof note !== "string" || note.length === 0) {
     return { core: "", suffix: "" };
   }

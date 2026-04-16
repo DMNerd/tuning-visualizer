@@ -34,6 +34,8 @@ import {
   resolveVisibleCapoFret,
   reconcileCapoState,
 } from "@/components/Fretboard/renderFilters";
+import { findDistinctWindowShapeOccurrences } from "@/lib/theory/fretboardShapes";
+import { getShapeColor } from "@/utils/shapeColors";
 
 const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
 const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
@@ -54,12 +56,7 @@ const APP_FONT_STACK =
 const SPATIAL_BUCKET_SIZE = 36;
 const NOTE_TEXT_PADDING = 2;
 
-function estimateMinimumDotSize({
-  textFit,
-  divisions,
-  nameForPc,
-  accidental,
-}) {
+function estimateMinimumDotSize({ textFit, divisions, nameForPc, accidental }) {
   if (!textFit || typeof nameForPc !== "function") return 8;
   let requiredRadius = 8;
 
@@ -253,6 +250,7 @@ const Fretboard = forwardRef(function Fretboard(
     chordRootPc,
     openOnlyInScale,
     colorByDegree,
+    colorByShape,
     hideNonChord,
     stringMeta,
     boardMeta,
@@ -549,7 +547,8 @@ const Fretboard = forwardRef(function Fretboard(
       const isRoot = pc === rootIx;
       const isStandard = (slot.f * 12) % N === 0;
       const isMicro = !isStandard;
-      const rBase = (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
+      const rBase =
+        (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
       const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
 
       let fill;
@@ -593,6 +592,82 @@ const Fretboard = forwardRef(function Fretboard(
         fill,
         label,
       });
+    }
+
+    if (colorByShape && baseNotes.length > 0) {
+      const fretMin = Math.min(...baseNotes.map((note) => note.f));
+      const fretMax = Math.max(...baseNotes.map((note) => note.f));
+      const windowWidth = Math.max(2, Math.round(system.divisions / 4));
+      const minShapeNotes = Math.max(2, Math.floor(strings / 2));
+      const shapeInputNotes = baseNotes.map((note) => ({
+        string: note.s,
+        fret: note.f,
+        pc: note.pc,
+        degree: (note.pc - rootIx + N) % N,
+        isRoot: note.isRoot,
+      }));
+      const { occurrences } = findDistinctWindowShapeOccurrences(
+        shapeInputNotes,
+        {
+          fretMin,
+          fretMax,
+          width: windowWidth,
+          minNotes: minShapeNotes,
+          requireRoot: true,
+        },
+      );
+
+      const rawStarts = [
+        ...new Set(
+          occurrences
+            .map((occurrence) => occurrence.startFret)
+            .sort((a, b) => a - b),
+        ),
+      ];
+      const regionStarts = [];
+      for (const start of rawStarts) {
+        const previous = regionStarts[regionStarts.length - 1];
+        if (previous == null || start - previous >= windowWidth) {
+          regionStarts.push(start);
+        }
+      }
+      if (regionStarts.length === 0 && baseNotes.length > 0) {
+        regionStarts.push(Math.min(...baseNotes.map((note) => note.f)));
+      }
+      const shapeColorByKey = new Map();
+
+      for (const note of baseNotes) {
+        if (note.isChordOutsideScale) continue;
+        if (regionStarts.length === 0) continue;
+
+        const memberships = [];
+        for (let i = 0; i < regionStarts.length; i += 1) {
+          const start = regionStarts[i];
+          const endInclusive = start + windowWidth;
+          if (note.f >= start && note.f <= endInclusive) {
+            memberships.push(i);
+          }
+        }
+        if (memberships.length === 0) {
+          for (let i = 0; i < regionStarts.length; i += 1) {
+            if (note.f >= regionStarts[i]) note.shapeRegionIndex = i;
+            else break;
+          }
+          memberships.push(note.shapeRegionIndex ?? 0);
+        }
+
+        const shapeFills = memberships
+          .map((regionIndex) => getShapeColor(regionIndex))
+          .filter((fill, index, all) => all.indexOf(fill) === index)
+          .slice(0, 2);
+
+        if (!shapeColorByKey.has(note.key)) {
+          shapeColorByKey.set(note.key, shapeFills[0]);
+        }
+        note.fill = shapeColorByKey.get(note.key);
+        note.shapeSplitFills = shapeFills;
+        note.splitByShape = shapeFills.length > 1;
+      }
     }
 
     const sorted = [...baseNotes].sort((a, b) => {
@@ -738,11 +813,13 @@ const Fretboard = forwardRef(function Fretboard(
     rootIx,
     effectiveDotSize,
     colorByDegree,
+    colorByShape,
     degreeForPc,
     labelFor,
     show,
     microLabelOpts,
     accidental,
+    strings,
     fitLabelCached,
     measureWidthCached,
   ]);
@@ -1031,7 +1108,7 @@ const Fretboard = forwardRef(function Fretboard(
                 : CHORD_NOTE_STROKE_WIDTH
               : 0;
 
-          if (!n.splitEnharmonic) {
+          if (!n.splitEnharmonic && !n.splitByShape) {
             return (
               <circle
                 key={`noteCirc-${n.key}`}
@@ -1048,8 +1125,10 @@ const Fretboard = forwardRef(function Fretboard(
 
           const clipTopId = `note-top-${n.key}`;
           const clipBottomId = `note-bottom-${n.key}`;
-          const topFill = n.fill;
-          const bottomFill = `color-mix(in srgb, ${topFill} 68%, var(--panel))`;
+          const topFill = n.shapeSplitFills?.[0] ?? n.fill;
+          const bottomFill =
+            n.shapeSplitFills?.[1] ??
+            `color-mix(in srgb, ${topFill} 68%, var(--panel))`;
 
           return (
             <g key={`noteCirc-${n.key}`} data-note-pc={n.pc}>
@@ -1058,12 +1137,12 @@ const Fretboard = forwardRef(function Fretboard(
                   <rect
                     x={n.cx - n.r}
                     y={n.cy - n.r}
-                    width={n.r * 2}
-                    height={n.r}
+                    width={n.r}
+                    height={n.r * 2}
                   />
                 </clipPath>
                 <clipPath id={clipBottomId}>
-                  <rect x={n.cx - n.r} y={n.cy} width={n.r * 2} height={n.r} />
+                  <rect x={n.cx} y={n.cy - n.r} width={n.r} height={n.r * 2} />
                 </clipPath>
               </defs>
               <circle
@@ -1081,10 +1160,10 @@ const Fretboard = forwardRef(function Fretboard(
                 clipPath={`url(#${clipBottomId})`}
               />
               <line
-                x1={n.cx - n.r * 0.72}
-                y1={n.cy}
-                x2={n.cx + n.r * 0.72}
-                y2={n.cy}
+                x1={n.cx}
+                y1={n.cy - n.r * 0.72}
+                x2={n.cx}
+                y2={n.cy + n.r * 0.72}
                 stroke="var(--line)"
                 strokeWidth="0.8"
                 opacity="0.8"
@@ -1213,6 +1292,7 @@ function areFretboardPropsEqual(prev, next) {
   if (!Object.is(prev.lefty, next.lefty)) return false;
   if (!Object.is(prev.openOnlyInScale, next.openOnlyInScale)) return false;
   if (!Object.is(prev.colorByDegree, next.colorByDegree)) return false;
+  if (!Object.is(prev.colorByShape, next.colorByShape)) return false;
   if (!Object.is(prev.hideNonChord, next.hideNonChord)) return false;
   if (!Object.is(prev.capoFret, next.capoFret)) return false;
   if (!Object.is(prev.chordRootPc, next.chordRootPc)) return false;
