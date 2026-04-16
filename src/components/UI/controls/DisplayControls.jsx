@@ -187,31 +187,30 @@ function DisplayControls({ state, actions, meta }) {
             ]}
           />
 
-          <ToggleSwitch
-            id="colorByDegree"
-            name="colorByDegree"
-            checked={colorByDegree}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setColorByDegree(checked);
-              if (checked) setColorByShape(false);
+          <SegmentedRadioGroup
+            label="Note colors"
+            name="note-color-mode"
+            value={colorByDegree ? "degree" : colorByShape ? "shape" : "off"}
+            onChange={(nextMode) => {
+              if (nextMode === "degree") {
+                setColorByDegree(true);
+                setColorByShape(false);
+                return;
+              }
+              if (nextMode === "shape") {
+                setColorByDegree(false);
+                setColorByShape(true);
+                return;
+              }
+              setColorByDegree(false);
+              setColorByShape(false);
             }}
-          >
-            Color notes by scale degree
-          </ToggleSwitch>
-
-          <ToggleSwitch
-            id="colorByShape"
-            name="colorByShape"
-            checked={colorByShape}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setColorByShape(checked);
-              if (checked) setColorByDegree(false);
-            }}
-          >
-            Color notes by detected shapes
-          </ToggleSwitch>
+            options={[
+              { value: "off", label: "Off" },
+              { value: "degree", label: "Degree" },
+              { value: "shape", label: "Shape" },
+            ]}
+          />
 
           {colorByDegree ? <DegreeLegend k={degreeCount} /> : null}
           {colorByShape ? <ShapeLegend /> : null}
