@@ -162,7 +162,11 @@ void test("heuristic CAGED naming remains explicitly non-authoritative", () => {
   });
 
   assert.ok(Object.keys(labels).length > 0);
-  assert.ok(Object.values(labels).every((label) => ["C", "A", "G", "E", "D"].includes(label)));
+  assert.ok(
+    Object.values(labels).every((label) =>
+      ["C", "A", "G", "E", "D"].includes(label),
+    ),
+  );
 
   const nonStandardLabels = labelStandardGuitarCagedTemplatesHeuristically({
     n: 19,
