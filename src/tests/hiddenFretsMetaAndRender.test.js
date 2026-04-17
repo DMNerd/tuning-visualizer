@@ -280,8 +280,9 @@ test("integration: colorByShape applies multiple palette colors across the neck"
 
   const shapeFillCount = new Set(fillsFromMarkup(shapeMarkup)).size;
   const plainFillCount = new Set(fillsFromMarkup(plainMarkup)).size;
-  const splitCountShape = (shapeMarkup.match(/id="note-top-/g) ?? []).length;
-  const splitCountPlain = (plainMarkup.match(/id="note-top-/g) ?? []).length;
+  const splitClipPattern = /id="note-(?:top|bottom|left|right)-/g;
+  const splitCountShape = (shapeMarkup.match(splitClipPattern) ?? []).length;
+  const splitCountPlain = (plainMarkup.match(splitClipPattern) ?? []).length;
 
   assert.ok(
     shapeFillCount > plainFillCount,
@@ -425,6 +426,6 @@ test("integration: both accidental mode uses split note rendering for enharmonic
 
   assert.match(markup, /note-top-/);
   assert.match(markup, /note-bottom-/);
-  assert.match(markup, /<tspan[^>]*>F#<\/tspan>/);
-  assert.match(markup, /<tspan[^>]*>Gb<\/tspan>/);
+  assert.match(markup, />F#<\/text>/);
+  assert.match(markup, />Gb<\/text>/);
 });

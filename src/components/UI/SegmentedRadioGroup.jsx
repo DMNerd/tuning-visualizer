@@ -30,11 +30,10 @@ function SegmentedRadioGroup({
           const optionId = `${idPrefix}-${idx}`;
           const isDisabled = Boolean(opt.disabled);
           return (
-            <label
+            <div
               className={clsx("tv-binary-toggle__option", {
                 "tv-binary-toggle__option--disabled": isDisabled,
               })}
-              htmlFor={optionId}
               key={opt.value}
               aria-disabled={isDisabled ? "true" : undefined}
             >
@@ -45,11 +44,17 @@ function SegmentedRadioGroup({
                 type="radio"
                 value={opt.value}
                 checked={value === opt.value}
-                onChange={() => onChange(opt.value)}
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    onChange(event.target.value);
+                  }
+                }}
                 disabled={isDisabled}
               />
-              <span className="tv-binary-toggle__label">{opt.label}</span>
-            </label>
+              <label className="tv-binary-toggle__label" htmlFor={optionId}>
+                {opt.label}
+              </label>
+            </div>
           );
         })}
       </div>

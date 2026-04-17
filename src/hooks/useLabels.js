@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback } from "react";
 
 export const LABEL_OPTIONS = [
   { value: "names", label: "Note names" },
@@ -10,16 +10,6 @@ export const LABEL_OPTIONS = [
 ];
 
 export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);
-
-function useLatestValue(value) {
-  const ref = useRef(value);
-
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
-
-  return ref;
-}
 
 const INTERVAL_12 = [
   "P1",
@@ -92,22 +82,19 @@ export function useLabels({
     [system, rootIx, accidental],
   );
 
-  const degreeForPcRef = useLatestValue(degreeForPc);
-  const nameForPcRef = useLatestValue(nameForPc);
-
   const labelFor = useCallback(
     (pc, fret) => {
       switch (mode) {
         case "off":
           return "";
         case "degrees": {
-          const d = degreeForPcRef.current(pc);
+          const d = degreeForPc(pc);
           return d == null ? "" : String(d);
         }
         case "intervals":
           return intervalOf(pc);
         case "names":
-          return nameForPcRef.current(pc);
+          return nameForPc(pc);
         case "edoSteps": {
           const steps = (pc - rootIx + system.divisions) % system.divisions;
           return String(steps);
@@ -118,7 +105,7 @@ export function useLabels({
           return "";
       }
     },
-    [mode, intervalOf, degreeForPcRef, nameForPcRef, rootIx, system],
+    [mode, intervalOf, degreeForPc, nameForPc, rootIx, system],
   );
 
   return useMemo(

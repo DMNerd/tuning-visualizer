@@ -698,7 +698,7 @@ const Fretboard = forwardRef(function Fretboard(
             kind: "note",
             allowSingleCharFallback: note.isRoot,
           }),
-          note.r * 1.5,
+          note.r * 0.9,
           {
             sizeRange: {
               min: SPLIT_NOTE_FONT_MIN,
@@ -714,7 +714,7 @@ const Fretboard = forwardRef(function Fretboard(
             kind: "note",
             allowSingleCharFallback: note.isRoot,
           }),
-          note.r * 1.5,
+          note.r * 0.9,
           {
             sizeRange: {
               min: SPLIT_NOTE_FONT_MIN,
@@ -741,7 +741,7 @@ const Fretboard = forwardRef(function Fretboard(
             fontWeight: 700,
           }),
         );
-        halfH = noteFontSize * 1.4;
+        halfH = noteFontSize * 1.25;
       } else {
         const noteVariants = buildLabelVariants(note.label ?? "", {
           kind: "note",
@@ -1123,51 +1123,158 @@ const Fretboard = forwardRef(function Fretboard(
             );
           }
 
-          const clipTopId = `note-top-${n.key}`;
-          const clipBottomId = `note-bottom-${n.key}`;
-          const topFill = n.shapeSplitFills?.[0] ?? n.fill;
-          const bottomFill =
-            n.shapeSplitFills?.[1] ??
-            `color-mix(in srgb, ${topFill} 68%, var(--panel))`;
+          const deriveLowerFill = (baseFill) =>
+            `color-mix(in oklab, ${baseFill} 58%, var(--bg))`;
 
           return (
             <g key={`noteCirc-${n.key}`} data-note-pc={n.pc}>
-              <defs>
-                <clipPath id={clipTopId}>
-                  <rect
-                    x={n.cx - n.r}
-                    y={n.cy - n.r}
-                    width={n.r}
-                    height={n.r * 2}
-                  />
-                </clipPath>
-                <clipPath id={clipBottomId}>
-                  <rect x={n.cx} y={n.cy - n.r} width={n.r} height={n.r * 2} />
-                </clipPath>
-              </defs>
-              <circle
-                cx={n.cx}
-                cy={n.cy}
-                r={n.r}
-                fill={topFill}
-                clipPath={`url(#${clipTopId})`}
-              />
-              <circle
-                cx={n.cx}
-                cy={n.cy}
-                r={n.r}
-                fill={bottomFill}
-                clipPath={`url(#${clipBottomId})`}
-              />
-              <line
-                x1={n.cx}
-                y1={n.cy - n.r * 0.72}
-                x2={n.cx}
-                y2={n.cy + n.r * 0.72}
-                stroke="var(--line)"
-                strokeWidth="0.8"
-                opacity="0.8"
-              />
+              {n.splitEnharmonic && n.splitByShape ? (
+                (() => {
+                  const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
+                  const rightFill = n.shapeSplitFills?.[1] ?? n.fill;
+                  const lowerLeftFill = deriveLowerFill(leftFill);
+                  const lowerRightFill = deriveLowerFill(rightFill);
+                  const clipTopLeftId = `note-top-left-${n.key}`;
+                  const clipTopRightId = `note-top-right-${n.key}`;
+                  const clipBottomLeftId = `note-bottom-left-${n.key}`;
+                  const clipBottomRightId = `note-bottom-right-${n.key}`;
+
+                  return (
+                    <>
+                      <defs>
+                        <clipPath id={clipTopLeftId}>
+                          <rect
+                            x={n.cx - n.r}
+                            y={n.cy - n.r}
+                            width={n.r}
+                            height={n.r}
+                          />
+                        </clipPath>
+                        <clipPath id={clipTopRightId}>
+                          <rect
+                            x={n.cx}
+                            y={n.cy - n.r}
+                            width={n.r}
+                            height={n.r}
+                          />
+                        </clipPath>
+                        <clipPath id={clipBottomLeftId}>
+                          <rect x={n.cx - n.r} y={n.cy} width={n.r} height={n.r} />
+                        </clipPath>
+                        <clipPath id={clipBottomRightId}>
+                          <rect x={n.cx} y={n.cy} width={n.r} height={n.r} />
+                        </clipPath>
+                      </defs>
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={leftFill}
+                        clipPath={`url(#${clipTopLeftId})`}
+                      />
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={rightFill}
+                        clipPath={`url(#${clipTopRightId})`}
+                      />
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={lowerLeftFill}
+                        clipPath={`url(#${clipBottomLeftId})`}
+                      />
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={lowerRightFill}
+                        clipPath={`url(#${clipBottomRightId})`}
+                      />
+                    </>
+                  );
+                })()
+              ) : n.splitByShape ? (
+                (() => {
+                  const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
+                  const rightFill = n.shapeSplitFills?.[1] ?? deriveLowerFill(leftFill);
+                  const clipLeftId = `note-left-${n.key}`;
+                  const clipRightId = `note-right-${n.key}`;
+
+                  return (
+                    <>
+                      <defs>
+                        <clipPath id={clipLeftId}>
+                          <rect
+                            x={n.cx - n.r}
+                            y={n.cy - n.r}
+                            width={n.r}
+                            height={n.r * 2}
+                          />
+                        </clipPath>
+                        <clipPath id={clipRightId}>
+                          <rect x={n.cx} y={n.cy - n.r} width={n.r} height={n.r * 2} />
+                        </clipPath>
+                      </defs>
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={leftFill}
+                        clipPath={`url(#${clipLeftId})`}
+                      />
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={rightFill}
+                        clipPath={`url(#${clipRightId})`}
+                      />
+                    </>
+                  );
+                })()
+              ) : (
+                (() => {
+                  const topFill = n.fill;
+                  const bottomFill = deriveLowerFill(topFill);
+                  const clipTopId = `note-top-${n.key}`;
+                  const clipBottomId = `note-bottom-${n.key}`;
+
+                  return (
+                    <>
+                      <defs>
+                        <clipPath id={clipTopId}>
+                          <rect
+                            x={n.cx - n.r}
+                            y={n.cy - n.r}
+                            width={n.r * 2}
+                            height={n.r}
+                          />
+                        </clipPath>
+                        <clipPath id={clipBottomId}>
+                          <rect x={n.cx - n.r} y={n.cy} width={n.r * 2} height={n.r} />
+                        </clipPath>
+                      </defs>
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={topFill}
+                        clipPath={`url(#${clipTopId})`}
+                      />
+                      <circle
+                        cx={n.cx}
+                        cy={n.cy}
+                        r={n.r}
+                        fill={bottomFill}
+                        clipPath={`url(#${clipBottomId})`}
+                      />
+                    </>
+                  );
+                })()
+              )}
               <circle
                 cx={n.cx}
                 cy={n.cy}
@@ -1186,25 +1293,36 @@ const Fretboard = forwardRef(function Fretboard(
         if (n.renderedLabelLines) {
           const [upper = "", lower = ""] = n.renderedLabelLines;
           const splitFontSize = n.noteFontSize ?? SPLIT_NOTE_FONT_MIN;
+          const topY = n.cy - splitFontSize * 0.15;
+          const bottomY = n.cy + splitFontSize * 0.9;
+          const splitX = displayX(n.cx);
           return (
-            <text
-              key={`noteText-${n.key}`}
-              data-note-pc={n.pc}
-              className={clsx("tv-fretboard__note", {
-                "tv-fretboard__note--root": n.isRoot,
-              })}
-              x={displayX(n.cx)}
-              y={n.cy}
-              textAnchor="middle"
-              fontSize={splitFontSize}
-            >
-              <tspan x={displayX(n.cx)} dy={-splitFontSize * 0.2}>
+            <g key={`noteText-${n.key}`}>
+              <text
+                data-note-pc={n.pc}
+                className={clsx("tv-fretboard__note", {
+                  "tv-fretboard__note--root": n.isRoot,
+                })}
+                x={splitX}
+                y={topY}
+                textAnchor="middle"
+                fontSize={splitFontSize}
+              >
                 {upper}
-              </tspan>
-              <tspan x={displayX(n.cx)} dy={splitFontSize * 1.05}>
+              </text>
+              <text
+                data-note-pc={n.pc}
+                className={clsx("tv-fretboard__note", {
+                  "tv-fretboard__note--root": n.isRoot,
+                })}
+                x={splitX}
+                y={bottomY}
+                textAnchor="middle"
+                fontSize={splitFontSize}
+              >
                 {lower}
-              </tspan>
-            </text>
+              </text>
+            </g>
           );
         }
         return (
