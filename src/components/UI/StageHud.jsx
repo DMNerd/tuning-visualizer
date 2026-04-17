@@ -12,6 +12,8 @@ function StageHud({
   isPlaying,
   showPracticeHud = true,
   countInEnabled,
+  timedPracticeEnabled,
+  practiceSecondsRemaining,
   audioReady,
   audioError,
 }) {
@@ -55,6 +57,8 @@ function StageHud({
             currentBar={currentBar}
             timeSig={timeSig}
             isPlaying={isPlaying}
+            timedPracticeEnabled={timedPracticeEnabled}
+            practiceSecondsRemaining={practiceSecondsRemaining}
           />
 
           <div className="tv-stage-hud__badges">

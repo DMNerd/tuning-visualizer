@@ -15,13 +15,17 @@ export default function StageHudContainer({
   showPracticeHud,
 }) {
   const { currentBeat, currentBar } = useMetronomeTickCursor();
-  const { isPlaying, audioReady, audioError } = useMetronomePlaybackStatus();
+  const { isPlaying, audioReady, audioError, practiceSecondsRemaining } =
+    useMetronomePlaybackStatus();
 
   const timeSig = useMetronomePrefsStore(
     (state) => selectMetronomePrefs(state).timeSig,
   );
   const countInEnabled = useMetronomePrefsStore(
     (state) => selectMetronomePrefs(state).countInEnabled,
+  );
+  const timedPracticeEnabled = useMetronomePrefsStore(
+    (state) => selectMetronomePrefs(state).timedPracticeEnabled,
   );
 
   return (
@@ -35,6 +39,8 @@ export default function StageHudContainer({
       timeSig={timeSig}
       isPlaying={isPlaying}
       countInEnabled={countInEnabled}
+      timedPracticeEnabled={timedPracticeEnabled}
+      practiceSecondsRemaining={practiceSecondsRemaining}
       audioReady={audioReady}
       audioError={audioError}
     />

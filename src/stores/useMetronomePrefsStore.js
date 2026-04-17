@@ -16,6 +16,8 @@ const SETTER_KEYS = [
   "autoAdvanceEnabled",
   "barsPerScale",
   "announceCountInBeforeChange",
+  "timedPracticeEnabled",
+  "practiceDurationMinutes",
 ];
 const RANDOMIZE_MODE_DEFAULT = "both";
 const RANDOMIZE_MODES = new Set(["both", "scale", "key"]);

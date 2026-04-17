@@ -7,6 +7,7 @@ const INITIAL_ENGINE_STATE = {
   currentBar: 1,
   audioReady: false,
   audioError: "",
+  practiceSecondsRemaining: null,
 };
 
 export const useMetronomeEngineStore = create(
@@ -19,6 +20,8 @@ export const useMetronomeEngineStore = create(
       set({ currentBeat, currentBar }),
     setAudioReady: (audioReady) => set({ audioReady }),
     setAudioError: (audioError) => set({ audioError }),
+    setPracticeSecondsRemaining: (practiceSecondsRemaining) =>
+      set({ practiceSecondsRemaining }),
     resetCursorState: () =>
       set({
         currentBeat: INITIAL_ENGINE_STATE.currentBeat,
@@ -29,6 +32,7 @@ export const useMetronomeEngineStore = create(
         isPlaying: INITIAL_ENGINE_STATE.isPlaying,
         currentBeat: INITIAL_ENGINE_STATE.currentBeat,
         currentBar: INITIAL_ENGINE_STATE.currentBar,
+        practiceSecondsRemaining: INITIAL_ENGINE_STATE.practiceSecondsRemaining,
       }),
   })),
 );
@@ -39,11 +43,13 @@ export const selectMetronomeEngineState = (state) => ({
   currentBar: state.currentBar,
   audioReady: state.audioReady,
   audioError: state.audioError,
+  practiceSecondsRemaining: state.practiceSecondsRemaining,
 });
 export const selectMetronomeEnginePlaybackState = (state) => ({
   isPlaying: state.isPlaying,
   audioReady: state.audioReady,
   audioError: state.audioError,
+  practiceSecondsRemaining: state.practiceSecondsRemaining,
 });
 export const selectMetronomeEngineCursorState = (state) => ({
   currentBeat: state.currentBeat,
@@ -57,6 +63,7 @@ export const selectMetronomeEngineActions = (state) => ({
   setCursor: state.setCursor,
   setAudioReady: state.setAudioReady,
   setAudioError: state.setAudioError,
+  setPracticeSecondsRemaining: state.setPracticeSecondsRemaining,
   resetCursorState: state.resetCursorState,
   resetPlaybackState: state.resetPlaybackState,
 });
@@ -66,3 +73,5 @@ export const selectMetronomeCurrentBeat = (state) => state.currentBeat;
 export const selectMetronomeCurrentBar = (state) => state.currentBar;
 export const selectMetronomeAudioReady = (state) => state.audioReady;
 export const selectMetronomeAudioError = (state) => state.audioError;
+export const selectMetronomePracticeSecondsRemaining = (state) =>
+  state.practiceSecondsRemaining;

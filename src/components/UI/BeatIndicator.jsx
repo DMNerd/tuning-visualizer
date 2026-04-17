@@ -6,11 +6,20 @@ function parseBeats(timeSig) {
   return Number.isFinite(beats) && beats > 0 ? beats : 4;
 }
 
+function formatRemainingTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 function BeatIndicator({
   currentBeat = 1,
   currentBar = 1,
   timeSig = "4/4",
   isPlaying = false,
+  timedPracticeEnabled = false,
+  practiceSecondsRemaining = null,
   className,
 }) {
   const beatsPerBar = useMemo(() => parseBeats(timeSig), [timeSig]);
@@ -30,6 +39,12 @@ function BeatIndicator({
         <span>
           Beat {currentBeat}/{beatsPerBar}
         </span>
+        {timedPracticeEnabled && Number.isFinite(practiceSecondsRemaining) ? (
+          <>
+            <span aria-hidden>•</span>
+            <span>Time {formatRemainingTime(practiceSecondsRemaining)}</span>
+          </>
+        ) : null}
       </div>
       <div className="tv-beat-indicator__beats" aria-hidden>
         {Array.from({ length: beatsPerBar }, (_, i) => {

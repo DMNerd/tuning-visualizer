@@ -7,6 +7,13 @@ import NumberField from "@/components/UI/NumberField";
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
+function formatRemainingTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 function MetronomeControls({ state, actions, meta }) {
   const {
     isPlaying,
@@ -18,6 +25,9 @@ function MetronomeControls({ state, actions, meta }) {
     barsPerScale,
     announceCountInBeforeChange,
     barsRemaining,
+    timedPracticeEnabled,
+    practiceDurationMinutes,
+    practiceSecondsRemaining,
   } = state;
 
   const {
@@ -28,6 +38,8 @@ function MetronomeControls({ state, actions, meta }) {
     setAutoAdvanceEnabled,
     setBarsPerScale,
     setAnnounceCountInBeforeChange,
+    setTimedPracticeEnabled,
+    setPracticeDurationMinutes,
     toggleMetronome,
     bpmUp,
     bpmDown,
@@ -40,6 +52,8 @@ function MetronomeControls({ state, actions, meta }) {
   const bpmMax = meta?.bpmMax ?? 300;
   const barsPerScaleMin = meta?.barsPerScaleMin ?? 1;
   const barsPerScaleMax = meta?.barsPerScaleMax ?? 64;
+  const practiceDurationMin = meta?.practiceDurationMin ?? 1;
+  const practiceDurationMax = meta?.practiceDurationMax ?? 180;
 
   return (
     <Section id="metronome-controls" title="Metronome" size="sm">
@@ -146,6 +160,33 @@ function MetronomeControls({ state, actions, meta }) {
         </ToggleSwitch>
 
         <ToggleSwitch
+          id="metronome-timed-practice"
+          name="metronome-timed-practice"
+          checked={timedPracticeEnabled}
+          onChange={(e) => setTimedPracticeEnabled(e.target.checked)}
+        >
+          Timed practice
+        </ToggleSwitch>
+
+        <NumberField
+          id="metronome-practice-duration"
+          label="Practice duration (minutes)"
+          value={practiceDurationMinutes}
+          min={practiceDurationMin}
+          max={practiceDurationMax}
+          onSubmit={setPracticeDurationMinutes}
+          className="tv-field--number-compact"
+          disabled={!timedPracticeEnabled}
+        />
+        <div className="tv-field">
+          {timedPracticeEnabled ? (
+            <small className="tv-field__hint">
+              Time remaining: {formatRemainingTime(practiceSecondsRemaining)}
+            </small>
+          ) : null}
+        </div>
+
+        <ToggleSwitch
           id="metronome-auto-advance"
           name="metronome-auto-advance"
           checked={autoAdvanceEnabled}
@@ -200,12 +241,17 @@ function pickMetronomeMemoProps(p) {
     barsPerScale: s.barsPerScale,
     announceCountInBeforeChange: s.announceCountInBeforeChange,
     barsRemaining: s.barsRemaining,
+    timedPracticeEnabled: s.timedPracticeEnabled,
+    practiceDurationMinutes: s.practiceDurationMinutes,
+    practiceSecondsRemaining: s.practiceSecondsRemaining,
     timeSignatures: m.timeSignatures,
     subdivisions: m.subdivisions,
     bpmMin: m.bpmMin,
     bpmMax: m.bpmMax,
     barsPerScaleMin: m.barsPerScaleMin,
     barsPerScaleMax: m.barsPerScaleMax,
+    practiceDurationMin: m.practiceDurationMin,
+    practiceDurationMax: m.practiceDurationMax,
     setBpm: a.setBpm,
     setTimeSig: a.setTimeSig,
     setSubdivision: a.setSubdivision,
@@ -213,6 +259,8 @@ function pickMetronomeMemoProps(p) {
     setAutoAdvanceEnabled: a.setAutoAdvanceEnabled,
     setBarsPerScale: a.setBarsPerScale,
     setAnnounceCountInBeforeChange: a.setAnnounceCountInBeforeChange,
+    setTimedPracticeEnabled: a.setTimedPracticeEnabled,
+    setPracticeDurationMinutes: a.setPracticeDurationMinutes,
     toggleMetronome: a.toggleMetronome,
     bpmUp: a.bpmUp,
     bpmDown: a.bpmDown,

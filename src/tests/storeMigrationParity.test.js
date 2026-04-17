@@ -87,6 +87,8 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
   assert.equal(state.randomizeMode, "both");
   assert.equal(typeof state.setters.setBpm, "function");
   assert.equal(typeof state.setters.setTimeSig, "function");
+  assert.equal(typeof state.setters.setTimedPracticeEnabled, "function");
+  assert.equal(typeof state.setters.setPracticeDurationMinutes, "function");
 
   const persisted = readStoredJson(STORAGE_KEYS.METRONOME_PREFS);
   assert.equal(typeof persisted, "object");
@@ -472,6 +474,8 @@ test("value-or-updater setters preserve direct assignment and updater semantics"
     autoAdvanceEnabled: false,
     barsPerScale: 4,
     announceCountInBeforeChange: true,
+    timedPracticeEnabled: true,
+    practiceDurationMinutes: 15,
   });
   useMetronomePrefsStore.getState().setPrefs((draft) => {
     draft.bpm = 112;

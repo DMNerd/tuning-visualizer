@@ -63,4 +63,6 @@ export const METRONOME_DEFAULTS = {
   autoAdvanceEnabled: false,
   barsPerScale: 4,
   announceCountInBeforeChange: false,
+  timedPracticeEnabled: false,
+  practiceDurationMinutes: 10,
 };
