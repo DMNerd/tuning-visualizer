@@ -6,6 +6,8 @@ import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import htmlMinifier from "vite-plugin-html-minifier-terser";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
+import { VitePWA } from "vite-plugin-pwa";
+import { compression } from "vite-plugin-compression2";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,6 +39,47 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       react(),
+      VitePWA({
+        registerType: "autoUpdate",
+        injectRegister: "auto",
+        includeAssets: [
+          "favicon.svg",
+          "apple-touch-icon.png",
+          "maskable-icon.svg",
+          "safari-pinned-tab.svg",
+        ],
+        manifest: {
+          name: "Tuning Visualizer",
+          short_name: "TuningViz",
+          start_url: "/",
+          scope: "/",
+          display: "standalone",
+          background_color: "#101214",
+          theme_color: "#ff6a00",
+          icons: [
+            {
+              src: "/maskable-icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any maskable",
+            },
+            {
+              src: "/maskable-icon-512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any maskable",
+            },
+          ],
+        },
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+          cleanupOutdatedCaches: true,
+          navigateFallback: "/index.html",
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
       ...(isProductionBuild
         ? [
             htmlMinifier({
@@ -57,6 +100,11 @@ export default defineConfig(({ command, mode }) => {
               jpg: { quality: 80 },
               webp: { quality: 80 },
               avif: { quality: 50 },
+            }),
+            compression({
+              algorithms: ["gzip", "brotliCompress"],
+              exclude: [/\.(png|jpe?g|webp|avif|gif|woff2?)$/i],
+              deleteOriginalAssets: false,
             }),
           ]
         : []),

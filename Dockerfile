@@ -16,4 +16,4 @@ FROM ghcr.io/static-web-server/static-web-server:latest
 COPY --from=builder /app/dist /public
 EXPOSE 8080
 # NOTE: keep CMD on ONE line so linters don't misparse flags as instructions
-CMD ["--root","/public","--host","0.0.0.0","--port","8080","--page-fallback","/index.html"]
+CMD ["--root","/public","--host","0.0.0.0","--port","8080","--page-fallback","/index.html","--compression","true","--compression-static","true"]
