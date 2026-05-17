@@ -7,6 +7,7 @@ import { execSync } from "node:child_process";
 import htmlMinifier from "vite-plugin-html-minifier-terser";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { VitePWA } from "vite-plugin-pwa";
+import { sri } from "vite-plugin-sri3";
 import { compression } from "vite-plugin-compression2";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -101,6 +102,7 @@ export default defineConfig(({ command, mode }) => {
               webp: { quality: 80 },
               avif: { quality: 50 },
             }),
+            sri(),
             compression({
               algorithms: ["gzip", "brotliCompress"],
               exclude: [/\.(png|jpe?g|webp|avif|gif|woff2?)$/i],
