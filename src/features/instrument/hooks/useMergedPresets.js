@@ -14,7 +14,10 @@ import {
   resolveNeckFilterModeIntentFromBoardMeta,
 } from "@domain/presets/neckFilterModes";
 import { isPlainObject } from "@shared/lib/object";
-import { coerceAnyTuning, usePresetBuilder } from "@features/instrument/hooks/usePresetBuilder";
+import {
+  coerceAnyTuning,
+  usePresetBuilder,
+} from "@features/instrument/hooks/usePresetBuilder";
 import {
   useInstrumentWorkflowStore,
   selectInstrumentWorkflowActions,

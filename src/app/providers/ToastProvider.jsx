@@ -1,4 +1,9 @@
-import { FiAlertTriangle, FiCheckCircle, FiInfo, FiLoader } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiCheckCircle,
+  FiInfo,
+  FiLoader,
+} from "react-icons/fi";
 import { Toaster, ToastBar } from "react-hot-toast";
 
 export default function ToastProvider() {

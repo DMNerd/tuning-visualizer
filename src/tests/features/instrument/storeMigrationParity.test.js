@@ -132,7 +132,9 @@ test("legacy theory keys hydrate into new theory store and clear old keys", asyn
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const { useTheoryStore } = await importFresh("@features/theory/store/useTheoryStore.js");
+  const { useTheoryStore } = await importFresh(
+    "@features/theory/store/useTheoryStore.js",
+  );
 
   await useTheoryStore.persist.rehydrate();
   const state = useTheoryStore.getState();
@@ -155,7 +157,9 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const { useTheoryStore } = await importFresh("@features/theory/store/useTheoryStore.js");
+  const { useTheoryStore } = await importFresh(
+    "@features/theory/store/useTheoryStore.js",
+  );
 
   await useTheoryStore.persist.rehydrate();
   const state = useTheoryStore.getState();
@@ -169,7 +173,9 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
 test("musical reset clears capo-relative chord mode through theory reset", async () => {
   storage.clear();
 
-  const { useTheoryStore } = await importFresh("@features/theory/store/useTheoryStore.js");
+  const { useTheoryStore } = await importFresh(
+    "@features/theory/store/useTheoryStore.js",
+  );
   const { resetMusicalStateFromRefs } = await importFresh(
     "@features/theory/hooks/resetMusicalState.js",
   );
@@ -483,7 +489,9 @@ test("global stores migrate scoped payloads back to unscoped keys", async () => 
     }),
   );
 
-  const { useThemeStore } = await importFresh("@features/display/store/useThemeStore.js");
+  const { useThemeStore } = await importFresh(
+    "@features/display/store/useThemeStore.js",
+  );
   await useThemeStore.persist.rehydrate();
 
   const unscopedPersisted = readStoredJson(STORAGE_KEYS.THEME);
@@ -586,7 +594,9 @@ test("metronome prefs setters and engine reset semantics remain distinct", async
 
 test("theory and workflow action names and behaviors remain stable", async () => {
   storage.clear();
-  const { useTheoryStore } = await importFresh("@features/theory/store/useTheoryStore.js");
+  const { useTheoryStore } = await importFresh(
+    "@features/theory/store/useTheoryStore.js",
+  );
   const { useInstrumentWorkflowStore } = await importFresh(
     "@features/instrument/store/useInstrumentWorkflowStore.js",
   );
@@ -677,8 +687,10 @@ test("resetAllStores restores defaults and clears only app-owned keys", async ()
     await import("@features/instrument/store/useInstrumentWorkflowStore.js");
   const { useMetronomeEngineStore } =
     await import("@features/practice/store/useMetronomeEngineStore.js");
-  const { useTheoryStore } = await import("@features/theory/store/useTheoryStore.js");
-  const { useThemeStore } = await import("@features/display/store/useThemeStore.js");
+  const { useTheoryStore } =
+    await import("@features/theory/store/useTheoryStore.js");
+  const { useThemeStore } =
+    await import("@features/display/store/useThemeStore.js");
 
   useDisplayPrefsStore.getState().setPrefs({ accidental: "flat", dotSize: 20 });
   useMetronomePrefsStore.getState().setPrefs({ bpm: 132, timeSig: "5/4" });
@@ -767,7 +779,9 @@ test("resetAllStores only clears instrument scoped keys for the active window", 
 
 test("generated immer setters preserve non-target keys on full-store drafts", async () => {
   storage.clear();
-  const { useTheoryStore } = await importFresh("@features/theory/store/useTheoryStore.js");
+  const { useTheoryStore } = await importFresh(
+    "@features/theory/store/useTheoryStore.js",
+  );
   const { useInstrumentWorkflowStore } = await importFresh(
     "@features/instrument/store/useInstrumentWorkflowStore.js",
   );

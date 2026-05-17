@@ -4,7 +4,10 @@ import { toast } from "react-hot-toast";
 import Section from "@shared/ui/Section";
 import { withToastPromise } from "@shared/lib/toast";
 import { memoWithKeys } from "@shared/lib/memo";
-import { PNG_EXPORT_SCALE, EXPORT_PADDING } from "@features/export/model/scales";
+import {
+  PNG_EXPORT_SCALE,
+  EXPORT_PADDING,
+} from "@features/export/model/scales";
 import {
   getImportPipelineErrorMessage,
   IMPORT_PIPELINE_ERROR_CODES,

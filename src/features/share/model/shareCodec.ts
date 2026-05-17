@@ -9,7 +9,10 @@ import {
 } from "@shared/config/appDefaults";
 import { TUNINGS } from "@domain/theory/tuning";
 import { SHARE_FIELD_SELECTORS } from "@features/share/model/shareScopes";
-import { SHARE_QUERY_KEYS, SHARE_SCHEMA_VERSION } from "@features/share/model/shareSchema";
+import {
+  SHARE_QUERY_KEYS,
+  SHARE_SCHEMA_VERSION,
+} from "@features/share/model/shareSchema";
 import {
   coerceNeckFilterMode,
   isNeckFilterMode,

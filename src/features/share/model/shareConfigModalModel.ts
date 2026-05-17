@@ -1,5 +1,8 @@
 import { serializeShareState } from "@features/share/model/shareState";
-import { buildSharePayload, serializeSharePayload } from "@features/share/model/shareCodec";
+import {
+  buildSharePayload,
+  serializeSharePayload,
+} from "@features/share/model/shareCodec";
 import { evaluateShareUrlSize } from "@features/share/model/shareLimits";
 
 export function buildShareConfigModalModel({

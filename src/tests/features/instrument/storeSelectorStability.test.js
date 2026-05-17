@@ -150,7 +150,9 @@ test("display controls selector only changes when selected pref changes", async 
 
 test("preset picker selector ignores workflow modal/editor updates", async () => {
   const { useInstrumentWorkflowStore, selectWorkflowSelectedPreset } =
-    await importFresh("@features/instrument/store/useInstrumentWorkflowStore.js");
+    await importFresh(
+      "@features/instrument/store/useInstrumentWorkflowStore.js",
+    );
   useInstrumentWorkflowStore.setState({
     customTunings: [],
     selectedPreset: "Factory default",

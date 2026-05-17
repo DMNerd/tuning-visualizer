@@ -50,7 +50,9 @@ test("layout values update immediately when stringMeta changes", () => {
 });
 
 test("useFretboardLayout derives metaByIndex during render via useMemo", () => {
-  const hookPath = path.resolve("src/features/fretboard/hooks/useFretboardLayout.js");
+  const hookPath = path.resolve(
+    "src/features/fretboard/hooks/useFretboardLayout.js",
+  );
   const source = fs.readFileSync(hookPath, "utf8");
 
   assert.match(
