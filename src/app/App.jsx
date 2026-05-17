@@ -1,55 +1,41 @@
-import { useCallback, useMemo, useRef } from "react";
-import clsx from "clsx";
+import { useMemo, useRef } from "react";
+
+import { useDisplayState } from "@features/display";
 import {
-  FiCheckCircle,
-  FiAlertTriangle,
-  FiInfo,
-  FiLoader,
-} from "react-icons/fi";
-import { Toaster, ToastBar } from "react-hot-toast";
-
-import { downloadPNG, downloadSVG, printFretboard } from "@/lib/export/scales";
-import Fretboard from "@/components/Fretboard/Fretboard";
-import StageHudContainer from "@/app/containers/StageHudContainer";
-
-import { TUNINGS } from "@/lib/theory/tuning";
-import { ALL_SCALES } from "@/lib/theory/scales";
-import { PRESET_TUNING_META } from "@/lib/presets/presets";
-
+  downloadPNG,
+  downloadSVG,
+  printFretboard,
+  useExportCustomTuningDomain,
+} from "@features/export";
+import { useInstrumentDomain } from "@features/instrument";
+import { usePracticeMetronomeDomain } from "@features/practice";
+import { useUrlShareHydration } from "@features/share";
+import { useTheoryDomain } from "@features/theory";
+import { PanelHeader } from "@shared/ui";
+import { useConfirm } from "@shared/hooks/useConfirm";
+import { TUNINGS } from "@domain/theory/tuning";
+import { ALL_SCALES } from "@domain/theory/scales";
+import { PRESET_TUNING_META } from "@domain/presets/presets";
+import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@domain/presets/presetState";
 import {
-  STR_MIN,
-  STR_MAX,
-  FRETS_MIN,
-  FRETS_MAX,
-  getFactoryFrets,
-  SYSTEM_DEFAULT,
-  ROOT_DEFAULT,
   DISPLAY_DEFAULTS,
+  FRETS_MAX,
+  FRETS_MIN,
+  getFactoryFrets,
   METRONOME_DEFAULTS,
+  ROOT_DEFAULT,
   SCALE_DEFAULT,
-} from "@/lib/config/appDefaults";
+  STR_MAX,
+  STR_MIN,
+  SYSTEM_DEFAULT,
+} from "@shared/config/appDefaults";
 
-import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@/lib/presets/presetState";
-
-import PanelHeader from "@/components/UI/PanelHeader";
-import SafeSection from "@/components/UI/SafeSection";
-import DisplayControls from "@/components/UI/controls/DisplayControls";
-
-import { useConfirm } from "@/hooks/useConfirm";
-import { useDisplayState } from "@/hooks/useDisplayState";
-import AppLayout from "@/components/Layout/AppLayout";
-import InstrumentPanelContainer from "@/app/containers/InstrumentPanelContainer";
-import TheoryPanelContainer from "@/app/containers/TheoryPanelContainer";
-import PracticePanelContainer from "@/app/containers/PracticePanelContainer";
-import ExportPanelContainer from "@/app/containers/ExportPanelContainer";
-import CustomTuningModalsContainer from "@/app/containers/CustomTuningModalsContainer";
-import { useTheoryDomain } from "@/app/hooks/useTheoryDomain";
-import { useInstrumentDomain } from "@/app/hooks/useInstrumentDomain";
-import { usePracticeMetronomeDomain } from "@/app/hooks/usePracticeMetronomeDomain";
-import { useExportCustomTuningDomain } from "@/app/hooks/useExportCustomTuningDomain";
-import { useAppOrchestration } from "@/app/hooks/useAppOrchestration";
-import { useAppPanelModels } from "@/app/hooks/useAppPanelModels";
-import { useUrlShareHydration } from "@/app/hooks/useUrlShareHydration";
+import AppLayout from "@app/shell/AppLayout";
+import { AppModals, AppPanels } from "@app/shell/AppPanels";
+import StageShell from "@app/shell/StageShell";
+import ToastProvider from "@app/providers/ToastProvider";
+import { useAppOrchestration } from "@app/hooks/useAppOrchestration";
+import { useAppPanelModels } from "@app/hooks/useAppPanelModels";
 
 export default function App() {
   const boardRef = useRef(null);
@@ -94,22 +80,8 @@ export default function App() {
     noteNaming: displayPrefs.noteNaming,
   });
   const { instrumentState, instrumentDerived, capo } = instrumentDomain;
-  const { strings, tuning, stringMeta, boardMeta } = instrumentState;
+  const { tuning, stringMeta, boardMeta } = instrumentState;
   const { drawFrets } = instrumentDerived;
-  const { capoFret, toggleCapoAt, effectiveStringMeta } = capo;
-
-  const {
-    show,
-    showOpen,
-    showFretNums,
-    dotSize,
-    lefty,
-    openOnlyInScale,
-    colorByDegree,
-    colorByShape,
-    accidental,
-    microLabelStyle,
-  } = displayPrefs;
 
   const practiceDomain = usePracticeMetronomeDomain({
     metronomeDefaults: METRONOME_DEFAULTS,
@@ -175,7 +147,7 @@ export default function App() {
     themeMode,
     root: theoryDomain.system.root,
     scale: theoryDomain.scale.scale,
-    accidental,
+    accidental: displayPrefs.accidental,
     noteNaming: displayPrefs.noteNaming,
     strings: instrumentState.strings,
     systemId: theoryDomain.system.systemId,
@@ -193,91 +165,38 @@ export default function App() {
   });
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
-  const showPracticeHud = orchestration.showPracticeHud;
-
-  const { handleSelectNote: handleTheorySelectNote } = theoryDomain.handlers;
-
-  const handleSelectNote = useCallback(
-    (pc, providedName, event) => {
-      handleTheorySelectNote(pc, providedName, event, {
-        capoFret,
-      });
-    },
-    [capoFret, handleTheorySelectNote],
-  );
-
   const stage = (
-    <div className="tv-stage" ref={stageRef}>
-      <div
-        className={clsx("tv-stage__surface", { "is-lefty": lefty })}
-        onDoubleClick={() => toggleFs()}
-      >
-        <StageHudContainer
-          isFs={isFs}
-          onToggleFs={toggleFs}
-          onResetAll={() => resetAll({ confirm: true })}
-          showPracticeHud={showPracticeHud}
-        />
-        <SafeSection onReset={orchestration.onResetCapo}>
-          <Fretboard
-            ref={boardRef}
-            strings={strings}
-            frets={drawFrets}
-            tuning={tuning}
-            rootIx={theoryDomain.system.rootIx}
-            intervals={theoryDomain.scale.intervals}
-            accidental={accidental}
-            noteNaming={displayPrefs.noteNaming}
-            microLabelStyle={microLabelStyle}
-            show={show}
-            showOpen={showOpen}
-            showFretNums={showFretNums}
-            dotSize={dotSize}
-            lefty={lefty}
-            system={theoryDomain.system.system}
-            chordPCs={theoryPanel.controlModel.meta.chordOverlayPcs}
-            chordRootPc={theoryPanel.controlModel.meta.chordRootPc}
-            openOnlyInScale={openOnlyInScale}
-            colorByDegree={colorByDegree}
-            colorByShape={colorByShape}
-            hideNonChord={theoryDomain.chord.hideNonChord}
-            stringMeta={effectiveStringMeta}
-            boardMeta={boardMeta}
-            onSelectNote={handleSelectNote}
-            capoFret={capoFret}
-            onSetCapo={toggleCapoAt}
-          />
-        </SafeSection>
-      </div>
-    </div>
+    <StageShell
+      boardRef={boardRef}
+      stageRef={stageRef}
+      isFs={isFs}
+      toggleFs={toggleFs}
+      resetAll={resetAll}
+      showPracticeHud={orchestration.showPracticeHud}
+      displayPrefs={displayPrefs}
+      theoryDomain={theoryDomain}
+      theoryPanel={theoryPanel}
+      instrumentState={instrumentState}
+      drawFrets={drawFrets}
+      boardMeta={boardMeta}
+      capo={capo}
+      onResetCapo={orchestration.onResetCapo}
+    />
   );
 
   const controls = useMemo(
     () => (
-      <>
-        <InstrumentPanelContainer
-          {...instrumentPanel}
-          controlModel={instrumentControlModel}
-        />
-        <TheoryPanelContainer {...theoryPanel} />
-        <PracticePanelContainer
-          {...practicePanel}
-          controlModel={metronomeControlModel}
-        />
-        <SafeSection
-          resetKeys={[displayPrefs]}
-          onReset={() => {
-            resetDisplay();
-          }}
-        >
-          <DisplayControls
-            state={displayControlModel.state}
-            actions={displayControlModel.actions}
-            meta={displayControlModel.meta}
-          />
-        </SafeSection>
-        <ExportPanelContainer {...exportCustomDomain.exportPanel} />
-      </>
+      <AppPanels
+        instrumentPanel={instrumentPanel}
+        instrumentControlModel={instrumentControlModel}
+        theoryPanel={theoryPanel}
+        practicePanel={practicePanel}
+        metronomeControlModel={metronomeControlModel}
+        displayPrefs={displayPrefs}
+        resetDisplay={resetDisplay}
+        displayControlModel={displayControlModel}
+        exportPanel={exportCustomDomain.exportPanel}
+      />
     ),
     [
       instrumentPanel,
@@ -292,45 +211,7 @@ export default function App() {
     ],
   );
 
-  const modals = (
-    <CustomTuningModalsContainer {...exportCustomDomain.modalPanel} />
-  );
-
-  const toaster = (
-    <Toaster
-      position="top-right"
-      gutter={8}
-      toastOptions={{
-        duration: 2800,
-        className: "tv-toast",
-      }}
-      containerClassName="tv-toast-container"
-    >
-      {(t) => {
-        const icon =
-          t.type === "success" ? (
-            <FiCheckCircle size={18} color="var(--accent)" />
-          ) : t.type === "error" ? (
-            <FiAlertTriangle size={18} color="var(--root)" />
-          ) : t.type === "loading" ? (
-            <FiLoader size={18} className="tv-u-spin" />
-          ) : (
-            <FiInfo size={18} color="var(--fg)" />
-          );
-        return (
-          <ToastBar toast={t}>
-            {({ message, action }) => (
-              <div className="tv-toast-bar">
-                <span className="tv-toast-icon">{icon}</span>
-                <div>{message}</div>
-                {action}
-              </div>
-            )}
-          </ToastBar>
-        );
-      }}
-    </Toaster>
-  );
+  const modals = <AppModals modalPanel={exportCustomDomain.modalPanel} />;
 
   return (
     <AppLayout
@@ -338,7 +219,7 @@ export default function App() {
       stage={stage}
       controls={controls}
       modals={modals}
-      toaster={toaster}
+      toaster={<ToastProvider />}
     />
   );
 }

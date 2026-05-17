@@ -2,13 +2,13 @@ import { useMemo } from "react";
 import {
   buildDisplayControlModel,
   buildTheoryControlModel,
-} from "@/app/adapters/controls";
-import { buildRawShareState } from "@/app/adapters/shareState";
+} from "@shared/lib/controlModels";
+import { buildRawShareState } from "@features/share";
 import {
   CHORD_DEFAULT,
   ROOT_DEFAULT,
   SCALE_DEFAULT,
-} from "@/lib/config/appDefaults";
+} from "@shared/config/appDefaults";
 
 export function useAppPanelModels({
   theoryDomain,

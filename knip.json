@@ -1,5 +1,5 @@
 {
-  "entry": ["index.html", "src/tests/**/*.test.js"],
+  "entry": ["index.html", "src/tests/**/*.test.{js,jsx,ts,tsx}"],
   "project": ["src/**/*.{js,jsx,ts,tsx}"],
   "ignoreDependencies": ["lightningcss"]
 }
