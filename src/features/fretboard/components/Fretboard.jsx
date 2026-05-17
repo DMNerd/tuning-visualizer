@@ -413,20 +413,14 @@ const Fretboard = forwardRef(function Fretboard(
     }),
     [microLabelStyle, accidental],
   );
+  const typographyCacheScope = `${microLabelStyle}:${system.divisions}:${width}:${frets}:${strings}:${effectiveDotSize}:${notePlacementMode}`;
   const typographyCaches = useMemo(
     () => ({
+      scope: typographyCacheScope,
       fitByConfig: new Map(),
       widthByTextStyle: new Map(),
     }),
-    [
-      microLabelStyle,
-      system.divisions,
-      width,
-      frets,
-      strings,
-      effectiveDotSize,
-      notePlacementMode,
-    ],
+    [typographyCacheScope],
   );
 
   const fitLabelCached = useCallback(
@@ -936,6 +930,7 @@ const Fretboard = forwardRef(function Fretboard(
     fitLabelCached,
     measureWidthCached,
     safeCapoFret,
+    wireX,
   ]);
 
   const resolveNotePcFromTarget = useCallback((target) => {
