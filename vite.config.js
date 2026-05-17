@@ -34,6 +34,35 @@ function resolveAppVersion() {
 
 const appVersion = resolveAppVersion();
 
+const productionTerserOptions = {
+  ecma: 2020,
+  compress: {
+    defaults: true,
+    ecma: 2020,
+    module: true,
+    toplevel: true,
+    passes: 3,
+    drop_console: ["log", "info", "debug"],
+    drop_debugger: true,
+    pure_getters: "strict",
+    keep_fargs: false,
+    unsafe: false,
+    unsafe_arrows: false,
+    unsafe_comps: false,
+    unsafe_math: false,
+  },
+  mangle: {
+    module: true,
+    toplevel: true,
+    safari10: true,
+  },
+  format: {
+    comments: false,
+    ecma: 2020,
+    safari10: true,
+  },
+};
+
 export default defineConfig(({ command, mode }) => {
   const isProductionBuild = command === "build" && mode === "production";
 
@@ -92,7 +121,7 @@ export default defineConfig(({ command, mode }) => {
                 removeStyleLinkTypeAttributes: true,
                 useShortDoctype: true,
                 minifyCSS: true,
-                minifyJS: true,
+                minifyJS: productionTerserOptions,
               },
             }),
             ViteImageOptimizer({
@@ -125,6 +154,9 @@ export default defineConfig(({ command, mode }) => {
     },
 
     build: {
+      target: ["chrome109", "safari15", "firefox102", "edge109"],
+      minify: isProductionBuild ? "terser" : false,
+      terserOptions: productionTerserOptions,
       cssMinify: "lightningcss",
       rolldownOptions: {
         output: {
@@ -151,6 +183,10 @@ export default defineConfig(({ command, mode }) => {
 
             if (id.includes("/json-edit-react/")) {
               return "editor";
+            }
+
+            if (id.includes("/react-qr-code/") || id.includes("/qr.js/")) {
+              return "share";
             }
 
             if (id.includes("/zustand/")) {
