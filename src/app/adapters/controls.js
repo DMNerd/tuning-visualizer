@@ -1,4 +1,5 @@
 import {
+  getEffectiveCapoPitchOffset,
   transposeCapoRelativeChordRootPc,
   transposePitchClassSet,
 } from "@/lib/theory/capoChords";
@@ -150,7 +151,11 @@ export function buildTheoryControlModel({
 
   const capoFret = Number.isFinite(capo?.capoFret) ? capo.capoFret : 0;
   const chordCapoRelative = Boolean(chord?.chordCapoRelative);
-  const transposeBy = chordCapoRelative ? capoFret : 0;
+  const effectiveCapoPitchOffset = getEffectiveCapoPitchOffset(
+    capoFret,
+    divisions,
+  );
+  const transposeBy = chordCapoRelative ? effectiveCapoPitchOffset : 0;
   const transposedChordRootPc = Number.isFinite(chord?.chordRootIx)
     ? transposeCapoRelativeChordRootPc({
         pc: chord.chordRootIx,
@@ -216,7 +221,7 @@ export function buildTheoryControlModel({
       capoFret,
       originalChordRoot: chord?.chordRoot,
       transposedChordRoot,
-      isChordTransposed: chordCapoRelative && capoFret > 0,
+      isChordTransposed: chordCapoRelative && effectiveCapoPitchOffset !== 0,
     },
   };
 }

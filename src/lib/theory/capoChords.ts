@@ -8,6 +8,15 @@ function normalizeCapoFret(capoFret: unknown): number {
     : 0;
 }
 
+export function getEffectiveCapoPitchOffset(
+  capoFret: unknown,
+  divisions: number,
+): number {
+  if (!Number.isFinite(divisions) || divisions <= 0) return 0;
+
+  return mod(normalizeCapoFret(capoFret), divisions);
+}
+
 export function transposePitchClassSet<T extends number>(
   pcs: Set<T> | null | undefined,
   amount: number,
@@ -35,7 +44,7 @@ export function resolveCapoRelativeChordRootPc({
   if (!chordCapoRelative) return pc;
   if (!Number.isFinite(divisions) || divisions <= 0) return pc;
 
-  return mod(pc - normalizeCapoFret(capoFret), divisions);
+  return mod(pc - getEffectiveCapoPitchOffset(capoFret, divisions), divisions);
 }
 
 export function transposeCapoRelativeChordRootPc({
@@ -53,5 +62,5 @@ export function transposeCapoRelativeChordRootPc({
   if (!chordCapoRelative) return pc;
   if (!Number.isFinite(divisions) || divisions <= 0) return pc;
 
-  return mod(pc + normalizeCapoFret(capoFret), divisions);
+  return mod(pc + getEffectiveCapoPitchOffset(capoFret, divisions), divisions);
 }

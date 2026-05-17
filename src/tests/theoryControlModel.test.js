@@ -218,3 +218,128 @@ test("capo-relative fretboard chord selection stores shape root and displays sou
   assert.equal(model.meta.transposedChordRoot, "D");
   assert.equal(model.meta.chordRootPc, clickedSoundingPc);
 });
+
+test("buildTheoryControlModel treats capo 12 as untransposed in 12-TET", () => {
+  const noteNames = [
+    "C",
+    "C#",
+    "D",
+    "D#",
+    "E",
+    "F",
+    "F#",
+    "G",
+    "G#",
+    "A",
+    "A#",
+    "B",
+  ];
+  const chordTonePcs = new Set([0, 4, 7]);
+  const chordOverlayPcs = new Set([0, 4, 7]);
+
+  const model = buildTheoryControlModel({
+    system: {
+      system: { divisions: 12 },
+      sysNames: noteNames,
+      nameForPc: (pc) => noteNames[pc],
+      rootIx: 0,
+    },
+    scale: {
+      root: "C",
+      setRoot: () => {},
+      scale: "Major",
+      setScale: () => {},
+      scaleOptions: [{ label: "Major", pcs: [0, 2, 4, 5, 7, 9, 11] }],
+      intervals: [0, 2, 4, 5, 7, 9, 11],
+    },
+    chord: {
+      chordRoot: "C",
+      setChordRoot: () => {},
+      chordType: "maj",
+      setChordType: () => {},
+      showChord: true,
+      setShowChord: () => {},
+      hideNonChord: false,
+      setHideNonChord: () => {},
+      chordCapoRelative: true,
+      setChordCapoRelative: () => {},
+      chordRootIx: 0,
+      chordTonePcs,
+      chordOverlayPcs,
+    },
+    capo: { capoFret: 12 },
+    randomize: {
+      randomizeMode: "both",
+      setRandomizeMode: () => {},
+      onRandomize: () => {},
+    },
+    defaults: {
+      root: "C",
+      scale: "Major",
+      chordRoot: "C",
+      chordType: "maj",
+    },
+  });
+
+  assert.deepEqual([...model.meta.chordTonePcs], [0, 4, 7]);
+  assert.deepEqual([...model.meta.chordOverlayPcs], [0, 4, 7]);
+  assert.equal(model.meta.chordRootPc, 0);
+  assert.equal(model.meta.transposedChordRoot, "C");
+  assert.equal(model.meta.isChordTransposed, false);
+});
+
+test("buildTheoryControlModel treats capo 24 as untransposed in 24-TET", () => {
+  const noteNames = Array.from({ length: 24 }, (_, pc) => `N${pc}`);
+  const chordTonePcs = new Set([0, 8, 14]);
+  const chordOverlayPcs = new Set([0, 8, 14]);
+
+  const model = buildTheoryControlModel({
+    system: {
+      system: { divisions: 24 },
+      sysNames: noteNames,
+      nameForPc: (pc) => noteNames[pc],
+      rootIx: 0,
+    },
+    scale: {
+      root: "N0",
+      setRoot: () => {},
+      scale: "Major",
+      setScale: () => {},
+      scaleOptions: [{ label: "Major", pcs: [0, 4, 8, 10, 14, 18, 22] }],
+      intervals: [0, 4, 8, 10, 14, 18, 22],
+    },
+    chord: {
+      chordRoot: "N0",
+      setChordRoot: () => {},
+      chordType: "maj",
+      setChordType: () => {},
+      showChord: true,
+      setShowChord: () => {},
+      hideNonChord: false,
+      setHideNonChord: () => {},
+      chordCapoRelative: true,
+      setChordCapoRelative: () => {},
+      chordRootIx: 0,
+      chordTonePcs,
+      chordOverlayPcs,
+    },
+    capo: { capoFret: 24 },
+    randomize: {
+      randomizeMode: "both",
+      setRandomizeMode: () => {},
+      onRandomize: () => {},
+    },
+    defaults: {
+      root: "N0",
+      scale: "Major",
+      chordRoot: "N0",
+      chordType: "maj",
+    },
+  });
+
+  assert.deepEqual([...model.meta.chordTonePcs], [0, 8, 14]);
+  assert.deepEqual([...model.meta.chordOverlayPcs], [0, 8, 14]);
+  assert.equal(model.meta.chordRootPc, 0);
+  assert.equal(model.meta.transposedChordRoot, "N0");
+  assert.equal(model.meta.isChordTransposed, false);
+});
