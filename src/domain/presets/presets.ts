@@ -414,7 +414,7 @@ function buildPresetMetaMap<SystemKey extends string>(
     }
   }
 
-  return freezeDeep(out) as PresetMetaMap<SystemKey>;
+  return freezeDeep(out);
 }
 
 const FRETLESS_BOARD_META: TuningPresetMeta = {

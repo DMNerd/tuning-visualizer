@@ -180,7 +180,9 @@ export function normalizePresetMeta(
     return null;
   }
 
-  const result: Record<string, unknown> = {};
+  const result: TuningPresetMeta & {
+    stringMeta?: NormalizedStringMeta | null;
+  } = {};
   if (stringMeta) {
     result.stringMeta = stringMeta;
   }
@@ -188,7 +190,5 @@ export function normalizePresetMeta(
     result.board = board;
   }
 
-  return result as TuningPresetMeta & {
-    stringMeta?: NormalizedStringMeta | null;
-  };
+  return result;
 }

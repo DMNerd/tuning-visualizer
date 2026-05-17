@@ -75,7 +75,7 @@ export function stripFretlessStyle(
   boardMeta: unknown,
 ): Record<string, unknown> | null {
   if (!isPlainObject(boardMeta)) return null;
-  const next = { ...boardMeta } as Record<string, unknown>;
+  const next = { ...boardMeta };
   if (
     next.fretStyle === FRETLESS_BOARD_META.fretStyle &&
     next.notePlacement === FRETLESS_BOARD_META.notePlacement
@@ -272,7 +272,7 @@ export function sanitizeBoardMetaForModeStorage(
 ): Record<string, unknown> | null {
   if (!isPlainObject(boardMeta)) return null;
 
-  const normalized = { ...boardMeta } as Record<string, unknown>;
+  const normalized = { ...boardMeta };
   if (normalized.neckFilterMode === NECK_FILTER_MODES.FRETLESS) {
     if (normalized.fretStyle === FRETLESS_BOARD_META.fretStyle) {
       delete normalized.fretStyle;
