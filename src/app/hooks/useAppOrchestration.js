@@ -1,19 +1,19 @@
 import { createElement, useCallback } from "react";
 import { toast } from "react-hot-toast";
-import HotkeysCheatsheet from "@/components/UI/HotkeysCheatsheet";
-import { LABEL_VALUES } from "@/hooks/useLabels";
-import { useAccidentalRespell } from "@/hooks/useAccidentalRespell";
-import { useHotkeys } from "@/hooks/useHotkeys";
-import { useResets } from "@/hooks/useResets";
+import HotkeysCheatsheet from "@shared/ui/HotkeysCheatsheet";
+import { LABEL_VALUES } from "@features/fretboard";
+import { useAccidentalRespell } from "@features/theory";
+import { useHotkeys } from "@shared/hooks/useHotkeys";
+import { useResets } from "@shared/hooks/useResets";
 import {
   CAPO_DEFAULT,
   FRETS_MAX,
   FRETS_MIN,
   STR_MAX,
   STR_MIN,
-} from "@/lib/config/appDefaults";
+} from "@shared/config/appDefaults";
 
-/** @typedef {import("@/app/hooks/interfaces").AppOrchestrationInput} AppOrchestrationInput */
+/** @typedef {import("@app/hooks/interfaces").AppOrchestrationInput} AppOrchestrationInput */
 
 function validateOrchestrationInputsDev({
   displayPrefs,

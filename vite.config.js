@@ -164,7 +164,14 @@ export default defineConfig(({ command, mode }) => {
     },
 
     resolve: {
-      alias: [{ find: "@", replacement: resolve(__dirname, "src") }],
+      alias: [
+        { find: "@app", replacement: resolve(__dirname, "src/app") },
+        { find: "@features", replacement: resolve(__dirname, "src/features") },
+        { find: "@shared", replacement: resolve(__dirname, "src/shared") },
+        { find: "@domain", replacement: resolve(__dirname, "src/domain") },
+        { find: "@styles", replacement: resolve(__dirname, "src/styles") },
+        { find: "@", replacement: resolve(__dirname, "src") },
+      ],
     },
   };
 });

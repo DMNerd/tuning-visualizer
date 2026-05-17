@@ -1,0 +1,269 @@
+import clsx from "clsx";
+import Section from "@shared/ui/Section";
+import PresetPicker from "@features/instrument/components/PresetPicker";
+import {
+  STR_MIN,
+  STR_MAX,
+  FRETS_MIN,
+  FRETS_MAX,
+} from "@shared/config/appDefaults";
+import { withToastPromise } from "@shared/lib/toast";
+import { memoWithShallowPick } from "@shared/lib/memo";
+import NumberField from "@shared/ui/NumberField";
+import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
+import { renderNoteName } from "@domain/theory/notation";
+import { normalizeIntlNoteName } from "@domain/theory/notation";
+import {
+  coerceNeckFilterMode,
+  getNeckFilterOptions,
+} from "@domain/presets/neckFilterModes";
+function InstrumentControls({ state, actions, meta }) {
+  const { strings, frets, tuning, systemId, selectedPreset, neckFilterMode } =
+    state;
+  const {
+    setFrets,
+    setSystemId,
+    setTuning,
+    handleStringsChange,
+    setSelectedPreset,
+    handleSaveDefault,
+    setNeckFilterMode,
+    handleResetFactoryDefault,
+    onCreateCustomPack,
+    onEditCustomPack,
+  } = actions;
+  const {
+    systems,
+    sysNames,
+    noteNaming,
+    presetNames,
+    customPresetNames,
+    presetMetaMap,
+  } = meta;
+  const safeSystems = systems ?? {};
+  const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
+  const safeTuning = Array.isArray(tuning) ? tuning : [];
+
+  const optionEntries = Array.from(
+    new Map(
+      safeSysNames.map((displayName) => [
+        normalizeIntlNoteName(displayName, {
+          translateGerman: noteNaming === "german",
+        }),
+        displayName,
+      ]),
+    ),
+  ).map(([value, label]) => ({ value, label }));
+
+  const onSaveDefault = () =>
+    withToastPromise(
+      () => handleSaveDefault?.(),
+      {
+        loading: "Saving default…",
+        success: "Default saved.",
+        error: "Failed to save default.",
+      },
+      "save-default",
+    );
+
+  const onResetFactory = () =>
+    withToastPromise(
+      () => handleResetFactoryDefault?.(),
+      {
+        loading: "Restoring factory settings…",
+        success: "Factory settings restored.",
+        error: "Failed to restore factory settings.",
+      },
+      "reset-factory",
+    );
+
+  const isCustomPreset = Array.isArray(customPresetNames)
+    ? customPresetNames.includes(selectedPreset)
+    : false;
+  const selectedNeckFilterMode = coerceNeckFilterMode(neckFilterMode);
+  const neckFilterOptions = getNeckFilterOptions({
+    edo: safeSystems?.[systemId]?.divisions,
+    boardMeta: null,
+  });
+
+  return (
+    <Section id="instrument-controls" title="Instrument">
+      <div className={clsx("tv-controls", "tv-controls--instrument")}>
+        <div className="tv-field">
+          <label className="tv-field__label" htmlFor="system">
+            Tuning system
+          </label>
+          <select
+            id="system"
+            name="system"
+            value={systemId}
+            onChange={(e) => setSystemId(e.target.value)}
+          >
+            {Object.keys(safeSystems).map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="tv-controls__row--two">
+          <NumberField
+            id="strings"
+            label="Strings"
+            value={strings}
+            min={STR_MIN}
+            max={STR_MAX}
+            onSubmit={handleStringsChange}
+          />
+
+          <NumberField
+            id="frets"
+            label="Frets"
+            value={frets}
+            min={FRETS_MIN}
+            max={FRETS_MAX}
+            onSubmit={setFrets}
+          />
+        </div>
+
+        <div className="tv-controls__strings-grid">
+          {safeTuning.map((note, i) => {
+            const stringNum = strings - i;
+            const noteValue = normalizeIntlNoteName(note, {
+              translateGerman: noteNaming === "german",
+            });
+            const hasOption = optionEntries.some(
+              (entry) => entry.value === noteValue,
+            );
+            return (
+              <div key={i} className="tv-field">
+                <label htmlFor={`string-${stringNum}`}>
+                  String {stringNum}
+                </label>
+                <select
+                  id={`string-${stringNum}`}
+                  name={`string-${stringNum}`}
+                  value={noteValue}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setTuning((d) => {
+                      d[i] = value;
+                    });
+                  }}
+                >
+                  {!hasOption && (
+                    <option value={noteValue}>
+                      {renderNoteName(noteValue, noteNaming)}
+                    </option>
+                  )}
+                  {optionEntries.map((entry) => (
+                    <option
+                      key={`${entry.value}:${entry.label}`}
+                      value={entry.value}
+                    >
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="tv-field tv-field--spaced">
+          <label htmlFor="preset">Preset</label>
+          <PresetPicker
+            id="preset"
+            presetNames={presetNames}
+            selectedPreset={selectedPreset}
+            onSelect={setSelectedPreset}
+            customPresetNames={customPresetNames}
+            presetMetaMap={presetMetaMap}
+          />
+        </div>
+
+        <div className="tv-controls__preset-actions">
+          <button
+            type="button"
+            className="tv-button"
+            onClick={() => onCreateCustomPack?.()}
+          >
+            New custom pack
+          </button>
+          <button
+            type="button"
+            className="tv-button"
+            onClick={() => onEditCustomPack?.()}
+            disabled={!isCustomPreset}
+          >
+            Edit pack
+          </button>
+        </div>
+
+        <div className="tv-controls__defaults">
+          <SegmentedRadioGroup
+            label="Neck filter"
+            name="neck-filter-mode"
+            className="tv-field--neck-filter"
+            value={selectedNeckFilterMode}
+            onChange={(value) => setNeckFilterMode?.(value)}
+            options={neckFilterOptions}
+          />
+          <button
+            className="tv-button tv-button--block"
+            onClick={onSaveDefault}
+          >
+            Save as default ({systemId}, {strings}-string)
+          </button>
+          <button
+            className="tv-button tv-button--block"
+            onClick={onResetFactory}
+          >
+            Reset to factory default
+          </button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function pickInstrumentMemoProps(p) {
+  const s = p.state ?? {};
+  const a = p.actions ?? {};
+  const m = p.meta ?? {};
+  return {
+    strings: s.strings,
+    frets: s.frets,
+    tuning: s.tuning,
+    systemId: s.systemId,
+    selectedPreset: s.selectedPreset,
+    neckFilterMode: s.neckFilterMode,
+    systems: m.systems,
+    sysNames: m.sysNames,
+    noteNaming: m.noteNaming,
+    presetNames: m.presetNames,
+    customPresetNames: m.customPresetNames,
+    presetMetaMap: m.presetMetaMap,
+    setFrets: a.setFrets,
+    setSystemId: a.setSystemId,
+    setTuning: a.setTuning,
+    handleStringsChange: a.handleStringsChange,
+    setSelectedPreset: a.setSelectedPreset,
+    handleSaveDefault: a.handleSaveDefault,
+    setNeckFilterMode: a.setNeckFilterMode,
+    handleResetFactoryDefault: a.handleResetFactoryDefault,
+    onCreateCustomPack: a.onCreateCustomPack,
+    onEditCustomPack: a.onEditCustomPack,
+  };
+}
+
+// React Profiler note: this panel depends on array/object references from state
+// and metadata, but deep structural checks are unnecessary; shallow identity
+// checks match the update model from React state/Immer.
+const InstrumentControlsMemo = memoWithShallowPick(
+  InstrumentControls,
+  pickInstrumentMemoProps,
+);
+
+export default InstrumentControlsMemo;
