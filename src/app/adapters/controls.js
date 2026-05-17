@@ -1,3 +1,8 @@
+import {
+  transposeCapoRelativeChordRootPc,
+  transposePitchClassSet,
+} from "@/lib/theory/capoChords";
+
 const METRONOME_TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const METRONOME_SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
@@ -128,6 +133,7 @@ export function buildTheoryControlModel({
   chord,
   randomize,
   defaults,
+  capo,
 }) {
   const divisions =
     Number(system?.system?.divisions) || system?.sysNames?.length || 12;
@@ -142,8 +148,31 @@ export function buildTheoryControlModel({
     typeof system?.nameForPc === "function" ? system.nameForPc(pc) : String(pc),
   );
 
-  const chordTonePcs = chord?.chordTonePcs;
-  const chordOverlayPcs = chord?.chordOverlayPcs;
+  const capoFret = Number.isFinite(capo?.capoFret) ? capo.capoFret : 0;
+  const chordCapoRelative = Boolean(chord?.chordCapoRelative);
+  const transposeBy = chordCapoRelative ? capoFret : 0;
+  const transposedChordRootPc = Number.isFinite(chord?.chordRootIx)
+    ? transposeCapoRelativeChordRootPc({
+        pc: chord.chordRootIx,
+        capoFret,
+        chordCapoRelative,
+        divisions,
+      })
+    : chord?.chordRootIx;
+  const transposedChordRoot =
+    chordCapoRelative && typeof system?.nameForPc === "function"
+      ? system.nameForPc(transposedChordRootPc)
+      : chord?.chordRoot;
+  const chordTonePcs = transposePitchClassSet(
+    chord?.chordTonePcs,
+    transposeBy,
+    divisions,
+  );
+  const chordOverlayPcs = transposePitchClassSet(
+    chord?.chordOverlayPcs,
+    transposeBy,
+    divisions,
+  );
 
   return {
     state: {
@@ -155,6 +184,7 @@ export function buildTheoryControlModel({
       chordType: chord?.chordType,
       showChord: chord?.showChord,
       hideNonChord: chord?.hideNonChord,
+      chordCapoRelative,
       defaultRoot: defaults?.root,
       defaultScale: defaults?.scale,
       defaultChordRoot: defaults?.chordRoot,
@@ -169,6 +199,7 @@ export function buildTheoryControlModel({
       onTypeChange: chord?.setChordType,
       setShowChord: chord?.setShowChord,
       setHideNonChord: chord?.setHideNonChord,
+      setChordCapoRelative: chord?.setChordCapoRelative,
     },
     meta: {
       sysNames: system?.sysNames ?? [],
@@ -181,7 +212,11 @@ export function buildTheoryControlModel({
       system: system?.system,
       rootIx: safeRootIx,
       nameForPc: system?.nameForPc,
-      chordRootPc: chord?.chordRootIx,
+      chordRootPc: transposedChordRootPc,
+      capoFret,
+      originalChordRoot: chord?.chordRoot,
+      transposedChordRoot,
+      isChordTransposed: chordCapoRelative && capoFret > 0,
     },
   };
 }

@@ -159,6 +159,46 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
   assert.equal(storage.getItem(STORAGE_KEYS.ROOT), null);
 });
 
+test("musical reset clears capo-relative chord mode through theory reset", async () => {
+  storage.clear();
+
+  const { useTheoryStore } = await importFresh("../stores/useTheoryStore.js");
+  const { resetMusicalStateFromRefs } = await importFresh(
+    "../hooks/resetMusicalState.js",
+  );
+
+  useTheoryStore.getState().setChordCapoRelative(true);
+  assert.equal(useTheoryStore.getState().chordCapoRelative, true);
+
+  resetMusicalStateFromRefs({
+    resetTheory: useTheoryStore.getState().resetTheory,
+  });
+
+  assert.equal(useTheoryStore.getState().chordCapoRelative, false);
+});
+
+test("musical reset fallback clears capo-relative chord mode", async () => {
+  const { resetMusicalStateFromRefs } = await importFresh(
+    "../hooks/resetMusicalState.js",
+  );
+  const calls = [];
+
+  resetMusicalStateFromRefs({
+    setRoot: (value) => calls.push(["root", value]),
+    setScale: (value) => calls.push(["scale", value]),
+    setChordRoot: (value) => calls.push(["chordRoot", value]),
+    setChordType: (value) => calls.push(["chordType", value]),
+    setShowChord: (value) => calls.push(["showChord", value]),
+    setHideNonChord: (value) => calls.push(["hideNonChord", value]),
+    setChordCapoRelative: (value) => calls.push(["chordCapoRelative", value]),
+  });
+
+  assert.deepEqual(
+    calls.find(([name]) => name === "chordCapoRelative"),
+    ["chordCapoRelative", false],
+  );
+});
+
 test("legacy custom tuning payload array remains compatible in workflow store", async () => {
   storage.clear();
   const legacyPayload = [

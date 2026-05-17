@@ -3,14 +3,12 @@ import {
   STR_FACTORY,
   CAPO_DEFAULT,
   DISPLAY_DEFAULTS,
-  ROOT_DEFAULT,
   SYSTEM_DEFAULT,
   getFactoryFrets,
-  SCALE_DEFAULT,
-  CHORD_DEFAULT,
 } from "@/lib/config/appDefaults";
 import { useLatest } from "react-use";
 import { resetAllStores } from "@/stores/resetAllStores";
+import { resetMusicalStateFromRefs } from "@/hooks/resetMusicalState";
 
 export function useResets({
   system,
@@ -27,6 +25,7 @@ export function useResets({
   setChordType,
   setShowChord,
   setHideNonChord,
+  setChordCapoRelative,
   resetTheory,
   setPreset,
   setTheme,
@@ -51,6 +50,7 @@ export function useResets({
     setChordType,
     setShowChord,
     setHideNonChord,
+    setChordCapoRelative,
     resetTheory,
     setPreset,
     setTheme,
@@ -88,24 +88,7 @@ export function useResets({
   }, [refs]);
 
   const resetMusicalState = useCallback(() => {
-    // Dependency note: stop/reset metronome before changing musical state
-    // so no in-flight ticks can read stale root/scale/chord values.
-    refs.current.stopMetronome?.();
-    refs.current.resetMetronomePrefs?.();
-    refs.current.resetPracticeCounters?.();
-
-    if (typeof refs.current.resetTheory === "function") {
-      refs.current.resetTheory();
-    } else {
-      refs.current.setRoot(ROOT_DEFAULT);
-      refs.current.setScale(SCALE_DEFAULT);
-      refs.current.setChordRoot(ROOT_DEFAULT);
-      refs.current.setChordType(CHORD_DEFAULT);
-      refs.current.setShowChord(false);
-      refs.current.setHideNonChord(false);
-    }
-    refs.current.setPreset?.("Factory default");
-    refs.current.setTheme?.("auto");
+    resetMusicalStateFromRefs(refs.current);
   }, [refs]);
 
   const resetInstrumentFactory = useCallback(

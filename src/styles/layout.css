@@ -554,6 +554,35 @@ html.is-fs {
   color: var(--root);
 }
 
+.tv-capo-chord-map {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  width: fit-content;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in oklab, var(--line) 78%, var(--accent));
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+.tv-capo-chord-map__part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.tv-capo-chord-map__part small,
+.tv-capo-chord-map__capo {
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+.tv-capo-chord-map__arrow {
+  color: var(--muted);
+}
+
 .tv-field .tv-check {
   margin-top: 4px;
 }

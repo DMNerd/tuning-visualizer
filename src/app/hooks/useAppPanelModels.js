@@ -42,6 +42,8 @@ export function useAppPanelModels({
     setShowChord,
     hideNonChord,
     setHideNonChord,
+    chordCapoRelative,
+    setChordCapoRelative,
     chordRootIx,
     chordOverlayPcs,
     chordTonePcs,
@@ -86,6 +88,8 @@ export function useAppPanelModels({
           setShowChord,
           hideNonChord,
           setHideNonChord,
+          chordCapoRelative,
+          setChordCapoRelative,
           chordRootIx,
           chordOverlayPcs,
           chordTonePcs,
@@ -94,6 +98,9 @@ export function useAppPanelModels({
           randomizeMode,
           setRandomizeMode,
           onRandomize: randomizeScaleNow,
+        },
+        capo: {
+          capoFret: instrumentDomain.capo?.capoFret,
         },
         defaults: {
           root: ROOT_DEFAULT,
@@ -123,12 +130,15 @@ export function useAppPanelModels({
       setShowChord,
       hideNonChord,
       setHideNonChord,
+      chordCapoRelative,
+      setChordCapoRelative,
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,
       randomizeMode,
       setRandomizeMode,
       randomizeScaleNow,
+      instrumentDomain.capo?.capoFret,
     ],
   );
 

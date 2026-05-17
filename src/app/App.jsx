@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import clsx from "clsx";
 import {
   FiCheckCircle,
@@ -183,7 +183,9 @@ export default function App() {
     stringMeta,
     boardMeta,
     showChord: theoryDomain.chord.showChord,
-    chordRoot: theoryDomain.chord.chordRoot,
+    chordRoot:
+      theoryPanel.controlModel.meta.transposedChordRoot ??
+      theoryDomain.chord.chordRoot,
     chordType: theoryDomain.chord.chordType,
     customTunings: instrumentDomain.customTunings,
     customPackEditor: instrumentDomain.customPackEditor,
@@ -192,6 +194,17 @@ export default function App() {
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
   const showPracticeHud = orchestration.showPracticeHud;
+
+  const { handleSelectNote: handleTheorySelectNote } = theoryDomain.handlers;
+
+  const handleSelectNote = useCallback(
+    (pc, providedName, event) => {
+      handleTheorySelectNote(pc, providedName, event, {
+        capoFret,
+      });
+    },
+    [capoFret, handleTheorySelectNote],
+  );
 
   const stage = (
     <div className="tv-stage" ref={stageRef}>
@@ -222,15 +235,15 @@ export default function App() {
             dotSize={dotSize}
             lefty={lefty}
             system={theoryDomain.system.system}
-            chordPCs={theoryDomain.chord.chordOverlayPcs}
-            chordRootPc={theoryDomain.chord.chordRootIx}
+            chordPCs={theoryPanel.controlModel.meta.chordOverlayPcs}
+            chordRootPc={theoryPanel.controlModel.meta.chordRootPc}
             openOnlyInScale={openOnlyInScale}
             colorByDegree={colorByDegree}
             colorByShape={colorByShape}
             hideNonChord={theoryDomain.chord.hideNonChord}
             stringMeta={effectiveStringMeta}
             boardMeta={boardMeta}
-            onSelectNote={theoryDomain.handlers.handleSelectNote}
+            onSelectNote={handleSelectNote}
             capoFret={capoFret}
             onSetCapo={toggleCapoAt}
           />

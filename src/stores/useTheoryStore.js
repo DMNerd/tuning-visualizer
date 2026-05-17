@@ -74,6 +74,7 @@ export const useTheoryStore = create(
         chordType: CHORD_DEFAULT,
         showChord: false,
         hideNonChord: false,
+        chordCapoRelative: false,
         ...baseSetters,
         setHydrated: (isHydrated = true) =>
           set((state) => {
@@ -89,6 +90,11 @@ export const useTheoryStore = create(
             state.hideNonChord =
               typeof value === "boolean" ? value : !state.hideNonChord;
           }),
+        setChordCapoRelative: (value) =>
+          set((state) => {
+            state.chordCapoRelative =
+              typeof value === "boolean" ? value : !state.chordCapoRelative;
+          }),
         resetTheory: () =>
           set({
             systemId: SYSTEM_DEFAULT,
@@ -98,6 +104,7 @@ export const useTheoryStore = create(
             chordType: CHORD_DEFAULT,
             showChord: false,
             hideNonChord: false,
+            chordCapoRelative: false,
           }),
       };
     }),
@@ -173,6 +180,7 @@ export const selectTheoryState = (state) => ({
   chordType: state.chordType,
   showChord: state.showChord,
   hideNonChord: state.hideNonChord,
+  chordCapoRelative: state.chordCapoRelative,
 });
 
 export const selectTheoryActions = (state) => ({
@@ -183,6 +191,7 @@ export const selectTheoryActions = (state) => ({
   setChordType: state.setChordType,
   setShowChord: state.setShowChord,
   setHideNonChord: state.setHideNonChord,
+  setChordCapoRelative: state.setChordCapoRelative,
   resetTheory: state.resetTheory,
 });
 
@@ -193,4 +202,5 @@ export const selectTheoryChordRoot = (state) => state.chordRoot;
 export const selectTheoryChordType = (state) => state.chordType;
 export const selectTheoryShowChord = (state) => state.showChord;
 export const selectTheoryHideNonChord = (state) => state.hideNonChord;
+export const selectTheoryChordCapoRelative = (state) => state.chordCapoRelative;
 export const selectTheoryIsHydrated = (state) => state.isHydrated;

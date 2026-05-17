@@ -159,6 +159,8 @@ export function useAppOrchestration({
     setChordType: theoryChord.setChordType,
     setShowChord: theoryChord.setShowChord,
     setHideNonChord: theoryChord.setHideNonChord,
+    setChordCapoRelative: theoryChord.setChordCapoRelative,
+    resetTheory: theoryChord.resetTheory,
     setPreset: instrumentPresets.setPreset,
     stopMetronome: practiceMetronome.engine.stop,
     resetMetronomePrefs: practiceReset.resetMetronomePrefs,

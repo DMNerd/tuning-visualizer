@@ -16,6 +16,8 @@ import { useScaleAndChord } from "@/hooks/useScaleAndChord";
 import { ROOT_DEFAULT, CHORD_DEFAULT } from "@/lib/config/appDefaults";
 import ChordTypePicker from "@/components/UI/combobox/ChordTypePicker";
 import SegmentedRadioGroup from "@/components/UI/SegmentedRadioGroup";
+import ToggleSwitch from "@/components/UI/ToggleSwitch";
+import { buildCapoChordDisplay } from "@/components/UI/controls/chordCapoDisplay";
 
 function ChordControls({ state, actions, meta }) {
   const {
@@ -23,10 +25,17 @@ function ChordControls({ state, actions, meta }) {
     type,
     showChord,
     hideNonChord,
+    chordCapoRelative = false,
     defaultRoot = ROOT_DEFAULT,
     defaultType = CHORD_DEFAULT,
   } = state;
-  const { onRootChange, onTypeChange, setShowChord, setHideNonChord } = actions;
+  const {
+    onRootChange,
+    onTypeChange,
+    setShowChord,
+    setHideNonChord,
+    setChordCapoRelative,
+  } = actions;
   const {
     sysNames,
     nameForPc = null,
@@ -37,6 +46,10 @@ function ChordControls({ state, actions, meta }) {
     chordTonePcs,
     chordOverlayPcs,
     chordRootPc,
+    capoFret = 0,
+    originalChordRoot = root,
+    transposedChordRoot = root,
+    isChordTransposed = false,
     chordFit = null,
   } = meta;
 
@@ -45,6 +58,7 @@ function ChordControls({ state, actions, meta }) {
     onTypeChange(defaultType);
     setShowChord(false);
     setHideNonChord(false);
+    setChordCapoRelative?.(false);
   };
 
   const divisions = Number(system?.divisions);
@@ -136,6 +150,18 @@ function ChordControls({ state, actions, meta }) {
   const rootLabelId = useId();
   const typeInputId = useId();
   const typeLabelId = useId();
+  const capoRelativeId = useId();
+  const chordTypeLabel = CHORD_LABELS[type] ?? type;
+  const capoChordDisplay = buildCapoChordDisplay({
+    chordCapoRelative,
+    capoFret,
+    isChordTransposed,
+    originalChordRoot,
+    transposedChordRoot,
+    root,
+    chordTypeLabel,
+  });
+
   const chordOverlayMode = !showChord
     ? "off"
     : hideNonChord
@@ -199,6 +225,46 @@ function ChordControls({ state, actions, meta }) {
             </div>
           </div>
         </div>
+
+        <div className="tv-field">
+          <ToggleSwitch
+            id={capoRelativeId}
+            name="chord-capo-relative"
+            checked={Boolean(chordCapoRelative)}
+            onChange={(e) => setChordCapoRelative?.(e.target.checked)}
+          >
+            Capo-relative chord
+          </ToggleSwitch>
+          <small className="tv-field__help">{capoChordDisplay.helpText}</small>
+        </div>
+
+        {chordCapoRelative ? (
+          <div className="tv-field" aria-label={capoChordDisplay.ariaLabel}>
+            <span className="tv-field__label">Capo chord</span>
+            {capoChordDisplay.hasActiveTransposition ? (
+              <div className="tv-capo-chord-map">
+                <span className="tv-capo-chord-map__part">
+                  <small>Shape</small>
+                  <strong>{capoChordDisplay.shapeChordLabel}</strong>
+                </span>
+                <span className="tv-capo-chord-map__arrow" aria-hidden="true">
+                  →
+                </span>
+                <span className="tv-capo-chord-map__part">
+                  <small>Sounds</small>
+                  <strong>{capoChordDisplay.soundingChordLabel}</strong>
+                </span>
+                <small className="tv-capo-chord-map__capo">
+                  capo {capoChordDisplay.safeCapoFret}
+                </small>
+              </div>
+            ) : (
+              <small className="tv-field__help">
+                {capoChordDisplay.summaryText}
+              </small>
+            )}
+          </div>
+        ) : null}
 
         <div className="tv-field tv-field--scale-tones">
           <span className="tv-field__label">Chord tones</span>
@@ -300,6 +366,9 @@ function areChordControlsPropsEqual(prev, next) {
   if (!Object.is(prevState.type, nextState.type)) return false;
   if (!Object.is(prevState.showChord, nextState.showChord)) return false;
   if (!Object.is(prevState.hideNonChord, nextState.hideNonChord)) return false;
+  if (!Object.is(prevState.chordCapoRelative, nextState.chordCapoRelative)) {
+    return false;
+  }
   if (!Object.is(prevState.defaultRoot, nextState.defaultRoot)) return false;
   if (!Object.is(prevState.defaultType, nextState.defaultType)) return false;
 
@@ -315,6 +384,14 @@ function areChordControlsPropsEqual(prev, next) {
     return false;
   }
   if (!Object.is(prevActions.setHideNonChord, nextActions.setHideNonChord)) {
+    return false;
+  }
+  if (
+    !Object.is(
+      prevActions.setChordCapoRelative,
+      nextActions.setChordCapoRelative,
+    )
+  ) {
     return false;
   }
 
@@ -342,6 +419,16 @@ function areChordControlsPropsEqual(prev, next) {
     return false;
   }
   if (!Object.is(prevMeta.chordRootPc, nextMeta.chordRootPc)) return false;
+  if (!Object.is(prevMeta.capoFret, nextMeta.capoFret)) return false;
+  if (!Object.is(prevMeta.originalChordRoot, nextMeta.originalChordRoot)) {
+    return false;
+  }
+  if (!Object.is(prevMeta.transposedChordRoot, nextMeta.transposedChordRoot)) {
+    return false;
+  }
+  if (!Object.is(prevMeta.isChordTransposed, nextMeta.isChordTransposed)) {
+    return false;
+  }
   if (!Object.is(prevMeta.chordFit, nextMeta.chordFit)) return false;
 
   return true;

@@ -1128,153 +1128,167 @@ const Fretboard = forwardRef(function Fretboard(
 
           return (
             <g key={`noteCirc-${n.key}`} data-note-pc={n.pc}>
-              {n.splitEnharmonic && n.splitByShape ? (
-                (() => {
-                  const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
-                  const rightFill = n.shapeSplitFills?.[1] ?? n.fill;
-                  const lowerLeftFill = deriveLowerFill(leftFill);
-                  const lowerRightFill = deriveLowerFill(rightFill);
-                  const clipTopLeftId = `note-top-left-${n.key}`;
-                  const clipTopRightId = `note-top-right-${n.key}`;
-                  const clipBottomLeftId = `note-bottom-left-${n.key}`;
-                  const clipBottomRightId = `note-bottom-right-${n.key}`;
+              {n.splitEnharmonic && n.splitByShape
+                ? (() => {
+                    const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
+                    const rightFill = n.shapeSplitFills?.[1] ?? n.fill;
+                    const lowerLeftFill = deriveLowerFill(leftFill);
+                    const lowerRightFill = deriveLowerFill(rightFill);
+                    const clipTopLeftId = `note-top-left-${n.key}`;
+                    const clipTopRightId = `note-top-right-${n.key}`;
+                    const clipBottomLeftId = `note-bottom-left-${n.key}`;
+                    const clipBottomRightId = `note-bottom-right-${n.key}`;
 
-                  return (
-                    <>
-                      <defs>
-                        <clipPath id={clipTopLeftId}>
-                          <rect
-                            x={n.cx - n.r}
-                            y={n.cy - n.r}
-                            width={n.r}
-                            height={n.r}
-                          />
-                        </clipPath>
-                        <clipPath id={clipTopRightId}>
-                          <rect
-                            x={n.cx}
-                            y={n.cy - n.r}
-                            width={n.r}
-                            height={n.r}
-                          />
-                        </clipPath>
-                        <clipPath id={clipBottomLeftId}>
-                          <rect x={n.cx - n.r} y={n.cy} width={n.r} height={n.r} />
-                        </clipPath>
-                        <clipPath id={clipBottomRightId}>
-                          <rect x={n.cx} y={n.cy} width={n.r} height={n.r} />
-                        </clipPath>
-                      </defs>
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={leftFill}
-                        clipPath={`url(#${clipTopLeftId})`}
-                      />
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={rightFill}
-                        clipPath={`url(#${clipTopRightId})`}
-                      />
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={lowerLeftFill}
-                        clipPath={`url(#${clipBottomLeftId})`}
-                      />
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={lowerRightFill}
-                        clipPath={`url(#${clipBottomRightId})`}
-                      />
-                    </>
-                  );
-                })()
-              ) : n.splitByShape ? (
-                (() => {
-                  const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
-                  const rightFill = n.shapeSplitFills?.[1] ?? deriveLowerFill(leftFill);
-                  const clipLeftId = `note-left-${n.key}`;
-                  const clipRightId = `note-right-${n.key}`;
+                    return (
+                      <>
+                        <defs>
+                          <clipPath id={clipTopLeftId}>
+                            <rect
+                              x={n.cx - n.r}
+                              y={n.cy - n.r}
+                              width={n.r}
+                              height={n.r}
+                            />
+                          </clipPath>
+                          <clipPath id={clipTopRightId}>
+                            <rect
+                              x={n.cx}
+                              y={n.cy - n.r}
+                              width={n.r}
+                              height={n.r}
+                            />
+                          </clipPath>
+                          <clipPath id={clipBottomLeftId}>
+                            <rect
+                              x={n.cx - n.r}
+                              y={n.cy}
+                              width={n.r}
+                              height={n.r}
+                            />
+                          </clipPath>
+                          <clipPath id={clipBottomRightId}>
+                            <rect x={n.cx} y={n.cy} width={n.r} height={n.r} />
+                          </clipPath>
+                        </defs>
+                        <circle
+                          cx={n.cx}
+                          cy={n.cy}
+                          r={n.r}
+                          fill={leftFill}
+                          clipPath={`url(#${clipTopLeftId})`}
+                        />
+                        <circle
+                          cx={n.cx}
+                          cy={n.cy}
+                          r={n.r}
+                          fill={rightFill}
+                          clipPath={`url(#${clipTopRightId})`}
+                        />
+                        <circle
+                          cx={n.cx}
+                          cy={n.cy}
+                          r={n.r}
+                          fill={lowerLeftFill}
+                          clipPath={`url(#${clipBottomLeftId})`}
+                        />
+                        <circle
+                          cx={n.cx}
+                          cy={n.cy}
+                          r={n.r}
+                          fill={lowerRightFill}
+                          clipPath={`url(#${clipBottomRightId})`}
+                        />
+                      </>
+                    );
+                  })()
+                : n.splitByShape
+                  ? (() => {
+                      const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
+                      const rightFill =
+                        n.shapeSplitFills?.[1] ?? deriveLowerFill(leftFill);
+                      const clipLeftId = `note-left-${n.key}`;
+                      const clipRightId = `note-right-${n.key}`;
 
-                  return (
-                    <>
-                      <defs>
-                        <clipPath id={clipLeftId}>
-                          <rect
-                            x={n.cx - n.r}
-                            y={n.cy - n.r}
-                            width={n.r}
-                            height={n.r * 2}
+                      return (
+                        <>
+                          <defs>
+                            <clipPath id={clipLeftId}>
+                              <rect
+                                x={n.cx - n.r}
+                                y={n.cy - n.r}
+                                width={n.r}
+                                height={n.r * 2}
+                              />
+                            </clipPath>
+                            <clipPath id={clipRightId}>
+                              <rect
+                                x={n.cx}
+                                y={n.cy - n.r}
+                                width={n.r}
+                                height={n.r * 2}
+                              />
+                            </clipPath>
+                          </defs>
+                          <circle
+                            cx={n.cx}
+                            cy={n.cy}
+                            r={n.r}
+                            fill={leftFill}
+                            clipPath={`url(#${clipLeftId})`}
                           />
-                        </clipPath>
-                        <clipPath id={clipRightId}>
-                          <rect x={n.cx} y={n.cy - n.r} width={n.r} height={n.r * 2} />
-                        </clipPath>
-                      </defs>
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={leftFill}
-                        clipPath={`url(#${clipLeftId})`}
-                      />
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={rightFill}
-                        clipPath={`url(#${clipRightId})`}
-                      />
-                    </>
-                  );
-                })()
-              ) : (
-                (() => {
-                  const topFill = n.fill;
-                  const bottomFill = deriveLowerFill(topFill);
-                  const clipTopId = `note-top-${n.key}`;
-                  const clipBottomId = `note-bottom-${n.key}`;
+                          <circle
+                            cx={n.cx}
+                            cy={n.cy}
+                            r={n.r}
+                            fill={rightFill}
+                            clipPath={`url(#${clipRightId})`}
+                          />
+                        </>
+                      );
+                    })()
+                  : (() => {
+                      const topFill = n.fill;
+                      const bottomFill = deriveLowerFill(topFill);
+                      const clipTopId = `note-top-${n.key}`;
+                      const clipBottomId = `note-bottom-${n.key}`;
 
-                  return (
-                    <>
-                      <defs>
-                        <clipPath id={clipTopId}>
-                          <rect
-                            x={n.cx - n.r}
-                            y={n.cy - n.r}
-                            width={n.r * 2}
-                            height={n.r}
+                      return (
+                        <>
+                          <defs>
+                            <clipPath id={clipTopId}>
+                              <rect
+                                x={n.cx - n.r}
+                                y={n.cy - n.r}
+                                width={n.r * 2}
+                                height={n.r}
+                              />
+                            </clipPath>
+                            <clipPath id={clipBottomId}>
+                              <rect
+                                x={n.cx - n.r}
+                                y={n.cy}
+                                width={n.r * 2}
+                                height={n.r}
+                              />
+                            </clipPath>
+                          </defs>
+                          <circle
+                            cx={n.cx}
+                            cy={n.cy}
+                            r={n.r}
+                            fill={topFill}
+                            clipPath={`url(#${clipTopId})`}
                           />
-                        </clipPath>
-                        <clipPath id={clipBottomId}>
-                          <rect x={n.cx - n.r} y={n.cy} width={n.r * 2} height={n.r} />
-                        </clipPath>
-                      </defs>
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={topFill}
-                        clipPath={`url(#${clipTopId})`}
-                      />
-                      <circle
-                        cx={n.cx}
-                        cy={n.cy}
-                        r={n.r}
-                        fill={bottomFill}
-                        clipPath={`url(#${clipBottomId})`}
-                      />
-                    </>
-                  );
-                })()
-              )}
+                          <circle
+                            cx={n.cx}
+                            cy={n.cy}
+                            r={n.r}
+                            fill={bottomFill}
+                            clipPath={`url(#${clipBottomId})`}
+                          />
+                        </>
+                      );
+                    })()}
               <circle
                 cx={n.cx}
                 cy={n.cy}

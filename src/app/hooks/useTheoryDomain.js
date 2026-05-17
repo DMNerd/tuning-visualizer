@@ -7,12 +7,14 @@ import {
   isMicrotonalChordType,
 } from "@/lib/theory/chords";
 import { CHORD_DEFAULT, ROOT_DEFAULT } from "@/lib/config/appDefaults";
+import { resolveCapoRelativeChordRootPc } from "@/lib/theory/capoChords";
 
 import { useSystemNoteNames } from "@/hooks/useSystemNoteNames";
 import { buildTheoryDomainReturn } from "@/app/hooks/domainReturnBuilders";
 import {
   useTheoryStore,
   selectTheoryActions,
+  selectTheoryChordCapoRelative,
   selectTheoryChordRoot,
   selectTheoryChordType,
   selectTheoryHideNonChord,
@@ -31,6 +33,7 @@ const selectTheoryDomainStore = (state) => ({
   chordType: selectTheoryChordType(state),
   showChord: selectTheoryShowChord(state),
   hideNonChord: selectTheoryHideNonChord(state),
+  chordCapoRelative: selectTheoryChordCapoRelative(state),
   isHydrated: selectTheoryIsHydrated(state),
   ...selectTheoryActions(state),
 });
@@ -53,6 +56,7 @@ export function useTheoryDomain({
     chordType,
     showChord,
     hideNonChord,
+    chordCapoRelative,
     isHydrated,
     setSystemId,
     setRoot,
@@ -61,6 +65,8 @@ export function useTheoryDomain({
     setChordType,
     setShowChord,
     setHideNonChord,
+    setChordCapoRelative,
+    resetTheory,
   } = theoryStore;
 
   const system = useMemo(
@@ -162,11 +168,24 @@ export function useTheoryDomain({
   }, [system.divisions, chordType, setChordType]);
 
   const handleSelectNote = useCallback(
-    (pc, providedName, event) => {
-      const noteName = providedName ?? nameForPc(pc);
+    (pc, providedName, event, selectionContext = {}) => {
+      const isChordRootSelection =
+        event?.type === "contextmenu" || event?.button === 2;
+      const notePc = isChordRootSelection
+        ? resolveCapoRelativeChordRootPc({
+            pc,
+            capoFret: selectionContext?.capoFret,
+            chordCapoRelative,
+            divisions: system.divisions,
+          })
+        : pc;
+      const noteName =
+        isChordRootSelection || notePc !== pc
+          ? nameForPc(notePc)
+          : (providedName ?? nameForPc(notePc));
       if (!noteName || !sysNames.includes(noteName)) return;
 
-      if (event?.type === "contextmenu" || event?.button === 2) {
+      if (isChordRootSelection) {
         event?.preventDefault?.();
         setChordRoot(noteName);
         return;
@@ -174,7 +193,14 @@ export function useTheoryDomain({
 
       setRoot(noteName);
     },
-    [nameForPc, sysNames, setChordRoot, setRoot],
+    [
+      chordCapoRelative,
+      nameForPc,
+      sysNames,
+      setChordRoot,
+      setRoot,
+      system.divisions,
+    ],
   );
 
   const systemSlice = useMemo(
@@ -223,6 +249,9 @@ export function useTheoryDomain({
       setShowChord,
       hideNonChord,
       setHideNonChord,
+      chordCapoRelative,
+      setChordCapoRelative,
+      resetTheory,
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,
@@ -236,6 +265,9 @@ export function useTheoryDomain({
       setShowChord,
       hideNonChord,
       setHideNonChord,
+      chordCapoRelative,
+      setChordCapoRelative,
+      resetTheory,
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,

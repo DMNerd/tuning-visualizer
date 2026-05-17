@@ -48,6 +48,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
           state.chordType,
           state.showChord,
           state.hideNonChord,
+          state.chordCapoRelative,
         ]}
         onReset={reset.resetMusicalState}
       >
@@ -57,6 +58,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             type: state.chordType,
             showChord: state.showChord,
             hideNonChord: state.hideNonChord,
+            chordCapoRelative: state.chordCapoRelative,
             defaultRoot: state.defaultChordRoot,
             defaultType: state.defaultChordType,
           }}
@@ -65,6 +67,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             onTypeChange: actions.onTypeChange,
             setShowChord: actions.setShowChord,
             setHideNonChord: actions.setHideNonChord,
+            setChordCapoRelative: actions.setChordCapoRelative,
           }}
           meta={{
             sysNames: meta.sysNames,
@@ -76,6 +79,10 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             chordTonePcs: meta.chordTonePcs,
             chordOverlayPcs: meta.chordOverlayPcs,
             chordRootPc: meta.chordRootPc,
+            capoFret: meta.capoFret,
+            originalChordRoot: meta.originalChordRoot,
+            transposedChordRoot: meta.transposedChordRoot,
+            isChordTransposed: meta.isChordTransposed,
             chordFit,
           }}
         />
