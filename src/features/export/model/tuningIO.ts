@@ -1,3 +1,5 @@
+import { generateId } from "@shared/lib/generateId";
+
 export type TuningString = {
   label?: string;
   note?: string;
@@ -102,12 +104,7 @@ export function normalizePackName(value: unknown): string {
 }
 
 export function generatePackId(): string {
-  if (typeof crypto?.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  const now = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 10);
-  return `pack-${now}-${rand}`;
+  return generateId("pack");
 }
 
 export function ensurePackHasId<T extends { meta?: PackMeta }>(pack: T): T {

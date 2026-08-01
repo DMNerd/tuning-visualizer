@@ -10,4 +10,5 @@ export const STORAGE_KEYS = {
   CUSTOM_TUNINGS: "tv.customTunings",
   SYSTEM_ID: "tv.systemId",
   ROOT: "tv.root",
+  TRAINING_ROUTINES: "tv.trainingRoutines",
 };

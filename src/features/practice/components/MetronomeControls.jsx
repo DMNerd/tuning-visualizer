@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import Section from "@shared/ui/Section";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import NumberField from "@shared/ui/NumberField";
@@ -50,7 +49,7 @@ function MetronomeControls({ state, actions, meta }) {
   const practiceDurationMax = meta?.practiceDurationMax ?? 180;
 
   return (
-    <Section id="metronome-controls" title="Metronome" size="sm">
+    <div id="metronome-controls">
       <div className={clsx("tv-controls", "tv-controls--metronome")}>
         <div className="tv-controls__input-row">
           <button
@@ -217,7 +216,7 @@ function MetronomeControls({ state, actions, meta }) {
           Announce before change
         </ToggleSwitch>
       </div>
-    </Section>
+    </div>
   );
 }
 

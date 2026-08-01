@@ -2,7 +2,9 @@ import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import ErrorFallback from "@shared/ui/ErrorFallback";
+import Section from "@shared/ui/Section";
 import MetronomeControls from "@features/practice/components/MetronomeControls";
+import { TrainingRoutinesControls } from "@features/training";
 
 export default function PracticePanelContainer({
   metronome,
@@ -20,11 +22,18 @@ export default function PracticePanelContainer({
       ]}
       onReset={reset.resetPracticeCounters}
     >
-      <MetronomeControls
-        state={controlModel.state}
-        actions={controlModel.actions}
-        meta={controlModel.meta}
-      />
+      <Section
+        id="metronome-training-controls"
+        title="Metronome and Training"
+        size="sm"
+      >
+        <MetronomeControls
+          state={controlModel.state}
+          actions={controlModel.actions}
+          meta={controlModel.meta}
+        />
+        <TrainingRoutinesControls />
+      </Section>
     </ErrorBoundary>
   );
 }

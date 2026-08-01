@@ -1,34 +1,9 @@
 import { toast } from "react-hot-toast";
 
 import ModalFrame from "@shared/ui/ModalFrame";
+import { copyTextWithFallback } from "@shared/lib/clipboard";
 import { buildShareConfigModalModel } from "@features/share/model/shareConfigModalModel";
 import ShareQrCode from "@features/share/components/ShareQrCode";
-
-async function copyTextWithFallback(text) {
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  if (typeof document === "undefined") {
-    throw new Error("Clipboard API unavailable");
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "absolute";
-  textarea.style.left = "-9999px";
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  const copied = document.execCommand("copy");
-  document.body.removeChild(textarea);
-
-  if (!copied) {
-    throw new Error("Copy command failed");
-  }
-}
 
 export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
   const model = buildShareConfigModalModel({

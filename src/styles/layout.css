@@ -270,6 +270,15 @@
   font-weight: 600;
 }
 
+.tv-panel__subtitle {
+  margin: var(--space-sm) 0 var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .tv-panel__actions {
   display: inline-flex;
   align-items: center;
@@ -1938,6 +1947,24 @@ svg {
   min-width: 0;
 }
 
+.tv-textarea {
+  margin: 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklab, var(--line) 85%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--bg) 92%, var(--panel) 8%);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
 .tv-share-modal__panel--qr {
   display: grid;
   gap: 8px;
@@ -1965,6 +1992,65 @@ svg {
   .tv-share-modal__grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.tv-routine-modal__body {
+  display: grid;
+  gap: var(--gap);
+}
+
+.tv-routine-chain {
+  display: grid;
+  gap: 0;
+  justify-items: stretch;
+}
+
+.tv-routine-block {
+  border: 1px solid color-mix(in oklab, var(--line) 88%, transparent);
+  border-radius: var(--card-radius);
+  background: color-mix(in oklab, var(--panel) 92%, var(--bg) 8%);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.tv-routine-block--start {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line) 45%);
+}
+
+.tv-routine-block h3 {
+  margin: 0;
+}
+
+.tv-routine-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.tv-routine-block__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.tv-routine-chain__connector {
+  width: 2px;
+  height: 20px;
+  margin-inline: auto;
+  background: color-mix(in oklab, var(--line) 70%, transparent);
+  position: relative;
+}
+
+.tv-routine-chain__connector::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid color-mix(in oklab, var(--line) 70%, transparent);
 }
 
 .tv-modal-suspense {

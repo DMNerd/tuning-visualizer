@@ -1,12 +1,10 @@
+import { generateId } from "@shared/lib/generateId";
+
 const SESSION_WINDOW_ID_KEY = "tv.windowId";
 const FALLBACK_WINDOW_ID_KEY = "__TV_WINDOW_ID__";
 
 function createWindowId() {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-
-  return `window-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return generateId("window");
 }
 
 export function getWindowId() {
