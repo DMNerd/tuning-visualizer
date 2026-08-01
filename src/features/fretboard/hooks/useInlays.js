@@ -1,5 +1,6 @@
 // src/hooks/useInlays.js
 import { useMemo } from "react";
+import { uniq } from "@shared/lib/object";
 
 /**
  * Computes center-inlay fret numbers for an N-TET board referenced to 12-TET.
@@ -23,7 +24,6 @@ export function useInlays({ frets, divisions }) {
     for (let s = 12; s <= maxSemi; s += 12) doubleSemis.push(s);
 
     const semiToWire = (semi) => Math.round((semi * N) / 12);
-    const uniq = (arr) => Array.from(new Set(arr));
 
     const inlaySingles = uniq(singleSemis.map(semiToWire)).filter(
       (f) => f >= 1 && f <= frets,

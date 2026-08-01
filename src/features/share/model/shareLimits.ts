@@ -8,9 +8,7 @@ export const SHARE_URL_WARNING_THRESHOLD = 1500;
 export const SHARE_URL_QR_HARD_LIMIT_THRESHOLD = 2953;
 
 export type ShareUrlSizeReasonCode =
-  | "none"
-  | "warning-threshold"
-  | "qr-hard-limit";
+  "none" | "warning-threshold" | "qr-hard-limit";
 
 export type ShareUrlSizeEvaluation = {
   length: number;

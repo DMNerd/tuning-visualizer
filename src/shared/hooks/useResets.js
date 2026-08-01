@@ -91,17 +91,6 @@ export function useResets({
     resetMusicalStateFromRefs(refs.current);
   }, [refs]);
 
-  const resetInstrumentFactory = useCallback(
-    (divisions) => {
-      resetInstrumentState(divisions);
-    },
-    [resetInstrumentState],
-  );
-
-  const resetDisplay = useCallback(() => {
-    resetDisplayState();
-  }, [resetDisplayState]);
-
   const resetAll = useCallback(
     async ({ confirm: shouldConfirm = true } = {}) => {
       if (shouldConfirm && typeof refs.current.confirm === "function") {
@@ -126,8 +115,8 @@ export function useResets({
   );
 
   return {
-    resetInstrumentFactory,
-    resetDisplay,
+    resetInstrumentFactory: resetInstrumentState,
+    resetDisplay: resetDisplayState,
     resetSystem,
     resetMusicalState,
     resetAll,

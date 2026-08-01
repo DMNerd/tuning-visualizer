@@ -1,8 +1,6 @@
 import { useMemo } from "react";
-import {
-  buildDisplayControlModel,
-  buildTheoryControlModel,
-} from "@shared/lib/controlModels";
+import { buildDisplayControlModel } from "@features/display";
+import { buildTheoryControlModel } from "@features/theory";
 import { buildRawShareState } from "@features/share";
 import {
   CHORD_DEFAULT,

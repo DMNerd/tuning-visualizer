@@ -81,6 +81,7 @@ export function useFretboardLayout({
       stringStartX,
       openXForString,
       noteX,
+      metaByIndex,
     };
   }, [frets, strings, dotSize, metaByIndex]);
 }

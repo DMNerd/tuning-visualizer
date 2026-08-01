@@ -26,8 +26,7 @@ export type NotesPerStringConstraint =
     };
 
 export type DegreeCoverageConstraint =
-  | { kind: "all-degrees" }
-  | { kind: "at-least"; count: number };
+  { kind: "all-degrees" } | { kind: "at-least"; count: number };
 
 export type ExtractionStrategy =
   | { kind: "window"; width: number }

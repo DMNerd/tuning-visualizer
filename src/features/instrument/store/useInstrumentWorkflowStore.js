@@ -3,21 +3,16 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
+import {
+  createGlobalStorage,
+  readLegacyJSON,
+} from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
 
 function readLegacyCustomTunings() {
-  if (typeof globalThis.localStorage === "undefined") return null;
-  const raw = globalThis.localStorage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS);
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
+  const parsed = readLegacyJSON(STORAGE_KEYS.CUSTOM_TUNINGS);
+  return Array.isArray(parsed) ? parsed : null;
 }
 
 let didHydrateLegacyWorkflowPayload = false;

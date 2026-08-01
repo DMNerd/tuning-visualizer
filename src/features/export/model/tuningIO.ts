@@ -76,10 +76,6 @@ export function buildTuningPack(params: {
   return pack;
 }
 
-export function downloadTuningPack(pack: TuningPack, filename?: string) {
-  downloadJsonFile(pack, `${filename || pack.name}.tuning.json`);
-}
-
 import { isPlainObject } from "@shared/lib/object";
 
 export interface PackMeta {

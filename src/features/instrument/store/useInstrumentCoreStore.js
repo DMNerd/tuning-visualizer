@@ -11,8 +11,13 @@ import {
   FRETS_MAX,
 } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import { createScopedStorage } from "@shared/lib/storage/scopedStorage";
+import {
+  createScopedStorage,
+  getLocalStorage,
+  readLegacyJSON,
+} from "@shared/lib/storage/scopedStorage";
 import { clamp } from "@shared/lib/math";
+import { isPlainObject } from "@shared/lib/object";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
 import {
   coerceNeckFilterMode,
@@ -37,9 +42,9 @@ function clampMaybeNumber(value, min, max, fallback) {
 }
 
 function readLegacyNumber(key, min, max, fallback) {
-  if (typeof globalThis.localStorage === "undefined")
-    return { value: fallback, found: false };
-  const raw = globalThis.localStorage.getItem(key);
+  const storage = getLocalStorage();
+  if (!storage) return { value: fallback, found: false };
+  const raw = storage.getItem(key);
   return {
     value: clampMaybeNumber(raw, min, max, fallback),
     found: raw !== null,
@@ -47,27 +52,17 @@ function readLegacyNumber(key, min, max, fallback) {
 }
 
 function readLegacyDefaultTuningMap() {
-  if (typeof globalThis.localStorage === "undefined")
-    return { value: {}, found: false };
-  try {
-    const raw = globalThis.localStorage.getItem(
-      STORAGE_KEYS.USER_DEFAULT_TUNING,
-    );
-    if (!raw) return { value: {}, found: false };
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      lastSerializedGlobalDefaultTuningMap = raw;
-    }
-    return {
-      value:
-        parsed && typeof parsed === "object" && !Array.isArray(parsed)
-          ? parsed
-          : {},
-      found: true,
-    };
-  } catch {
-    return { value: {}, found: true };
+  const storage = getLocalStorage();
+  if (!storage) return { value: {}, found: false };
+
+  const raw = storage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING);
+  if (!raw) return { value: {}, found: false };
+
+  const parsed = readLegacyJSON(STORAGE_KEYS.USER_DEFAULT_TUNING);
+  if (isPlainObject(parsed)) {
+    lastSerializedGlobalDefaultTuningMap = raw;
   }
+  return { value: isPlainObject(parsed) ? parsed : {}, found: true };
 }
 
 function serializeDefaultTuningMap(value) {
@@ -139,12 +134,17 @@ export const useInstrumentCoreStore = create(
         neckFilterMode: NECK_FILTER_MODES.NONE,
         userDefaultTuningMap: legacyDefaults.value,
 
-        setStrings: (strings) => set({ strings }),
+        setStrings: (strings) =>
+          set({ strings: clamp(strings, STR_MIN, STR_MAX) }),
         setHydrated: (isHydrated = true) =>
           set({ isHydrated: Boolean(isHydrated) }),
-        setFrets: (frets) => set({ frets }),
+        setFrets: (frets) => set({ frets: clamp(frets, FRETS_MIN, FRETS_MAX) }),
         setFretsTouched: (fretsTouched) => set({ fretsTouched }),
-        setFretsUI: (frets) => set({ frets, fretsTouched: true }),
+        setFretsUI: (frets) =>
+          set({
+            frets: clamp(frets, FRETS_MIN, FRETS_MAX),
+            fretsTouched: true,
+          }),
         setTuning: (valueOrUpdater) =>
           set((state) => {
             if (

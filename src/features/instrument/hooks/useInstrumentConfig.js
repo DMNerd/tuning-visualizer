@@ -55,8 +55,6 @@ function normalizeSavedEntry(raw) {
 export function useInstrumentConfig({
   system,
   systemId,
-  stringsRange,
-  fretsRange,
   presetMeta,
   defaultTunings,
   presetTunings,
@@ -84,23 +82,6 @@ export function useInstrumentConfig({
     updateUserDefaultTuningMap,
     resetInstrumentPrefs,
   } = instrumentStore;
-
-  const minStrings = stringsRange.min;
-  const maxStrings = stringsRange.max;
-  const minFrets = fretsRange.min;
-  const maxFrets = fretsRange.max;
-
-  useEffect(() => {
-    if (strings < minStrings || strings > maxStrings) {
-      setStrings(Math.max(minStrings, Math.min(maxStrings, strings)));
-    }
-  }, [strings, minStrings, maxStrings, setStrings]);
-
-  useEffect(() => {
-    if (frets < minFrets || frets > maxFrets) {
-      setFrets(Math.max(minFrets, Math.min(maxFrets, frets)));
-    }
-  }, [frets, minFrets, maxFrets, setFrets]);
 
   const storeKey = keyOf(systemId, strings);
   const savedEntry = useMemo(
@@ -267,7 +248,6 @@ export function useInstrumentConfig({
       setBoardMeta,
       setNeckFilterMode,
       resetInstrumentPrefs,
-      setFretsPref: setFretsUI,
       handleSaveDefault,
       handleStringsChange,
     }),
@@ -314,7 +294,6 @@ export function useInstrumentFretsSlice(instrumentConfig) {
       frets: state.frets,
       drawFrets: derived.drawFrets,
       setFretsUI: actions.setFretsUI,
-      setFretsPref: actions.setFretsPref,
       handleStringsChange: actions.handleStringsChange,
     }),
     [
@@ -322,7 +301,6 @@ export function useInstrumentFretsSlice(instrumentConfig) {
       state.frets,
       derived.drawFrets,
       actions.setFretsUI,
-      actions.setFretsPref,
       actions.handleStringsChange,
     ],
   );

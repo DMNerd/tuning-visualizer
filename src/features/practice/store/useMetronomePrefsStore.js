@@ -4,9 +4,13 @@ import { immer } from "zustand/middleware/immer";
 
 import { METRONOME_DEFAULTS } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
+import {
+  createGlobalStorage,
+  readLegacyJSON,
+} from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
+import { isPlainObject } from "@shared/lib/object";
 
 const SETTER_KEYS = [
   "bpm",
@@ -41,20 +45,8 @@ function normalizeLegacyShape(persisted) {
 }
 
 function readLegacyMetronomePrefs() {
-  if (typeof globalThis.localStorage === "undefined") return null;
-  const raw = globalThis.localStorage.getItem(STORAGE_KEYS.METRONOME_PREFS);
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return { prefs: parsed };
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
+  const parsed = readLegacyJSON(STORAGE_KEYS.METRONOME_PREFS);
+  return isPlainObject(parsed) ? { prefs: parsed } : null;
 }
 
 let didHydrateLegacyMetronomePayload = false;

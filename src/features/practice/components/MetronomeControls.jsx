@@ -3,16 +3,10 @@ import Section from "@shared/ui/Section";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import NumberField from "@shared/ui/NumberField";
+import { formatRemainingTime } from "@features/practice/model/formatRemainingTime";
 
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
-
-function formatRemainingTime(totalSeconds) {
-  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
-  const minutes = Math.floor(safeSeconds / 60);
-  const seconds = safeSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
 
 function MetronomeControls({ state, actions, meta }) {
   const {

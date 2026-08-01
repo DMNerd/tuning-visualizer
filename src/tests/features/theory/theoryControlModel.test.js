@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildTheoryControlModel } from "@shared/lib/controlModels";
+import { buildTheoryControlModel } from "@features/theory/model/controlModel";
 import { resolveCapoRelativeChordRootPc } from "@domain/theory/capoChords";
 import { buildChordFit } from "@features/theory/model/theoryPanelModel";
 

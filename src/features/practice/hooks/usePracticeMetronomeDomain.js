@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { buildMetronomeControlModel } from "@shared/lib/controlModels";
+import { buildMetronomeControlModel } from "@features/practice/model/controlModel";
 import { PANEL_CONTRACTS } from "@shared/lib/panelContracts";
 import usePracticePanelState from "@features/practice/containers/usePracticePanelState";
 import { buildPracticeMetronomeDomainReturn } from "@shared/lib/domainReturnBuilders";

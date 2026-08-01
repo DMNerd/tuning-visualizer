@@ -247,6 +247,12 @@ function formatHeaderSingleLine(h: ExportHeader): string {
   return primary.join(" • ");
 }
 
+function svgToBlobUrl(svg: SVGSVGElement) {
+  const xml = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+  return URL.createObjectURL(blob);
+}
+
 export function downloadSVG(
   svgEl: SVGSVGElement,
   filename = "fretboard.svg",
@@ -254,9 +260,7 @@ export function downloadSVG(
   padding = EXPORT_PADDING,
 ) {
   const svg = withPaddingAndHeader(svgEl, padding, header);
-  const xml = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+  const url = svgToBlobUrl(svg);
   triggerDownload(url, filename);
   URL.revokeObjectURL(url);
 }
@@ -303,9 +307,7 @@ export function printFretboard(
   padding = EXPORT_PADDING,
 ) {
   const svg = withPaddingAndHeader(svgEl, padding, header);
-  const xml = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+  const url = svgToBlobUrl(svg);
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";

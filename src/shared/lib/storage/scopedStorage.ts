@@ -1,11 +1,25 @@
 import { scopeKey } from "@shared/lib/storage/windowScope";
 
-function getLocalStorage() {
+export function getLocalStorage() {
   if (typeof globalThis.localStorage === "undefined") {
     return null;
   }
 
   return globalThis.localStorage;
+}
+
+export function readLegacyJSON(key: string): unknown {
+  const storage = getLocalStorage();
+  if (!storage) return null;
+
+  const raw = storage.getItem(key);
+  if (raw === null) return null;
+
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 export function createScopedLocalStorage({

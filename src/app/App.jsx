@@ -19,14 +19,10 @@ import { PRESET_TUNING_META } from "@domain/presets/presets";
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@domain/presets/presetState";
 import {
   DISPLAY_DEFAULTS,
-  FRETS_MAX,
-  FRETS_MIN,
   getFactoryFrets,
   METRONOME_DEFAULTS,
   ROOT_DEFAULT,
   SCALE_DEFAULT,
-  STR_MAX,
-  STR_MIN,
   SYSTEM_DEFAULT,
 } from "@shared/config/appDefaults";
 
@@ -70,8 +66,6 @@ export default function App() {
     systemId: theoryDomain.system.systemId,
     setSystemId: theoryDomain.system.setSystemId,
     tunings: TUNINGS,
-    stringsRange: { min: STR_MIN, max: STR_MAX },
-    fretsRange: { min: FRETS_MIN, max: FRETS_MAX },
     factory: getFactoryFrets,
     presetMeta: PRESET_TUNING_META,
     defaultTunings: DEFAULT_TUNINGS,
@@ -165,23 +159,41 @@ export default function App() {
   });
 
   const header = <PanelHeader theme={theme} setTheme={setTheme} />;
-  const stage = (
-    <StageShell
-      boardRef={boardRef}
-      stageRef={stageRef}
-      isFs={isFs}
-      toggleFs={toggleFs}
-      resetAll={resetAll}
-      showPracticeHud={orchestration.showPracticeHud}
-      displayPrefs={displayPrefs}
-      theoryDomain={theoryDomain}
-      theoryPanel={theoryPanel}
-      instrumentState={instrumentState}
-      drawFrets={drawFrets}
-      boardMeta={boardMeta}
-      capo={capo}
-      onResetCapo={orchestration.onResetCapo}
-    />
+  const stage = useMemo(
+    () => (
+      <StageShell
+        boardRef={boardRef}
+        stageRef={stageRef}
+        isFs={isFs}
+        toggleFs={toggleFs}
+        resetAll={resetAll}
+        showPracticeHud={orchestration.showPracticeHud}
+        displayPrefs={displayPrefs}
+        theoryDomain={theoryDomain}
+        theoryPanel={theoryPanel}
+        instrumentState={instrumentState}
+        drawFrets={drawFrets}
+        boardMeta={boardMeta}
+        capo={capo}
+        onResetCapo={orchestration.onResetCapo}
+      />
+    ),
+    [
+      boardRef,
+      stageRef,
+      isFs,
+      toggleFs,
+      resetAll,
+      orchestration.showPracticeHud,
+      displayPrefs,
+      theoryDomain,
+      theoryPanel,
+      instrumentState,
+      drawFrets,
+      boardMeta,
+      capo,
+      orchestration.onResetCapo,
+    ],
   );
 
   const controls = useMemo(

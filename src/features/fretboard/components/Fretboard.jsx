@@ -26,7 +26,24 @@ import {
   parseDatasetNumber,
   resolveClosestDatasetElement,
 } from "@shared/lib/svgDelegation";
-import { toStringMetaMap } from "@domain/meta/meta";
+import {
+  collides1D,
+  collides2D,
+  addBounds1D,
+  addBounds2D,
+} from "@features/fretboard/model/collisionGrid";
+import {
+  NOTE_FONT_MIN,
+  NOTE_FONT_MAX,
+  SPLIT_NOTE_FONT_MIN,
+  SPLIT_NOTE_FONT_MAX,
+  MARKER_FONT_MIN,
+  MARKER_FONT_MAX,
+  estimateMinimumDotSize,
+  buildLabelVariants,
+  buildFitCacheKey,
+  buildWidthCacheKey,
+} from "@features/fretboard/model/labelFit";
 import {
   normalizeHiddenFrets,
   isHiddenFret,
@@ -45,190 +62,9 @@ const PANEL_CORNER_RADIUS = 14;
 const INLAY_RADIUS = 6.5;
 const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
 const NUT_VERTICAL_PADDING = 8;
-const NOTE_FONT_MIN = 6;
-const NOTE_FONT_MAX = 11.5;
-const SPLIT_NOTE_FONT_MIN = 5.5;
-const SPLIT_NOTE_FONT_MAX = 9.5;
-const MARKER_FONT_MIN = 6;
-const MARKER_FONT_MAX = 11.5;
 const APP_FONT_STACK =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 const SPATIAL_BUCKET_SIZE = 36;
-const NOTE_TEXT_PADDING = 2;
-
-function estimateMinimumDotSize({ textFit, divisions, nameForPc, accidental }) {
-  if (!textFit || typeof nameForPc !== "function") return 8;
-  let requiredRadius = 8;
-
-  for (let pc = 0; pc < divisions; pc += 1) {
-    const label = String(nameForPc(pc) ?? "");
-    if (!label) continue;
-
-    if (accidental === "both" && label.includes("/")) {
-      const [upper = "", lower = ""] = label.split("/");
-      const upperW = textFit.measureWidth(upper, {
-        fontWeight: 700,
-        fontSize: SPLIT_NOTE_FONT_MAX,
-      });
-      const lowerW = textFit.measureWidth(lower, {
-        fontWeight: 700,
-        fontSize: SPLIT_NOTE_FONT_MAX,
-      });
-      requiredRadius = Math.max(
-        requiredRadius,
-        Math.max(upperW, lowerW) / 1.7 + NOTE_TEXT_PADDING,
-      );
-      continue;
-    }
-
-    const width = textFit.measureWidth(label, {
-      fontWeight: 700,
-      fontSize: NOTE_FONT_MAX,
-    });
-    requiredRadius = Math.max(requiredRadius, width / 1.65 + NOTE_TEXT_PADDING);
-  }
-
-  return Math.ceil(requiredRadius);
-}
-
-function forEachBucketKey2D(bounds, bucketSize, visit) {
-  const startX = Math.floor(bounds.left / bucketSize);
-  const endX = Math.floor(bounds.right / bucketSize);
-  const startY = Math.floor(bounds.top / bucketSize);
-  const endY = Math.floor(bounds.bottom / bucketSize);
-  for (let bx = startX; bx <= endX; bx += 1) {
-    for (let by = startY; by <= endY; by += 1) {
-      visit(`${bx}:${by}`);
-    }
-  }
-}
-
-function collides2D(bounds, bucketStore, bucketSize) {
-  let collided = false;
-  forEachBucketKey2D(bounds, bucketSize, (key) => {
-    if (collided) return;
-    const bucket = bucketStore.get(key);
-    if (!bucket) return;
-    for (let i = 0; i < bucket.length; i += 1) {
-      const b = bucket[i];
-      if (
-        bounds.left < b.right &&
-        bounds.right > b.left &&
-        bounds.top < b.bottom &&
-        bounds.bottom > b.top
-      ) {
-        collided = true;
-        return;
-      }
-    }
-  });
-  return collided;
-}
-
-function addBounds2D(bounds, bucketStore, bucketSize) {
-  forEachBucketKey2D(bounds, bucketSize, (key) => {
-    const bucket = bucketStore.get(key);
-    if (bucket) bucket.push(bounds);
-    else bucketStore.set(key, [bounds]);
-  });
-}
-
-function forEachBucketKey1D(bounds, bucketSize, visit) {
-  const startX = Math.floor(bounds.left / bucketSize);
-  const endX = Math.floor(bounds.right / bucketSize);
-  for (let bx = startX; bx <= endX; bx += 1) {
-    visit(String(bx));
-  }
-}
-
-function collides1D(bounds, bucketStore, bucketSize) {
-  let collided = false;
-  forEachBucketKey1D(bounds, bucketSize, (key) => {
-    if (collided) return;
-    const bucket = bucketStore.get(key);
-    if (!bucket) return;
-    for (let i = 0; i < bucket.length; i += 1) {
-      const b = bucket[i];
-      if (bounds.left < b.right && bounds.right > b.left) {
-        collided = true;
-        return;
-      }
-    }
-  });
-  return collided;
-}
-
-function addBounds1D(bounds, bucketStore, bucketSize) {
-  forEachBucketKey1D(bounds, bucketSize, (key) => {
-    const bucket = bucketStore.get(key);
-    if (bucket) bucket.push(bounds);
-    else bucketStore.set(key, [bounds]);
-  });
-}
-
-function buildLabelVariants(label, { kind, allowSingleCharFallback = true }) {
-  const compact = label.replace(/\s+/g, "");
-  const variants = [compact];
-
-  if (kind === "note") {
-    if (compact.includes("/")) {
-      variants.push(compact.split("/")[0]);
-    }
-    variants.push(compact.slice(0, 2));
-    if (allowSingleCharFallback) variants.push(compact.slice(0, 1));
-    return Array.from(new Set(variants.filter(Boolean)));
-  }
-
-  if (compact.includes("+")) {
-    const [base, fracRaw] = compact.split("+");
-    const frac = fracRaw ?? "";
-    const slashChar = frac.includes("⁄") ? "⁄" : frac.includes("/") ? "/" : "";
-    if (slashChar) {
-      const [num = "", den = ""] = frac.split(slashChar);
-      variants.push(`${base}+${num}${slashChar}${den}`);
-      variants.push(`${base}+${num}${slashChar}…`);
-      variants.push(`${base}+…${slashChar}${den}`);
-      variants.push(`${base}+${num}`);
-    }
-  } else if (compact.includes("/") || compact.includes("⁄")) {
-    const slashChar = compact.includes("⁄") ? "⁄" : "/";
-    const [left = "", right = ""] = compact.split(slashChar);
-    variants.push(`${left}${slashChar}…`);
-    variants.push(`…${slashChar}${right}`);
-  }
-
-  variants.push(compact.slice(0, 2));
-  if (allowSingleCharFallback) variants.push(compact.slice(0, 1));
-  return Array.from(new Set(variants.filter(Boolean)));
-}
-
-function buildFitCacheKey({
-  variants,
-  maxWidth,
-  minFontSize,
-  maxFontSize,
-  step,
-  fontWeight,
-  allowSingleCharFallback,
-}) {
-  return [
-    variants.join("\u241F"),
-    Number(maxWidth).toFixed(3),
-    Number(minFontSize).toFixed(3),
-    Number(maxFontSize).toFixed(3),
-    Number(step).toFixed(3),
-    fontWeight,
-    allowSingleCharFallback ? "1" : "0",
-  ].join("|");
-}
-
-function buildWidthCacheKey({ label, fontSize, fontWeight }) {
-  return [
-    label,
-    Number(fontSize).toFixed(3),
-    Number(fontWeight).toFixed(3),
-  ].join("|");
-}
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -301,6 +137,7 @@ const Fretboard = forwardRef(function Fretboard(
     startFretFor,
     stringStartX,
     openXForString,
+    metaByIndex,
   } = useFretboardLayout({
     frets,
     strings,
@@ -403,8 +240,6 @@ const Fretboard = forwardRef(function Fretboard(
     nameForPc,
     accidental,
   });
-
-  const metaByIndex = useMemo(() => toStringMetaMap(stringMeta), [stringMeta]);
 
   const microLabelOpts = useMemo(
     () => ({
@@ -589,8 +424,12 @@ const Fretboard = forwardRef(function Fretboard(
     }
 
     if (colorByShape && baseNotes.length > 0) {
-      const fretMin = Math.min(...baseNotes.map((note) => note.f));
-      const fretMax = Math.max(...baseNotes.map((note) => note.f));
+      let fretMin = baseNotes[0].f;
+      let fretMax = baseNotes[0].f;
+      for (const note of baseNotes) {
+        if (note.f < fretMin) fretMin = note.f;
+        if (note.f > fretMax) fretMax = note.f;
+      }
       const windowWidth = Math.max(2, Math.round(system.divisions / 4));
       const minShapeNotes = Math.max(2, Math.floor(strings / 2));
       const shapeInputNotes = baseNotes.map((note) => ({

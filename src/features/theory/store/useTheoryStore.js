@@ -9,7 +9,10 @@ import {
   SYSTEM_DEFAULT,
 } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
+import {
+  createGlobalStorage,
+  getLocalStorage,
+} from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
 
 function isNonEmptyString(value) {
@@ -25,14 +28,13 @@ function hasValidPersistedTheory(persistedState) {
 }
 
 function readLegacyTheoryPrefs() {
-  if (typeof globalThis.localStorage === "undefined") {
+  const storage = getLocalStorage();
+  if (!storage) {
     return { systemId: SYSTEM_DEFAULT, root: ROOT_DEFAULT, found: false };
   }
 
-  const legacySystemId = globalThis.localStorage.getItem(
-    STORAGE_KEYS.SYSTEM_ID,
-  );
-  const legacyRoot = globalThis.localStorage.getItem(STORAGE_KEYS.ROOT);
+  const legacySystemId = storage.getItem(STORAGE_KEYS.SYSTEM_ID);
+  const legacyRoot = storage.getItem(STORAGE_KEYS.ROOT);
   const found = legacySystemId !== null || legacyRoot !== null;
 
   return {

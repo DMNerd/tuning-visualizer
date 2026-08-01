@@ -72,11 +72,3 @@ export function useDisplayState(defaults) {
     stage,
   };
 }
-
-export function useDisplayPrefsSlice(displayState) {
-  return displayState.display;
-}
-
-export function useDisplayStageSlice(displayState) {
-  return displayState.stage;
-}

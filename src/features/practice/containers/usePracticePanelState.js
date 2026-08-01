@@ -366,14 +366,3 @@ export default function usePracticePanelState({
     practiceActions,
   };
 }
-
-export function useMetronomeControlsSlice(practiceState) {
-  const { metronome, practiceActions } = practiceState;
-  return useMemo(
-    () => ({
-      setters: metronome.setters,
-      actions: practiceActions,
-    }),
-    [metronome.setters, practiceActions],
-  );
-}

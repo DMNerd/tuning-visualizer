@@ -39,8 +39,7 @@ export type ImportPipelineFailure = {
 };
 
 export type ImportPipelineResult =
-  | ImportPipelineSuccess
-  | ImportPipelineFailure;
+  ImportPipelineSuccess | ImportPipelineFailure;
 
 type ImportPipelineArgs = {
   file?: File | null;

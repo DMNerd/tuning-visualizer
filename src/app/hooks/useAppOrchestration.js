@@ -15,64 +15,6 @@ import {
 
 /** @typedef {import("@app/hooks/interfaces").AppOrchestrationInput} AppOrchestrationInput */
 
-function validateOrchestrationInputsDev({
-  displayPrefs,
-  setDisplayPrefs,
-  toggleFs,
-  theorySystem,
-  theoryChord,
-  instrumentActions,
-  practiceActions,
-  practiceMetronome,
-}) {
-  if (!import.meta.env.DEV) return;
-
-  const checks = [
-    {
-      path: "displayPrefs",
-      valid:
-        Boolean(displayPrefs) &&
-        typeof displayPrefs === "object" &&
-        !Array.isArray(displayPrefs),
-    },
-    { path: "setDisplayPrefs", valid: typeof setDisplayPrefs === "function" },
-    { path: "toggleFs", valid: typeof toggleFs === "function" },
-    {
-      path: "theorySystem.setRoot",
-      valid: typeof theorySystem?.setRoot === "function",
-    },
-    {
-      path: "theoryChord.setChordRoot",
-      valid: typeof theoryChord?.setChordRoot === "function",
-    },
-    {
-      path: "instrumentActions.setTuning",
-      valid: typeof instrumentActions?.setTuning === "function",
-    },
-    {
-      path: "instrumentActions.setFretsUI",
-      valid: typeof instrumentActions?.setFretsUI === "function",
-    },
-    {
-      path: "practiceActions.randomizeScaleFromHotkey",
-      valid: typeof practiceActions?.randomizeScaleFromHotkey === "function",
-    },
-    {
-      path: "practiceMetronome.engine.stop",
-      valid: typeof practiceMetronome?.engine?.stop === "function",
-    },
-  ];
-
-  const missing = checks
-    .filter((check) => !check.valid)
-    .map((check) => check.path);
-  if (missing.length > 0) {
-    throw new Error(
-      `[useAppOrchestration] Missing or invalid required inputs: ${missing.join(", ")}`,
-    );
-  }
-}
-
 /** @param {AppOrchestrationInput} params */
 export function useAppOrchestration({
   displayPrefs,
@@ -91,17 +33,6 @@ export function useAppOrchestration({
   practiceReset,
   confirm,
 }) {
-  validateOrchestrationInputsDev({
-    displayPrefs,
-    setDisplayPrefs,
-    toggleFs,
-    theorySystem,
-    theoryChord,
-    instrumentActions,
-    practiceActions,
-    practiceMetronome,
-  });
-
   const showCheatsheet = useCallback(() => {
     toast(
       (t) =>
@@ -169,9 +100,15 @@ export function useAppOrchestration({
     confirm,
   });
 
+  const { setCapoFret } = instrumentCapo;
+  const onResetCapo = useCallback(
+    () => setCapoFret(CAPO_DEFAULT),
+    [setCapoFret],
+  );
+
   return {
     resets,
     showPracticeHud: practiceMetronome.engine.isPlaying,
-    onResetCapo: () => instrumentCapo.setCapoFret(CAPO_DEFAULT),
+    onResetCapo,
   };
 }

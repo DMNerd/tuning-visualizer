@@ -18,6 +18,10 @@ import ChordTypePicker from "@features/theory/components/ChordTypePicker";
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import { buildCapoChordDisplay } from "@features/theory/model/chordCapoDisplay";
+import {
+  buildChordTones,
+  buildChordSummary,
+} from "@features/theory/model/chordToneAnalysis";
 
 function ChordControls({ state, actions, meta }) {
   const {
@@ -77,74 +81,32 @@ function ChordControls({ state, actions, meta }) {
     chordRootPc,
   });
 
-  const chordTones = useMemo(() => {
-    if (!chordTonePcs || chordTonePcs.size === 0) return [];
-    if (!system?.divisions) return [];
+  const chordTones = useMemo(
+    () =>
+      buildChordTones({
+        chordTonePcs,
+        chordRootPc,
+        rootIx,
+        divisions: system?.divisions,
+        nameForPc,
+        degreeForPc,
+        scaleSet,
+      }),
+    [
+      chordTonePcs,
+      chordRootPc,
+      degreeForPc,
+      nameForPc,
+      rootIx,
+      scaleSet,
+      system?.divisions,
+    ],
+  );
 
-    const totalDivisions = system.divisions;
-    const anchorRaw = Number.isFinite(chordRootPc)
-      ? chordRootPc
-      : Number.isFinite(rootIx)
-        ? rootIx
-        : 0;
-    const anchor =
-      ((anchorRaw % totalDivisions) + totalDivisions) % totalDivisions;
-
-    const pcs = Array.from(chordTonePcs, (value) => {
-      const wrapped =
-        ((value % totalDivisions) + totalDivisions) % totalDivisions;
-      return wrapped;
-    });
-
-    pcs.sort((a, b) => {
-      const da = (a - anchor + totalDivisions) % totalDivisions;
-      const db = (b - anchor + totalDivisions) % totalDivisions;
-      return da - db;
-    });
-
-    return pcs.map((pc) => {
-      const noteName = nameForPc?.(pc) ?? String(pc);
-      const degree = degreeForPc(pc);
-      const inScale = scaleSet.has(pc);
-      return { pc, noteName, degree, inScale };
-    });
-  }, [
-    chordTonePcs,
-    chordRootPc,
-    degreeForPc,
-    nameForPc,
-    rootIx,
-    scaleSet,
-    system?.divisions,
-  ]);
-
-  const chordSummary = useMemo(() => {
-    if (!showChord) return null;
-    if (!chordTones.length) return null;
-    if (scaleSet.size === 0) {
-      return {
-        kind: "info",
-        text: "Select a scale to analyse the chord.",
-      };
-    }
-
-    const outside = chordTones.filter((tone) => !tone.inScale);
-    if (outside.length > 0) {
-      return {
-        kind: "warning",
-        text: `Outside selected scale: ${outside.map((tone) => tone.noteName).join(", ")}`,
-      };
-    }
-
-    const degreeLabels = chordTones
-      .map((tone) => (tone.degree != null ? String(tone.degree) : "–"))
-      .join(", ");
-
-    return {
-      kind: "success",
-      text: `All chord tones are in scale (degrees: ${degreeLabels}).`,
-    };
-  }, [chordTones, scaleSet, showChord]);
+  const chordSummary = useMemo(
+    () => buildChordSummary({ showChord, chordTones, scaleSet }),
+    [chordTones, scaleSet, showChord],
+  );
 
   const rootInputId = useId();
   const rootLabelId = useId();

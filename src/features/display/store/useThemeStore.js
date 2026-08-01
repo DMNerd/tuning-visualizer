@@ -21,4 +21,3 @@ export const useThemeStore = create(
 
 export const selectTheme = (state) => state.theme;
 export const selectSetTheme = (state) => state.setTheme;
-export const selectResetTheme = (state) => state.resetTheme;

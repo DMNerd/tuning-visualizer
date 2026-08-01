@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { buildInstrumentControlModel } from "@shared/lib/controlModels";
+import { buildInstrumentControlModel } from "@features/instrument/model/controlModel";
 import { PANEL_CONTRACTS } from "@shared/lib/panelContracts";
 import { useCustomTuningPacks } from "@features/instrument/hooks/useCustomTuningPacks";
 import {
@@ -17,8 +17,6 @@ export function useInstrumentDomain({
   systemId,
   setSystemId,
   tunings,
-  stringsRange,
-  fretsRange,
   factory,
   presetMeta,
   defaultTunings,
@@ -29,8 +27,6 @@ export function useInstrumentDomain({
   const instrument = useInstrumentConfig({
     system,
     systemId,
-    stringsRange,
-    fretsRange,
     factory,
     presetMeta,
     defaultTunings,
@@ -84,7 +80,7 @@ export function useInstrumentDomain({
   const { strings, frets, tuning } = instrumentState;
   const { divisions: systemDivisions } = system;
   const {
-    setFretsPref,
+    setFretsUI,
     setTuning,
     handleStringsChange,
     handleSaveDefault,
@@ -120,7 +116,7 @@ export function useInstrumentDomain({
         setPreset,
       },
       handlers: {
-        setFretsPref,
+        setFretsUI,
         setSystemId,
         setTuning,
         handleStringsChange,
@@ -145,7 +141,7 @@ export function useInstrumentDomain({
       mergedPresetMetaMap,
       selectedPreset,
       setPreset,
-      setFretsPref,
+      setFretsUI,
       setSystemId,
       setTuning,
       handleStringsChange,

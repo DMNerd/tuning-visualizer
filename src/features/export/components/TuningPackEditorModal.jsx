@@ -30,48 +30,10 @@ import {
   ensurePack,
   buildTemplatePack,
   togglePackSpelling,
+  getSeedSnapshot,
+  isTuningNoteNode,
+  pushUnique,
 } from "@features/export/model/tuningPackNormalization";
-
-function clonePack(pack) {
-  if (!pack) return null;
-  if (typeof structuredClone === "function") {
-    return structuredClone(pack);
-  }
-  return JSON.parse(JSON.stringify(pack));
-}
-
-function getSeedSnapshot(pack, mode) {
-  const source = clonePack(pack);
-  return mode === "create" ? buildTemplatePack(source) : ensurePack(source);
-}
-
-function pushUnique(list, seen, value) {
-  if (typeof value !== "string") return;
-  const normalized = value.trim();
-  if (!normalized.length || seen.has(normalized)) return;
-  seen.add(normalized);
-  list.push(normalized);
-}
-
-function isTuningNoteNode({ key, path }) {
-  if (key !== "note" || !Array.isArray(path)) return false;
-  if (path.length < 3) return false;
-
-  const last = path[path.length - 1];
-  const prev = path[path.length - 2];
-  const prev2 = path[path.length - 3];
-  const prev3 = path[path.length - 4];
-
-  if (last === "note") {
-    return (
-      prev2 === "strings" &&
-      prev3 === "tuning" &&
-      (typeof prev === "number" || prev === null)
-    );
-  }
-
-  return path.includes("tuning") && path.includes("strings");
-}
 
 function NoteSelectNode({
   value,

@@ -23,6 +23,14 @@ import {
 } from "@features/instrument/store/useInstrumentWorkflowStore";
 import { sanitizeBoardMetaForModeStorage } from "@domain/presets/neckFilterModes";
 
+function getTakenNames(existing, { exclude } = {}) {
+  return new Set(
+    existing
+      .map((item) => normalizePackName(item?.name))
+      .filter((name) => name && name !== exclude),
+  );
+}
+
 function ensureUniqueName(desiredName, takenNames) {
   const base = normalizePackName(desiredName);
   if (!base) return "";
@@ -321,11 +329,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       let savedPack = null;
 
       const existing = getExistingCustomTunings().map(ensurePackHasId);
-      const takenNames = new Set(
-        existing
-          .map((item) => normalizePackName(item?.name))
-          .filter((name) => name && name !== replaceName),
-      );
+      const takenNames = getTakenNames(existing, { exclude: replaceName });
 
       const finalName = ensureUniqueName(desiredName, takenNames);
       const nextPack = ensurePackHasId({ ...parsed, name: finalName });
@@ -372,9 +376,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const parsed = res.output.map((pack) => parsePack(pack));
 
       const existing = getExistingCustomTunings();
-      const takenNames = new Set(
-        existing.map((item) => normalizePackName(item?.name)).filter(Boolean),
-      );
+      const takenNames = getTakenNames(existing);
 
       const newTunings = parsed.map((p, i) => {
         const candidate =

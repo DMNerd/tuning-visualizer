@@ -8,3 +8,4 @@ export {
 } from "./hooks/useRandomScale";
 export { useSystemNoteNames } from "./hooks/useSystemNoteNames";
 export { useAccidentalRespell } from "./hooks/useAccidentalRespell";
+export { buildTheoryControlModel } from "./model/controlModel";

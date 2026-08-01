@@ -1,6 +1,7 @@
 export { default as BeatIndicator } from "./components/BeatIndicator";
 export { default as PracticePanelContainer } from "./containers/PracticePanelContainer";
 export { usePracticeMetronomeDomain } from "./hooks/usePracticeMetronomeDomain";
+export { buildMetronomeControlModel } from "./model/controlModel";
 export {
   useMetronomePlayback,
   useMetronomePlaybackStatus,

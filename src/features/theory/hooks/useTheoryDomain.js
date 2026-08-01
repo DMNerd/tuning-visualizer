@@ -203,18 +203,46 @@ export function useTheoryDomain({
     ],
   );
 
-  const systemSlice = useMemo(
-    () => ({
-      systemId,
-      setSystemId,
-      system,
-      rootIx,
-      nameForPc,
-      sysNames,
-      root,
-      setRoot,
-      pcFromName,
-    }),
+  const theoryDomain = useMemo(
+    () =>
+      buildTheoryDomainReturn({
+        system: {
+          systemId,
+          setSystemId,
+          system,
+          rootIx,
+          nameForPc,
+          sysNames,
+          root,
+          setRoot,
+          pcFromName,
+        },
+        scale: {
+          scale,
+          setScale,
+          scaleOptions,
+          intervals,
+          defaultScale,
+        },
+        chord: {
+          chordRoot,
+          setChordRoot,
+          chordType,
+          setChordType,
+          showChord,
+          setShowChord,
+          hideNonChord,
+          setHideNonChord,
+          chordCapoRelative,
+          setChordCapoRelative,
+          resetTheory,
+          chordRootIx,
+          chordOverlayPcs,
+          chordTonePcs,
+        },
+        hydration: { isHydrated },
+        handlers: { handleSelectNote },
+      }),
     [
       systemId,
       setSystemId,
@@ -225,22 +253,11 @@ export function useTheoryDomain({
       root,
       setRoot,
       pcFromName,
-    ],
-  );
-
-  const scaleSlice = useMemo(
-    () => ({
       scale,
       setScale,
       scaleOptions,
       intervals,
       defaultScale,
-    }),
-    [scale, setScale, scaleOptions, intervals, defaultScale],
-  );
-
-  const chordSlice = useMemo(
-    () => ({
       chordRoot,
       setChordRoot,
       chordType,
@@ -255,42 +272,9 @@ export function useTheoryDomain({
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,
-    }),
-    [
-      chordRoot,
-      setChordRoot,
-      chordType,
-      setChordType,
-      showChord,
-      setShowChord,
-      hideNonChord,
-      setHideNonChord,
-      chordCapoRelative,
-      setChordCapoRelative,
-      resetTheory,
-      chordRootIx,
-      chordOverlayPcs,
-      chordTonePcs,
-    ],
-  );
-
-  const handlersSlice = useMemo(
-    () => ({
+      isHydrated,
       handleSelectNote,
-    }),
-    [handleSelectNote],
-  );
-
-  const theoryDomain = useMemo(
-    () =>
-      buildTheoryDomainReturn({
-        system: systemSlice,
-        scale: scaleSlice,
-        chord: chordSlice,
-        hydration: { isHydrated },
-        handlers: handlersSlice,
-      }),
-    [systemSlice, scaleSlice, chordSlice, isHydrated, handlersSlice],
+    ],
   );
 
   return theoryDomain;

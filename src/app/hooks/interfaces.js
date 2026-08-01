@@ -16,5 +16,3 @@
  * @property {Object} practiceReset
  * @property {Function} confirm
  */
-
-export const ORCHESTRATION_INTERFACE_VERSION = "1.0.0";
