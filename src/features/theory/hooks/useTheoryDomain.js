@@ -148,18 +148,12 @@ export function useTheoryDomain({
     [chordRoot, pcFromName],
   );
 
-  const chordOverlayPcs = useMemo(
-    () =>
-      showChord
-        ? buildChordPCsFromPc(chordRootIx, chordType, system.divisions)
-        : null,
-    [showChord, chordRootIx, chordType, system.divisions],
-  );
-
   const chordTonePcs = useMemo(
     () => buildChordPCsFromPc(chordRootIx, chordType, system.divisions),
     [chordRootIx, chordType, system.divisions],
   );
+
+  const chordOverlayPcs = showChord ? chordTonePcs : null;
 
   useEffect(() => {
     if (system.divisions === 24) return;

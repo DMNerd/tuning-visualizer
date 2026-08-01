@@ -494,7 +494,7 @@ export function findDistinctWindowShapeOccurrences(
     occurrences.push({
       occurrenceId: `${startFret}:${templateId}`,
       startFret,
-      endFret: startFret + width,
+      endFret: startFret + width - 1,
       templateId,
       notes: windowNotes,
     });

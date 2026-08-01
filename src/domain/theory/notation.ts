@@ -150,12 +150,13 @@ export function buildNoteAliases(note: string): Set<string> {
   const aliases = new Set<string>();
   if (typeof note !== "string" || note.length === 0) return aliases;
 
+  // `note` is always an English canonical name here (see buildNameToPcMap).
+  // Do not also round-trip it through germanToEnglishNoteName: English "B"
+  // is coincidentally valid-looking German notation for a different pitch
+  // class (Bb), so that round trip would alias "B" to "Bb" and vice versa.
   aliases.add(note);
   const german = toGermanNoteName(note);
   if (german) aliases.add(german);
-
-  const englishFromGerman = germanToEnglishNoteName(note);
-  if (englishFromGerman) aliases.add(englishFromGerman);
 
   return aliases;
 }

@@ -1,3 +1,5 @@
+import { mod } from "@shared/lib/math";
+
 type ChordType =
   // Standard triads & sevenths
   | "maj"
@@ -307,16 +309,30 @@ const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
   },
 };
 
-const mod = (n: number, m: number) => ((n % m) + m) % m;
+/**
+ * Projects the 12-TET step formula for a chord into an arbitrary EDO by
+ * scaling proportionally (same technique as scales.ts's projectFrom12TET).
+ * Used as a fallback when there's no explicit formula for `divisions`.
+ */
+function projectStepsFrom12TET(steps: number[], divisions: number): number[] {
+  const factor = divisions / 12;
+  return steps.map((step) => Math.round(step * factor));
+}
 
 export function buildChordPCsFromPc(
   rootPc: number,
   type: ChordType,
   divisions: number,
 ): Set<number> {
-  const f = BASE[type]?.[String(divisions) as "12" | "24"];
-  if (!f) return new Set();
-  return new Set(f.steps.map((s) => mod(rootPc + s, divisions)));
+  const formulas = BASE[type];
+  if (!formulas) return new Set();
+
+  const exact = formulas[String(divisions) as "12" | "24"];
+  const steps = exact
+    ? exact.steps
+    : projectStepsFrom12TET(formulas["12"].steps, divisions);
+
+  return new Set(steps.map((s) => mod(rootPc + s, divisions)));
 }
 
 /** Convenience: list & labels for UIs */

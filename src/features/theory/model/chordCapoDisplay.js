@@ -1,3 +1,5 @@
+import { normalizeCapoFret } from "@domain/theory/capoChords";
+
 export function buildCapoChordDisplay({
   chordCapoRelative = false,
   capoFret = 0,
@@ -11,9 +13,7 @@ export function buildCapoChordDisplay({
   const soundingRoot = transposedChordRoot ?? shapeRoot;
   const shapeChordLabel = `${shapeRoot} ${chordTypeLabel}`;
   const soundingChordLabel = `${soundingRoot} ${chordTypeLabel}`;
-  const safeCapoFret = Number.isFinite(capoFret)
-    ? Math.max(0, Math.floor(capoFret))
-    : 0;
+  const safeCapoFret = normalizeCapoFret(capoFret);
   const hasActiveTransposition = safeCapoFret > 0 && isChordTransposed;
 
   return {

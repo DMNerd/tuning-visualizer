@@ -1,8 +1,6 @@
-function mod(n: number, m: number): number {
-  return ((n % m) + m) % m;
-}
+import { mod } from "@shared/lib/math";
 
-function normalizeCapoFret(capoFret: unknown): number {
+export function normalizeCapoFret(capoFret: unknown): number {
   return typeof capoFret === "number" && Number.isFinite(capoFret)
     ? Math.max(0, Math.floor(capoFret))
     : 0;

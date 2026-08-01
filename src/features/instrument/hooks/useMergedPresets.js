@@ -25,6 +25,17 @@ import {
   selectWorkflowSelectedPreset,
 } from "@features/instrument/store/useInstrumentWorkflowStore";
 
+const RESERVED_PRESET_NAMES = new Set(["Factory default", "Saved default"]);
+
+function omitReservedPresetNames(map) {
+  const out = {};
+  for (const [name, value] of Object.entries(map || {})) {
+    if (RESERVED_PRESET_NAMES.has(name)) continue;
+    out[name] = value;
+  }
+  return out;
+}
+
 function areTuningsEqual(a, b) {
   if (!Array.isArray(a) || !Array.isArray(b)) return false;
   if (a.length !== b.length) return false;
@@ -99,25 +110,15 @@ export function useMergedPresets({
     [presetMetaMap],
   );
 
-  const catalogPresets = useMemo(() => {
-    const entries = Object.entries(presetMap || {});
-    const out = {};
-    for (const [name, tuning] of entries) {
-      if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = tuning;
-    }
-    return out;
-  }, [presetMap]);
+  const catalogPresets = useMemo(
+    () => omitReservedPresetNames(presetMap),
+    [presetMap],
+  );
 
-  const catalogMeta = useMemo(() => {
-    const entries = Object.entries(presetMetaMap || {});
-    const out = {};
-    for (const [name, meta] of entries) {
-      if (name === "Factory default" || name === "Saved default") continue;
-      out[name] = meta;
-    }
-    return out;
-  }, [presetMetaMap]);
+  const catalogMeta = useMemo(
+    () => omitReservedPresetNames(presetMetaMap),
+    [presetMetaMap],
+  );
 
   const {
     presetMap: mergedPresetMap,

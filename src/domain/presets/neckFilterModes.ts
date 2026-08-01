@@ -71,6 +71,14 @@ export function stripHiddenFrets(
   return Object.keys(rest).length > 0 ? rest : null;
 }
 
+function stripHiddenFretsIfKg<T>(
+  boardMeta: T,
+): T | Record<string, unknown> | null {
+  return hasKgNeckFilterMeta(boardMeta)
+    ? stripHiddenFrets(boardMeta)
+    : boardMeta;
+}
+
 export function stripFretlessStyle(
   boardMeta: unknown,
 ): Record<string, unknown> | null {
@@ -112,12 +120,7 @@ export const NECK_FILTER_MODE_DEFS: readonly NeckFilterModeDef[] =
       id: NECK_FILTER_MODES.NONE,
       label: "None",
       isApplicable: () => true,
-      apply: (boardMeta) =>
-        stripFretlessStyle(
-          hasKgNeckFilterMeta(boardMeta)
-            ? stripHiddenFrets(boardMeta)
-            : boardMeta,
-        ),
+      apply: (boardMeta) => stripFretlessStyle(stripHiddenFretsIfKg(boardMeta)),
     },
     {
       id: NECK_FILTER_MODES.KG,
@@ -130,9 +133,7 @@ export const NECK_FILTER_MODE_DEFS: readonly NeckFilterModeDef[] =
           Number(context?.edo) !== 24 ||
           isFretlessBoardMeta(normalizedBoardMeta)
         ) {
-          return hasKgNeckFilterMeta(normalizedBoardMeta)
-            ? stripHiddenFrets(normalizedBoardMeta)
-            : normalizedBoardMeta;
+          return stripHiddenFretsIfKg(normalizedBoardMeta);
         }
         return {
           ...(stripHiddenFrets(normalizedBoardMeta) ?? {}),
