@@ -3,6 +3,7 @@ import clsx from "clsx";
 
 import StageHudContainer from "@app/shell/StageHudContainer";
 import { Fretboard } from "@features/fretboard";
+import { RoutineHudContainer } from "@features/training";
 import { SafeSection } from "@shared/ui";
 
 export default function StageShell({
@@ -20,6 +21,7 @@ export default function StageShell({
   boardMeta,
   capo,
   onResetCapo,
+  routinePlayback,
 }) {
   const { strings, tuning } = instrumentState;
   const { capoFret, toggleCapoAt, effectiveStringMeta } = capo;
@@ -59,6 +61,7 @@ export default function StageShell({
           onResetAll={() => resetAll({ confirm: true })}
           showPracticeHud={showPracticeHud}
         />
+        <RoutineHudContainer routinePlayback={routinePlayback} />
         <SafeSection onReset={onResetCapo}>
           <Fretboard
             ref={boardRef}

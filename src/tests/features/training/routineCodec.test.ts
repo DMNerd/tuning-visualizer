@@ -3,13 +3,17 @@ import assert from "node:assert/strict";
 
 import { encodeBase64Url } from "@shared/lib/base64url";
 import { stableStringify } from "@shared/lib/stableStringify";
-import { decodeRoutine, encodeRoutine } from "@features/training/model/routineCodec";
+import {
+  decodeRoutine,
+  encodeRoutine,
+} from "@features/training/model/routineCodec";
 import type { Routine } from "@features/training/model/routine";
 import {
   ROUTINE_BEATS_MAX,
   ROUTINE_BEATS_MIN,
   ROUTINE_BPM_MAX,
 } from "@features/training/model/routineLimits";
+import { STR_FACTORY, STR_MAX } from "@shared/config/appDefaults";
 import { ROUTINE_SCHEMA_VERSION } from "@features/training/model/routineSchema";
 
 function buildFixtureRoutine(): Routine {
@@ -20,6 +24,7 @@ function buildFixtureRoutine(): Routine {
     updatedAt: 2000,
     startBlock: {
       systemId: "12-TET",
+      strings: 6,
       presetName: "Standard (EADGBE)",
       beats: 4,
     },
@@ -79,7 +84,12 @@ void test("decodeRoutine clamps/defaults out-of-range or invalid step fields ins
     r: {
       id: "routine-1",
       name: 12345, // wrong type -> coerced to ""
-      startBlock: { systemId: "12-TET", presetName: "X", beats: 999999 },
+      startBlock: {
+        systemId: "12-TET",
+        strings: 999,
+        presetName: "X",
+        beats: 999999,
+      },
       steps: [
         {
           id: "step-1",
@@ -97,6 +107,7 @@ void test("decodeRoutine clamps/defaults out-of-range or invalid step fields ins
 
   assert.notEqual(decoded, null);
   assert.equal(decoded?.name, "");
+  assert.equal(decoded?.startBlock.strings, STR_MAX);
   assert.equal(decoded?.startBlock.beats, ROUTINE_BEATS_MAX);
   assert.equal(decoded?.steps[0]?.rootPc, 0);
   assert.equal(decoded?.steps[0]?.beats, ROUTINE_BEATS_MIN);
@@ -111,8 +122,22 @@ void test("decodeRoutine deduplicates colliding step ids", () => {
       id: "routine-1",
       startBlock: { systemId: "12-TET", beats: 4 },
       steps: [
-        { id: "dup", scaleLabel: "A", rootPc: 0, beats: 4, bpm: 80, timeSig: "4/4" },
-        { id: "dup", scaleLabel: "B", rootPc: 1, beats: 4, bpm: 80, timeSig: "4/4" },
+        {
+          id: "dup",
+          scaleLabel: "A",
+          rootPc: 0,
+          beats: 4,
+          bpm: 80,
+          timeSig: "4/4",
+        },
+        {
+          id: "dup",
+          scaleLabel: "B",
+          rootPc: 1,
+          beats: 4,
+          bpm: 80,
+          timeSig: "4/4",
+        },
       ],
     },
   };
@@ -121,6 +146,7 @@ void test("decodeRoutine deduplicates colliding step ids", () => {
 
   assert.equal(decoded?.steps.length, 2);
   assert.notEqual(decoded?.steps[0]?.id, decoded?.steps[1]?.id);
+  assert.equal(decoded?.startBlock.strings, STR_FACTORY);
 });
 
 void test("decodeRoutine returns null for garbage input, never throws", () => {

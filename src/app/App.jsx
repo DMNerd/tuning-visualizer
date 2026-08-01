@@ -11,6 +11,7 @@ import { useInstrumentDomain } from "@features/instrument";
 import { usePracticeMetronomeDomain } from "@features/practice";
 import { useUrlShareHydration } from "@features/share";
 import { useTheoryDomain } from "@features/theory";
+import { useRoutinePlayback } from "@features/training";
 import { PanelHeader } from "@shared/ui";
 import { useConfirm } from "@shared/hooks/useConfirm";
 import { TUNINGS } from "@domain/theory/tuning";
@@ -87,6 +88,14 @@ export default function App() {
       selectedRoot: theoryDomain.system.root,
       selectedScale: theoryDomain.scale.scale,
     },
+  });
+
+  const routinePlayback = useRoutinePlayback({
+    theoryDomain,
+    instrumentDomain,
+    startMetronome: practiceDomain.metronome.engine.start,
+    stopMetronome: practiceDomain.metronome.engine.stop,
+    subscribeBeat: practiceDomain.metronome.engine.subscribeBeat,
   });
 
   useUrlShareHydration({
@@ -176,6 +185,7 @@ export default function App() {
         boardMeta={boardMeta}
         capo={capo}
         onResetCapo={orchestration.onResetCapo}
+        routinePlayback={routinePlayback}
       />
     ),
     [
@@ -193,6 +203,7 @@ export default function App() {
       boardMeta,
       capo,
       orchestration.onResetCapo,
+      routinePlayback,
     ],
   );
 
@@ -208,6 +219,7 @@ export default function App() {
         resetDisplay={resetDisplay}
         displayControlModel={displayControlModel}
         exportPanel={exportCustomDomain.exportPanel}
+        routinePlayback={routinePlayback}
       />
     ),
     [
@@ -220,6 +232,7 @@ export default function App() {
       resetDisplay,
       displayControlModel,
       exportCustomDomain.exportPanel,
+      routinePlayback,
     ],
   );
 

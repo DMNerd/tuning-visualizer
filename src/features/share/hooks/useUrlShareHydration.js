@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 
+import { applyResolvedTuning } from "@shared/lib/applyResolvedTuning";
 import {
   parseSharePayload,
   resolveInstrumentHydrationValues,
@@ -138,10 +139,15 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
     const instrumentCustomTuningIO = instrumentDomain?.customTunings || {};
 
     const applyPayload = async () => {
-      safeInvoke(theorySystem.setSystemId, values.systemId);
-      safeInvoke(instrumentActions.setStrings, values.strings);
+      applyResolvedTuning({
+        setSystemId: theorySystem.setSystemId,
+        setStrings: instrumentActions.setStrings,
+        setTuning: instrumentActions.setTuning,
+        systemId: values.systemId,
+        strings: values.strings,
+        tuning: values.tuning,
+      });
       safeInvoke(instrumentActions.setFrets, values.frets);
-      safeInvoke(instrumentActions.setTuning, values.tuning);
       safeInvoke(instrumentActions.setStringMeta, values.stringMeta);
       safeInvoke(instrumentActions.setBoardMeta, values.boardMeta);
       safeInvoke(instrumentActions.setNeckFilterMode, values.neckFilterMode);

@@ -9,7 +9,9 @@ function touch(patch) {
 }
 
 export function useRoutineDraft(initialRoutine) {
-  const [draft, setDraft] = useState(() => initialRoutine ?? createEmptyRoutine());
+  const [draft, setDraft] = useState(
+    () => initialRoutine ?? createEmptyRoutine(),
+  );
 
   // patchFn receives the current draft and returns either a partial patch to
   // merge (with updatedAt bumped) or a falsy value to signal "no change".
@@ -55,7 +57,8 @@ export function useRoutineDraft(initialRoutine) {
   );
 
   const removeScaleBlock = useCallback(
-    (id) => patchDraft((d) => ({ steps: d.steps.filter((step) => step.id !== id) })),
+    (id) =>
+      patchDraft((d) => ({ steps: d.steps.filter((step) => step.id !== id) })),
     [patchDraft],
   );
 

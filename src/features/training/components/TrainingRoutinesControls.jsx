@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import RoutineBuilderModal from "@features/training/components/RoutineBuilderModal";
 import { useTrainingRoutineUrlHydration } from "@features/training/hooks/useTrainingRoutineUrlHydration";
 
-export default function TrainingRoutinesControls() {
+export default function TrainingRoutinesControls({ routinePlayback }) {
   const [isBuilderOpen, setBuilderOpen] = useState(false);
   const [importedRoutine, setImportedRoutine] = useState(null);
 
@@ -30,6 +30,7 @@ export default function TrainingRoutinesControls() {
         onClose={() => setBuilderOpen(false)}
         initialRoutine={importedRoutine}
         onConsumedInitialRoutine={() => setImportedRoutine(null)}
+        routinePlayback={routinePlayback}
       />
     </div>
   );

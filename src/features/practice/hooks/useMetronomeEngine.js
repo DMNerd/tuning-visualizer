@@ -98,11 +98,37 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
   const beatCursorRef = useRef(0);
   const barCursorRef = useRef(1);
   const uiTimerIdsRef = useRef([]);
-  const onBeatRef = useRef(onBeat);
+  const beatListenersRef = useRef(new Set());
 
+  // Fans out every scheduled beat to every subscriber. Kept as a single,
+  // never-reassigned function so scheduleBeatUiUpdateWithAudioClock's
+  // onBeatRef contract (one callback) doesn't need to change — subscribers
+  // are managed separately via the Set below.
+  const notifyBeatListeners = useCallback((payload) => {
+    for (const listener of beatListenersRef.current) {
+      listener(payload);
+    }
+  }, []);
+  const onBeatRef = useRef(notifyBeatListeners);
+
+  // Lets any number of consumers (not just the `onBeat` prop) react to real
+  // audio-scheduled beats — e.g. a feature that needs to know "N beats have
+  // elapsed" without also owning its own independently-drifting clock.
+  const subscribeBeat = useCallback((listener) => {
+    if (typeof listener !== "function") return () => {};
+    beatListenersRef.current.add(listener);
+    return () => {
+      beatListenersRef.current.delete(listener);
+    };
+  }, []);
+
+  // `onBeat` is sugar for "subscribe one listener for the lifetime of this
+  // prop's identity" — the original, still-supported way to hook a single
+  // callback into the beat clock.
   useEffect(() => {
-    onBeatRef.current = onBeat;
-  }, [onBeat]);
+    if (typeof onBeat !== "function") return undefined;
+    return subscribeBeat(onBeat);
+  }, [onBeat, subscribeBeat]);
 
   const beatsPerBar = useMemo(() => parseBeatsPerBar(timeSig), [timeSig]);
   const safeBpm = useMemo(() => clampBpm(bpm), [bpm]);
@@ -263,6 +289,7 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
     isPlaying,
     audioReady,
     audioError,
+    subscribeBeat,
   };
 }
 

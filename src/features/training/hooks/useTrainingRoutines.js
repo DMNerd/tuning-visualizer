@@ -9,9 +9,8 @@ import {
 export function useTrainingRoutines() {
   const routines = useTrainingRoutineStore(selectTrainingRoutinesList);
   const isHydrated = useTrainingRoutineStore(selectTrainingRoutinesIsHydrated);
-  const { upsertRoutine, renameRoutine, removeRoutine } = useTrainingRoutineStore(
-    useShallow(selectTrainingRoutinesActions),
-  );
+  const { upsertRoutine, renameRoutine, removeRoutine } =
+    useTrainingRoutineStore(useShallow(selectTrainingRoutinesActions));
 
   return { routines, isHydrated, upsertRoutine, renameRoutine, removeRoutine };
 }

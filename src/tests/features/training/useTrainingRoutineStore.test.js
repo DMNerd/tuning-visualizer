@@ -47,7 +47,9 @@ test("upsertRoutine inserts new and updates existing by id", async () => {
   );
 
   useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
-  useTrainingRoutineStore.getState().upsertRoutine({ id: "r2", name: "Second" });
+  useTrainingRoutineStore
+    .getState()
+    .upsertRoutine({ id: "r2", name: "Second" });
   useTrainingRoutineStore
     .getState()
     .upsertRoutine({ id: "r1", name: "First (updated)" });
@@ -83,7 +85,9 @@ test("removeRoutine removes by id", async () => {
   );
 
   useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
-  useTrainingRoutineStore.getState().upsertRoutine({ id: "r2", name: "Second" });
+  useTrainingRoutineStore
+    .getState()
+    .upsertRoutine({ id: "r2", name: "Second" });
   useTrainingRoutineStore.getState().removeRoutine("r1");
 
   const { routines } = useTrainingRoutineStore.getState();

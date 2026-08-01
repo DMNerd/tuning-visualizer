@@ -6,8 +6,10 @@ import ModalFrame from "@shared/ui/ModalFrame";
 import NumberField from "@shared/ui/NumberField";
 import { useConfirm } from "@shared/hooks/useConfirm";
 import { copyTextWithFallback } from "@shared/lib/clipboard";
+import { STR_MAX, STR_MIN } from "@shared/config/appDefaults";
 import { TUNINGS } from "@domain/theory/tuning";
 import {
+  nameForRootPc,
   resolvePresetNamesForSystem,
   resolveScaleOptionsForSystem,
 } from "@features/training/model/routine";
@@ -21,6 +23,11 @@ import { ROUTINE_TIME_SIGNATURES } from "@features/training/model/routineTimeSig
 import { buildRoutineShareModel } from "@features/training/model/routineShareModel";
 import { useRoutineDraft } from "@features/training/hooks/useRoutineDraft";
 import { useTrainingRoutines } from "@features/training/hooks/useTrainingRoutines";
+import {
+  useRoutinePlaybackStore,
+  selectActiveRoutine,
+  selectIsRoutinePlaying,
+} from "@features/training/store/useRoutinePlaybackStore";
 import ShareQrCode from "@features/share/components/ShareQrCode";
 
 function optionsWithFallback(options, currentValue) {
@@ -35,8 +42,16 @@ export default function RoutineBuilderModal({
   onClose,
   initialRoutine,
   onConsumedInitialRoutine,
+  routinePlayback,
 }) {
   const { confirm } = useConfirm();
+  // Single-field selectors, not the full playback state — this modal only
+  // needs to know what/whether something is playing, not live beat
+  // progress, and it stays mounted (just hidden) for the whole playback
+  // session, so subscribing to per-beat state would re-render it for
+  // nothing every beat.
+  const playingRoutine = useRoutinePlaybackStore(selectActiveRoutine);
+  const isRoutinePlaying = useRoutinePlaybackStore(selectIsRoutinePlaying);
   const { routines, upsertRoutine, renameRoutine, removeRoutine } =
     useTrainingRoutines();
   const {
@@ -64,7 +79,7 @@ export default function RoutineBuilderModal({
 
   const systemIds = useMemo(() => Object.keys(TUNINGS), []);
   const divisions = TUNINGS[draft.startBlock.systemId]?.divisions ?? 12;
-  const nameForPc = TUNINGS[draft.startBlock.systemId]?.nameForPc ?? ((pc) => `N${pc}`);
+  const hasSteps = draft.steps.length > 0;
 
   const scaleOptions = useMemo(
     () => resolveScaleOptionsForSystem(draft.startBlock.systemId, divisions),
@@ -75,8 +90,12 @@ export default function RoutineBuilderModal({
     [scaleOptions],
   );
   const presetOptions = useMemo(
-    () => resolvePresetNamesForSystem(draft.startBlock.systemId),
-    [draft.startBlock.systemId],
+    () =>
+      resolvePresetNamesForSystem(
+        draft.startBlock.systemId,
+        draft.startBlock.strings,
+      ),
+    [draft.startBlock.systemId, draft.startBlock.strings],
   );
   const rootPcOptions = useMemo(
     () => Array.from({ length: divisions }, (_, pc) => pc),
@@ -105,6 +124,11 @@ export default function RoutineBuilderModal({
 
   const handleLoad = (routine) => {
     loadDraft(routine);
+  };
+
+  const handlePlay = (routine) => {
+    routinePlayback?.play?.(routine);
+    onClose();
   };
 
   const startRename = (routine) => {
@@ -160,6 +184,7 @@ export default function RoutineBuilderModal({
           <span className="tv-field__label">Routine name</span>
           <input
             type="text"
+            className="tv-routine-name-input"
             value={draft.name}
             onChange={(event) => renameDraft(event.target.value)}
             placeholder="Untitled routine"
@@ -185,6 +210,15 @@ export default function RoutineBuilderModal({
                   ))}
                 </select>
               </label>
+
+              <NumberField
+                id="routine-start-strings"
+                label="Strings"
+                value={draft.startBlock.strings}
+                min={STR_MIN}
+                max={STR_MAX}
+                onSubmit={(value) => setStartBlock({ strings: value })}
+              />
 
               <label className="tv-field">
                 <span className="tv-field__label">Preset</span>
@@ -291,7 +325,7 @@ export default function RoutineBuilderModal({
                     >
                       {rootPcOptions.map((pc) => (
                         <option key={pc} value={pc}>
-                          {nameForPc(pc)}
+                          {nameForRootPc(draft.startBlock.systemId, pc)}
                         </option>
                       ))}
                     </select>
@@ -361,6 +395,19 @@ export default function RoutineBuilderModal({
               New routine
             </button>
           </div>
+          {isRoutinePlaying ? (
+            <p className="tv-field__help">
+              Currently playing: {playingRoutine.name || "Untitled routine"}
+              {" — "}
+              <button
+                type="button"
+                className="tv-button tv-button--danger"
+                onClick={() => routinePlayback?.stop?.()}
+              >
+                Stop
+              </button>
+            </p>
+          ) : null}
           {routines.length ? (
             <ul className="tv-modal__manager-list">
               {routines.map((routine) => (
@@ -383,6 +430,14 @@ export default function RoutineBuilderModal({
                     </span>
                   )}
                   <div className="tv-modal__manager-actions">
+                    <button
+                      type="button"
+                      className="tv-button tv-button--primary"
+                      onClick={() => handlePlay(routine)}
+                      disabled={isRoutinePlaying}
+                    >
+                      Play
+                    </button>
                     <button
                       type="button"
                       className="tv-button"
@@ -413,48 +468,57 @@ export default function RoutineBuilderModal({
           )}
         </section>
 
-        <div className="tv-share-modal__grid">
-          <section
-            className="tv-share-modal__panel"
-            aria-label="Routine link preview"
-          >
-            <label className="tv-field">
-              <span className="tv-field__label">Routine link</span>
-              <pre className="tv-textarea" aria-label="Routine link preview">
-                {shareModel.presentableUrl}
-              </pre>
-              <span
-                className="tv-field__help"
-                data-warn={shareModel.sizeEvaluation.warn ? "true" : "false"}
-              >
-                Length: {shareModel.sizeEvaluation.length}
-                {shareModel.sizeEvaluation.reasonCode === "warning-threshold"
-                  ? " (Long URL warning)"
-                  : ""}
-                {shareModel.sizeEvaluation.reasonCode === "qr-hard-limit"
-                  ? " (Too long for QR)"
-                  : ""}
-              </span>
-            </label>
-          </section>
+        {hasSteps ? (
+          <div className="tv-share-modal__grid">
+            <section
+              className="tv-share-modal__panel"
+              aria-label="Routine link preview"
+            >
+              <label className="tv-field">
+                <span className="tv-field__label">Routine link</span>
+                <pre className="tv-textarea" aria-label="Routine link preview">
+                  {shareModel.presentableUrl}
+                </pre>
+                <span
+                  className="tv-field__help"
+                  data-warn={shareModel.sizeEvaluation.warn ? "true" : "false"}
+                >
+                  Length: {shareModel.sizeEvaluation.length}
+                  {shareModel.sizeEvaluation.reasonCode === "warning-threshold"
+                    ? " (Long URL warning)"
+                    : ""}
+                  {shareModel.sizeEvaluation.reasonCode === "qr-hard-limit"
+                    ? " (Too long for QR)"
+                    : ""}
+                </span>
+              </label>
+            </section>
 
-          <section
-            className="tv-share-modal__panel tv-share-modal__panel--qr"
-            aria-label="Routine QR preview"
-          >
-            <span className="tv-field__label">QR preview</span>
-            {shareModel.sizeEvaluation.allowQr ? (
-              <div className="tv-share-modal__qr-wrap" aria-live="polite">
-                <ShareQrCode value={shareModel.canonicalUrl} size={176} />
-              </div>
-            ) : (
-              <p className="tv-field__help tv-field__help--error" role="status">
-                Routine is too long for QR generation. Try fewer blocks or use
-                link copy instead.
-              </p>
-            )}
-          </section>
-        </div>
+            <section
+              className="tv-share-modal__panel tv-share-modal__panel--qr"
+              aria-label="Routine QR preview"
+            >
+              <span className="tv-field__label">QR preview</span>
+              {shareModel.sizeEvaluation.allowQr ? (
+                <div className="tv-share-modal__qr-wrap" aria-live="polite">
+                  <ShareQrCode value={shareModel.canonicalUrl} size={176} />
+                </div>
+              ) : (
+                <p
+                  className="tv-field__help tv-field__help--error"
+                  role="status"
+                >
+                  Routine is too long for QR generation. Try fewer blocks or use
+                  link copy instead.
+                </p>
+              )}
+            </section>
+          </div>
+        ) : (
+          <p className="tv-field__help">
+            Add at least one scale block to generate a shareable link.
+          </p>
+        )}
       </div>
 
       <footer className="tv-modal__footer">
@@ -465,15 +529,20 @@ export default function RoutineBuilderModal({
           type="button"
           className="tv-button"
           onClick={() => void copyLink()}
+          disabled={!hasSteps}
         >
           Copy routine link
+        </button>
+        <button type="button" className="tv-button" onClick={handleSave}>
+          Save to My Routines
         </button>
         <button
           type="button"
           className="tv-button tv-button--primary"
-          onClick={handleSave}
+          onClick={() => handlePlay(draft)}
+          disabled={isRoutinePlaying || !hasSteps}
         >
-          Save to My Routines
+          Play routine
         </button>
       </footer>
     </ModalFrame>

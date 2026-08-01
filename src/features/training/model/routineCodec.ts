@@ -1,4 +1,5 @@
 import { TUNINGS } from "@domain/theory/tuning";
+import { STR_MAX, STR_MIN, STR_FACTORY } from "@shared/config/appDefaults";
 import { clamp } from "@shared/lib/math";
 import { encodeBase64Url, decodeBase64Url } from "@shared/lib/base64url";
 import { stableStringify } from "@shared/lib/stableStringify";
@@ -64,6 +65,7 @@ function coerceStartBlock(raw: unknown): RoutineStartBlock | null {
 
   return {
     systemId,
+    strings: coerceClampedInt(raw.strings, STR_MIN, STR_MAX, STR_FACTORY),
     presetName: coerceString(raw.presetName, ""),
     beats: coerceClampedInt(
       raw.beats,

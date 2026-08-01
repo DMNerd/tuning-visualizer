@@ -11,8 +11,18 @@ import { dirname } from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const bestPracticeRules = {
+  eqeqeq: ["error", "smart"],
+  "no-var": "error",
+  "prefer-const": "error",
+  "object-shorthand": "error",
+  "no-console": ["warn", { allow: ["warn", "error"] }],
+  "no-restricted-globals": ["error", "event", "name"],
+};
+
 export default defineConfig([
   globalIgnores(["dist", "build"]),
+  { linterOptions: { reportUnusedDisableDirectives: "error" } },
   {
     files: ["**/*.css"],
     plugins: { css },
@@ -36,6 +46,7 @@ export default defineConfig([
 
   {
     files: ["**/*.{js,jsx}"],
+    ignores: ["eslint.config.js", "vite.config.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -48,10 +59,37 @@ export default defineConfig([
       reactRefresh.configs.vite,
     ],
     rules: {
-      "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
+      ...bestPracticeRules,
+      "no-unused-vars": [
+        "error",
+        {
+          varsIgnorePattern: "^[A-Z_]",
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
     },
     settings: {
       react: { version: "detect" },
+    },
+  },
+
+  // Node-run config files (build tooling, not app/browser code)
+  {
+    files: ["eslint.config.js", "vite.config.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: globals.node,
+    },
+    extends: [js.configs.recommended],
+    rules: {
+      ...bestPracticeRules,
+      "no-console": "off",
+      "no-unused-vars": [
+        "error",
+        { varsIgnorePattern: "^[A-Z_]", argsIgnorePattern: "^_" },
+      ],
     },
   },
 
@@ -75,10 +113,15 @@ export default defineConfig([
       reactRefresh.configs.vite,
     ],
     rules: {
+      ...bestPracticeRules,
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { varsIgnorePattern: "^[A-Z_]" },
+        {
+          varsIgnorePattern: "^[A-Z_]",
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       "no-undef": "off",
 
@@ -92,6 +135,8 @@ export default defineConfig([
         "error",
         { checksVoidReturn: { attributes: false } },
       ],
+      "@typescript-eslint/no-shadow": "error",
+      "@typescript-eslint/no-import-type-side-effects": "error",
     },
     settings: {
       react: { version: "detect" },

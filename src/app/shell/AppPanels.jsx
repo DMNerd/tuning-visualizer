@@ -18,6 +18,7 @@ export function AppPanels({
   resetDisplay,
   displayControlModel,
   exportPanel,
+  routinePlayback,
 }) {
   return (
     <>
@@ -29,6 +30,7 @@ export function AppPanels({
       <PracticePanelContainer
         {...practicePanel}
         controlModel={metronomeControlModel}
+        routinePlayback={routinePlayback}
       />
       <SafeSection
         resetKeys={[displayPrefs]}

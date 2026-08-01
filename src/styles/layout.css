@@ -215,6 +215,52 @@
   color: var(--root);
 }
 
+.tv-routine-hud {
+  position: absolute;
+  inset: auto auto var(--space-xs) var(--space-xs);
+  display: grid;
+  gap: var(--space-xs);
+  max-width: min(320px, calc(100% - var(--space-xs) * 2));
+  padding: var(--space-sm);
+  border: 1px solid color-mix(in oklab, var(--accent) 55%, var(--line) 45%);
+  border-radius: var(--card-radius);
+  background: color-mix(in oklab, var(--panel) 92%, transparent);
+  color: var(--fg);
+  pointer-events: auto;
+}
+
+.tv-routine-hud__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  font-weight: 600;
+}
+
+.tv-routine-hud__step {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: var(--font-body);
+}
+
+.tv-routine-hud__block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.tv-routine-hud__progress {
+  font-size: var(--font-body);
+  color: var(--muted);
+}
+
+.tv-routine-hud__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
 .tv-shell__controls {
   width: calc(100% - var(--gutter) * 2);
   max-width: calc(var(--max-stage) - var(--gutter) * 2);
@@ -1997,6 +2043,14 @@ svg {
 .tv-routine-modal__body {
   display: grid;
   gap: var(--gap);
+}
+
+input.tv-routine-name-input {
+  padding: 8px 10px;
+  background: color-mix(in oklab, var(--fg) 6%, var(--panel) 94%);
+  border-color: color-mix(in oklab, var(--fg) 20%, var(--line) 80%);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .tv-routine-chain {

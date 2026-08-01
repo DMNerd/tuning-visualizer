@@ -11,7 +11,7 @@ const routine: Routine = {
   name: "Test routine",
   createdAt: 0,
   updatedAt: 0,
-  startBlock: { systemId: "12-TET", presetName: "", beats: 4 },
+  startBlock: { systemId: "12-TET", strings: 6, presetName: "", beats: 4 },
   steps: [],
 };
 
