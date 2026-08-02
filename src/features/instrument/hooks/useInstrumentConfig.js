@@ -116,6 +116,7 @@ export function useInstrumentConfig({
   }, [savedExists, saved, factoryDefault]);
 
   const prevSystemStringsKey = usePrevious(`${systemId}|${strings}`);
+  const prevTuning = usePrevious(tuning);
   useEffect(() => {
     if (prevSystemStringsKey === undefined) {
       if (!Array.isArray(tuning) || tuning.length === 0) {
@@ -125,10 +126,18 @@ export function useInstrumentConfig({
     }
 
     if (prevSystemStringsKey !== `${systemId}|${strings}`) {
-      setTuning(getPreferredDefault());
+      // Skip the auto-default if the tuning was *also* explicitly set in
+      // the same update as the system/strings change (e.g. a caller
+      // atomically applying a specific preset via applyResolvedTuning) —
+      // only fall back to the default when the tuning is still the stale
+      // array left over from the previous system.
+      if (tuning === prevTuning) {
+        setTuning(getPreferredDefault());
+      }
     }
   }, [
     prevSystemStringsKey,
+    prevTuning,
     systemId,
     strings,
     tuning,
