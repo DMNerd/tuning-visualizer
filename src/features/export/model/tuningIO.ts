@@ -191,5 +191,7 @@ export function removePackByIdentifier(
     }
   }
 
-  return packList.filter((pack) => !shouldDeletePack(pack, normalizedIdentifier));
+  return packList.filter(
+    (pack) => !shouldDeletePack(pack, normalizedIdentifier),
+  );
 }
