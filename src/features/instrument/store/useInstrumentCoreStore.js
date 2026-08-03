@@ -129,6 +129,13 @@ export const useInstrumentCoreStore = create(
         isHydrated: false,
         fretsTouched: false,
         tuning: [],
+        // Bumped whenever setTuningAtomic runs a tuning change together with
+        // a systemId/strings change (see applyResolvedTuning.ts). Downstream
+        // effects that would otherwise reset tuning back to a default on
+        // systemId/strings changes watch this epoch (not tuning reference
+        // equality, which callers like useStringsChange also produce) to
+        // tell "atomic preset apply" apart from any other tuning update.
+        tuningAtomicEpoch: 0,
         stringMeta: null,
         boardMeta: null,
         neckFilterMode: NECK_FILTER_MODES.NONE,
@@ -154,6 +161,17 @@ export const useInstrumentCoreStore = create(
               state.tuning = [];
             }
             applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
+          }),
+        setTuningAtomic: (valueOrUpdater) =>
+          set((state) => {
+            if (
+              typeof valueOrUpdater === "function" &&
+              !Array.isArray(state.tuning)
+            ) {
+              state.tuning = [];
+            }
+            applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
+            state.tuningAtomicEpoch += 1;
           }),
         setStringMeta: (stringMeta) => set({ stringMeta }),
         updateStringMeta: (draftUpdater) =>
@@ -202,6 +220,7 @@ export const useInstrumentCoreStore = create(
             state.frets = FRETS_FACTORY;
             state.fretsTouched = false;
             state.tuning = [];
+            state.tuningAtomicEpoch = 0;
             state.stringMeta = null;
             state.boardMeta = null;
             state.neckFilterMode = NECK_FILTER_MODES.NONE;
@@ -343,6 +362,7 @@ export const selectInstrumentCoreState = (state) => ({
   isHydrated: state.isHydrated,
   fretsTouched: state.fretsTouched,
   tuning: state.tuning,
+  tuningAtomicEpoch: state.tuningAtomicEpoch,
   stringMeta: state.stringMeta,
   boardMeta: state.boardMeta,
   neckFilterMode: state.neckFilterMode,
@@ -355,6 +375,7 @@ export const selectInstrumentCoreActions = (state) => ({
   setFretsTouched: state.setFretsTouched,
   setFretsUI: state.setFretsUI,
   setTuning: state.setTuning,
+  setTuningAtomic: state.setTuningAtomic,
   setStringMeta: state.setStringMeta,
   updateStringMeta: state.updateStringMeta,
   setBoardMeta: state.setBoardMeta,
@@ -370,6 +391,8 @@ export const selectInstrumentStrings = (state) => state.strings;
 export const selectInstrumentFrets = (state) => state.frets;
 export const selectInstrumentFretsTouched = (state) => state.fretsTouched;
 export const selectInstrumentTuning = (state) => state.tuning;
+export const selectInstrumentTuningAtomicEpoch = (state) =>
+  state.tuningAtomicEpoch;
 export const selectInstrumentStringMeta = (state) => state.stringMeta;
 export const selectInstrumentBoardMeta = (state) => state.boardMeta;
 export const selectInstrumentDefaultTuningMap = (state) =>

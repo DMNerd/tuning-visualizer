@@ -174,8 +174,22 @@ export function removePackByIdentifier(
   const normalizedIdentifier = normalizeIdentifier(identifier);
 
   if (!Array.isArray(packs) || packs.length === 0) return [];
+  const packList = packs as Pack[];
 
-  return (packs as Pack[]).filter(
-    (pack) => !shouldDeletePack(pack, normalizedIdentifier),
-  );
+  // When the caller passed the actual pack object (the real deletion path —
+  // the manager UI hands back the exact rendered pack), prefer deleting that
+  // single object by reference over id/name matching. Two packs can end up
+  // sharing a meta.id (e.g. a file re-imported before the id-collision
+  // guard on import existed, or legacy/manually-edited data), and matching
+  // by id alone would delete every pack with that id instead of just the
+  // one the user selected.
+  if (normalizedIdentifier.ref) {
+    const targetRef = normalizedIdentifier.ref;
+    const hasRefMatch = packList.some((pack) => pack === targetRef);
+    if (hasRefMatch) {
+      return packList.filter((pack) => pack !== targetRef);
+    }
+  }
+
+  return packList.filter((pack) => !shouldDeletePack(pack, normalizedIdentifier));
 }

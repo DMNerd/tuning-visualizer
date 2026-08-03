@@ -13,6 +13,7 @@ export {
   buildTuningPack,
   downloadJsonFile,
   ensurePackHasId,
+  generatePackId,
   normalizePackName,
   removePackByIdentifier,
 } from "./model/tuningIO";

@@ -12,6 +12,7 @@ export default function ConfirmDialog({
 }) {
   const skipFirstCleanup = useRef(true);
   const dismissRef = useRef(onDismiss);
+  const confirmButtonRef = useRef(null);
 
   useEffect(() => {
     dismissRef.current = onDismiss;
@@ -55,14 +56,30 @@ export default function ConfirmDialog({
     handleCancel,
   ]);
 
+  // Respect whichever button is actually focused (Cancel is autoFocus'd as
+  // the safe default) rather than always confirming — otherwise Enter/Space
+  // bypasses the visible focus state and can trigger a destructive action
+  // the user never selected. Falls back to Cancel when neither button has
+  // focus, keeping the same safe-by-default behavior autoFocus implies.
+  const handleEnterOrSpace = useCallback(
+    (event) => {
+      if (document.activeElement === confirmButtonRef.current) {
+        handleConfirm(event);
+        return;
+      }
+      handleCancel(event);
+    },
+    [handleCancel, handleConfirm],
+  );
+
   useKey(
     (e) => {
       const k = e.key.toLowerCase();
       return k === "enter" || k === " ";
     },
-    handleConfirm,
+    handleEnterOrSpace,
     undefined,
-    [handleConfirm],
+    [handleEnterOrSpace],
   );
 
   return (
@@ -88,6 +105,7 @@ export default function ConfirmDialog({
           {cancelText}
         </button>
         <button
+          ref={confirmButtonRef}
           type="button"
           onClick={handleConfirm}
           className="tv-overlay__button tv-overlay__button--accent"

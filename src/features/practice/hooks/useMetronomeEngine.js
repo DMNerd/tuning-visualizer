@@ -81,7 +81,13 @@ export function useMetronomeTickCursor() {
   return useMetronomeEngineStore(useShallow(selectMetronomeEngineCursorState));
 }
 
-export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
+export function useMetronomePlayback({
+  bpm,
+  timeSig,
+  subdivision,
+  countInEnabled = false,
+  onBeat,
+}) {
   const { isPlaying, audioReady, audioError } = useMetronomePlaybackStatus();
   const {
     setIsPlaying,
@@ -97,6 +103,12 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
   const nextNoteTimeRef = useRef(0);
   const beatCursorRef = useRef(0);
   const barCursorRef = useRef(1);
+  // Number of plain lead-in clicks still owed before real beat 1 — armed on
+  // a fresh start when countInEnabled, consumed by scheduler() below. Kept
+  // separate from beatCursorRef so count-in clicks never reach
+  // scheduleBeatUiUpdate/onBeat and can't throw off bar counting for
+  // auto-advance-scale or training-routine step tracking.
+  const countInRemainingRef = useRef(0);
   const uiTimerIdsRef = useRef([]);
   const beatListenersRef = useRef(new Set());
 
@@ -184,6 +196,7 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
     beatCursorRef.current = 0;
     barCursorRef.current = 1;
     nextNoteTimeRef.current = 0;
+    countInRemainingRef.current = 0;
     resetCursorState();
   }, [resetCursorState]);
 
@@ -210,6 +223,16 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
     const secPerSubStep = secPerBeat / stepsPerBeat;
 
     while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
+      if (countInRemainingRef.current > 0) {
+        scheduleClick(ctx, nextNoteTimeRef.current, {
+          accent: false,
+          subdivision: false,
+        });
+        countInRemainingRef.current -= 1;
+        nextNoteTimeRef.current += secPerBeat;
+        continue;
+      }
+
       const stepInBeat = beatCursorRef.current % stepsPerBeat;
       const beatIndex = Math.floor(beatCursorRef.current / stepsPerBeat);
       const beatNumber = (beatIndex % beatsPerBar) + 1;
@@ -260,16 +283,36 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
     [clearUiTimers, stopScheduler],
   );
 
+  // Tracks whether the *previous* run of this effect was already playing,
+  // so a bpm/timeSig/subdivision tweak mid-play (which also re-runs this
+  // effect, since scheduler's identity depends on them) can be told apart
+  // from an actual start. Only an actual start should reset the beat/bar
+  // cursor — otherwise every tempo nudge snaps the cursor back to beat
+  // 1/bar 1 and fires a spurious real beat event for a boundary that never
+  // happened.
+  const wasPlayingRef = useRef(false);
+
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      wasPlayingRef.current = false;
+      return;
+    }
 
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
+    const justStarted = !wasPlayingRef.current;
+    wasPlayingRef.current = true;
+
     stopScheduler();
     clearUiTimers();
-    resetCursor();
-    nextNoteTimeRef.current = ctx.currentTime + 0.03;
+    if (justStarted) {
+      resetCursor();
+      nextNoteTimeRef.current = ctx.currentTime + 0.03;
+      if (countInEnabled) {
+        countInRemainingRef.current = beatsPerBar;
+      }
+    }
     timerRef.current = window.setInterval(scheduler, LOOKAHEAD_MS);
     scheduler();
   }, [
@@ -277,6 +320,7 @@ export function useMetronomePlayback({ bpm, timeSig, subdivision, onBeat }) {
     safeBpm,
     stepsPerBeat,
     beatsPerBar,
+    countInEnabled,
     scheduler,
     clearUiTimers,
     resetCursor,

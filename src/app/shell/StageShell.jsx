@@ -33,6 +33,7 @@ export default function StageShell({
     dotSize,
     lefty,
     openOnlyInScale,
+    openOnlyInChord,
     colorByDegree,
     colorByShape,
     accidental,
@@ -82,6 +83,7 @@ export default function StageShell({
             chordPCs={theoryPanel.controlModel.meta.chordOverlayPcs}
             chordRootPc={theoryPanel.controlModel.meta.chordRootPc}
             openOnlyInScale={openOnlyInScale}
+            openOnlyInChord={openOnlyInChord}
             colorByDegree={colorByDegree}
             colorByShape={colorByShape}
             hideNonChord={theoryDomain.chord.hideNonChord}

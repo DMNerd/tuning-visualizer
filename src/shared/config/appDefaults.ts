@@ -43,6 +43,7 @@ export const DISPLAY_DEFAULTS = {
   dotSize: 14,
   lefty: false,
   openOnlyInScale: false,
+  openOnlyInChord: false,
   colorByDegree: false,
   colorByShape: false,
   accidental: "sharp" as "sharp" | "flat" | "both",

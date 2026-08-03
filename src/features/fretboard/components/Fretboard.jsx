@@ -85,6 +85,7 @@ const Fretboard = forwardRef(function Fretboard(
     chordPCs,
     chordRootPc,
     openOnlyInScale,
+    openOnlyInChord,
     colorByDegree,
     colorByShape,
     hideNonChord,
@@ -359,22 +360,36 @@ const Fretboard = forwardRef(function Fretboard(
       const inScale = scaleSet.has(pc);
       const inChord = chordPCs ? chordPCs.has(pc) : false;
       const isOverlayOutsideScaleChord =
-        Boolean(chordPCs) && !hideNonChord && inChord && !inScale;
+        Boolean(chordPCs) &&
+        !hideNonChord &&
+        inChord &&
+        !inScale &&
+        (!slot.isOpen || showOpen);
 
       let visible;
       if (hideNonChord && chordPCs) {
         const baselineVisible = slot.isOpen ? showOpen : true;
         visible = baselineVisible && inChord;
       } else {
+        // openOnlyInChord only restricts opens while a chord is actually
+        // overlaid (chordPCs set) — with no chord active it would hide
+        // every open string, since inChord is always false without one.
         const baselineVisible = slot.isOpen
-          ? showOpen && (!openOnlyInScale || inScale)
+          ? showOpen &&
+            (!openOnlyInScale || inScale) &&
+            (!openOnlyInChord || !chordPCs || inChord)
           : inScale;
         visible = baselineVisible || isOverlayOutsideScaleChord;
       }
       if (!visible) continue;
 
       const isRoot = pc === rootIx;
-      const isStandard = (slot.f * 12) % N === 0;
+      // Open notes always have slot.f === 0, which would always read as
+      // "standard" — for a string whose true position is offset by
+      // stringMeta.startFret (non-12-TET partial-fret setups), the open
+      // note's actual fret is slot.sf, matching the correction already
+      // applied to its fret-number label below (globalFretForLabel).
+      const isStandard = ((slot.isOpen ? slot.sf : slot.f) * 12) % N === 0;
       const isMicro = !isStandard;
       const rBase =
         (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
@@ -642,6 +657,7 @@ const Fretboard = forwardRef(function Fretboard(
     chordRootPc,
     showOpen,
     openOnlyInScale,
+    openOnlyInChord,
     hideNonChord,
     rootIx,
     effectiveDotSize,
@@ -1257,6 +1273,7 @@ function areFretboardPropsEqual(prev, next) {
   if (!Object.is(prev.dotSize, next.dotSize)) return false;
   if (!Object.is(prev.lefty, next.lefty)) return false;
   if (!Object.is(prev.openOnlyInScale, next.openOnlyInScale)) return false;
+  if (!Object.is(prev.openOnlyInChord, next.openOnlyInChord)) return false;
   if (!Object.is(prev.colorByDegree, next.colorByDegree)) return false;
   if (!Object.is(prev.colorByShape, next.colorByShape)) return false;
   if (!Object.is(prev.hideNonChord, next.hideNonChord)) return false;

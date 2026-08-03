@@ -116,6 +116,7 @@ export function useRoutinePlayback({
           setSystemId: theory?.system?.setSystemId,
           setStrings: instrument?.instrumentActions?.setStrings,
           setTuning: instrument?.instrumentActions?.setTuning,
+          setTuningAtomic: instrument?.instrumentActions?.setTuningAtomic,
           systemId: startBlock.systemId,
           strings: startBlock.strings,
           tuning: tuningArray,

@@ -13,6 +13,7 @@ import { withToastPromise } from "@shared/lib/toast";
 import { isPlainObject } from "@shared/lib/object";
 import {
   ensurePackHasId,
+  generatePackId,
   normalizePackName,
   removePackByIdentifier,
 } from "@features/export";
@@ -29,6 +30,34 @@ function getTakenNames(existing, { exclude } = {}) {
       .map((item) => normalizePackName(item?.name))
       .filter((name) => name && name !== exclude),
   );
+}
+
+function getTakenIds(existing) {
+  return new Set(
+    existing
+      .map((item) =>
+        typeof item?.meta?.id === "string" ? item.meta.id.trim() : "",
+      )
+      .filter(Boolean),
+  );
+}
+
+// Re-importing a pack that was previously exported carries its original
+// meta.id, which ensurePackHasId leaves untouched since it's already
+// present. If that id still belongs to a pack in the local list (or to
+// another pack in this same import batch), removePackByIdentifier would
+// later delete every pack sharing the id when just one of them is deleted
+// — so give the newcomer a fresh id instead of letting them collide.
+function ensureUniquePackId(pack, takenIds) {
+  const currentId =
+    typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
+  if (!currentId || takenIds.has(currentId)) {
+    const nextPack = { ...pack, meta: { ...pack.meta, id: generatePackId() } };
+    takenIds.add(nextPack.meta.id);
+    return nextPack;
+  }
+  takenIds.add(currentId);
+  return pack;
 }
 
 function ensureUniqueName(desiredName, takenNames) {
@@ -377,6 +406,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
 
       const existing = getExistingCustomTunings();
       const takenNames = getTakenNames(existing);
+      const takenIds = getTakenIds(existing);
 
       const newTunings = parsed.map((p, i) => {
         const candidate =
@@ -387,11 +417,12 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         const uniqueName = ensureUniqueName(label, takenNames);
         const { system, ...rest } = p;
         const cleanSystem = { edo: system.edo };
-        return ensurePackHasId({
+        const withId = ensurePackHasId({
           ...rest,
           system: cleanSystem,
           name: uniqueName,
         });
+        return ensureUniquePackId(withId, takenIds);
       });
 
       const nextTunings = [...existing, ...newTunings];

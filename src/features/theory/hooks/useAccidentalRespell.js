@@ -20,6 +20,7 @@ export function useAccidentalRespell({
   setChordRoot,
 }) {
   const prevPcFromNameRef = useRef(null);
+  const prevSystemRef = useRef(system);
   const { pcFromName, nameForPc, sysNames } = useSystemNoteNames(
     system,
     accidental,
@@ -27,7 +28,20 @@ export function useAccidentalRespell({
   );
 
   useEffect(() => {
-    const parsePrevName = prevPcFromNameRef.current ?? pcFromName;
+    // The tuning system itself changing (not just the accidental/naming
+    // preference) means pcFromName's pitch-class space changed too (e.g.
+    // 12-TET's 0-11 vs 24-TET's 0-23) — reparsing root/tuning/chordRoot
+    // with the *previous* system's mapping would misinterpret a name that
+    // the caller already made valid under the new system before this runs.
+    // Treat a system change like the very first run: reparse with the
+    // current (new-system) mapping, which is a no-op respell, instead of
+    // the stale one left over from the old system.
+    const systemChanged = prevSystemRef.current !== system;
+    prevSystemRef.current = system;
+
+    const parsePrevName = systemChanged
+      ? pcFromName
+      : (prevPcFromNameRef.current ?? pcFromName);
     const normalizeName = (pc) =>
       normalizeNameForSystem(pc, nameForPc, sysNames);
 
@@ -51,6 +65,7 @@ export function useAccidentalRespell({
 
     prevPcFromNameRef.current = pcFromName;
   }, [
+    system,
     accidental,
     noteNaming,
     pcFromName,

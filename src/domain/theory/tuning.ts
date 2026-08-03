@@ -237,7 +237,12 @@ export function getSystemLabel({
   edo: number;
   metaSystemId?: string | null;
 }): string {
-  const metaLabel = typeof metaSystemId === "string" ? metaSystemId : null;
+  // Empty string must be treated the same as absent here, matching
+  // findSystemByEdo's truthy `metaId &&` check — otherwise a pack with
+  // `meta.systemId: ""` shows a blank label instead of falling through to
+  // the resolved match/edo below.
+  const metaLabel =
+    typeof metaSystemId === "string" && metaSystemId ? metaSystemId : null;
   if (metaLabel !== null) {
     return metaLabel;
   }

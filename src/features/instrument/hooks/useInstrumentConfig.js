@@ -19,6 +19,7 @@ import {
   selectInstrumentStringMeta,
   selectInstrumentStrings,
   selectInstrumentTuning,
+  selectInstrumentTuningAtomicEpoch,
 } from "@features/instrument/store/useInstrumentCoreStore";
 
 const selectInstrumentConfigStore = (state) => ({
@@ -27,6 +28,7 @@ const selectInstrumentConfigStore = (state) => ({
   fretsTouched: selectInstrumentFretsTouched(state),
   isHydrated: selectInstrumentCoreIsHydrated(state),
   tuning: selectInstrumentTuning(state),
+  tuningAtomicEpoch: selectInstrumentTuningAtomicEpoch(state),
   stringMeta: selectInstrumentStringMeta(state),
   boardMeta: selectInstrumentBoardMeta(state),
   userDefaultTuningMap: selectInstrumentDefaultTuningMap(state),
@@ -68,6 +70,7 @@ export function useInstrumentConfig({
     fretsTouched,
     isHydrated,
     tuning,
+    tuningAtomicEpoch,
     stringMeta,
     boardMeta,
     userDefaultTuningMap,
@@ -76,6 +79,7 @@ export function useInstrumentConfig({
     setFrets,
     setFretsUI,
     setTuning,
+    setTuningAtomic,
     setStringMeta,
     setBoardMeta,
     setNeckFilterMode,
@@ -116,7 +120,7 @@ export function useInstrumentConfig({
   }, [savedExists, saved, factoryDefault]);
 
   const prevSystemStringsKey = usePrevious(`${systemId}|${strings}`);
-  const prevTuning = usePrevious(tuning);
+  const prevTuningAtomicEpoch = usePrevious(tuningAtomicEpoch);
   useEffect(() => {
     if (prevSystemStringsKey === undefined) {
       if (!Array.isArray(tuning) || tuning.length === 0) {
@@ -126,18 +130,21 @@ export function useInstrumentConfig({
     }
 
     if (prevSystemStringsKey !== `${systemId}|${strings}`) {
-      // Skip the auto-default if the tuning was *also* explicitly set in
-      // the same update as the system/strings change (e.g. a caller
-      // atomically applying a specific preset via applyResolvedTuning) —
-      // only fall back to the default when the tuning is still the stale
-      // array left over from the previous system.
-      if (tuning === prevTuning) {
+      // Skip the auto-default if the tuning was *also* explicitly set
+      // atomically alongside this system/strings change via
+      // setTuningAtomic (e.g. applyResolvedTuning applying a specific
+      // preset) — only fall back to the default otherwise. This checks the
+      // store's tuningAtomicEpoch rather than tuning reference equality,
+      // since ordinary tuning writes (e.g. useStringsChange extending the
+      // array) also produce a new reference and must still get a default.
+      if (tuningAtomicEpoch === prevTuningAtomicEpoch) {
         setTuning(getPreferredDefault());
       }
     }
   }, [
     prevSystemStringsKey,
-    prevTuning,
+    tuningAtomicEpoch,
+    prevTuningAtomicEpoch,
     systemId,
     strings,
     tuning,
@@ -241,11 +248,21 @@ export function useInstrumentConfig({
       frets,
       isHydrated,
       tuning,
+      tuningAtomicEpoch,
       stringMeta,
       boardMeta,
       neckFilterMode,
     }),
-    [strings, frets, isHydrated, tuning, stringMeta, boardMeta, neckFilterMode],
+    [
+      strings,
+      frets,
+      isHydrated,
+      tuning,
+      tuningAtomicEpoch,
+      stringMeta,
+      boardMeta,
+      neckFilterMode,
+    ],
   );
   const actions = useMemo(
     () => ({
@@ -253,6 +270,7 @@ export function useInstrumentConfig({
       setFrets,
       setFretsUI,
       setTuning,
+      setTuningAtomic,
       setStringMeta,
       setBoardMeta,
       setNeckFilterMode,
@@ -265,6 +283,7 @@ export function useInstrumentConfig({
       setFrets,
       setFretsUI,
       setTuning,
+      setTuningAtomic,
       setStringMeta,
       setBoardMeta,
       setNeckFilterMode,

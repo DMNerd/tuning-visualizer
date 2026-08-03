@@ -17,6 +17,7 @@ const SETTER_KEYS = [
   "noteNaming",
   "microLabelStyle",
   "openOnlyInScale",
+  "openOnlyInChord",
   "colorByDegree",
   "colorByShape",
   "lefty",

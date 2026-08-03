@@ -55,6 +55,7 @@ export function useInstrumentDomain({
     currentEdo: system.divisions,
     currentStrings: instrumentState.strings,
     currentTuning: instrumentState.tuning,
+    tuningAtomicEpoch: instrumentState.tuningAtomicEpoch,
     systemId,
     strings: instrumentState.strings,
     savedExists: instrumentDerived.savedExists,

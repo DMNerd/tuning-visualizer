@@ -143,6 +143,7 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
         setSystemId: theorySystem.setSystemId,
         setStrings: instrumentActions.setStrings,
         setTuning: instrumentActions.setTuning,
+        setTuningAtomic: instrumentActions.setTuningAtomic,
         systemId: values.systemId,
         strings: values.strings,
         tuning: values.tuning,
@@ -167,6 +168,7 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
           },
         );
 
+        let saveFailed = false;
         if (
           !existing &&
           packPayload &&
@@ -188,11 +190,17 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
           try {
             await instrumentCustomTuningIO.saveCustomTuning(payload);
           } catch {
-            // Non-fatal: still attempt preset selection below.
+            // The shared pack payload passed the coarse shareCodec check but
+            // was rejected by the stricter tuning-pack schema — skip
+            // selecting a preset name with no actual saved tuning behind
+            // it, rather than leaving the UI pointing at a dangling name.
+            saveFailed = true;
           }
         }
 
-        safeInvoke(instrumentPresets.setPreset, presetName);
+        if (!saveFailed) {
+          safeInvoke(instrumentPresets.setPreset, presetName);
+        }
       }
 
       // Non-destructive by design: custom packs are only upserted when a shared

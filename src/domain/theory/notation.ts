@@ -62,8 +62,10 @@ function toGermanCore(englishCore: string): string {
       if (accidentals.length === 1) return "B";
       return `H${"es".repeat(accidentals.length)}`;
     }
-    if (accidentals.length === 1 && (base === "A" || base === "E")) {
-      return `${base}s`;
+    if (base === "A" || base === "E") {
+      // "es" elides to "s" right after the vowel (A/E), but only for the
+      // first flat — Aes -> As, Aeses -> Ases (not Aeses), Eeses -> Eses.
+      return `${base}s${"es".repeat(accidentals.length - 1)}`;
     }
     return `${base}${"es".repeat(accidentals.length)}`;
   }
@@ -96,9 +98,13 @@ function fromGermanCore(germanCore: unknown): string {
     return `${base}${"#".repeat(count)}`;
   }
 
-  const singleS = normalized.match(/^([AE])S$/);
-  if (singleS) {
-    return `${singleS[1]}b`;
+  // Standard German elision for A/E: the first flat drops the "e" of "es"
+  // (As, Es), and further flats append full "es" groups after that (Ases,
+  // Eses, ...) rather than repeating "es" from the bare letter.
+  const elidedFlatMatch = normalized.match(/^([AE])S((?:ES)*)$/);
+  if (elidedFlatMatch) {
+    const count = 1 + elidedFlatMatch[2].length / 2;
+    return `${elidedFlatMatch[1]}${"b".repeat(count)}`;
   }
 
   const flatMatch = normalized.match(/^([A-H])(ES)+$/);

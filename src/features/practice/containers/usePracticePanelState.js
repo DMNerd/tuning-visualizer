@@ -64,6 +64,7 @@ export default function usePracticePanelState({
     subdivision,
     autoAdvanceEnabled,
     barsPerScale,
+    countInEnabled,
     announceCountInBeforeChange,
     timedPracticeEnabled,
     practiceDurationMinutes,
@@ -209,6 +210,7 @@ export default function usePracticePanelState({
     bpm,
     timeSig,
     subdivision,
+    countInEnabled,
     onBeat: handleMetronomeBeat,
   });
   const isMetronomePlaying = metronomeEngine.isPlaying;
@@ -246,6 +248,12 @@ export default function usePracticePanelState({
     return () => window.clearInterval(intervalId);
   }, [
     isMetronomePlaying,
+    // Not read directly in this effect, but editing the duration mid-play
+    // clears practiceSessionEndTimeRef.current in the effect above — this
+    // effect must re-run to notice that and reinitialize the end time,
+    // otherwise the still-running interval's `if (!endTime) return;` guard
+    // freezes the countdown for the rest of the session.
+    sessionDurationSeconds,
     setPracticeSecondsRemaining,
     stopMetronome,
     timedPracticeEnabled,

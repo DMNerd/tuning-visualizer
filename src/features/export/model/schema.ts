@@ -11,7 +11,9 @@ export const TuningStringSchema = v.pipe(
     greyBefore: v.optional(v.boolean()),
   }),
   v.check(
-    (value) => typeof value.note === "string" || typeof value.midi === "number",
+    (value) =>
+      (typeof value.note === "string" && value.note.trim().length > 0) ||
+      typeof value.midi === "number",
     "Each string must include a note or MIDI value.",
   ),
 );
