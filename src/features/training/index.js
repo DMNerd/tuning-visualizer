@@ -2,3 +2,7 @@ export { default as TrainingRoutinesControls } from "./components/TrainingRoutin
 export { default as RoutineHudContainer } from "./components/RoutineHudContainer";
 export { useTrainingRoutines } from "./hooks/useTrainingRoutines";
 export { useRoutinePlayback } from "./hooks/useRoutinePlayback";
+export {
+  useRoutinePlaybackStore,
+  selectIsRoutinePlaying,
+} from "./store/useRoutinePlaybackStore";

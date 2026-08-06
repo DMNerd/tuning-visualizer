@@ -10,7 +10,7 @@ import {
 } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import {
-  createGlobalStorage,
+  createScopedStorage,
   getLocalStorage,
 } from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
@@ -113,7 +113,9 @@ export const useTheoryStore = create(
     {
       name: STORAGE_KEYS.THEORY_PREFS,
       version: 1,
-      storage: createJSONStorage(() => createGlobalStorage()),
+      // Per-window-scoped, not global — matches useInstrumentCoreStore, so a
+      // tuning system/root/scale change in one tab doesn't leak into others.
+      storage: createJSONStorage(() => createScopedStorage()),
       migrate: (persistedState) => {
         if (hasValidPersistedTheory(persistedState)) {
           return persistedState;

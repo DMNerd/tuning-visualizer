@@ -1,4 +1,5 @@
 import { TUNINGS } from "@domain/theory/tuning";
+import { nameForPcWithDisplayAccidentals } from "@features/fretboard";
 import {
   ALL_SCALES,
   buildBaselineScalesForSystem,
@@ -52,11 +53,20 @@ export function resolveScaleOptionsForSystem(
   return buildBaselineScalesForSystem(systemId, divisions);
 }
 
-/** Note name for a pitch class within a tuning system, with a safe fallback
- * for a system that doesn't (or no longer) exists in `TUNINGS`. */
-export function nameForRootPc(systemId: string, rootPc: number): string {
+/** Note name for a pitch class within a tuning system, respecting the app's
+ * accidental/note-naming display prefs (German/Czech, flats, etc.) the same
+ * way every other note label in the app does — with a safe fallback for a
+ * system that doesn't (or no longer) exists in `TUNINGS`. */
+export function nameForRootPc(
+  systemId: string,
+  rootPc: number,
+  accidental: string = "sharp",
+  noteNaming: string = "english",
+): string {
   const system = TUNINGS[systemId];
-  return system ? system.nameForPc(rootPc) : `N${rootPc}`;
+  return system
+    ? nameForPcWithDisplayAccidentals(system, rootPc, accidental, noteNaming)
+    : `N${rootPc}`;
 }
 
 /** Preset names available for a specific tuning system + string count. */
@@ -93,9 +103,16 @@ function resolveDefaultPresetName(systemId: string, strings: number): string {
   return bySystem[strings] ?? Object.values(bySystem)[0] ?? "";
 }
 
-export function createEmptyRoutine(systemId: string = SYSTEM_DEFAULT): Routine {
+/** Builds a fresh routine draft. `strings`/`presetName` default to the
+ * factory tuning but should normally be seeded with the app's *live*
+ * instrument state (see useRoutineDraft) so a new draft starts from what's
+ * actually loaded rather than always the factory 6-string default. */
+export function createEmptyRoutine(
+  systemId: string = SYSTEM_DEFAULT,
+  strings: number = STR_FACTORY,
+  presetName?: string,
+): Routine {
   const now = Date.now();
-  const strings = STR_FACTORY;
   return {
     id: generateRoutineId(),
     name: "",
@@ -104,7 +121,7 @@ export function createEmptyRoutine(systemId: string = SYSTEM_DEFAULT): Routine {
     startBlock: {
       systemId,
       strings,
-      presetName: resolveDefaultPresetName(systemId, strings),
+      presetName: presetName ?? resolveDefaultPresetName(systemId, strings),
       beats: ROUTINE_BEATS_DEFAULT,
     },
     steps: [],

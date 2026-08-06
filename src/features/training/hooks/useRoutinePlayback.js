@@ -50,7 +50,14 @@ export function useRoutinePlayback({
   const applyStep = useCallback(
     (systemId, step) => {
       const theory = theoryDomainRef.current;
-      theory?.system?.setRoot?.(nameForRootPc(systemId, step.rootPc));
+      // Prefer the live, display-preference-aware namer (same one every
+      // other note label in the app uses) — play() has already forced the
+      // theory system to match `systemId` via applyResolvedTuning, so this
+      // is safe. Only fall back to the plain namer if that's unavailable.
+      const rootName =
+        theory?.system?.nameForPc?.(step.rootPc) ??
+        nameForRootPc(systemId, step.rootPc);
+      theory?.system?.setRoot?.(rootName);
       theory?.scale?.setScale?.(step.scaleLabel);
       const { setBpm, setTimeSig } = useMetronomePrefsStore.getState().setters;
       setBpm?.(step.bpm);
@@ -129,7 +136,7 @@ export function useRoutinePlayback({
           .getState()
           .setters.setAutoAdvanceEnabled?.(false);
 
-        useRoutinePlaybackStore.getState().beginRoutine(routine);
+        useRoutinePlaybackStore.getState().beginRoutine(routine, stop);
         applyStep(startBlock.systemId, steps[0]);
 
         unsubscribeFromBeats();

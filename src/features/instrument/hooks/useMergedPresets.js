@@ -14,6 +14,7 @@ import {
   resolveNeckFilterModeIntentFromBoardMeta,
 } from "@domain/presets/neckFilterModes";
 import { isPlainObject } from "@shared/lib/object";
+import { useTuningWasSetAtomically } from "@features/instrument/hooks/useTuningAtomicEpoch";
 import {
   coerceAnyTuning,
   usePresetBuilder,
@@ -326,7 +327,7 @@ export function useMergedPresets({
 
   const prevSystemId = usePrevious(systemId);
   const prevStrings = usePrevious(strings);
-  const prevTuningAtomicEpoch = usePrevious(tuningAtomicEpoch);
+  const tuningWasSetAtomically = useTuningWasSetAtomically(tuningAtomicEpoch);
 
   useUpdateEffect(() => {
     const instrumentChanged =
@@ -345,12 +346,8 @@ export function useMergedPresets({
     // Skip resetting to the default preset (which would overwrite the
     // tuning via setPreset) if the tuning was *also* explicitly set
     // atomically alongside this system/strings change via setTuningAtomic
-    // — e.g. applyResolvedTuning applying a specific preset. This checks
-    // the store's tuningAtomicEpoch rather than currentTuning reference
-    // equality, since ordinary tuning writes (e.g. useStringsChange
-    // extending the array) also produce a new reference and must still
-    // resync the preset selection.
-    if (tuningAtomicEpoch !== prevTuningAtomicEpoch) return;
+    // — e.g. applyResolvedTuning applying a specific preset.
+    if (tuningWasSetAtomically) return;
     resetSelection();
     if (defaultPresetName) {
       queuePresetByName(defaultPresetName);
@@ -360,8 +357,7 @@ export function useMergedPresets({
     strings,
     prevSystemId,
     prevStrings,
-    tuningAtomicEpoch,
-    prevTuningAtomicEpoch,
+    tuningWasSetAtomically,
     queuePresetByName,
     resetSelection,
     defaultPresetName,

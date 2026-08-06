@@ -13,6 +13,9 @@ export const useThemeStore = create(
     }),
     {
       name: STORAGE_KEYS.THEME,
+      // Global (unscoped), not per-window — theme is a display preference
+      // the user expects to be consistent everywhere, same as saved
+      // routines/custom tunings, unlike theory/instrument/metronome state.
       storage: createJSONStorage(() => createGlobalStorage()),
       partialize: (state) => ({ theme: state.theme }),
     },

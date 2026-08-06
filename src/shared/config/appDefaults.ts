@@ -42,8 +42,10 @@ export const DISPLAY_DEFAULTS = {
   showFretNums: true,
   dotSize: 14,
   lefty: false,
-  openOnlyInScale: false,
-  openOnlyInChord: false,
+  // Restricts which open strings render when showOpen is true: "none" (no
+  // restriction), "scale" (only opens in the current scale), or "chord"
+  // (only opens in the active chord overlay).
+  openOnlyInMode: "none" as "none" | "scale" | "chord",
   colorByDegree: false,
   colorByShape: false,
   accidental: "sharp" as "sharp" | "flat" | "both",

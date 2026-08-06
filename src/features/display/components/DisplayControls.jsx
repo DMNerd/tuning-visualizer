@@ -91,8 +91,7 @@ function DisplayControls({ state, actions, meta }) {
     showOpen,
     showFretNums,
     dotSize,
-    openOnlyInScale,
-    openOnlyInChord,
+    openOnlyInMode,
     accidental,
     noteNaming,
     microLabelStyle,
@@ -105,8 +104,7 @@ function DisplayControls({ state, actions, meta }) {
     setShowOpen,
     setShowFretNums,
     setDotSize,
-    setOpenOnlyInScale,
-    setOpenOnlyInChord,
+    setOpenOnlyInMode,
     setAccidental,
     setNoteNaming,
     setMicroLabelStyle,
@@ -115,16 +113,14 @@ function DisplayControls({ state, actions, meta }) {
     setLefty,
   } = actions;
   const degreeCount = meta?.degreeCount ?? 7;
-  const resolvedShowOpen = showOpen !== false;
-  const resolvedOpenOnlyInScale = resolvedShowOpen && openOnlyInScale === true;
-  const resolvedOpenOnlyInChord = resolvedShowOpen && openOnlyInChord === true;
-  const openNotesMode = !resolvedShowOpen
-    ? "off"
-    : resolvedOpenOnlyInChord
-      ? "chord"
-      : resolvedOpenOnlyInScale
-        ? "scale"
-        : "all";
+  const openNotesMode =
+    showOpen === false
+      ? "off"
+      : openOnlyInMode === "chord"
+        ? "chord"
+        : openOnlyInMode === "scale"
+          ? "scale"
+          : "all";
   const labelsInputId = useId();
   const labelsFieldLabelId = useId();
   const dotSizeInputId = useId();
@@ -231,27 +227,12 @@ function DisplayControls({ state, actions, meta }) {
             name="open-notes-mode"
             value={openNotesMode}
             onChange={(nextMode) => {
-              if (nextMode === "off") {
-                setShowOpen(false);
-                setOpenOnlyInScale(false);
-                setOpenOnlyInChord(false);
-                return;
-              }
-              if (nextMode === "all") {
-                setShowOpen(true);
-                setOpenOnlyInScale(false);
-                setOpenOnlyInChord(false);
-                return;
-              }
-              if (nextMode === "scale") {
-                setShowOpen(true);
-                setOpenOnlyInScale(true);
-                setOpenOnlyInChord(false);
-                return;
-              }
-              setShowOpen(true);
-              setOpenOnlyInScale(false);
-              setOpenOnlyInChord(true);
+              setShowOpen(nextMode !== "off");
+              setOpenOnlyInMode(
+                nextMode === "scale" || nextMode === "chord"
+                  ? nextMode
+                  : "none",
+              );
             }}
             options={[
               { value: "off", label: "Off" },
@@ -319,8 +300,7 @@ function pickDisplayMemoProps(p) {
     showOpen: s.showOpen,
     showFretNums: s.showFretNums,
     dotSize: s.dotSize,
-    openOnlyInScale: s.openOnlyInScale,
-    openOnlyInChord: s.openOnlyInChord,
+    openOnlyInMode: s.openOnlyInMode,
     accidental: s.accidental,
     noteNaming: s.noteNaming,
     microLabelStyle: s.microLabelStyle,
@@ -332,8 +312,7 @@ function pickDisplayMemoProps(p) {
     setShowOpen: a.setShowOpen,
     setShowFretNums: a.setShowFretNums,
     setDotSize: a.setDotSize,
-    setOpenOnlyInScale: a.setOpenOnlyInScale,
-    setOpenOnlyInChord: a.setOpenOnlyInChord,
+    setOpenOnlyInMode: a.setOpenOnlyInMode,
     setAccidental: a.setAccidental,
     setNoteNaming: a.setNoteNaming,
     setMicroLabelStyle: a.setMicroLabelStyle,

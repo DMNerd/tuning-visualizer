@@ -5,7 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import { METRONOME_DEFAULTS } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import {
-  createGlobalStorage,
+  createScopedStorage,
   readLegacyJSON,
 } from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
@@ -96,7 +96,9 @@ export const useMetronomePrefsStore = create(
     {
       name: STORAGE_KEYS.METRONOME_PREFS,
       version: 1,
-      storage: createJSONStorage(() => createGlobalStorage()),
+      // Per-window-scoped, not global — matches useInstrumentCoreStore, so
+      // metronome prefs can differ per tab instead of leaking across them.
+      storage: createJSONStorage(() => createScopedStorage()),
       migrate: (persistedState) => {
         const normalized = normalizeLegacyShape(persistedState);
         if (normalized && !persistedState?.prefs) {

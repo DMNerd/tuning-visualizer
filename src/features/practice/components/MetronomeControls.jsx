@@ -21,6 +21,7 @@ function MetronomeControls({ state, actions, meta }) {
     timedPracticeEnabled,
     practiceDurationMinutes,
     practiceSecondsRemaining,
+    isRoutinePlaying,
   } = state;
 
   const {
@@ -68,6 +69,15 @@ function MetronomeControls({ state, actions, meta }) {
           </button>
         </div>
 
+        {isRoutinePlaying ? (
+          <div className="tv-field">
+            <small className="tv-field__hint">
+              BPM, time signature, and auto-advance are controlled by the
+              active training routine.
+            </small>
+          </div>
+        ) : null}
+
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="metronome-bpm">
             BPM
@@ -77,6 +87,7 @@ function MetronomeControls({ state, actions, meta }) {
               type="button"
               className="tv-button tv-button--icon"
               aria-label="Decrease BPM"
+              disabled={isRoutinePlaying}
               onClick={() => bpmDown?.()}
             >
               −
@@ -89,12 +100,14 @@ function MetronomeControls({ state, actions, meta }) {
               max={bpmMax}
               onSubmit={setBpm}
               hideLabel
+              disabled={isRoutinePlaying}
               className="tv-field--inline-number tv-field--number-compact"
             />
             <button
               type="button"
               className="tv-button tv-button--icon"
               aria-label="Increase BPM"
+              disabled={isRoutinePlaying}
               onClick={() => bpmUp?.()}
             >
               +
@@ -114,6 +127,7 @@ function MetronomeControls({ state, actions, meta }) {
               id="metronome-time-signature"
               name="metronome-time-signature"
               value={timeSig}
+              disabled={isRoutinePlaying}
               onChange={(e) => setTimeSig(e.target.value)}
             >
               {timeSignatures.map((option) => (
@@ -183,6 +197,7 @@ function MetronomeControls({ state, actions, meta }) {
           id="metronome-auto-advance"
           name="metronome-auto-advance"
           checked={autoAdvanceEnabled}
+          disabled={isRoutinePlaying}
           onChange={(e) => setAutoAdvanceEnabled(e.target.checked)}
         >
           Auto-advance scale
@@ -195,6 +210,7 @@ function MetronomeControls({ state, actions, meta }) {
           min={barsPerScaleMin}
           max={barsPerScaleMax}
           onSubmit={setBarsPerScale}
+          disabled={isRoutinePlaying}
           className="tv-field--number-compact"
         />
         <div className="tv-field">
@@ -211,7 +227,7 @@ function MetronomeControls({ state, actions, meta }) {
           name="metronome-announce-count-in"
           checked={announceCountInBeforeChange}
           onChange={(e) => setAnnounceCountInBeforeChange(e.target.checked)}
-          disabled={!autoAdvanceEnabled}
+          disabled={!autoAdvanceEnabled || isRoutinePlaying}
         >
           Announce before change
         </ToggleSwitch>
@@ -237,6 +253,7 @@ function pickMetronomeMemoProps(p) {
     timedPracticeEnabled: s.timedPracticeEnabled,
     practiceDurationMinutes: s.practiceDurationMinutes,
     practiceSecondsRemaining: s.practiceSecondsRemaining,
+    isRoutinePlaying: s.isRoutinePlaying,
     timeSignatures: m.timeSignatures,
     subdivisions: m.subdivisions,
     bpmMin: m.bpmMin,

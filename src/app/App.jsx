@@ -103,6 +103,27 @@ export default function App() {
     instrumentDomain,
   });
 
+  // Lets a freshly opened routine builder seed its Start block from what's
+  // actually loaded right now, and render root labels in the app's current
+  // accidental/note-naming style, instead of always defaulting to the
+  // factory tuning system in sharp/English spelling.
+  const routineLiveDefaults = useMemo(
+    () => ({
+      systemId: theoryDomain.system.systemId,
+      strings: instrumentState.strings,
+      presetName: instrumentDomain.presets.selectedPreset,
+      accidental: displayPrefs.accidental,
+      noteNaming: displayPrefs.noteNaming,
+    }),
+    [
+      theoryDomain.system.systemId,
+      instrumentState.strings,
+      instrumentDomain.presets.selectedPreset,
+      displayPrefs.accidental,
+      displayPrefs.noteNaming,
+    ],
+  );
+
   const orchestration = useAppOrchestration({
     displayPrefs,
     setDisplayPrefs,
@@ -220,6 +241,7 @@ export default function App() {
         displayControlModel={displayControlModel}
         exportPanel={exportCustomDomain.exportPanel}
         routinePlayback={routinePlayback}
+        routineLiveDefaults={routineLiveDefaults}
       />
     ),
     [
@@ -233,6 +255,7 @@ export default function App() {
       displayControlModel,
       exportCustomDomain.exportPanel,
       routinePlayback,
+      routineLiveDefaults,
     ],
   );
 

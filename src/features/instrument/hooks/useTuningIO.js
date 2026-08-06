@@ -24,21 +24,23 @@ import {
 } from "@features/instrument/store/useInstrumentWorkflowStore";
 import { sanitizeBoardMetaForModeStorage } from "@domain/presets/neckFilterModes";
 
-function getTakenNames(existing, { exclude } = {}) {
+function getTakenValues(existing, pluck, { exclude } = {}) {
   return new Set(
-    existing
-      .map((item) => normalizePackName(item?.name))
-      .filter((name) => name && name !== exclude),
+    existing.map(pluck).filter((value) => value && value !== exclude),
+  );
+}
+
+function getTakenNames(existing, options) {
+  return getTakenValues(
+    existing,
+    (item) => normalizePackName(item?.name),
+    options,
   );
 }
 
 function getTakenIds(existing) {
-  return new Set(
-    existing
-      .map((item) =>
-        typeof item?.meta?.id === "string" ? item.meta.id.trim() : "",
-      )
-      .filter(Boolean),
+  return getTakenValues(existing, (item) =>
+    typeof item?.meta?.id === "string" ? item.meta.id.trim() : "",
   );
 }
 

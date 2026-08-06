@@ -11,6 +11,7 @@ export default function PracticePanelContainer({
   controlModel,
   reset,
   routinePlayback,
+  routineLiveDefaults,
 }) {
   return (
     <ErrorBoundary
@@ -33,7 +34,10 @@ export default function PracticePanelContainer({
           actions={controlModel.actions}
           meta={controlModel.meta}
         />
-        <TrainingRoutinesControls routinePlayback={routinePlayback} />
+        <TrainingRoutinesControls
+          routinePlayback={routinePlayback}
+          liveDefaults={routineLiveDefaults}
+        />
       </Section>
     </ErrorBoundary>
   );

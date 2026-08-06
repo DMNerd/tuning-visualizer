@@ -97,7 +97,9 @@ export function useAppOrchestration({
     resetTheory: theoryChord.resetTheory,
     setPreset: instrumentPresets.setPreset,
     setTheme,
-    stopMetronome: practiceMetronome.engine.stop,
+    // Routine-aware: a raw engine stop here would leave an active training
+    // routine's store/UI stuck if "Reset All" is used mid-routine.
+    stopMetronome: practiceMetronome.stopMetronomeOrRoutine,
     resetMetronomePrefs: practiceReset.resetMetronomePrefs,
     resetPracticeCounters: practiceReset.resetPracticeCounters,
     toast,

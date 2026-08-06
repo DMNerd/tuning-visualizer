@@ -8,9 +8,15 @@ function touch(patch) {
   return { ...patch, updatedAt: Date.now() };
 }
 
-export function useRoutineDraft(initialRoutine) {
+export function useRoutineDraft(initialRoutine, liveStartBlockDefaults) {
   const [draft, setDraft] = useState(
-    () => initialRoutine ?? createEmptyRoutine(),
+    () =>
+      initialRoutine ??
+      createEmptyRoutine(
+        liveStartBlockDefaults?.systemId,
+        liveStartBlockDefaults?.strings,
+        liveStartBlockDefaults?.presetName,
+      ),
   );
 
   // patchFn receives the current draft and returns either a partial patch to
@@ -26,8 +32,8 @@ export function useRoutineDraft(initialRoutine) {
     setDraft(routine ?? createEmptyRoutine());
   }, []);
 
-  const resetDraft = useCallback((systemId) => {
-    setDraft(createEmptyRoutine(systemId));
+  const resetDraft = useCallback((systemId, strings, presetName) => {
+    setDraft(createEmptyRoutine(systemId, strings, presetName));
   }, []);
 
   const renameDraft = useCallback(

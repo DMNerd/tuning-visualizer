@@ -5,7 +5,11 @@ import {
   selectRoutinePlaybackState,
 } from "@features/training/store/useRoutinePlaybackStore";
 
-export default function RoutineHudContainer({ routinePlayback }) {
+export default function RoutineHudContainer({
+  routinePlayback,
+  accidental,
+  noteNaming,
+}) {
   const { activeRoutine, stepIndex, elapsedBeats, isPaused } =
     useRoutinePlaybackStore(useShallow(selectRoutinePlaybackState));
 
@@ -20,6 +24,8 @@ export default function RoutineHudContainer({ routinePlayback }) {
       onPause={routinePlayback.pause}
       onResume={routinePlayback.resume}
       onStop={routinePlayback.stop}
+      accidental={accidental}
+      noteNaming={noteNaming}
     />
   );
 }

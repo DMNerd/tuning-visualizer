@@ -18,7 +18,7 @@ export function usePracticeMetronomeDomain({
   const metronomePrefs = metronome.prefs;
   const metronomeEngine = metronome.engine;
   const metronomeSetters = metronome.setters;
-  const { safeBarsPerScale, barsRemaining } = metronome;
+  const { safeBarsPerScale, barsRemaining, isRoutinePlaying } = metronome;
   const { resetPracticeCounters } = reset;
 
   const practicePanel = useMemo(
@@ -29,6 +29,7 @@ export function usePracticeMetronomeDomain({
         ...metronomeEngine,
         safeBarsPerScale,
         barsRemaining,
+        isRoutinePlaying,
       },
       controls: {
         ...metronomeSetters,
@@ -41,6 +42,7 @@ export function usePracticeMetronomeDomain({
       metronomeEngine,
       safeBarsPerScale,
       barsRemaining,
+      isRoutinePlaying,
       metronomeSetters,
       practiceActions,
       resetPracticeCounters,

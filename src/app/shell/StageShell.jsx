@@ -32,8 +32,7 @@ export default function StageShell({
     showFretNums,
     dotSize,
     lefty,
-    openOnlyInScale,
-    openOnlyInChord,
+    openOnlyInMode,
     colorByDegree,
     colorByShape,
     accidental,
@@ -62,7 +61,11 @@ export default function StageShell({
           onResetAll={() => resetAll({ confirm: true })}
           showPracticeHud={showPracticeHud}
         />
-        <RoutineHudContainer routinePlayback={routinePlayback} />
+        <RoutineHudContainer
+          routinePlayback={routinePlayback}
+          accidental={accidental}
+          noteNaming={noteNaming}
+        />
         <SafeSection onReset={onResetCapo}>
           <Fretboard
             ref={boardRef}
@@ -82,8 +85,7 @@ export default function StageShell({
             system={theoryDomain.system.system}
             chordPCs={theoryPanel.controlModel.meta.chordOverlayPcs}
             chordRootPc={theoryPanel.controlModel.meta.chordRootPc}
-            openOnlyInScale={openOnlyInScale}
-            openOnlyInChord={openOnlyInChord}
+            openOnlyInMode={openOnlyInMode}
             colorByDegree={colorByDegree}
             colorByShape={colorByShape}
             hideNonChord={theoryDomain.chord.hideNonChord}

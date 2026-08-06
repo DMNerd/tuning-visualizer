@@ -19,6 +19,7 @@ import {
   isNeckFilterMode,
   NECK_FILTER_MODES,
 } from "@domain/presets/neckFilterModes";
+import { isPlainObject } from "@shared/lib/object";
 
 type ShareValues = Partial<{
   systemId: string;
@@ -78,23 +79,18 @@ const SHARE_PACK_PAYLOAD_VERSION = 1;
 const SHARE_SELECTORS = SHARE_FIELD_SELECTORS;
 
 function normalizePackPayload(value: unknown): NormalizedPackPayload | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const pack = value as Record<string, unknown>;
+  if (!isPlainObject(value)) return null;
+  const pack = value;
   const name =
     typeof pack.name === "string" && pack.name.trim() ? pack.name.trim() : null;
   if (!name) return null;
 
   const tuning = pack.tuning;
-  if (!tuning || typeof tuning !== "object" || Array.isArray(tuning)) {
-    return null;
-  }
-  if (!Array.isArray((tuning as Record<string, unknown>).strings)) return null;
+  if (!isPlainObject(tuning) || !Array.isArray(tuning.strings)) return null;
 
   const system = pack.system;
-  if (!system || typeof system !== "object" || Array.isArray(system)) {
-    return null;
-  }
-  const edo = (system as Record<string, unknown>).edo;
+  if (!isPlainObject(system)) return null;
+  const edo = system.edo;
   if (typeof edo !== "number" || !Number.isFinite(edo)) return null;
 
   return {

@@ -241,10 +241,8 @@ export function getSystemLabel({
   // findSystemByEdo's truthy `metaId &&` check — otherwise a pack with
   // `meta.systemId: ""` shows a blank label instead of falling through to
   // the resolved match/edo below.
-  const metaLabel =
-    typeof metaSystemId === "string" && metaSystemId ? metaSystemId : null;
-  if (metaLabel !== null) {
-    return metaLabel;
+  if (typeof metaSystemId === "string" && metaSystemId) {
+    return metaSystemId;
   }
 
   if (match?.id) {

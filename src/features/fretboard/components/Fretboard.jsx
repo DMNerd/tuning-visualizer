@@ -84,8 +84,7 @@ const Fretboard = forwardRef(function Fretboard(
     system,
     chordPCs,
     chordRootPc,
-    openOnlyInScale,
-    openOnlyInChord,
+    openOnlyInMode,
     colorByDegree,
     colorByShape,
     hideNonChord,
@@ -359,25 +358,23 @@ const Fretboard = forwardRef(function Fretboard(
       const pc = (openPcByString[slot.s] + slot.step) % N;
       const inScale = scaleSet.has(pc);
       const inChord = chordPCs ? chordPCs.has(pc) : false;
+      // Open notes only ever count toward visibility when showOpen is on —
+      // shared by the chord-overlay term below and the hideNonChord branch.
+      const openVisible = !slot.isOpen || showOpen;
       const isOverlayOutsideScaleChord =
-        Boolean(chordPCs) &&
-        !hideNonChord &&
-        inChord &&
-        !inScale &&
-        (!slot.isOpen || showOpen);
+        Boolean(chordPCs) && !hideNonChord && inChord && !inScale && openVisible;
 
       let visible;
       if (hideNonChord && chordPCs) {
-        const baselineVisible = slot.isOpen ? showOpen : true;
-        visible = baselineVisible && inChord;
+        visible = openVisible && inChord;
       } else {
-        // openOnlyInChord only restricts opens while a chord is actually
-        // overlaid (chordPCs set) — with no chord active it would hide
-        // every open string, since inChord is always false without one.
+        // openOnlyInMode === "chord" only restricts opens while a chord is
+        // actually overlaid (chordPCs set) — with no chord active it would
+        // hide every open string, since inChord is always false without one.
         const baselineVisible = slot.isOpen
           ? showOpen &&
-            (!openOnlyInScale || inScale) &&
-            (!openOnlyInChord || !chordPCs || inChord)
+            (openOnlyInMode !== "scale" || inScale) &&
+            (openOnlyInMode !== "chord" || !chordPCs || inChord)
           : inScale;
         visible = baselineVisible || isOverlayOutsideScaleChord;
       }
@@ -387,9 +384,10 @@ const Fretboard = forwardRef(function Fretboard(
       // Open notes always have slot.f === 0, which would always read as
       // "standard" — for a string whose true position is offset by
       // stringMeta.startFret (non-12-TET partial-fret setups), the open
-      // note's actual fret is slot.sf, matching the correction already
-      // applied to its fret-number label below (globalFretForLabel).
-      const isStandard = ((slot.isOpen ? slot.sf : slot.f) * 12) % N === 0;
+      // note's actual fret is slot.sf, matching the correction the label
+      // below needs too, so both share this one computation.
+      const globalFretForLabel = slot.isOpen ? slot.sf : slot.f;
+      const isStandard = (globalFretForLabel * 12) % N === 0;
       const isMicro = !isStandard;
       const rBase =
         (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
@@ -416,7 +414,6 @@ const Fretboard = forwardRef(function Fretboard(
       const isChordOutsideScale = inChord && !inScale;
       if (isChordOutsideScale) fill = "var(--chord-outside-fill)";
 
-      const globalFretForLabel = slot.isOpen ? slot.sf : slot.f;
       const raw = labelFor(pc, slot.f);
       const label =
         show === "fret"
@@ -656,8 +653,7 @@ const Fretboard = forwardRef(function Fretboard(
     chordPCs,
     chordRootPc,
     showOpen,
-    openOnlyInScale,
-    openOnlyInChord,
+    openOnlyInMode,
     hideNonChord,
     rootIx,
     effectiveDotSize,
@@ -1272,8 +1268,7 @@ function areFretboardPropsEqual(prev, next) {
   if (!Object.is(prev.showFretNums, next.showFretNums)) return false;
   if (!Object.is(prev.dotSize, next.dotSize)) return false;
   if (!Object.is(prev.lefty, next.lefty)) return false;
-  if (!Object.is(prev.openOnlyInScale, next.openOnlyInScale)) return false;
-  if (!Object.is(prev.openOnlyInChord, next.openOnlyInChord)) return false;
+  if (!Object.is(prev.openOnlyInMode, next.openOnlyInMode)) return false;
   if (!Object.is(prev.colorByDegree, next.colorByDegree)) return false;
   if (!Object.is(prev.colorByShape, next.colorByShape)) return false;
   if (!Object.is(prev.hideNonChord, next.hideNonChord)) return false;

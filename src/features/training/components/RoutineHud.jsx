@@ -8,6 +8,8 @@ export default function RoutineHud({
   onPause,
   onResume,
   onStop,
+  accidental,
+  noteNaming,
 }) {
   if (!routine) return null;
 
@@ -27,7 +29,14 @@ export default function RoutineHud({
 
       <div className="tv-routine-hud__block">
         <span>{step.scaleLabel || "(no scale)"}</span>
-        <span>{nameForRootPc(routine.startBlock.systemId, step.rootPc)}</span>
+        <span>
+          {nameForRootPc(
+            routine.startBlock.systemId,
+            step.rootPc,
+            accidental,
+            noteNaming,
+          )}
+        </span>
         <span>{step.bpm} BPM</span>
         <span>{step.timeSig}</span>
       </div>

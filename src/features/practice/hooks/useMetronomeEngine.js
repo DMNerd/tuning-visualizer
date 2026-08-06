@@ -215,24 +215,20 @@ export function useMetronomePlayback({
     [setCursor],
   );
 
-  const scheduler = useCallback(() => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
+  // One count-in click: plain, unaccented, spaced a full beat apart, and
+  // never reaches scheduleBeatUiUpdate/onBeat — see countInRemainingRef.
+  const scheduleCountInStep = useCallback((ctx, secPerBeat) => {
+    scheduleClick(ctx, nextNoteTimeRef.current, {
+      accent: false,
+      subdivision: false,
+    });
+    countInRemainingRef.current -= 1;
+    nextNoteTimeRef.current += secPerBeat;
+  }, []);
 
-    const secPerBeat = 60 / safeBpm;
-    const secPerSubStep = secPerBeat / stepsPerBeat;
-
-    while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
-      if (countInRemainingRef.current > 0) {
-        scheduleClick(ctx, nextNoteTimeRef.current, {
-          accent: false,
-          subdivision: false,
-        });
-        countInRemainingRef.current -= 1;
-        nextNoteTimeRef.current += secPerBeat;
-        continue;
-      }
-
+  // One real (beat-and-bar-tracked) click, main or subdivision.
+  const scheduleBeatStep = useCallback(
+    (ctx, secPerSubStep) => {
       const stepInBeat = beatCursorRef.current % stepsPerBeat;
       const beatIndex = Math.floor(beatCursorRef.current / stepsPerBeat);
       const beatNumber = (beatIndex % beatsPerBar) + 1;
@@ -259,8 +255,25 @@ export function useMetronomePlayback({
 
       beatCursorRef.current += 1;
       nextNoteTimeRef.current += secPerSubStep;
+    },
+    [beatsPerBar, scheduleBeatUiUpdate, stepsPerBeat],
+  );
+
+  const scheduler = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    const secPerBeat = 60 / safeBpm;
+    const secPerSubStep = secPerBeat / stepsPerBeat;
+
+    while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
+      if (countInRemainingRef.current > 0) {
+        scheduleCountInStep(ctx, secPerBeat);
+      } else {
+        scheduleBeatStep(ctx, secPerSubStep);
+      }
     }
-  }, [beatsPerBar, safeBpm, scheduleBeatUiUpdate, stepsPerBeat]);
+  }, [safeBpm, stepsPerBeat, scheduleCountInStep, scheduleBeatStep]);
 
   const start = useCallback(async () => {
     if (isPlaying) return;
@@ -290,6 +303,11 @@ export function useMetronomePlayback({
   // cursor — otherwise every tempo nudge snaps the cursor back to beat
   // 1/bar 1 and fires a spurious real beat event for a boundary that never
   // happened.
+  //
+  // Deliberately a plain ref, not react-use's usePrevious: react-use ships
+  // as CJS, and `usePrevious` isn't resolved as a named export under
+  // Node's native ESM loader (only under a bundler like Vite) — it would
+  // crash any test that imports this module directly.
   const wasPlayingRef = useRef(false);
 
   useEffect(() => {

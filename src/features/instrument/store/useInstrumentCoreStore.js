@@ -101,6 +101,14 @@ function resolvePersistedNeckFilterMode(persistedState) {
 const LEGACY_CORE_KEYS = [STORAGE_KEYS.STRINGS, STORAGE_KEYS.FRETS];
 let shouldCleanupLegacyInstrumentCoreKeys = false;
 
+function applyTuningDraft(state, valueOrUpdater, { atomic = false } = {}) {
+  if (typeof valueOrUpdater === "function" && !Array.isArray(state.tuning)) {
+    state.tuning = [];
+  }
+  applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
+  if (atomic) state.tuningAtomicEpoch += 1;
+}
+
 export const useInstrumentCoreStore = create(
   persist(
     immer((set) => {
@@ -153,26 +161,11 @@ export const useInstrumentCoreStore = create(
             fretsTouched: true,
           }),
         setTuning: (valueOrUpdater) =>
-          set((state) => {
-            if (
-              typeof valueOrUpdater === "function" &&
-              !Array.isArray(state.tuning)
-            ) {
-              state.tuning = [];
-            }
-            applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
-          }),
+          set((state) => applyTuningDraft(state, valueOrUpdater)),
         setTuningAtomic: (valueOrUpdater) =>
-          set((state) => {
-            if (
-              typeof valueOrUpdater === "function" &&
-              !Array.isArray(state.tuning)
-            ) {
-              state.tuning = [];
-            }
-            applyValueOrUpdaterOnDraft(state, "tuning", valueOrUpdater);
-            state.tuningAtomicEpoch += 1;
-          }),
+          set((state) =>
+            applyTuningDraft(state, valueOrUpdater, { atomic: true }),
+          ),
         setStringMeta: (stringMeta) => set({ stringMeta }),
         updateStringMeta: (draftUpdater) =>
           set((state) => {

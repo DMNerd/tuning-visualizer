@@ -9,6 +9,10 @@ import {
   formatRandomizedScaleAnnouncement,
 } from "@features/theory";
 import {
+  useRoutinePlaybackStore,
+  selectIsRoutinePlaying,
+} from "@features/training";
+import {
   useMetronomePrefsStore,
   selectMetronomeHydrateWithDefaults,
   selectMetronomePrefs,
@@ -44,6 +48,12 @@ export default function usePracticePanelState({
   const setPracticeSecondsRemaining = useMetronomeEngineStore(
     (state) => state.setPracticeSecondsRemaining,
   );
+  // A training routine drives this same shared metronome engine (see
+  // @features/training's useRoutinePlayback). Practice needs to know when
+  // that's the case so it doesn't run its own timed-session/start-selection
+  // bookkeeping over a session it doesn't own, and so its Stop control tears
+  // the routine down properly instead of just killing the engine under it.
+  const isRoutinePlaying = useRoutinePlaybackStore(selectIsRoutinePlaying);
   const {
     randomizeNow,
     randomizeFromHotkey,
@@ -87,6 +97,7 @@ export default function usePracticePanelState({
   const practiceStartSelectionRef = useRef(null);
   const randomizedDuringPracticeRef = useRef(false);
   const isPlayingRef = useRef(false);
+  const isRoutineSessionRef = useRef(false);
 
   const capturePracticeStartSelection = useCallback(() => {
     if (practiceStartSelectionRef.current) return;
@@ -192,20 +203,6 @@ export default function usePracticePanelState({
     setBarsRemaining(safeBarsPerScale);
   }, [safeBarsPerScale, autoAdvanceEnabled]);
 
-  useEffect(() => {
-    const nextSecondsRemaining = sessionDurationSeconds;
-    secondsRemainingRef.current = nextSecondsRemaining;
-    practiceSessionEndTimeRef.current = null;
-    setSecondsRemaining(nextSecondsRemaining);
-    setPracticeSecondsRemaining(
-      timedPracticeEnabled ? nextSecondsRemaining : null,
-    );
-  }, [
-    sessionDurationSeconds,
-    setPracticeSecondsRemaining,
-    timedPracticeEnabled,
-  ]);
-
   const metronomeEngine = useMetronomePlayback({
     bpm,
     timeSig,
@@ -216,13 +213,46 @@ export default function usePracticePanelState({
   const isMetronomePlaying = metronomeEngine.isPlaying;
   const stopMetronome = metronomeEngine.stop;
 
-  useEffect(() => {
-    if (!isMetronomePlaying || !timedPracticeEnabled) return;
-
-    if (!practiceSessionEndTimeRef.current) {
-      const startSeconds = Math.max(1, secondsRemainingRef.current);
-      practiceSessionEndTimeRef.current = Date.now() + startSeconds * 1000;
+  // Stopping the engine directly while a routine owns it would leave the
+  // routine store stuck "playing" and autoAdvanceEnabled permanently
+  // disabled (see useRoutinePlayback.stop's cleanup). Route through the
+  // routine's own teardown when one is active instead.
+  const stopMetronomeOrRoutine = useCallback(() => {
+    const { activeRoutine, requestStop } = useRoutinePlaybackStore.getState();
+    if (activeRoutine && requestStop) {
+      requestStop();
+      return;
     }
+    stopMetronome();
+  }, [stopMetronome]);
+
+  // Owns the whole timed-practice countdown lifecycle in one place: reset
+  // the displayed remaining time whenever the configured duration changes,
+  // then (only while actually running one) own the interval that counts an
+  // active session down. Merged into a single effect specifically so
+  // "duration changed, forget the old end time" and "the running interval
+  // needs to notice and recompute it" can't drift apart — previously two
+  // separate effects shared practiceSessionEndTimeRef across an implicit
+  // ordering dependency (one nulled it, the other had to be re-triggered by
+  // an unrelated-looking dependency to notice), which is exactly the kind
+  // of thing that silently breaks if either effect's deps ever change.
+  useEffect(() => {
+    const nextSecondsRemaining = sessionDurationSeconds;
+    secondsRemainingRef.current = nextSecondsRemaining;
+    practiceSessionEndTimeRef.current = null;
+    setSecondsRemaining(nextSecondsRemaining);
+    setPracticeSecondsRemaining(
+      timedPracticeEnabled ? nextSecondsRemaining : null,
+    );
+
+    // A training routine defines its own length via its steps — Practice's
+    // independent session timer must not cut a routine off early.
+    if (!isMetronomePlaying || !timedPracticeEnabled || isRoutinePlaying) {
+      return undefined;
+    }
+
+    const startSeconds = Math.max(1, nextSecondsRemaining);
+    practiceSessionEndTimeRef.current = Date.now() + startSeconds * 1000;
 
     const intervalId = window.setInterval(() => {
       const endTime = practiceSessionEndTimeRef.current;
@@ -247,13 +277,9 @@ export default function usePracticePanelState({
 
     return () => window.clearInterval(intervalId);
   }, [
-    isMetronomePlaying,
-    // Not read directly in this effect, but editing the duration mid-play
-    // clears practiceSessionEndTimeRef.current in the effect above — this
-    // effect must re-run to notice that and reinitialize the end time,
-    // otherwise the still-running interval's `if (!endTime) return;` guard
-    // freezes the countdown for the rest of the session.
     sessionDurationSeconds,
+    isMetronomePlaying,
+    isRoutinePlaying,
     setPracticeSecondsRemaining,
     stopMetronome,
     timedPracticeEnabled,
@@ -261,13 +287,25 @@ export default function usePracticePanelState({
 
   useEffect(() => {
     if (isMetronomePlaying && !isPlayingRef.current) {
-      practiceStartSelectionRef.current = null;
-      randomizedDuringPracticeRef.current = false;
-      capturePracticeStartSelection();
+      // Decided once, at the moment this play session starts: a routine's
+      // own stop() clears activeRoutine before this effect can observe the
+      // matching false-transition below, so isRoutinePlaying can't be
+      // trusted there — this ref carries the answer across the session.
+      isRoutineSessionRef.current = isRoutinePlaying;
+      if (!isRoutineSessionRef.current) {
+        practiceStartSelectionRef.current = null;
+        randomizedDuringPracticeRef.current = false;
+        capturePracticeStartSelection();
+      }
     }
 
     if (!isMetronomePlaying && isPlayingRef.current) {
-      restorePracticeStartSelection();
+      // Restoring here would clobber a routine's final step root/scale with
+      // whatever was live before it started — that bookkeeping belongs to
+      // the routine, not Practice.
+      if (!isRoutineSessionRef.current) {
+        restorePracticeStartSelection();
+      }
       practiceStartSelectionRef.current = null;
       randomizedDuringPracticeRef.current = false;
       pendingRandomizedScaleRef.current = null;
@@ -277,12 +315,14 @@ export default function usePracticePanelState({
       setPracticeSecondsRemaining(
         timedPracticeEnabled ? sessionDurationSeconds : null,
       );
+      isRoutineSessionRef.current = false;
     }
 
     isPlayingRef.current = isMetronomePlaying;
   }, [
     capturePracticeStartSelection,
     isMetronomePlaying,
+    isRoutinePlaying,
     restorePracticeStartSelection,
     sessionDurationSeconds,
     setPracticeSecondsRemaining,
@@ -292,7 +332,7 @@ export default function usePracticePanelState({
   const practiceActions = usePracticeActions({
     isPlaying: isMetronomePlaying,
     startMetronome: metronomeEngine.start,
-    stopMetronome,
+    stopMetronome: stopMetronomeOrRoutine,
     setBpm: metronomeSetters.setBpm,
     randomizeNow: randomizeNowForPractice,
     randomizeFromHotkey,
@@ -348,6 +388,8 @@ export default function usePracticePanelState({
       safePracticeDurationMinutes,
       barsRemaining,
       secondsRemaining,
+      isRoutinePlaying,
+      stopMetronomeOrRoutine,
     }),
     [
       metronomePrefs,
@@ -357,6 +399,8 @@ export default function usePracticePanelState({
       safePracticeDurationMinutes,
       barsRemaining,
       secondsRemaining,
+      isRoutinePlaying,
+      stopMetronomeOrRoutine,
     ],
   );
   const reset = useMemo(

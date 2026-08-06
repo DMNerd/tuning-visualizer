@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
+import { createScopedStorage } from "@shared/lib/storage/scopedStorage";
 import { DISPLAY_DEFAULTS } from "@shared/config/appDefaults";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
@@ -16,12 +16,27 @@ const SETTER_KEYS = [
   "accidental",
   "noteNaming",
   "microLabelStyle",
-  "openOnlyInScale",
-  "openOnlyInChord",
+  "openOnlyInMode",
   "colorByDegree",
   "colorByShape",
   "lefty",
 ];
+
+// One-time upgrade for prefs persisted before openOnlyInScale/openOnlyInChord
+// were unified into a single openOnlyInMode field — only runs when loading
+// old localStorage data that predates the enum, never on fresh writes.
+function migrateOpenOnlyPrefs(prefs) {
+  if (!prefs || typeof prefs !== "object") return prefs;
+  if ("openOnlyInMode" in prefs) return prefs;
+  if (!("openOnlyInScale" in prefs) && !("openOnlyInChord" in prefs)) {
+    return prefs;
+  }
+  const { openOnlyInScale, openOnlyInChord, ...rest } = prefs;
+  return {
+    ...rest,
+    openOnlyInMode: openOnlyInChord ? "chord" : openOnlyInScale ? "scale" : "none",
+  };
+}
 
 export const useDisplayPrefsStore = create(
   persist(
@@ -51,14 +66,16 @@ export const useDisplayPrefsStore = create(
     }),
     {
       name: STORAGE_KEYS.DISPLAY_PREFS,
-      storage: createJSONStorage(() => createGlobalStorage()),
+      // Per-window-scoped, not global — matches useInstrumentCoreStore, so
+      // display prefs can differ per tab instead of leaking across them.
+      storage: createJSONStorage(() => createScopedStorage()),
       partialize: (state) => ({ prefs: state.prefs }),
       merge: (persisted, current) => ({
         ...current,
         ...persisted,
         prefs: {
           ...DISPLAY_DEFAULTS,
-          ...(persisted?.prefs || {}),
+          ...migrateOpenOnlyPrefs(persisted?.prefs || {}),
         },
       }),
       onRehydrateStorage: () => (state) => {

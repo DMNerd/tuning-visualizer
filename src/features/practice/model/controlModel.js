@@ -16,6 +16,7 @@ export function buildMetronomeControlModel({ metronome, controls }) {
       timedPracticeEnabled: metronome.timedPracticeEnabled,
       practiceDurationMinutes: metronome.safePracticeDurationMinutes,
       practiceSecondsRemaining: metronome.secondsRemaining,
+      isRoutinePlaying: metronome.isRoutinePlaying,
     },
     actions: {
       setBpm: controls.setBpm,

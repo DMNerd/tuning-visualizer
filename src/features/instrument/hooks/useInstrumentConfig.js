@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { usePrevious } from "react-use";
 import { useShallow } from "zustand/react/shallow";
+import { useTuningWasSetAtomically } from "@features/instrument/hooks/useTuningAtomicEpoch";
 import { useDrawFrets } from "@features/instrument/hooks/useDrawFrets";
 import { useCapo } from "@features/instrument/hooks/useCapo";
 import { useStringsChange } from "@features/instrument/hooks/useStringsChange";
@@ -120,7 +121,7 @@ export function useInstrumentConfig({
   }, [savedExists, saved, factoryDefault]);
 
   const prevSystemStringsKey = usePrevious(`${systemId}|${strings}`);
-  const prevTuningAtomicEpoch = usePrevious(tuningAtomicEpoch);
+  const tuningWasSetAtomically = useTuningWasSetAtomically(tuningAtomicEpoch);
   useEffect(() => {
     if (prevSystemStringsKey === undefined) {
       if (!Array.isArray(tuning) || tuning.length === 0) {
@@ -133,18 +134,14 @@ export function useInstrumentConfig({
       // Skip the auto-default if the tuning was *also* explicitly set
       // atomically alongside this system/strings change via
       // setTuningAtomic (e.g. applyResolvedTuning applying a specific
-      // preset) — only fall back to the default otherwise. This checks the
-      // store's tuningAtomicEpoch rather than tuning reference equality,
-      // since ordinary tuning writes (e.g. useStringsChange extending the
-      // array) also produce a new reference and must still get a default.
-      if (tuningAtomicEpoch === prevTuningAtomicEpoch) {
+      // preset) — only fall back to the default otherwise.
+      if (!tuningWasSetAtomically) {
         setTuning(getPreferredDefault());
       }
     }
   }, [
     prevSystemStringsKey,
-    tuningAtomicEpoch,
-    prevTuningAtomicEpoch,
+    tuningWasSetAtomically,
     systemId,
     strings,
     tuning,

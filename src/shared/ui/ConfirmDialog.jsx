@@ -12,7 +12,6 @@ export default function ConfirmDialog({
 }) {
   const skipFirstCleanup = useRef(true);
   const dismissRef = useRef(onDismiss);
-  const confirmButtonRef = useRef(null);
 
   useEffect(() => {
     dismissRef.current = onDismiss;
@@ -32,55 +31,23 @@ export default function ConfirmDialog({
     [],
   );
 
-  const handleCancel = useCallback(
-    (event) => {
-      event?.preventDefault?.();
-      if (typeof onCancel === "function") {
-        onCancel();
-      }
-    },
-    [onCancel],
-  );
+  const handleCancel = useCallback(() => {
+    onCancel?.();
+  }, [onCancel]);
 
-  const handleConfirm = useCallback(
-    (event) => {
-      event?.preventDefault?.();
-      if (typeof onConfirm === "function") {
-        onConfirm();
-      }
-    },
-    [onConfirm],
-  );
+  const handleConfirm = useCallback(() => {
+    onConfirm?.();
+  }, [onConfirm]);
 
   useKey((e) => e.key.toLowerCase() === "escape", handleCancel, undefined, [
     handleCancel,
   ]);
 
-  // Respect whichever button is actually focused (Cancel is autoFocus'd as
-  // the safe default) rather than always confirming — otherwise Enter/Space
-  // bypasses the visible focus state and can trigger a destructive action
-  // the user never selected. Falls back to Cancel when neither button has
-  // focus, keeping the same safe-by-default behavior autoFocus implies.
-  const handleEnterOrSpace = useCallback(
-    (event) => {
-      if (document.activeElement === confirmButtonRef.current) {
-        handleConfirm(event);
-        return;
-      }
-      handleCancel(event);
-    },
-    [handleCancel, handleConfirm],
-  );
-
-  useKey(
-    (e) => {
-      const k = e.key.toLowerCase();
-      return k === "enter" || k === " ";
-    },
-    handleEnterOrSpace,
-    undefined,
-    [handleEnterOrSpace],
-  );
+  // No JS handling for Enter/Space: Cancel is autoFocus'd as the safe
+  // default, and a native <button> already activates (fires click) on
+  // Enter/Space when it has focus — respecting whichever button the user
+  // actually tabbed to, for free, instead of reimplementing that dispatch
+  // imperatively via document.activeElement.
 
   return (
     <div
@@ -105,7 +72,6 @@ export default function ConfirmDialog({
           {cancelText}
         </button>
         <button
-          ref={confirmButtonRef}
           type="button"
           onClick={handleConfirm}
           className="tv-overlay__button tv-overlay__button--accent"

@@ -43,8 +43,11 @@ export default function RoutineBuilderModal({
   initialRoutine,
   onConsumedInitialRoutine,
   routinePlayback,
+  liveDefaults,
 }) {
   const { confirm } = useConfirm();
+  const accidental = liveDefaults?.accidental;
+  const noteNaming = liveDefaults?.noteNaming;
   // Single-field selectors, not the full playback state — this modal only
   // needs to know what/whether something is playing, not live beat
   // progress, and it stays mounted (just hidden) for the whole playback
@@ -64,7 +67,7 @@ export default function RoutineBuilderModal({
     updateScaleBlock,
     removeScaleBlock,
     moveScaleBlock,
-  } = useRoutineDraft(initialRoutine);
+  } = useRoutineDraft(initialRoutine, liveDefaults);
 
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
@@ -76,6 +79,25 @@ export default function RoutineBuilderModal({
     loadDraft(initialRoutine);
     onConsumedInitialRoutineRef.current?.();
   }, [initialRoutine, loadDraft, onConsumedInitialRoutineRef]);
+
+  // Re-seed the Start block from the app's *current* tuning every time the
+  // builder is opened fresh (not loading an imported/edited routine) — this
+  // hook only mounts once for the app's lifetime, so without this the draft
+  // would otherwise be stuck on whatever tuning was live the first time the
+  // builder ever opened. Only touches a still-pristine draft (untouched
+  // name, no scale blocks yet) so it never clobbers in-progress work.
+  const draftRef = useLatest(draft);
+  const liveDefaultsRef = useLatest(liveDefaults);
+  const resetDraftRef = useLatest(resetDraft);
+  useEffect(() => {
+    if (!isOpen || initialRoutine) return;
+    const live = liveDefaultsRef.current;
+    const currentDraft = draftRef.current;
+    const isPristine =
+      !currentDraft.name.trim() && currentDraft.steps.length === 0;
+    if (!isPristine || !live) return;
+    resetDraftRef.current(live.systemId, live.strings, live.presetName);
+  }, [isOpen, initialRoutine, draftRef, liveDefaultsRef, resetDraftRef]);
 
   const systemIds = useMemo(() => Object.keys(TUNINGS), []);
   const divisions = TUNINGS[draft.startBlock.systemId]?.divisions ?? 12;
@@ -325,7 +347,12 @@ export default function RoutineBuilderModal({
                     >
                       {rootPcOptions.map((pc) => (
                         <option key={pc} value={pc}>
-                          {nameForRootPc(draft.startBlock.systemId, pc)}
+                          {nameForRootPc(
+                            draft.startBlock.systemId,
+                            pc,
+                            accidental,
+                            noteNaming,
+                          )}
                         </option>
                       ))}
                     </select>
@@ -390,7 +417,13 @@ export default function RoutineBuilderModal({
             <button
               type="button"
               className="tv-button"
-              onClick={() => resetDraft(draft.startBlock.systemId)}
+              onClick={() =>
+                resetDraft(
+                  liveDefaults?.systemId ?? draft.startBlock.systemId,
+                  liveDefaults?.strings,
+                  liveDefaults?.presetName,
+                )
+              }
             >
               New routine
             </button>

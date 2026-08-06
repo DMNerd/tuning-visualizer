@@ -97,7 +97,9 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
   assert.equal(typeof state.setters.setTimedPracticeEnabled, "function");
   assert.equal(typeof state.setters.setPracticeDurationMinutes, "function");
 
-  const persisted = readStoredJson(STORAGE_KEYS.METRONOME_PREFS);
+  // Metronome prefs persist per-window now, so the migrated payload lands
+  // on the scoped key, not the legacy unscoped one it was read from.
+  const persisted = readStoredJson(scopeKey(STORAGE_KEYS.METRONOME_PREFS));
   assert.equal(typeof persisted, "object");
   assert.equal(typeof persisted?.state, "object");
   assert.equal(typeof persisted?.state?.prefs, "object");
@@ -479,26 +481,31 @@ test("display prefs store hydrates via globalThis localStorage adapter", async (
 });
 
 test("global stores migrate scoped payloads back to unscoped keys", async () => {
+  // Saved routines/custom tunings are intentionally global (curated user
+  // data that should look identical in every tab) — theme, display prefs,
+  // theory, and metronome prefs are per-window now, so this store is the
+  // remaining example of createGlobalStorage()'s reverse-migration behavior.
   storage.clear();
   sessionStorage.clear();
+  const routines = [{ id: "r1", name: "Warmup" }];
   storage.setItem(
-    scopeKey(STORAGE_KEYS.THEME),
+    scopeKey(STORAGE_KEYS.TRAINING_ROUTINES),
     JSON.stringify({
-      state: { theme: "dark" },
-      version: 0,
+      state: { routines },
+      version: 1,
     }),
   );
 
-  const { useThemeStore } = await importFresh(
-    "@features/display/store/useThemeStore.js",
+  const { useTrainingRoutineStore } = await importFresh(
+    "@features/training/store/useTrainingRoutineStore.js",
   );
-  await useThemeStore.persist.rehydrate();
+  await useTrainingRoutineStore.persist.rehydrate();
 
-  const unscopedPersisted = readStoredJson(STORAGE_KEYS.THEME);
-  assert.equal(useThemeStore.getState().theme, "dark");
+  const unscopedPersisted = readStoredJson(STORAGE_KEYS.TRAINING_ROUTINES);
+  assert.deepEqual(useTrainingRoutineStore.getState().routines, routines);
   assert.equal(typeof unscopedPersisted, "object");
-  assert.equal(unscopedPersisted?.state?.theme, "dark");
-  assert.equal(storage.getItem(scopeKey(STORAGE_KEYS.THEME)), null);
+  assert.deepEqual(unscopedPersisted?.state?.routines, routines);
+  assert.equal(storage.getItem(scopeKey(STORAGE_KEYS.TRAINING_ROUTINES)), null);
 });
 
 test("value-or-updater setters preserve direct assignment and updater semantics", async () => {
@@ -759,7 +766,16 @@ test("resetAllStores only clears instrument scoped keys for the active window", 
     scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowB),
     JSON.stringify({ state: { strings: 5 }, version: 2 }),
   );
-  storage.setItem(STORAGE_KEYS.DISPLAY_PREFS, JSON.stringify({ state: {} }));
+  // Display prefs are per-window now too (same as instrument core), so its
+  // pre-existing data lives at the scoped key, not the legacy unscoped one.
+  storage.setItem(
+    scopedKeyForWindow(STORAGE_KEYS.DISPLAY_PREFS, windowA),
+    JSON.stringify({ state: {} }),
+  );
+  storage.setItem(
+    scopedKeyForWindow(STORAGE_KEYS.DISPLAY_PREFS, windowB),
+    JSON.stringify({ state: {} }),
+  );
   storage.setItem(STORAGE_KEYS.CUSTOM_TUNINGS, JSON.stringify({ state: [] }));
 
   const { resetAllStores } = await importFresh("@shared/lib/resetAllStores.js");
@@ -773,7 +789,14 @@ test("resetAllStores only clears instrument scoped keys for the active window", 
     storage.getItem(scopedKeyForWindow(STORAGE_KEYS.INSTRUMENT_CORE, windowB)),
     null,
   );
-  assert.equal(storage.getItem(STORAGE_KEYS.DISPLAY_PREFS), null);
+  assert.equal(
+    storage.getItem(scopedKeyForWindow(STORAGE_KEYS.DISPLAY_PREFS, windowA)),
+    null,
+  );
+  assert.notEqual(
+    storage.getItem(scopedKeyForWindow(STORAGE_KEYS.DISPLAY_PREFS, windowB)),
+    null,
+  );
   assert.equal(storage.getItem(STORAGE_KEYS.CUSTOM_TUNINGS), null);
 });
 

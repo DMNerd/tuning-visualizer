@@ -2,7 +2,10 @@ import { useCallback, useState } from "react";
 import RoutineBuilderModal from "@features/training/components/RoutineBuilderModal";
 import { useTrainingRoutineUrlHydration } from "@features/training/hooks/useTrainingRoutineUrlHydration";
 
-export default function TrainingRoutinesControls({ routinePlayback }) {
+export default function TrainingRoutinesControls({
+  routinePlayback,
+  liveDefaults,
+}) {
   const [isBuilderOpen, setBuilderOpen] = useState(false);
   const [importedRoutine, setImportedRoutine] = useState(null);
 
@@ -31,6 +34,7 @@ export default function TrainingRoutinesControls({ routinePlayback }) {
         initialRoutine={importedRoutine}
         onConsumedInitialRoutine={() => setImportedRoutine(null)}
         routinePlayback={routinePlayback}
+        liveDefaults={liveDefaults}
       />
     </div>
   );
