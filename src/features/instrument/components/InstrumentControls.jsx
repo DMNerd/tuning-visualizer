@@ -1,3 +1,4 @@
+import { lazy, useState } from "react";
 import clsx from "clsx";
 import Section from "@shared/ui/Section";
 import PresetPicker from "@features/instrument/components/PresetPicker";
@@ -11,12 +12,18 @@ import { withToastPromise } from "@shared/lib/toast";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import NumberField from "@shared/ui/NumberField";
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
+import SafeLazyModal from "@shared/ui/SafeLazyModal";
 import { renderNoteName } from "@domain/theory/notation";
 import { normalizeIntlNoteName } from "@domain/theory/notation";
 import {
   coerceNeckFilterMode,
   getNeckFilterOptions,
 } from "@domain/presets/neckFilterModes";
+
+const PresetGalleryModal = lazy(
+  () => import("@features/instrument/components/PresetGalleryModal"),
+);
+
 function InstrumentControls({ state, actions, meta }) {
   const { strings, frets, tuning, systemId, selectedPreset, neckFilterMode } =
     state;
@@ -25,21 +32,16 @@ function InstrumentControls({ state, actions, meta }) {
     setSystemId,
     setTuning,
     handleStringsChange,
-    setSelectedPreset,
+    selectPresetEntry,
     handleSaveDefault,
     setNeckFilterMode,
     handleResetFactoryDefault,
     onCreateCustomPack,
     onEditCustomPack,
   } = actions;
-  const {
-    systems,
-    sysNames,
-    noteNaming,
-    presetNames,
-    customPresetNames,
-    presetMetaMap,
-  } = meta;
+  const { systems, sysNames, noteNaming, customPresetNames, presetCatalog } =
+    meta;
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const safeSystems = systems ?? {};
   const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
   const safeTuning = Array.isArray(tuning) ? tuning : [];
@@ -179,13 +181,29 @@ function InstrumentControls({ state, actions, meta }) {
           <label htmlFor="preset">Preset</label>
           <PresetPicker
             id="preset"
-            presetNames={presetNames}
+            presetCatalog={presetCatalog}
+            currentStrings={strings}
             selectedPreset={selectedPreset}
-            onSelect={setSelectedPreset}
-            customPresetNames={customPresetNames}
-            presetMetaMap={presetMetaMap}
+            onSelectEntry={selectPresetEntry}
+            onOpenGallery={() => setIsGalleryOpen(true)}
           />
         </div>
+
+        <SafeLazyModal
+          isOpen={isGalleryOpen}
+          resetKeys={[isGalleryOpen]}
+          label="preset gallery"
+        >
+          <PresetGalleryModal
+            isOpen={isGalleryOpen}
+            onClose={() => setIsGalleryOpen(false)}
+            presetCatalog={presetCatalog}
+            currentStrings={strings}
+            selectedPreset={selectedPreset}
+            noteNaming={noteNaming}
+            onSelectEntry={selectPresetEntry}
+          />
+        </SafeLazyModal>
 
         <div className="tv-controls__preset-actions">
           <button
@@ -246,14 +264,13 @@ function pickInstrumentMemoProps(p) {
     systems: m.systems,
     sysNames: m.sysNames,
     noteNaming: m.noteNaming,
-    presetNames: m.presetNames,
     customPresetNames: m.customPresetNames,
-    presetMetaMap: m.presetMetaMap,
+    presetCatalog: m.presetCatalog,
     setFrets: a.setFrets,
     setSystemId: a.setSystemId,
     setTuning: a.setTuning,
     handleStringsChange: a.handleStringsChange,
-    setSelectedPreset: a.setSelectedPreset,
+    selectPresetEntry: a.selectPresetEntry,
     handleSaveDefault: a.handleSaveDefault,
     setNeckFilterMode: a.setNeckFilterMode,
     handleResetFactoryDefault: a.handleResetFactoryDefault,

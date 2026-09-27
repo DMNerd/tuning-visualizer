@@ -11,102 +11,26 @@ import {
   FRETS_MAX,
 } from "@shared/config/appDefaults";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-import {
-  createScopedStorage,
-  getLocalStorage,
-  readLegacyJSON,
-} from "@shared/lib/storage/scopedStorage";
+import { createScopedStorage } from "@shared/lib/storage/scopedStorage";
 import { clamp, clampNumeric } from "@shared/lib/math";
-import { isPlainObject } from "@shared/lib/object";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
 import {
   coerceNeckFilterMode,
   NECK_FILTER_MODES,
 } from "@domain/presets/neckFilterModes";
-
-let lastSerializedGlobalDefaultTuningMap = null;
-
-function readLegacyNumber(key, min, max, fallback) {
-  const storage = getLocalStorage();
-  if (!storage) return { value: fallback, found: false };
-  const raw = storage.getItem(key);
-  return {
-    value: clampNumeric(raw, min, max, fallback),
-    found: raw !== null,
-  };
-}
-
-function readLegacyInstrumentCore() {
-  const strings = readLegacyNumber(
-    STORAGE_KEYS.STRINGS,
-    STR_MIN,
-    STR_MAX,
-    STR_FACTORY,
-  );
-  const frets = readLegacyNumber(
-    STORAGE_KEYS.FRETS,
-    FRETS_MIN,
-    FRETS_MAX,
-    FRETS_FACTORY,
-  );
-  const defaults = readLegacyDefaultTuningMap();
-  return {
-    strings,
-    frets,
-    defaults,
-    hasLegacyKeys: strings.found || frets.found || defaults.found,
-  };
-}
-
-function readLegacyDefaultTuningMap() {
-  const storage = getLocalStorage();
-  if (!storage) return { value: {}, found: false };
-
-  const raw = storage.getItem(STORAGE_KEYS.USER_DEFAULT_TUNING);
-  if (!raw) return { value: {}, found: false };
-
-  const parsed = readLegacyJSON(STORAGE_KEYS.USER_DEFAULT_TUNING);
-  if (isPlainObject(parsed)) {
-    lastSerializedGlobalDefaultTuningMap = raw;
-  }
-  return { value: isPlainObject(parsed) ? parsed : {}, found: true };
-}
-
-function serializeDefaultTuningMap(value) {
-  return JSON.stringify(
-    value && typeof value === "object" && !Array.isArray(value) ? value : {},
-  );
-}
-
-function syncGlobalDefaultTunings(value) {
-  if (typeof globalThis.localStorage === "undefined") return;
-  const serialized = serializeDefaultTuningMap(value);
-  if (serialized === lastSerializedGlobalDefaultTuningMap) {
-    return;
-  }
-  try {
-    globalThis.localStorage.setItem(
-      STORAGE_KEYS.USER_DEFAULT_TUNING,
-      serialized,
-    );
-    lastSerializedGlobalDefaultTuningMap = serialized;
-  } catch {
-    // Ignore write failures.
-  }
-}
-
-function isValidPersistedMap(value) {
-  return !!(value && typeof value === "object" && !Array.isArray(value));
-}
+import {
+  cleanupLegacyInstrumentCoreKeys,
+  markLegacyInstrumentCoreKeysForCleanup,
+  primeGlobalDefaultTuningCache,
+  readLegacyInstrumentCore,
+  syncGlobalDefaultTunings,
+} from "@features/instrument/store/instrumentCoreLegacyStorage";
 
 function resolvePersistedNeckFilterMode(persistedState) {
   return coerceNeckFilterMode(
     persistedState?.neckFilterMode ?? NECK_FILTER_MODES.NONE,
   );
 }
-
-const LEGACY_CORE_KEYS = [STORAGE_KEYS.STRINGS, STORAGE_KEYS.FRETS];
-let shouldCleanupLegacyInstrumentCoreKeys = false;
 
 function applyTuningDraft(state, valueOrUpdater, { atomic = false } = {}) {
   if (typeof valueOrUpdater === "function" && !Array.isArray(state.tuning)) {
@@ -119,18 +43,23 @@ function applyTuningDraft(state, valueOrUpdater, { atomic = false } = {}) {
 export const useInstrumentCoreStore = create(
   persist(
     immer((set) => {
+      const updateUserDefaultTuningMap = (valueOrUpdater) =>
+        set((state) => {
+          applyValueOrUpdaterOnDraft(
+            state,
+            "userDefaultTuningMap",
+            valueOrUpdater,
+          );
+          syncGlobalDefaultTunings(state.userDefaultTuningMap);
+        });
       const {
         strings: legacyStrings,
         frets: legacyFrets,
         defaults: legacyDefaults,
         hasLegacyKeys,
       } = readLegacyInstrumentCore();
-      lastSerializedGlobalDefaultTuningMap = serializeDefaultTuningMap(
-        legacyDefaults.value,
-      );
-      if (hasLegacyKeys) {
-        shouldCleanupLegacyInstrumentCoreKeys = true;
-      }
+      primeGlobalDefaultTuningCache(legacyDefaults.value);
+      if (hasLegacyKeys) markLegacyInstrumentCoreKeysForCleanup();
       return {
         strings: legacyStrings.value,
         frets: legacyFrets.value,
@@ -173,34 +102,13 @@ export const useInstrumentCoreStore = create(
           }),
         setBoardMeta: (boardMeta) => set({ boardMeta }),
         setNeckFilterMode: (neckFilterMode) =>
-          set(() => {
-            const nextMode = coerceNeckFilterMode(neckFilterMode);
-            return {
-              neckFilterMode: nextMode,
-            };
-          }),
+          set({ neckFilterMode: coerceNeckFilterMode(neckFilterMode) }),
         updateBoardMeta: (draftUpdater) =>
           set((state) => {
             applyValueOrUpdaterOnDraft(state, "boardMeta", draftUpdater);
           }),
-        setUserDefaultTuningMap: (valueOrUpdater) =>
-          set((state) => {
-            applyValueOrUpdaterOnDraft(
-              state,
-              "userDefaultTuningMap",
-              valueOrUpdater,
-            );
-            syncGlobalDefaultTunings(state.userDefaultTuningMap);
-          }),
-        updateUserDefaultTuningMap: (draftUpdater) =>
-          set((state) => {
-            applyValueOrUpdaterOnDraft(
-              state,
-              "userDefaultTuningMap",
-              draftUpdater,
-            );
-            syncGlobalDefaultTunings(state.userDefaultTuningMap);
-          }),
+        setUserDefaultTuningMap: updateUserDefaultTuningMap,
+        updateUserDefaultTuningMap,
         resetInstrumentPrefs: (nextStringsFactory, nextFretsFactory) =>
           set({
             strings: nextStringsFactory,
@@ -240,9 +148,7 @@ export const useInstrumentCoreStore = create(
         } = readLegacyInstrumentCore();
 
         if (!hasPersisted) {
-          if (hasLegacyKeys) {
-            shouldCleanupLegacyInstrumentCoreKeys = true;
-          }
+          if (hasLegacyKeys) markLegacyInstrumentCoreKeysForCleanup();
           return {
             strings: legacyStrings.value,
             frets: legacyFrets.value,
@@ -267,11 +173,9 @@ export const useInstrumentCoreStore = create(
             legacyFrets.value,
           ),
           neckFilterMode: persistedNeckFilterMode,
-          userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
-            ? legacyDefaults.value
-            : isValidPersistedMap(persistedState.userDefaultTuningMap)
-              ? persistedState.userDefaultTuningMap
-              : legacyDefaults.value,
+          // The global map is always a plain object and always wins over the
+          // per-window persisted copy.
+          userDefaultTuningMap: legacyDefaults.value,
         };
       },
       partialize: (state) => ({
@@ -290,14 +194,12 @@ export const useInstrumentCoreStore = create(
           defaults: legacyDefaults,
           hasLegacyKeys,
         } = readLegacyInstrumentCore();
-        if (hasLegacyKeys) {
-          shouldCleanupLegacyInstrumentCoreKeys = true;
-        }
+        if (hasLegacyKeys) markLegacyInstrumentCoreKeysForCleanup();
         const mergedNeckFilterMode = resolvePersistedNeckFilterMode(persisted);
 
         return {
           ...current,
-          ...(persisted || {}),
+          ...persisted,
           strings: clampNumeric(
             persisted?.strings,
             STR_MIN,
@@ -311,21 +213,13 @@ export const useInstrumentCoreStore = create(
             legacyFrets.found ? legacyFrets.value : FRETS_FACTORY,
           ),
           neckFilterMode: mergedNeckFilterMode,
-          userDefaultTuningMap: isValidPersistedMap(legacyDefaults.value)
-            ? legacyDefaults.value
-            : isValidPersistedMap(persisted?.userDefaultTuningMap)
-              ? persisted.userDefaultTuningMap
-              : legacyDefaults.value,
+          userDefaultTuningMap: legacyDefaults.value,
         };
       },
       onRehydrateStorage: () => (_state, error) => {
         _state?.setHydrated?.(true);
-        if (error || !shouldCleanupLegacyInstrumentCoreKeys) return;
-        shouldCleanupLegacyInstrumentCoreKeys = false;
-        if (typeof globalThis.localStorage === "undefined") return;
-        for (const key of LEGACY_CORE_KEYS) {
-          globalThis.localStorage.removeItem(key);
-        }
+        if (error) return;
+        cleanupLegacyInstrumentCoreKeys();
       },
     },
   ),

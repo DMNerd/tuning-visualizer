@@ -13,7 +13,13 @@ import {
   resolvePresetNeckFilterMode,
   resolveNeckFilterModeIntentFromBoardMeta,
 } from "@domain/presets/neckFilterModes";
-import { isPlainObject } from "@shared/lib/object";
+import {
+  areTuningsEqual,
+  filterCompatibleCustoms,
+  findPackByName,
+  omitReservedPresetNames,
+} from "@features/instrument/model/presetMerging";
+import { applyResolvedTuning } from "@shared/lib/applyResolvedTuning";
 import { useTuningWasSetAtomically } from "@features/instrument/hooks/useTuningAtomicEpoch";
 import {
   coerceAnyTuning,
@@ -26,31 +32,13 @@ import {
   selectWorkflowSelectedPreset,
 } from "@features/instrument/store/useInstrumentWorkflowStore";
 
-const RESERVED_PRESET_NAMES = new Set(["Factory default", "Saved default"]);
-
-function omitReservedPresetNames(map) {
-  const out = {};
-  for (const [name, value] of Object.entries(map || {})) {
-    if (RESERVED_PRESET_NAMES.has(name)) continue;
-    out[name] = value;
-  }
-  return out;
-}
-
-function areTuningsEqual(a, b) {
-  if (!Array.isArray(a) || !Array.isArray(b)) return false;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i += 1) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 export function useMergedPresets({
   presetMap,
   presetMetaMap,
   customTunings,
   setTuning,
+  setTuningAtomic,
+  setStrings,
   setStringMeta,
   setBoardMeta,
   currentEdo,
@@ -68,26 +56,10 @@ export function useMergedPresets({
   const onInstrumentChangeRef = useLatest(onInstrumentChange);
   const currentTuningRef = useLatest(currentTuning);
 
-  const compatibleCustoms = useMemo(() => {
-    if (!Array.isArray(customTunings) || !customTunings.length) return [];
-    const edo = Number(currentEdo);
-    const sc = Number(currentStrings);
-    return customTunings.filter((t) => {
-      if (!isPlainObject(t) || !Array.isArray(t?.tuning?.strings)) {
-        return false;
-      }
-
-      const tEdo = Number(t?.system?.edo);
-      const tStrings = t.tuning.strings.length;
-      const stringsMatch =
-        Number.isFinite(sc) && Number.isFinite(tStrings)
-          ? tStrings === sc
-          : true;
-      const edoMatch =
-        Number.isFinite(edo) && Number.isFinite(tEdo) ? tEdo === edo : true;
-      return stringsMatch && edoMatch;
-    });
-  }, [customTunings, currentEdo, currentStrings]);
+  const compatibleCustoms = useMemo(
+    () => filterCompatibleCustoms(customTunings, currentEdo, currentStrings),
+    [customTunings, currentEdo, currentStrings],
+  );
 
   const customPresetNames = useMemo(
     () =>
@@ -155,11 +127,8 @@ export function useMergedPresets({
       if (!name) return null;
       const fromMerged = coerceAnyTuning(mergedPresetMap?.[name]);
       if (fromMerged?.length) return fromMerged;
-      const fromPack = Array.isArray(compatibleCustoms)
-        ? compatibleCustoms.find((p) => p?.name === name)
-        : null;
-      if (!fromPack) return null;
-      return coerceAnyTuning(fromPack);
+      const fromPack = findPackByName(compatibleCustoms, name);
+      return fromPack ? coerceAnyTuning(fromPack) : null;
     },
     [mergedPresetMap, compatibleCustoms],
   );
@@ -192,11 +161,8 @@ export function useMergedPresets({
       }
       const meta =
         normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
-        normalizePresetMeta(
-          (compatibleCustoms.find((p) => p?.name === name) || {})?.meta,
-        );
-      if (meta?.stringMeta) setStringMeta(meta.stringMeta);
-      else setStringMeta(null);
+        normalizePresetMeta(findPackByName(compatibleCustoms, name)?.meta);
+      setStringMeta(meta?.stringMeta || null);
 
       const presetMode = resolveNeckFilterModeIntentFromBoardMeta(meta?.board);
       const resolvedNeckFilterMode = resolvePresetNeckFilterMode({
@@ -213,8 +179,7 @@ export function useMergedPresets({
         edo: currentEdo,
         strings: currentStrings,
       });
-      if (nextBoardMeta) setBoardMeta(nextBoardMeta);
-      else setBoardMeta(null);
+      setBoardMeta(nextBoardMeta || null);
       setQueuedPresetName(null);
     },
     [
@@ -231,6 +196,48 @@ export function useMergedPresets({
       setNeckFilterMode,
       currentTuningRef,
       selectedPreset,
+      setSelectedPreset,
+      setQueuedPresetName,
+    ],
+  );
+
+  // Selects a catalog entry that may belong to a different string count. For
+  // other counts the strings + tuning are switched atomically and the name is
+  // queued, so the queued-preset effect applies its meta once the merged map
+  // for the new count exists.
+  const selectPresetEntry = useCallback(
+    (entry) => {
+      const name = entry?.name;
+      if (typeof name !== "string" || !name) return;
+      const entryStrings = Number(entry.strings);
+      const isOtherCount =
+        Number.isFinite(entryStrings) &&
+        Number.isFinite(currentStrings) &&
+        entryStrings !== currentStrings;
+      if (!isOtherCount || !Array.isArray(entry.tuning)) {
+        setPreset(name);
+        return;
+      }
+      if (!isMounted()) return;
+      applyResolvedTuning({
+        setStrings,
+        setTuning,
+        setTuningAtomic,
+        systemId,
+        strings: entryStrings,
+        tuning: entry.tuning,
+      });
+      setSelectedPreset(name);
+      setQueuedPresetName(name);
+    },
+    [
+      currentStrings,
+      isMounted,
+      setPreset,
+      setStrings,
+      setTuning,
+      setTuningAtomic,
+      systemId,
       setSelectedPreset,
       setQueuedPresetName,
     ],
@@ -333,9 +340,9 @@ export function useMergedPresets({
     const instrumentChanged =
       prevSystemId !== systemId || prevStrings !== strings;
     if (!instrumentChanged) return;
-    setStringMeta(null);
-    setBoardMeta(null);
     if (typeof onInstrumentChangeRef.current === "function") {
+      setStringMeta(null);
+      setBoardMeta(null);
       onInstrumentChangeRef.current({
         queuePresetByName,
         resetSelection,
@@ -346,8 +353,12 @@ export function useMergedPresets({
     // Skip resetting to the default preset (which would overwrite the
     // tuning via setPreset) if the tuning was *also* explicitly set
     // atomically alongside this system/strings change via setTuningAtomic
-    // — e.g. applyResolvedTuning applying a specific preset.
+    // — e.g. applyResolvedTuning applying a specific preset. The caller owns
+    // string/board meta in that case too (the queued preset or share payload
+    // sets it), so don't clear what an earlier effect in this commit applied.
     if (tuningWasSetAtomically) return;
+    setStringMeta(null);
+    setBoardMeta(null);
     resetSelection();
     if (defaultPresetName) {
       queuePresetByName(defaultPresetName);
@@ -374,6 +385,7 @@ export function useMergedPresets({
       customPresetNames,
       selectedPreset,
       setPreset,
+      selectPresetEntry,
       resetSelection,
       queuePresetByName,
     }),
@@ -384,6 +396,7 @@ export function useMergedPresets({
       customPresetNames,
       selectedPreset,
       setPreset,
+      selectPresetEntry,
       resetSelection,
       queuePresetByName,
     ],

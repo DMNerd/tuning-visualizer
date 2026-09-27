@@ -66,6 +66,22 @@ export type WindowShapeOptions = {
   width: number;
 };
 
+function assertValidFretRange(fretMin: number, fretMax: number): void {
+  if (
+    !Number.isInteger(fretMin) ||
+    !Number.isInteger(fretMax) ||
+    fretMax < fretMin
+  ) {
+    throw new Error("Invalid fret range");
+  }
+}
+
+function assertPositiveWidth(width: number): void {
+  if (!Number.isInteger(width) || width < 1) {
+    throw new Error("width must be a positive integer");
+  }
+}
+
 export function mod(value: number, n: number): number {
   if (!Number.isInteger(n) || n <= 0) {
     throw new Error("n must be a positive integer");
@@ -142,13 +158,7 @@ export function propagateFretToRange(
   if (!Number.isInteger(fretOnStringI)) {
     throw new Error("fretOnStringI must be an integer");
   }
-  if (
-    !Number.isInteger(fretMin) ||
-    !Number.isInteger(fretMax) ||
-    fretMax < fretMin
-  ) {
-    throw new Error("Invalid fret range");
-  }
+  assertValidFretRange(fretMin, fretMax);
 
   const delta = mod(tuning[stringJ] - tuning[stringI], n);
   const base = fretOnStringI - delta;
@@ -164,6 +174,46 @@ export function propagateFretToRange(
   return out;
 }
 
+function anchorPcFor(
+  rootLocation: RootLocation | undefined,
+  normalizedTuning: readonly number[],
+  n: number,
+): number | undefined {
+  if (!rootLocation) return undefined;
+  if (
+    rootLocation.string < 0 ||
+    rootLocation.string >= normalizedTuning.length
+  ) {
+    throw new Error("rootLocation.string is out of range");
+  }
+  if (!Number.isInteger(rootLocation.fret)) {
+    throw new Error("rootLocation.fret must be an integer");
+  }
+  return pcAt(normalizedTuning[rootLocation.string], rootLocation.fret, n);
+}
+
+// "infer-from-location" lets the anchor override rootPc; "require-match"
+// only accepts an anchor that agrees with rootPc.
+function resolveRootPc(
+  rootPc: number | undefined,
+  anchorPc: number | undefined,
+  mode: NonNullable<BuildFretboardMapInput["rootLocationMode"]>,
+  n: number,
+): number {
+  const inferred = mode === "infer-from-location" ? anchorPc : undefined;
+  const resolved =
+    inferred ?? (typeof rootPc === "number" ? mod(rootPc, n) : undefined);
+  if (resolved == null) {
+    throw new Error(
+      "rootPc is required unless it can be inferred from rootLocation",
+    );
+  }
+  if (mode === "require-match" && anchorPc != null && anchorPc !== resolved) {
+    throw new Error("rootLocation does not match the selected rootPc");
+  }
+  return resolved;
+}
+
 export function buildFretboardMap(input: BuildFretboardMapInput): ShapeNote[] {
   const {
     n,
@@ -176,13 +226,7 @@ export function buildFretboardMap(input: BuildFretboardMapInput): ShapeNote[] {
     rootLocationMode = "require-match",
   } = input;
 
-  if (
-    !Number.isInteger(fretMin) ||
-    !Number.isInteger(fretMax) ||
-    fretMax < fretMin
-  ) {
-    throw new Error("Invalid fret range");
-  }
+  assertValidFretRange(fretMin, fretMax);
   if (typeof input.rootPc === "number" && !Number.isInteger(input.rootPc)) {
     throw new Error("rootPc must be an integer");
   }
@@ -198,41 +242,12 @@ export function buildFretboardMap(input: BuildFretboardMapInput): ShapeNote[] {
 
   const normalizedTuning = tuning.map((pc) => mod(pc, n));
 
-  if (rootLocation) {
-    const inBounds =
-      rootLocation.string >= 0 && rootLocation.string < normalizedTuning.length;
-    if (!inBounds) {
-      throw new Error("rootLocation.string is out of range");
-    }
-    if (!Number.isInteger(rootLocation.fret)) {
-      throw new Error("rootLocation.fret must be an integer");
-    }
-  }
-
-  const anchorPc = rootLocation
-    ? pcAt(normalizedTuning[rootLocation.string], rootLocation.fret, n)
-    : undefined;
-
-  let resolvedRootPc =
-    typeof input.rootPc === "number" ? mod(input.rootPc, n) : undefined;
-
-  if (rootLocationMode === "infer-from-location" && anchorPc != null) {
-    resolvedRootPc = anchorPc;
-  }
-
-  if (resolvedRootPc == null) {
-    throw new Error(
-      "rootPc is required unless it can be inferred from rootLocation",
-    );
-  }
-
-  if (
-    rootLocationMode === "require-match" &&
-    anchorPc != null &&
-    anchorPc !== resolvedRootPc
-  ) {
-    throw new Error("rootLocation does not match the selected rootPc");
-  }
+  const resolvedRootPc = resolveRootPc(
+    input.rootPc,
+    anchorPcFor(rootLocation, normalizedTuning, n),
+    rootLocationMode,
+    n,
+  );
 
   const relativePcs =
     pcsMode === "absolute"
@@ -270,9 +285,7 @@ export function extractWindowShape(
   notes: readonly ShapeNote[],
   options: WindowShapeOptions,
 ): ShapeNote[] {
-  if (!Number.isInteger(options.width) || options.width < 1) {
-    throw new Error("width must be a positive integer");
-  }
+  assertPositiveWidth(options.width);
   const maxFret = options.startFret + options.width - 1;
   return notes.filter(
     (note) => note.fret >= options.startFret && note.fret <= maxFret,
@@ -322,11 +335,11 @@ export function extractConnectedComponentShapesWithAdjacency(
   options: { fretMin?: number; fretMax?: number } = {},
 ): ShapeNote[][] {
   const { fretMin, fretMax } = options;
-  const filtered = notes.filter((note) => {
-    if (fretMin != null && note.fret < fretMin) return false;
-    if (fretMax != null && note.fret > fretMax) return false;
-    return true;
-  });
+  const filtered = notes.filter(
+    (note) =>
+      (fretMin == null || note.fret >= fretMin) &&
+      (fretMax == null || note.fret <= fretMax),
+  );
 
   const adjacency = new Map<number, number[]>();
 
@@ -474,9 +487,7 @@ export function findDistinctWindowShapeOccurrences(
     minNotes = 1,
     requireRoot = false,
   } = options;
-  if (!Number.isInteger(width) || width < 1) {
-    throw new Error("width must be a positive integer");
-  }
+  assertPositiveWidth(width);
 
   const occurrences: ShapeOccurrence[] = [];
 

@@ -18,7 +18,7 @@ export function buildInstrumentControlModel({
       setSystemId: handlers.setSystemId,
       setTuning: handlers.setTuning,
       handleStringsChange: handlers.handleStringsChange,
-      setSelectedPreset: presets.setPreset,
+      selectPresetEntry: presets.selectPresetEntry,
       handleSaveDefault: handlers.handleSaveDefault,
       setNeckFilterMode: handlers.setNeckFilterMode,
       handleResetFactoryDefault: reset.resetInstrumentFactory,
@@ -29,9 +29,8 @@ export function buildInstrumentControlModel({
       systems: instrument.tunings,
       sysNames: instrument.sysNames,
       noteNaming: instrument.noteNaming,
-      presetNames: presets.mergedPresetNames,
       customPresetNames: presets.customPresetNames,
-      presetMetaMap: presets.mergedPresetMetaMap,
+      presetCatalog: presets.presetCatalog,
     },
   };
 }

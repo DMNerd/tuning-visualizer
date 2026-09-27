@@ -1,155 +1,139 @@
-import { useCallback, useMemo } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import clsx from "clsx";
-import { normalizeStringList } from "@shared/lib/normalizeStringList";
+import { FiGrid } from "react-icons/fi";
 import BaseCombobox from "@shared/ui/BaseCombobox";
+import PresetBadgeList from "@features/instrument/components/PresetBadgeList";
+import { stringCountLabel } from "@features/instrument/model/presetBadges";
+import {
+  groupPresetsByStringCount,
+  presetEntryKey,
+} from "@features/instrument/model/presetCatalog";
+import { usePresetCatalogEntries } from "@features/instrument/hooks/usePresetCatalogEntries";
 
-function toBadges({ name, customPresetSet, presetMetaMap }) {
-  const badges = [];
-  if (customPresetSet.has(name)) {
-    badges.push({ key: "custom", label: "Custom", variant: "accent" });
-  }
+const preventBlur = (event) => event.preventDefault();
 
-  const meta = presetMetaMap?.[name];
-  if (meta) {
-    const stringMeta = meta?.stringMeta;
-    let stringMetaCount = 0;
-    if (stringMeta instanceof Map) {
-      stringMetaCount = stringMeta.size;
-    } else if (Array.isArray(stringMeta)) {
-      stringMetaCount = stringMeta.length;
-    }
-    if (stringMetaCount > 0) {
-      badges.push({ key: "string-meta", label: "String markers" });
-    }
-
-    const boardMeta = meta?.board;
-    if (boardMeta) {
-      const boardLabels = [];
-      if (boardMeta.notePlacement === "onFret") {
-        boardLabels.push("On-fret notes");
-      } else if (boardMeta.notePlacement === "between") {
-        boardLabels.push("Between frets");
-      }
-
-      if (boardMeta.fretStyle === "dotted") {
-        boardLabels.push("Dotted frets");
-      } else if (boardMeta.fretStyle === "solid") {
-        boardLabels.push("Solid frets");
-      }
-
-      if (!boardLabels.length) {
-        boardLabels.push("Board styling");
-      }
-
-      boardLabels.forEach((label, idx) => {
-        badges.push({ key: `board-${idx}-${label}`, label });
-      });
-    }
-  }
-
-  return badges;
+// Keeps each string-count group contiguous (so keyboard order matches the
+// rendered groups) while the top search hit's group stays first.
+function orderByStringCountGroup(options) {
+  return groupPresetsByStringCount(options).flatMap(([, entries]) => entries);
 }
 
 export default function PresetPicker({
   id,
-  presetNames,
+  presetCatalog,
+  currentStrings,
   selectedPreset,
-  onSelect,
-  customPresetNames,
-  presetMetaMap,
+  onSelectEntry,
+  onOpenGallery,
   placeholder = "Search presets…",
   ariaLabelledBy,
 }) {
-  const allPresetNames = useMemo(
-    () => normalizeStringList(presetNames),
-    [presetNames],
-  );
-  const customPresetSet = useMemo(
-    () => new Set(normalizeStringList(customPresetNames)),
-    [customPresetNames],
-  );
+  const {
+    entries: options,
+    badgesByKey,
+    getSearchTerms,
+  } = usePresetCatalogEntries(presetCatalog);
 
-  const badgesByName = useMemo(() => {
-    const map = new Map();
-    allPresetNames.forEach((name) => {
-      map.set(
-        name,
-        toBadges({
-          name,
-          customPresetSet,
-          presetMetaMap: presetMetaMap ?? {},
-        }),
-      );
-    });
-    return map;
-  }, [allPresetNames, customPresetSet, presetMetaMap]);
+  // Fall back to the bare name so the input never shows the "count:name" key
+  // while a queued preset is not in the catalog yet.
+  const selectedValue = useMemo(() => {
+    if (!selectedPreset) return "";
+    const key = presetEntryKey(currentStrings, selectedPreset);
+    return options.some((entry) => entry.key === key) ? key : selectedPreset;
+  }, [options, currentStrings, selectedPreset]);
 
-  const options = useMemo(
-    () =>
-      allPresetNames.map((name) => ({
-        value: name,
-        label: name,
-      })),
-    [allPresetNames],
-  );
-  const getOptionKey = useCallback((opt) => opt.value, []);
-  const getOptionLabel = useCallback((opt) => opt.label, []);
-  const getFilterTerms = useCallback(
-    (opt) => {
-      const badges = badgesByName.get(opt.value) ?? [];
-      return [opt.label, opt.value, ...badges.map((badge) => badge.label)];
-    },
-    [badgesByName],
-  );
+  const getOptionKey = useCallback((entry) => entry.key, []);
+  const getOptionLabel = useCallback((entry) => entry.name, []);
   const handleOptionSelect = useCallback(
-    (option) => {
-      if (typeof option?.value !== "string") return;
-      onSelect?.(option.value);
+    (entry) => {
+      if (typeof entry?.name !== "string") return;
+      onSelectEntry?.(entry);
     },
-    [onSelect],
+    [onSelectEntry],
   );
   const renderOption = useCallback(
-    (opt, { isActive }) => {
-      const badges = badgesByName.get(opt.value) ?? [];
-      return (
-        <div
-          className={clsx("tv-preset-picker__option", {
-            "is-active": isActive,
-            "is-custom": customPresetSet.has(opt.value),
-          })}
-        >
-          <span className="tv-combobox__option-title">{opt.label}</span>
-          {badges.length > 0 && (
-            <span className="tv-preset-picker__option-meta">
-              {badges.map((badge) => (
-                <span
-                  key={badge.key}
-                  className={clsx("tv-preset-picker__meta-badge", {
-                    "tv-preset-picker__meta-badge--accent":
-                      badge.variant === "accent",
-                  })}
-                >
-                  {badge.label}
-                </span>
-              ))}
-            </span>
-          )}
-        </div>
-      );
-    },
-    [badgesByName, customPresetSet],
+    (entry, { isActive }) => (
+      <div
+        className={clsx("tv-preset-picker__option", {
+          "is-active": isActive,
+          "is-custom": entry.isCustom,
+        })}
+      >
+        <span className="tv-combobox__option-title">{entry.name}</span>
+        <PresetBadgeList badges={badgesByKey.get(entry.key)} />
+      </div>
+    ),
+    [badgesByKey],
+  );
+
+  const renderList = useCallback(
+    ({ options: visible, listProps, renderOptionItem, closeList }) => (
+      <ul
+        {...listProps}
+        className="tv-combobox__list tv-preset-picker__list"
+        aria-labelledby={ariaLabelledBy}
+      >
+        {visible.length === 0 ? (
+          <li className="tv-combobox__empty" role="presentation">
+            No matches.
+          </li>
+        ) : null}
+        {visible.map((entry, index) => (
+          <Fragment key={entry.key}>
+            {entry.strings !== visible[index - 1]?.strings ? (
+              <li role="presentation" className="tv-preset-picker__group">
+                {stringCountLabel(entry.strings)}
+                {entry.strings === currentStrings ? (
+                  <span className="tv-preset-picker__group-current">
+                    current
+                  </span>
+                ) : null}
+              </li>
+            ) : null}
+            {renderOptionItem(entry, index)}
+          </Fragment>
+        ))}
+        {onOpenGallery ? (
+          <li role="presentation" className="tv-preset-picker__footer">
+            <button
+              type="button"
+              className="tv-preset-picker__gallery-button"
+              tabIndex={-1}
+              onMouseDown={preventBlur}
+              onPointerDown={preventBlur}
+              onClick={() => {
+                closeList();
+                // Blur so the modal doesn't hand focus back to the input on
+                // close, which would reopen the list.
+                if (document.activeElement instanceof HTMLElement) {
+                  document.activeElement.blur();
+                }
+                onOpenGallery();
+              }}
+            >
+              <FiGrid aria-hidden />
+              Browse preset gallery…
+            </button>
+          </li>
+        ) : null}
+      </ul>
+    ),
+    [ariaLabelledBy, currentStrings, onOpenGallery],
   );
 
   return (
     <BaseCombobox
       id={id}
-      value={selectedPreset ?? ""}
+      value={selectedValue}
       onSelect={handleOptionSelect}
       options={options}
       getOptionKey={getOptionKey}
       getOptionLabel={getOptionLabel}
-      getFilterTerms={getFilterTerms}
+      getFilterTerms={getSearchTerms}
+      orderFilteredOptions={orderByStringCountGroup}
       renderOption={renderOption}
+      renderList={renderList}
+      enableVirtualization={false}
       placeholder={placeholder}
       aria-labelledby={ariaLabelledBy}
       className="tv-preset-picker"

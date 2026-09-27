@@ -146,6 +146,17 @@ export default function useCombobox({
     }
   }, [isOpen, activeIndex, scrollActiveIntoView]);
 
+  // Floating lists mount a commit after opening (once positioned), after the
+  // effect above already ran, so scroll again when the list element attaches.
+  const activeIndexRef = useLatest(activeIndex);
+  const setListElement = useCallback(
+    (node) => {
+      listRef.current = node;
+      if (node) scrollActiveIntoView(activeIndexRef.current);
+    },
+    [activeIndexRef, scrollActiveIntoView],
+  );
+
   const handleClickAway = useCallback(
     (event) => {
       if (!isOpenRef.current) return;
@@ -266,6 +277,9 @@ export default function useCombobox({
           setInputValue(event.target.value);
           setIsFiltering(true);
           setIsOpen(true);
+          // A new query highlights the top match rather than whatever row
+          // index was active before filtering.
+          setActiveIndex(0);
           onChange?.(event);
         },
         onFocus: (event) => {
@@ -363,9 +377,9 @@ export default function useCombobox({
     () => ({
       id: listId,
       role: "listbox",
-      ref: listRef,
+      ref: setListElement,
     }),
-    [listId],
+    [listId, setListElement],
   );
 
   const rootProps = useMemo(

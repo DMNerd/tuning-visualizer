@@ -3,180 +3,107 @@ import { DOT_SIZE_DEFAULT } from "@shared/config/appDefaults";
 
 /** @typedef {import("@shared/hooks/hotkeys.types").HotkeysLiveRef} HotkeysLiveRef */
 
+const ACCIDENTAL_CYCLE = ["sharp", "flat", "both"];
+
 /** @param {HotkeysLiveRef} liveRef */
 export function buildShortcutTableFromRefs(liveRef) {
+  const getLive = () => liveRef.current || {};
+
+  // Calls live[name] (or live.practiceActions[name]); active only when present.
+  const callLive = (combo, name) => ({
+    combo,
+    handler: () => getLive()[name]?.(),
+    when: () => typeof getLive()[name] === "function",
+  });
+  const callPractice = (combo, name) => ({
+    combo,
+    handler: () => getLive().practiceActions?.[name]?.(),
+    when: () => typeof getLive().practiceActions?.[name] === "function",
+  });
+
+  const updateDisplay = (combo, update) => ({
+    combo,
+    handler: () => {
+      const live = getLive();
+      live.setDisplayPrefs?.((d) => update(d, live));
+    },
+  });
+  const toggleDisplay = (combo, key) =>
+    updateDisplay(combo, (d) => {
+      d[key] = !d[key];
+    });
+  const cycleDisplay = (combo, key, getValues) =>
+    updateDisplay(combo, (d, live) => {
+      const values = getValues(live);
+      if (!values.length) return;
+      const ix = values.indexOf(d[key]);
+      d[key] = values[(ix + 1) % values.length];
+    });
+  const stepDotSize = (combo, delta) =>
+    updateDisplay(combo, (d, live) => {
+      d.dotSize = clamp(
+        (d.dotSize ?? DOT_SIZE_DEFAULT) + delta,
+        live.minDot,
+        live.maxDot,
+      );
+    });
+
+  // Steps live[valueKey] by delta within [live[minKey], live[maxKey]].
+  const stepLive = (combo, setterName, valueKey, minKey, maxKey, delta) => ({
+    combo,
+    handler: () => {
+      const live = getLive();
+      live[setterName]?.(
+        clamp((live[valueKey] ?? 0) + delta, live[minKey], live[maxKey]),
+      );
+    },
+  });
+
   const display = [
+    callLive(["shift+/", "ctrl+/", "F1"], "onShowCheatsheet"),
+    callLive("f", "toggleFs"),
     {
-      combo: ["shift+/", "ctrl+/", "F1"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.onShowCheatsheet?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.onShowCheatsheet === "function";
-      },
+      ...cycleDisplay("l", "show", (live) => live.labelValues || []),
+      when: () => typeof getLive().setDisplayPrefs === "function",
     },
-    {
-      combo: "f",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.toggleFs?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.toggleFs === "function";
-      },
-    },
-    {
-      combo: "l",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          const values = live.labelValues || [];
-          if (!values.length) return;
-          const ix = values.findIndex((v) => v === d.show);
-          d.show = values[(ix + 1) % values.length];
-        });
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.setDisplayPrefs === "function";
-      },
-    },
-    {
-      combo: "o",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.showOpen = !d.showOpen;
-        });
-      },
-    },
-    {
-      combo: "n",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.showFretNums = !d.showFretNums;
-        });
-      },
-    },
-    {
-      combo: "d",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.colorByDegree = !d.colorByDegree;
-        });
-      },
-    },
-    {
-      combo: "a",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          const cycle = ["sharp", "flat", "both"];
-          const currentIndex = cycle.indexOf(d.accidental);
-          d.accidental = cycle[(currentIndex + 1) % cycle.length];
-        });
-      },
-    },
-    {
-      combo: "g",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.lefty = !d.lefty;
-        });
-      },
-    },
-    {
-      combo: ",",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.dotSize = clamp(
-            (d.dotSize ?? DOT_SIZE_DEFAULT) - 1,
-            live.minDot,
-            live.maxDot,
-          );
-        });
-      },
-    },
-    {
-      combo: ".",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setDisplayPrefs?.((d) => {
-          d.dotSize = clamp(
-            (d.dotSize ?? DOT_SIZE_DEFAULT) + 1,
-            live.minDot,
-            live.maxDot,
-          );
-        });
-      },
-    },
+    toggleDisplay("o", "showOpen"),
+    toggleDisplay("n", "showFretNums"),
+    toggleDisplay("d", "colorByDegree"),
+    cycleDisplay("a", "accidental", () => ACCIDENTAL_CYCLE),
+    toggleDisplay("g", "lefty"),
+    stepDotSize(",", -1),
+    stepDotSize(".", 1),
   ];
 
   const instrument = [
-    {
-      combo: "c",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setShowChord?.();
-      },
-    },
-    {
-      combo: "h",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setHideNonChord?.();
-      },
-    },
-    {
-      combo: "[",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.handleStringsChange?.(
-          clamp((live.strings ?? 0) - 1, live.minStrings, live.maxStrings),
-        );
-      },
-    },
-    {
-      combo: "]",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.handleStringsChange?.(
-          clamp((live.strings ?? 0) + 1, live.minStrings, live.maxStrings),
-        );
-      },
-    },
-    {
-      combo: "-",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setFrets?.(
-          clamp((live.frets ?? 0) - 1, live.minFrets, live.maxFrets),
-        );
-      },
-    },
-    {
-      combo: "=",
-      handler: () => {
-        const live = liveRef.current || {};
-        live.setFrets?.(
-          clamp((live.frets ?? 0) + 1, live.minFrets, live.maxFrets),
-        );
-      },
-    },
+    { combo: "c", handler: () => getLive().setShowChord?.() },
+    { combo: "h", handler: () => getLive().setHideNonChord?.() },
+    stepLive(
+      "[",
+      "handleStringsChange",
+      "strings",
+      "minStrings",
+      "maxStrings",
+      -1,
+    ),
+    stepLive(
+      "]",
+      "handleStringsChange",
+      "strings",
+      "minStrings",
+      "maxStrings",
+      1,
+    ),
+    stepLive("-", "setFrets", "frets", "minFrets", "maxFrets", -1),
+    stepLive("=", "setFrets", "frets", "minFrets", "maxFrets", 1),
   ];
 
   const practice = [
     {
+      // Prefer the practice-panel randomizer; fall back to the app-level one.
       combo: "r",
       handler: () => {
-        const live = liveRef.current || {};
+        const live = getLive();
         if (
           typeof live.practiceActions?.randomizeScaleFromHotkey === "function"
         ) {
@@ -186,72 +113,20 @@ export function buildShortcutTableFromRefs(liveRef) {
         live.onRandomizeScale?.();
       },
       when: () => {
-        const live = liveRef.current || {};
+        const live = getLive();
         return (
           typeof live.practiceActions?.randomizeScaleFromHotkey ===
             "function" || typeof live.onRandomizeScale === "function"
         );
       },
     },
-    {
-      combo: ["m", "space"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.practiceActions?.toggleMetronome?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.practiceActions?.toggleMetronome === "function";
-      },
-    },
-    {
-      combo: ["alt+[", "arrowdown"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.practiceActions?.bpmDown?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.practiceActions?.bpmDown === "function";
-      },
-    },
-    {
-      combo: ["alt+]", "arrowup"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.practiceActions?.bpmUp?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.practiceActions?.bpmUp === "function";
-      },
-    },
-    {
-      combo: ["t", "enter"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.practiceActions?.tapTempo?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.practiceActions?.tapTempo === "function";
-      },
-    },
+    callPractice(["m", "space"], "toggleMetronome"),
+    callPractice(["alt+[", "arrowdown"], "bpmDown"),
+    callPractice(["alt+]", "arrowup"], "bpmUp"),
+    callPractice(["t", "enter"], "tapTempo"),
   ];
 
-  const tuningPacks = [
-    {
-      combo: ["ctrl+n", "meta+n"],
-      handler: () => {
-        const live = liveRef.current || {};
-        live.onCreateCustomPack?.();
-      },
-      when: () => {
-        const live = liveRef.current || {};
-        return typeof live.onCreateCustomPack === "function";
-      },
-    },
-  ];
+  const tuningPacks = [callLive(["ctrl+n", "meta+n"], "onCreateCustomPack")];
 
   return [...display, ...instrument, ...practice, ...tuningPacks];
 }

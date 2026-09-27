@@ -8,6 +8,7 @@ import {
   useInstrumentFretsSlice,
 } from "@features/instrument/hooks/useInstrumentConfig";
 import { useMergedPresets } from "@features/instrument/hooks/useMergedPresets";
+import { buildPresetCatalog } from "@features/instrument/model/presetCatalog";
 import { useTuningIO } from "@features/instrument/hooks/useTuningIO";
 import { buildInstrumentDomainReturn } from "@shared/lib/domainReturnBuilders";
 
@@ -50,6 +51,8 @@ export function useInstrumentDomain({
     presetMetaMap: instrumentPresets.presetMetaMap,
     customTunings: customTunings.customTunings,
     setTuning: instrumentActions.setTuning,
+    setTuningAtomic: instrumentActions.setTuningAtomic,
+    setStrings: instrumentActions.setStrings,
     setStringMeta: instrumentActions.setStringMeta,
     setBoardMeta: instrumentActions.setBoardMeta,
     currentEdo: system.divisions,
@@ -93,7 +96,34 @@ export function useInstrumentDomain({
     mergedPresetMetaMap,
     selectedPreset,
     setPreset,
+    selectPresetEntry,
   } = presets;
+
+  const presetCatalog = useMemo(
+    () =>
+      buildPresetCatalog({
+        systemId,
+        edo: system.divisions,
+        currentStrings: strings,
+        currentPresetMap: presets.mergedPresetMap,
+        currentPresetMetaMap: mergedPresetMetaMap,
+        currentCustomNames: customPresetNames,
+        presetTunings,
+        presetMeta,
+        customTunings: customTunings.customTunings,
+      }),
+    [
+      systemId,
+      system.divisions,
+      strings,
+      presets.mergedPresetMap,
+      mergedPresetMetaMap,
+      customPresetNames,
+      presetTunings,
+      presetMeta,
+      customTunings.customTunings,
+    ],
+  );
   const { openCreate, openEditSelected } = customPackEditor;
 
   const sharedPayload = useMemo(
@@ -115,6 +145,8 @@ export function useInstrumentDomain({
         mergedPresetMetaMap,
         selectedPreset,
         setPreset,
+        presetCatalog,
+        selectPresetEntry,
       },
       handlers: {
         setFretsUI,
@@ -142,6 +174,8 @@ export function useInstrumentDomain({
       mergedPresetMetaMap,
       selectedPreset,
       setPreset,
+      presetCatalog,
+      selectPresetEntry,
       setFretsUI,
       setSystemId,
       setTuning,

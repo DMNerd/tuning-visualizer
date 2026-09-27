@@ -2257,6 +2257,190 @@ input.tv-routine-name-input {
   background: color-mix(in oklab, var(--accent) 16%, transparent);
 }
 
+.tv-preset-picker__list {
+  gap: 2px;
+  padding-bottom: 0;
+  max-height: min(340px, 60vh);
+}
+
+.tv-preset-picker__group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 2px;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.tv-preset-picker__group-current {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+.tv-preset-picker__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 4px;
+  padding: 4px 0;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.tv-preset-picker__gallery-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--speed) var(--ease);
+}
+
+.tv-preset-picker__gallery-button svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+.tv-preset-picker__gallery-button:hover {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* Preset gallery modal */
+
+.tv-preset-gallery__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tv-preset-gallery__chip {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    background var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.tv-preset-gallery__chip:hover {
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+}
+
+.tv-preset-gallery__chip.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+}
+
+.tv-preset-gallery__body {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  padding: clamp(12px, 3vw, 20px);
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.tv-preset-gallery__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.tv-preset-gallery__group {
+  display: grid;
+  gap: 10px;
+}
+
+.tv-preset-gallery__group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.tv-preset-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 10px;
+}
+
+.tv-preset-gallery__card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--panel) 96%, var(--fg) 4%);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--speed) var(--ease),
+    background var(--speed) var(--ease);
+}
+
+.tv-preset-gallery__card:hover,
+.tv-preset-gallery__card:focus-visible {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  background: color-mix(in oklab, var(--accent) 6%, var(--panel));
+}
+
+.tv-preset-gallery__card.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.tv-preset-gallery__card-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.tv-preset-gallery__notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tv-preset-gallery__note {
+  min-width: 2ch;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--fg) 8%, transparent);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .tv-scale-picker {
   flex: 1;
   min-width: 0;

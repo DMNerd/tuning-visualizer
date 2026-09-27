@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useId } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { JsonEditor } from "json-edit-react";
 import {
   useDebounce,
@@ -11,20 +11,15 @@ import { parseTuningPack } from "@features/export/model/schema";
 import { confirm } from "@shared/ui/confirm";
 import { toast } from "react-hot-toast";
 import { memoWithShallowPick } from "@shared/lib/memo";
-import {
-  FiPlus,
-  FiEdit2,
-  FiTrash2,
-  FiClipboard,
-  FiCheck,
-  FiX,
-  FiChevronRight,
-  FiAlertTriangle,
-  FiRefreshCcw,
-} from "react-icons/fi";
+import { FiAlertTriangle } from "react-icons/fi";
 import ModalFrame from "@shared/ui/ModalFrame";
-import { STR_MAX, STR_MIN } from "@shared/config/appDefaults";
-import { SPELLING_MARKER_DISPLAY } from "@domain/theory/notation";
+import { STR_MAX } from "@shared/config/appDefaults";
+import NoteSelectNode from "@features/export/components/NoteSelectNode";
+import PackEditorHelper from "@features/export/components/PackEditorHelper";
+import {
+  buildPackEditorIcons,
+  buildPackEditorTheme,
+} from "@features/export/components/packEditorTheme";
 import {
   buildNoteOptionsForPack,
   ensurePack,
@@ -32,79 +27,7 @@ import {
   togglePackSpelling,
   getSeedSnapshot,
   isTuningNoteNode,
-  pushUnique,
 } from "@features/export/model/tuningPackNormalization";
-
-function NoteSelectNode({
-  value,
-  setValue,
-  handleEdit,
-  handleKeyPress,
-  isEditing,
-  canEdit,
-  originalNode,
-  customNodeProps,
-  getStyles,
-  nodeData,
-}) {
-  const { noteOptions = [], systemLabel } = customNodeProps ?? {};
-  const selectId = useId();
-  const stringStyles = getStyles("string", nodeData);
-  const currentValue = typeof value === "string" ? value : "";
-
-  const options = useMemo(() => {
-    const seen = new Set();
-    const list = [];
-    noteOptions.forEach((option) => pushUnique(list, seen, option));
-    if (currentValue && !seen.has(currentValue)) {
-      list.push(currentValue);
-    }
-    return list;
-  }, [noteOptions, currentValue]);
-
-  if (!canEdit) {
-    return (
-      originalNode ?? <span style={stringStyles}>{currentValue || ""}</span>
-    );
-  }
-
-  if (!isEditing) {
-    return (
-      originalNode ?? <span style={stringStyles}>{currentValue || ""}</span>
-    );
-  }
-
-  const handleChange = (event) => {
-    const nextValue = event.target.value;
-    setValue(nextValue);
-    handleEdit(nextValue);
-  };
-
-  return (
-    <div className="tv-json-editor__note-editor">
-      <select
-        id={selectId}
-        className="tv-json-editor__note-select"
-        value={currentValue || ""}
-        onChange={handleChange}
-        onKeyDown={handleKeyPress}
-        autoFocus
-      >
-        <option value="" disabled>
-          Select note…
-        </option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      {systemLabel ? (
-        <span className="tv-json-editor__note-hint">{systemLabel}</span>
-      ) : null}
-    </div>
-  );
-}
 
 function TuningPackEditorModal({
   isOpen,
@@ -276,62 +199,8 @@ function TuningPackEditorModal({
   }, []);
 
   const isDark = themeMode === "dark";
-
-  const editorTheme = useMemo(() => {
-    const baseBoolean = "#0f766e";
-    const baseNumber = "#2563eb";
-    const baseNull = "#b91c1c";
-    const baseBooleanDark = "#34d399";
-    const baseNumberDark = "#38bdf8";
-    const baseNullDark = "#fca5a5";
-
-    return {
-      rootFontSize: 11,
-      styles: {
-        container: {
-          backgroundColor: "transparent",
-          color: "var(--fg)",
-          fontFamily:
-            'var(--font-mono, "JetBrains Mono", "Fira Code", "IBM Plex Mono", "ui-monospace", monospace)',
-        },
-        collection: { backgroundColor: "transparent" },
-        collectionInner: { backgroundColor: "transparent" },
-        collectionElement: { borderRadius: "6px", paddingBlock: "2px" },
-        property: { color: "var(--muted)" },
-        bracket: {
-          color: isDark
-            ? "rgba(226, 232, 240, 0.85)"
-            : "rgba(17, 24, 39, 0.75)",
-          fontWeight: 600,
-        },
-        itemCount: { color: "var(--muted)", fontStyle: "italic" },
-        string: "var(--accent)",
-        number: isDark ? baseNumberDark : baseNumber,
-        boolean: isDark ? baseBooleanDark : baseBoolean,
-        null: isDark ? baseNullDark : baseNull,
-        input: [
-          "var(--fg)",
-          {
-            backgroundColor: isDark
-              ? "rgba(15, 23, 42, 0.7)"
-              : "rgba(255, 255, 255, 0.95)",
-            border: isDark
-              ? "1px solid rgba(148, 163, 184, 0.35)"
-              : "1px solid rgba(148, 163, 184, 0.45)",
-            borderRadius: "6px",
-            padding: "2px 4px",
-          },
-        ],
-        inputHighlight: isDark
-          ? "rgba(59, 130, 246, 0.35)"
-          : "rgba(59, 130, 246, 0.2)",
-        error: {
-          color: isDark ? "#f87171" : "#b91c1c",
-          fontWeight: 600,
-        },
-      },
-    };
-  }, [isDark]);
+  const editorTheme = useMemo(() => buildPackEditorTheme(isDark), [isDark]);
+  const icons = useMemo(() => buildPackEditorIcons(isDark), [isDark]);
 
   const noteMeta = useMemo(() => buildNoteOptionsForPack(draft), [draft]);
 
@@ -351,28 +220,6 @@ function TuningPackEditorModal({
       },
     ];
   }, [noteMeta]);
-
-  const icons = useMemo(() => {
-    const base = {
-      size: 18,
-      style: { verticalAlign: "middle" },
-    };
-
-    const accent = { color: "var(--accent)" };
-    const muted = { color: "var(--muted)" };
-    const danger = { color: isDark ? "#f87171" : "#dc2626" };
-
-    return {
-      add: <FiPlus {...base} style={{ ...base.style, ...accent }} />,
-      edit: <FiEdit2 {...base} style={{ ...base.style, ...accent }} />,
-      delete: <FiTrash2 {...base} style={{ ...base.style, ...danger }} />,
-      copy: <FiClipboard {...base} style={{ ...base.style, ...accent }} />,
-      ok: <FiCheck {...base} style={{ ...base.style, ...accent }} />,
-      cancel: <FiX {...base} style={{ ...base.style, ...muted }} />,
-      chevron: <FiChevronRight {...base} style={{ ...base.style, ...muted }} />,
-      reset: <FiRefreshCcw {...base} style={{ ...base.style, ...accent }} />,
-    };
-  }, [isDark]);
 
   const { height: winH } = useWindowSize();
   const editorMaxH = Math.max(240, winH - 280);
@@ -426,32 +273,6 @@ function TuningPackEditorModal({
     toggleHelper();
   }, [toggleHelper]);
 
-  const exampleSnippet = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          name: "Custom pack example",
-          spelling: "german",
-          system: { edo: 12 },
-          tuning: {
-            strings: [
-              { label: "String 1", note: "E" },
-              { label: "String 2", note: "Hih" },
-              { label: "String 3", midi: 55 },
-              { label: "String 4", note: "Aeh" },
-            ],
-          },
-          meta: {
-            stringMeta: [{ index: 0, startFret: 2, greyBefore: true }],
-            board: { fretStyle: "dotted", notePlacement: "onFret" },
-          },
-        },
-        null,
-        2,
-      ),
-    [],
-  );
-
   if (!isOpen) return null;
 
   return (
@@ -469,165 +290,15 @@ function TuningPackEditorModal({
             isHelperCollapsed ? " is-helper-collapsed" : ""
           }`}
         >
-          <div className="tv-pack-helper__toggle-row">
-            <button
-              type="button"
-              className="tv-pack-helper__toggle"
-              onClick={handleToggleHelper}
-              aria-expanded={!isHelperCollapsed}
-              aria-controls="pack-helper-content"
-              aria-label={`${
-                isHelperCollapsed ? "Show" : "Hide"
-              } pack helper details`}
-            >
-              <span
-                className={`tv-pack-helper__chevron${
-                  isHelperCollapsed ? " is-rotated" : ""
-                }`}
-                aria-hidden
-              >
-                {icons.chevron}
-              </span>
-              <span className="tv-pack-helper__toggle-label">
-                {isHelperCollapsed ? "Show helper" : "Hide helper"}
-              </span>
-            </button>
-          </div>
-          <aside
-            id="pack-helper-content"
-            className={`tv-pack-helper${isHelperCollapsed ? " is-hidden" : ""}`}
-            tabIndex={isHelperCollapsed ? -1 : 0}
-            aria-label="Tuning pack requirements and quick actions"
-            aria-expanded={!isHelperCollapsed}
-            aria-hidden={isHelperCollapsed}
-          >
-            <div className="tv-pack-helper__header">
-              <div className="tv-pack-helper__header-text">
-                <h3>Pack requirements</h3>
-                <p>
-                  Ensure your pack stays valid while you edit. Keep these rules
-                  in mind:
-                </p>
-              </div>
-            </div>
-            <div className="tv-pack-helper__content">
-              <ul className="tv-pack-helper__list">
-                <li>
-                  <strong>Name:</strong> required text label.
-                </li>
-                <li>
-                  <strong>system.edo:</strong> integer {"\u2265"} 12.
-                </li>
-                <li>
-                  <strong>Strings:</strong> between {STR_MIN} and {STR_MAX}{" "}
-                  entries.
-                </li>
-                <li>
-                  <strong>Each string:</strong> include a <code>note</code> or{" "}
-                  <code>midi</code> value (labels optional).
-                </li>
-                <li>
-                  <strong>spelling</strong> (optional): set to{" "}
-                  {SPELLING_MARKER_DISPLAY.map((marker, idx) => (
-                    <span key={marker}>
-                      {idx > 0 ? ", " : ""}
-                      <code>"{marker}"</code>
-                    </span>
-                  ))}{" "}
-                  to auto-translate notes to international spellings for
-                  internal logic (for example <code>Hih</code> → <code>B↑</code>
-                  , <code>Aeh</code> → <code>A↓</code>). Arrow forms are
-                  accepted too.
-                </li>
-              </ul>
-              <div className="tv-pack-helper__meta">
-                <div className="tv-pack-helper__meta-section">
-                  <div className="tv-pack-helper__meta-title">String meta</div>
-                  <p className="tv-pack-helper__meta-copy">
-                    Optional <code>meta.stringMeta</code> entries let you set
-                    per-string visuals.
-                  </p>
-                  <ul className="tv-pack-helper__meta-list">
-                    <li>
-                      <code>index</code>: the string number to target
-                      (required).
-                    </li>
-                    <li>
-                      <code>startFret</code>: first fret to render (default 0).
-                    </li>
-                    <li>
-                      <code>greyBefore</code>: hide frets before start (default
-                      true).
-                    </li>
-                  </ul>
-                </div>
-                <div className="tv-pack-helper__meta-section">
-                  <div className="tv-pack-helper__meta-title">Board meta</div>
-                  <p className="tv-pack-helper__meta-copy">
-                    Configure <code>meta.board</code> to control fretboard
-                    defaults.
-                  </p>
-                  <ul className="tv-pack-helper__meta-list">
-                    <li>
-                      <code>fretStyle</code>: <code>"solid"</code> or{" "}
-                      <code>"dotted"</code>.
-                    </li>
-                    <li>
-                      <code>notePlacement</code>: <code>"between"</code> or{" "}
-                      <code>"onFret"</code>.
-                    </li>
-                    <li>
-                      <code>hiddenFrets</code>: array of 0-based rendered fret
-                      indices to hide (N-TET safe). Example:{" "}
-                      <code>[0, 1, 13]</code>.
-                    </li>
-                    <li>
-                      Pattern/modulo shorthand is not supported here; repeat
-                      indices per octave manually when needed.
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div
-                className="tv-pack-helper__actions"
-                role="group"
-                aria-label="Pack shortcuts"
-              >
-                <button
-                  type="button"
-                  className="tv-button tv-button--ghost"
-                  onClick={handleInsertString}
-                >
-                  {icons.add} Add string
-                </button>
-                <button
-                  type="button"
-                  className="tv-button tv-button--ghost"
-                  onClick={handleResetTemplate}
-                >
-                  {icons.reset} Reload template
-                </button>
-                <button
-                  type="button"
-                  className="tv-button tv-button--ghost"
-                  onClick={handleToggleSpellingHint}
-                >
-                  {hasSpellingHint ? icons.cancel : icons.ok}{" "}
-                  {hasSpellingHint
-                    ? "Remove spelling hint"
-                    : 'Set spelling: "de-h/b"'}
-                </button>
-              </div>
-              <div className="tv-pack-helper__example">
-                <div className="tv-pack-helper__example-header">
-                  Example snippet
-                </div>
-                <pre>
-                  <code>{exampleSnippet}</code>
-                </pre>
-              </div>
-            </div>
-          </aside>
+          <PackEditorHelper
+            isCollapsed={isHelperCollapsed}
+            onToggle={handleToggleHelper}
+            icons={icons}
+            hasSpellingHint={hasSpellingHint}
+            onInsertString={handleInsertString}
+            onResetTemplate={handleResetTemplate}
+            onToggleSpellingHint={handleToggleSpellingHint}
+          />
           <div
             className="tv-modal__editor"
             style={{ maxHeight: editorMaxH, overflow: "auto" }}
