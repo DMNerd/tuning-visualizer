@@ -1,17 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
-import {
-  METRONOME_BPM_MAX,
-  METRONOME_BPM_MIN,
-} from "@features/practice/model/metronomeTiming";
-
-// Non-numeric/zero input falls back to 80 before clamping (unlike the engine's
-// clampBpm, which also maps non-finite values to 80 but clamps 0 up to 20).
-function clampBpm(value) {
-  return Math.max(
-    METRONOME_BPM_MIN,
-    Math.min(METRONOME_BPM_MAX, Math.round(Number(value) || 80)),
-  );
-}
+import { clampBpm } from "@features/practice/model/metronomeTiming";
 
 export function usePracticeActions({
   isPlaying,
