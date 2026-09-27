@@ -1,11 +1,11 @@
-export { default as TheoryPanelContainer } from "./containers/TheoryPanelContainer";
-export { useTheoryDomain } from "./hooks/useTheoryDomain";
-export { useScaleAndChord } from "./hooks/useScaleAndChord";
+export { default as TheoryPanelContainer } from "@features/theory/containers/TheoryPanelContainer";
+export { useTheoryDomain } from "@features/theory/hooks/useTheoryDomain";
+export { useScaleAndChord } from "@features/theory/hooks/useScaleAndChord";
 export {
   formatRandomizedScaleAnnouncement,
   RANDOMIZE_MODES,
   useRandomScale,
-} from "./hooks/useRandomScale";
-export { useSystemNoteNames } from "./hooks/useSystemNoteNames";
-export { useAccidentalRespell } from "./hooks/useAccidentalRespell";
-export { buildTheoryControlModel } from "./model/controlModel";
+} from "@features/theory/hooks/useRandomScale";
+export { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
+export { useAccidentalRespell } from "@features/theory/hooks/useAccidentalRespell";
+export { buildTheoryControlModel } from "@features/theory/model/controlModel";

@@ -1,3 +1,3 @@
-export { default as InstrumentPanelContainer } from "./containers/InstrumentPanelContainer";
-export { useInstrumentDomain } from "./hooks/useInstrumentDomain";
-export { buildInstrumentControlModel } from "./model/controlModel";
+export { default as InstrumentPanelContainer } from "@features/instrument/containers/InstrumentPanelContainer";
+export { useInstrumentDomain } from "@features/instrument/hooks/useInstrumentDomain";
+export { buildInstrumentControlModel } from "@features/instrument/model/controlModel";

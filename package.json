@@ -16,7 +16,7 @@
     "test": "tsx --test",
     "dup": "jscpd",
     "dup:report": "jscpd --reporters console,html",
-    "deadcode": "jscpd --dead-code"
+    "deadcode": "jscpd --dead-code --exit-code"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.9",

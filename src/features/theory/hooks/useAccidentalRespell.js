@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useSystemNoteNames } from "./useSystemNoteNames";
+import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
 
 export function normalizeNameForSystem(pc, nameForPc, sysNames) {
   const candidate = nameForPc(pc);

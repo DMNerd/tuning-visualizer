@@ -1,6 +1,6 @@
-export { default as ExportPanelContainer } from "./containers/ExportPanelContainer";
-export { default as CustomTuningModalsContainer } from "./containers/CustomTuningModalsContainer";
-export { useExportCustomTuningDomain } from "./hooks/useExportCustomTuningDomain";
+export { default as ExportPanelContainer } from "@features/export/containers/ExportPanelContainer";
+export { default as CustomTuningModalsContainer } from "@features/export/containers/CustomTuningModalsContainer";
+export { useExportCustomTuningDomain } from "@features/export/hooks/useExportCustomTuningDomain";
 export {
   downloadPNG,
   downloadSVG,
@@ -8,7 +8,7 @@ export {
   PNG_EXPORT_SCALE,
   printFretboard,
   slug,
-} from "./model/scales";
+} from "@features/export/model/scales";
 export {
   buildTuningPack,
   downloadJsonFile,
@@ -16,9 +16,9 @@ export {
   generatePackId,
   normalizePackName,
   removePackByIdentifier,
-} from "./model/tuningIO";
+} from "@features/export/model/tuningIO";
 export {
   parseTuningPack,
   stripVersionField,
   TuningPackArraySchema,
-} from "./model/schema";
+} from "@features/export/model/schema";

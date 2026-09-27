@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Report dead code (jscpd, non-blocking)
+      - name: Check dead code (jscpd)
         run: pnpm deadcode
 
       - name: Check code duplication (jscpd)

@@ -1,12 +1,12 @@
-export { default as BeatIndicator } from "./components/BeatIndicator";
-export { default as PracticePanelContainer } from "./containers/PracticePanelContainer";
-export { usePracticeMetronomeDomain } from "./hooks/usePracticeMetronomeDomain";
-export { buildMetronomeControlModel } from "./model/controlModel";
+export { default as BeatIndicator } from "@features/practice/components/BeatIndicator";
+export { default as PracticePanelContainer } from "@features/practice/containers/PracticePanelContainer";
+export { usePracticeMetronomeDomain } from "@features/practice/hooks/usePracticeMetronomeDomain";
+export { buildMetronomeControlModel } from "@features/practice/model/controlModel";
 export {
   useMetronomePlayback,
   useMetronomePlaybackStatus,
   useMetronomeTickCursor,
-} from "./hooks/useMetronomeEngine";
+} from "@features/practice/hooks/useMetronomeEngine";
 export {
   selectMetronomeHydrateWithDefaults,
   selectMetronomePrefs,
@@ -15,4 +15,4 @@ export {
   selectMetronomeSetRandomizeMode,
   selectMetronomeSetters,
   useMetronomePrefsStore,
-} from "./store/useMetronomePrefsStore";
+} from "@features/practice/store/useMetronomePrefsStore";

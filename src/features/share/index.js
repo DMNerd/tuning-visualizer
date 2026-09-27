@@ -1,3 +1,3 @@
-export { default as ShareConfigModal } from "./components/ShareConfigModal";
-export { useUrlShareHydration } from "./hooks/useUrlShareHydration";
-export { buildRawShareState } from "./model/shareState";
+export { default as ShareConfigModal } from "@features/share/components/ShareConfigModal";
+export { useUrlShareHydration } from "@features/share/hooks/useUrlShareHydration";
+export { buildRawShareState } from "@features/share/model/shareState";
