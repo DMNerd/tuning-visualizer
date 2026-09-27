@@ -3,3 +3,4 @@ dist
 build
 pnpm-lock.yaml
 reports
+vendor

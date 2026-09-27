@@ -1,4 +1,5 @@
 import { mod } from "@shared/lib/math";
+import { Interval } from "@vendor/microtonal/index.mjs";
 
 export type ChordType =
   // Standard triads & sevenths
@@ -38,285 +39,84 @@ const MICROTONAL_TYPE_SET = new Set<ChordType>(MICROTONAL_TYPES);
 export const isMicrotonalChordType = (type: ChordType): boolean =>
   MICROTONAL_TYPE_SET.has(type);
 
-interface ChordFormula {
+interface ChordDef {
   label: string;
-  /** Steps from the root in system divisions (EDO steps). */
-  steps: number[];
-  /** Degree strings aligned with steps (UI helper only). */
-  degrees: string[];
+  /** Intervals in ups and downs notation (see vendor/microtonal). */
+  intervals: string;
+  /**
+   * 12-TET stand-in for microtonal chords (the closest conventional sound),
+   * so switching systems doesn't break the UI.
+   */
+  fallback?: string;
 }
 
-/**
- * For each chord type we provide explicit 12 and 24 step sets.
- * For 24-only ideas we still include a 12-TET fallback (closest conventional sound)
- * so changing systems doesn’t break the UI.
- */
-const BASE: Record<ChordType, { "12": ChordFormula; "24": ChordFormula }> = {
+const CHORDS: Record<ChordType, ChordDef> = {
   // ---- Standard library ----
-  maj: {
-    "12": {
-      label: "Major (1 3 5)",
-      steps: [0, 4, 7],
-      degrees: ["1", "3", "5"],
-    },
-    "24": {
-      label: "Major (1 3 5)",
-      steps: [0, 8, 14],
-      degrees: ["1", "3", "5"],
-    },
-  },
-  min: {
-    "12": {
-      label: "Minor (1 ♭3 5)",
-      steps: [0, 3, 7],
-      degrees: ["1", "b3", "5"],
-    },
-    "24": {
-      label: "Minor (1 ♭3 5)",
-      steps: [0, 6, 14],
-      degrees: ["1", "b3", "5"],
-    },
-  },
-  dim: {
-    "12": {
-      label: "Diminished (1 ♭3 ♭5)",
-      steps: [0, 3, 6],
-      degrees: ["1", "b3", "b5"],
-    },
-    "24": {
-      label: "Diminished (1 ♭3 ♭5)",
-      steps: [0, 6, 12],
-      degrees: ["1", "b3", "b5"],
-    },
-  },
-  aug: {
-    "12": {
-      label: "Augmented (1 3 #5)",
-      steps: [0, 4, 8],
-      degrees: ["1", "3", "#5"],
-    },
-    "24": {
-      label: "Augmented (1 3 #5)",
-      steps: [0, 8, 16],
-      degrees: ["1", "3", "#5"],
-    },
-  },
-  sus2: {
-    "12": {
-      label: "Sus2 (1 2 5)",
-      steps: [0, 2, 7],
-      degrees: ["1", "2", "5"],
-    },
-    "24": {
-      label: "Sus2 (1 2 5)",
-      steps: [0, 4, 14],
-      degrees: ["1", "2", "5"],
-    },
-  },
-  sus4: {
-    "12": {
-      label: "Sus4 (1 4 5)",
-      steps: [0, 5, 7],
-      degrees: ["1", "4", "5"],
-    },
-    "24": {
-      label: "Sus4 (1 4 5)",
-      steps: [0, 10, 14],
-      degrees: ["1", "4", "5"],
-    },
-  },
-  "6": {
-    "12": {
-      label: "6 (1 3 5 6)",
-      steps: [0, 4, 7, 9],
-      degrees: ["1", "3", "5", "6"],
-    },
-    "24": {
-      label: "6 (1 3 5 6)",
-      steps: [0, 8, 14, 18],
-      degrees: ["1", "3", "5", "6"],
-    },
-  },
-  m6: {
-    "12": {
-      label: "m6 (1 ♭3 5 6)",
-      steps: [0, 3, 7, 9],
-      degrees: ["1", "b3", "5", "6"],
-    },
-    "24": {
-      label: "m6 (1 ♭3 5 6)",
-      steps: [0, 6, 14, 18],
-      degrees: ["1", "b3", "5", "6"],
-    },
-  },
-  "7": {
-    "12": {
-      label: "7 (1 3 5 ♭7)",
-      steps: [0, 4, 7, 10],
-      degrees: ["1", "3", "5", "b7"],
-    },
-    "24": {
-      label: "7 (1 3 5 ♭7)",
-      steps: [0, 8, 14, 20],
-      degrees: ["1", "3", "5", "b7"],
-    },
-  },
-  maj7: {
-    "12": {
-      label: "Maj7 (1 3 5 7)",
-      steps: [0, 4, 7, 11],
-      degrees: ["1", "3", "5", "7"],
-    },
-    "24": {
-      label: "Maj7 (1 3 5 7)",
-      steps: [0, 8, 14, 22],
-      degrees: ["1", "3", "5", "7"],
-    },
-  },
-  m7: {
-    "12": {
-      label: "m7 (1 ♭3 5 ♭7)",
-      steps: [0, 3, 7, 10],
-      degrees: ["1", "b3", "5", "b7"],
-    },
-    "24": {
-      label: "m7 (1 ♭3 5 ♭7)",
-      steps: [0, 6, 14, 20],
-      degrees: ["1", "b3", "5", "b7"],
-    },
-  },
-  m7b5: {
-    "12": {
-      label: "m7♭5 (1 ♭3 ♭5 ♭7)",
-      steps: [0, 3, 6, 10],
-      degrees: ["1", "b3", "b5", "b7"],
-    },
-    "24": {
-      label: "m7♭5 (1 ♭3 ♭5 ♭7)",
-      steps: [0, 6, 12, 20],
-      degrees: ["1", "b3", "b5", "b7"],
-    },
-  },
-  dim7: {
-    "12": {
-      label: "Dim7 (1 ♭3 ♭5 6)",
-      steps: [0, 3, 6, 9],
-      degrees: ["1", "b3", "b5", "6"],
-    },
-    "24": {
-      label: "Dim7 (1 ♭3 ♭5 6)",
-      steps: [0, 6, 12, 18],
-      degrees: ["1", "b3", "b5", "6"],
-    },
-  },
-  add9: {
-    "12": {
-      label: "Add9 (1 3 5 9)",
-      steps: [0, 4, 7, 14],
-      degrees: ["1", "3", "5", "9"],
-    },
-    "24": {
-      label: "Add9 (1 3 5 9)",
-      steps: [0, 8, 14, 28],
-      degrees: ["1", "3", "5", "9"],
-    },
-  },
+  maj: { label: "Major (1 3 5)", intervals: "1P 3M 5P" },
+  min: { label: "Minor (1 ♭3 5)", intervals: "1P 3m 5P" },
+  dim: { label: "Diminished (1 ♭3 ♭5)", intervals: "1P 3m 5d" },
+  aug: { label: "Augmented (1 3 #5)", intervals: "1P 3M 5A" },
+  sus2: { label: "Sus2 (1 2 5)", intervals: "1P 2M 5P" },
+  sus4: { label: "Sus4 (1 4 5)", intervals: "1P 4P 5P" },
+  "6": { label: "6 (1 3 5 6)", intervals: "1P 3M 5P 6M" },
+  m6: { label: "m6 (1 ♭3 5 6)", intervals: "1P 3m 5P 6M" },
+  "7": { label: "7 (1 3 5 ♭7)", intervals: "1P 3M 5P 7m" },
+  maj7: { label: "Maj7 (1 3 5 7)", intervals: "1P 3M 5P 7M" },
+  m7: { label: "m7 (1 ♭3 5 ♭7)", intervals: "1P 3m 5P 7m" },
+  m7b5: { label: "m7♭5 (1 ♭3 ♭5 ♭7)", intervals: "1P 3m 5d 7m" },
+  dim7: { label: "Dim7 (1 ♭3 ♭5 6)", intervals: "1P 3m 5d 7d" },
+  add9: { label: "Add9 (1 3 5 9)", intervals: "1P 3M 5P 9M" },
 
   // ---- Microtonal extensions ----
   neut: {
-    "12": {
-      label: "Neutral (1 3 5)",
-      steps: [0, 4, 7],
-      degrees: ["1", "3", "5"],
-    },
-    "24": {
-      label: "Neutral (1 n3 5)",
-      steps: [0, 7, 14],
-      degrees: ["1", "n3", "5"],
-    },
+    label: "Neutral (1 n3 5)",
+    intervals: "1P ↓3M 5P",
+    fallback: "1P 3M 5P",
   },
   neut7: {
-    "12": {
-      label: "Neutral7 (1 3 5 ♭7)",
-      steps: [0, 4, 7, 10],
-      degrees: ["1", "3", "5", "b7"],
-    },
-    "24": {
-      label: "Neutral7 (1 n3 5 ♭7)",
-      steps: [0, 7, 14, 20],
-      degrees: ["1", "n3", "5", "b7"],
-    },
+    label: "Neutral7 (1 n3 5 ♭7)",
+    intervals: "1P ↓3M 5P 7m",
+    fallback: "1P 3M 5P 7m",
   },
   "sus2↓": {
-    "12": {
-      label: "Sus2 (1 2 5)",
-      steps: [0, 2, 7],
-      degrees: ["1", "2", "5"],
-    },
-    "24": {
-      label: "Sus2↓ (1 2↓ 5)",
-      steps: [0, 3, 14],
-      degrees: ["1", "2↓", "5"],
-    },
+    label: "Sus2↓ (1 2↓ 5)",
+    intervals: "1P ↓2M 5P",
+    fallback: "1P 2M 5P",
   },
   "sus4↑": {
-    "12": {
-      label: "Sus4 (1 4 5)",
-      steps: [0, 5, 7],
-      degrees: ["1", "4", "5"],
-    },
-    "24": {
-      label: "Sus4↑ (1 4↑ 5)",
-      steps: [0, 11, 14],
-      degrees: ["1", "4↑", "5"],
-    },
+    label: "Sus4↑ (1 4↑ 5)",
+    intervals: "1P ↑4P 5P",
+    fallback: "1P 4P 5P",
   },
   "maj↑3": {
-    "12": {
-      label: "Major (1 3 5)",
-      steps: [0, 4, 7],
-      degrees: ["1", "3", "5"],
-    },
-    "24": {
-      label: "Maj↑3 (1 3↑ 5)",
-      steps: [0, 9, 14],
-      degrees: ["1", "3↑", "5"],
-    },
+    label: "Maj↑3 (1 3↑ 5)",
+    intervals: "1P ↑3M 5P",
+    fallback: "1P 3M 5P",
   },
   "min↓3": {
-    "12": {
-      label: "Minor (1 ♭3 5)",
-      steps: [0, 3, 7],
-      degrees: ["1", "b3", "5"],
-    },
-    "24": {
-      label: "Min↓3 (1 ♭3↓ 5)",
-      steps: [0, 5, 14],
-      degrees: ["1", "b3↓", "5"],
-    },
+    label: "Min↓3 (1 ♭3↓ 5)",
+    intervals: "1P ↓3m 5P",
+    fallback: "1P 3m 5P",
   },
-  quartal: {
-    "12": {
-      label: "Quartal (1 4 7♭)",
-      steps: [0, 5, 10],
-      degrees: ["1", "4", "b7"],
-    },
-    "24": {
-      label: "Quartal (1 4 7♭)",
-      steps: [0, 10, 20],
-      degrees: ["1", "4", "b7"],
-    },
-  },
+  quartal: { label: "Quartal (1 4 7♭)", intervals: "1P 4P 7m" },
 };
 
+const stepsOf = (intervals: string, divisions: number): number[] =>
+  intervals.split(" ").map((ivl) => Interval.edoSteps(ivl, divisions));
+
 /**
- * Projects the 12-TET step formula for a chord into an arbitrary EDO by
- * scaling proportionally (same technique as scales.ts's projectFrom12TET).
- * Used as a fallback when there's no explicit formula for `divisions`.
+ * Steps from the root in `divisions`. 12- and 24-EDO use the chord's
+ * intervals exactly (24-EDO is where the microtonal chords live); other EDOs
+ * scale the 12-TET steps proportionally, which approximates chords better
+ * than stacked fifths in EDOs with poor fifths.
  */
-function projectStepsFrom12TET(steps: number[], divisions: number): number[] {
+function chordSteps(type: ChordType, divisions: number): number[] {
+  const { intervals, fallback } = CHORDS[type];
+  if (divisions === 24) return stepsOf(intervals, 24);
+  const steps12 = stepsOf(fallback ?? intervals, 12);
+  if (divisions === 12) return steps12;
   const factor = divisions / 12;
-  return steps.map((step) => Math.round(step * factor));
+  return steps12.map((step) => Math.round(step * factor));
 }
 
 export function buildChordPCsFromPc(
@@ -324,66 +124,19 @@ export function buildChordPCsFromPc(
   type: ChordType,
   divisions: number,
 ): Set<number> {
-  const formulas = BASE[type];
-  if (!formulas) return new Set();
-
-  const exact = formulas[String(divisions) as "12" | "24"];
-  const steps = exact
-    ? exact.steps
-    : projectStepsFrom12TET(formulas["12"].steps, divisions);
-
-  return new Set(steps.map((s) => mod(rootPc + s, divisions)));
+  if (!CHORDS[type]) return new Set();
+  return new Set(
+    chordSteps(type, divisions).map((s) => mod(rootPc + s, divisions)),
+  );
 }
 
 /** Convenience: list & labels for UIs */
-const ALL_CHORD_TYPES = Object.keys(BASE) as ChordType[];
+const ALL_CHORD_TYPES = Object.keys(CHORDS) as ChordType[];
 export const CHORD_TYPES = ALL_CHORD_TYPES;
 export const MICROTONAL_CHORD_TYPES = MICROTONAL_TYPES;
 export const STANDARD_CHORD_TYPES = ALL_CHORD_TYPES.filter(
   (t) => !isMicrotonalChordType(t),
 );
 export const CHORD_LABELS: Record<ChordType, string> = Object.fromEntries(
-  ALL_CHORD_TYPES.map((t) => [t, BASE[t]["24"].label]), // show 24-EDO names; still fine in 12-TET
+  ALL_CHORD_TYPES.map((t) => [t, CHORDS[t].label]),
 ) as Record<ChordType, string>;
-
-/**
- * Degree label helper for showing chord degrees when desired.
- * For 24-EDO we collapse to the nearest 12-TET degree for readability.
- */
-export function degreeForStep(step: number, divisions: number): string {
-  const degreeFor12 = (semi: number): string => {
-    switch (mod(semi, 12)) {
-      case 0:
-        return "1";
-      case 1:
-        return "b2";
-      case 2:
-        return "2";
-      case 3:
-        return "b3";
-      case 4:
-        return "3";
-      case 5:
-        return "4";
-      case 6:
-        return "b5";
-      case 7:
-        return "5";
-      case 8:
-        return "#5";
-      case 9:
-        return "6";
-      case 10:
-        return "b7";
-      case 11:
-        return "7";
-      default:
-        return "?";
-    }
-  };
-
-  if (divisions === 12) return degreeFor12(step);
-
-  const mapped = Math.round((step / divisions) * 12);
-  return degreeFor12(mapped);
-}

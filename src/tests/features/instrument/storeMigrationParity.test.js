@@ -11,6 +11,14 @@ import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { SYSTEM_DEFAULT } from "@shared/config/appDefaults";
 import { scopeKey } from "@shared/lib/storage/windowScope";
 
+const rehydrateTheoryStore = () =>
+  rehydrateFresh("@features/theory/store/useTheoryStore.js", "useTheoryStore");
+const rehydrateInstrumentCoreStore = () =>
+  rehydrateFresh(
+    "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
+  );
+
 const storage = new MemoryStorage();
 const sessionStorage = new MemoryStorage();
 globalThis.localStorage = storage;
@@ -98,10 +106,7 @@ test("legacy theory keys hydrate into new theory store and clear old keys", asyn
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const useTheoryStore = await rehydrateFresh(
-    "@features/theory/store/useTheoryStore.js",
-    "useTheoryStore",
-  );
+  const useTheoryStore = await rehydrateTheoryStore();
   const state = useTheoryStore.getState();
 
   assert.equal(state.systemId, "24-TET");
@@ -122,10 +127,7 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const useTheoryStore = await rehydrateFresh(
-    "@features/theory/store/useTheoryStore.js",
-    "useTheoryStore",
-  );
+  const useTheoryStore = await rehydrateTheoryStore();
   const state = useTheoryStore.getState();
 
   assert.equal(state.systemId, "19-TET");
@@ -144,10 +146,7 @@ test("theory store ignores blank persisted fields but keeps valid siblings", asy
     }),
   );
 
-  const useTheoryStore = await rehydrateFresh(
-    "@features/theory/store/useTheoryStore.js",
-    "useTheoryStore",
-  );
+  const useTheoryStore = await rehydrateTheoryStore();
   const state = useTheoryStore.getState();
 
   assert.equal(state.systemId, SYSTEM_DEFAULT);
@@ -224,10 +223,7 @@ test("instrument core migration clamps strings/frets and reset action restores f
   storage.setItem(STORAGE_KEYS.STRINGS, "100");
   storage.setItem(STORAGE_KEYS.FRETS, "1");
 
-  const useInstrumentCoreStore = await rehydrateFresh(
-    "@features/instrument/store/useInstrumentCoreStore.js",
-    "useInstrumentCoreStore",
-  );
+  const useInstrumentCoreStore = await rehydrateInstrumentCoreStore();
   let state = useInstrumentCoreStore.getState();
 
   assert.equal(state.strings, 8);
@@ -265,10 +261,7 @@ test("instrument core keeps global default tunings while using persisted strings
     JSON.stringify({ legacy: ["E", "A", "D", "G", "B", "E"] }),
   );
 
-  const useInstrumentCoreStore = await rehydrateFresh(
-    "@features/instrument/store/useInstrumentCoreStore.js",
-    "useInstrumentCoreStore",
-  );
+  const useInstrumentCoreStore = await rehydrateInstrumentCoreStore();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.strings, 7);
@@ -368,59 +361,31 @@ test("instrument core migration defaults neckFilterMode to none when mode is abs
     }),
   );
 
-  const useInstrumentCoreStore = await rehydrateFresh(
-    "@features/instrument/store/useInstrumentCoreStore.js",
-    "useInstrumentCoreStore",
-  );
+  const useInstrumentCoreStore = await rehydrateInstrumentCoreStore();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.neckFilterMode, "none");
 });
 
 test("instrument core migration keeps explicit canonical neckFilterMode", async () => {
-  storage.clear();
-  storage.setItem(
-    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
-    JSON.stringify({
-      state: {
-        strings: 6,
-        frets: 24,
-        neckFilterMode: "fretless",
-      },
-      version: 3,
-    }),
-  );
+  for (const { strings, frets } of [
+    { strings: 6, frets: 24 },
+    { strings: 7, frets: 22 },
+  ]) {
+    storage.clear();
+    storage.setItem(
+      scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
+      JSON.stringify({
+        state: { strings, frets, neckFilterMode: "fretless" },
+        version: 3,
+      }),
+    );
 
-  const useInstrumentCoreStore = await rehydrateFresh(
-    "@features/instrument/store/useInstrumentCoreStore.js",
-    "useInstrumentCoreStore",
-  );
-  const state = useInstrumentCoreStore.getState();
+    const useInstrumentCoreStore = await rehydrateInstrumentCoreStore();
+    const state = useInstrumentCoreStore.getState();
 
-  assert.equal(state.neckFilterMode, "fretless");
-});
-
-test("instrument core migration preserves explicit fretless neck filter mode", async () => {
-  storage.clear();
-  storage.setItem(
-    scopeKey(STORAGE_KEYS.INSTRUMENT_CORE),
-    JSON.stringify({
-      state: {
-        strings: 7,
-        frets: 22,
-        neckFilterMode: "fretless",
-      },
-      version: 3,
-    }),
-  );
-
-  const useInstrumentCoreStore = await rehydrateFresh(
-    "@features/instrument/store/useInstrumentCoreStore.js",
-    "useInstrumentCoreStore",
-  );
-  const state = useInstrumentCoreStore.getState();
-
-  assert.equal(state.neckFilterMode, "fretless");
+    assert.equal(state.neckFilterMode, "fretless");
+  }
 });
 
 test("instrument core setNeckFilterMode updates canonical mode", async () => {

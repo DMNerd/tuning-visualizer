@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build vendored microtonal (pinned in vendor/microtonal/SOURCE.json)
+        run: pnpm vendor:microtonal --from-pin
+
       - name: Check dead code (jscpd)
         run: pnpm deadcode
 

@@ -12,7 +12,7 @@ import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
 import { useScaleAndChord } from "@features/theory/hooks/useScaleAndChord";
 import { useInlays } from "@features/fretboard/hooks/useInlays";
 import { useLabels } from "@features/fretboard/hooks/useLabels";
-import { buildFretLabel, MICRO_LABEL_STYLES } from "@shared/lib/fretLabels";
+import { MICRO_LABEL_STYLES } from "@shared/lib/fretLabels";
 import {
   arrayRefAndLengthEqual,
   keysIdentical,
@@ -26,8 +26,6 @@ import {
   resolveClosestDatasetElement,
 } from "@shared/lib/svgDelegation";
 import {
-  MARKER_FONT_MIN,
-  MARKER_FONT_MAX,
   estimateMinimumDotSize,
   buildFitCacheKey,
   buildWidthCacheKey,
@@ -40,22 +38,17 @@ import {
   reconcileCapoState,
 } from "@features/fretboard/model/renderFilters";
 import {
-  isNoteVisible,
-  resolveNoteFill,
-} from "@features/fretboard/model/noteAppearance";
-import { applyShapeRegionColors } from "@features/fretboard/model/shapeRegions";
-import {
-  placeNoteLabels,
-  placeFretMarkerLabels,
-  fitFretMarkerLabel,
-} from "@features/fretboard/model/labelPlacement";
+  buildBetweenVisibleFretsX,
+  buildFretMarkers,
+  buildNoteGeometry,
+  buildOpenPcByString,
+  buildRenderedNotes,
+} from "@features/fretboard/model/boardLayout";
 import {
   NoteCircle,
   NoteLabel,
 } from "@features/fretboard/components/FretboardNote";
 
-const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
-const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
 const PANEL_CORNER_RADIUS = 14;
 const INLAY_RADIUS = 6.5;
 const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
@@ -179,32 +172,18 @@ function Fretboard({
     [capoFret, visibleFrets],
   );
 
-  const betweenVisibleFretsXByFret = useMemo(() => {
-    const xByFret = Array.from({ length: frets + 1 }, (_, fret) =>
-      betweenFretsX(fret),
-    );
-    if (frets < 1) return xByFret;
-
-    let prevVisible = 0;
-    let visibleIndex = 0;
-    const visibleCount = visibleFrets.length;
-
-    for (let fret = 1; fret <= frets; fret += 1) {
-      while (visibleIndex < visibleCount && visibleFrets[visibleIndex] < fret) {
-        prevVisible = visibleFrets[visibleIndex];
-        visibleIndex += 1;
-      }
-
-      if (visibleIndex < visibleCount && visibleFrets[visibleIndex] === fret) {
-        // The fret space right after the nut starts at the nut's right edge.
-        const leftX =
-          wireX(prevVisible) + (prevVisible === safeCapoFret ? nutW : 0);
-        xByFret[fret] = (leftX + wireX(fret)) / 2;
-      }
-    }
-
-    return xByFret;
-  }, [frets, betweenFretsX, visibleFrets, wireX, safeCapoFret, nutW]);
+  const betweenVisibleFretsXByFret = useMemo(
+    () =>
+      buildBetweenVisibleFretsX({
+        frets,
+        visibleFrets,
+        betweenFretsX,
+        wireX,
+        capoFret: safeCapoFret,
+        nutW,
+      }),
+    [frets, betweenFretsX, visibleFrets, wireX, safeCapoFret, nutW],
+  );
 
   const betweenVisibleFretsX = useCallback(
     (fret) => betweenVisibleFretsXByFret[fret] ?? betweenFretsX(fret),
@@ -297,201 +276,127 @@ function Fretboard({
     },
     [textFit, typographyCaches],
   );
-  const openPcByString = useMemo(() => {
-    const N = Math.max(1, system.divisions);
-    const out = Array.from({ length: strings }, () => 0);
+  const openPcByString = useMemo(
+    () =>
+      buildOpenPcByString({
+        strings,
+        tuning,
+        startFretFor,
+        divisions: system.divisions,
+        pcForName,
+      }),
+    [strings, tuning, startFretFor, system.divisions, pcForName],
+  );
 
-    for (let s = 0; s < strings; s += 1) {
-      const sf = startFretFor(s);
-      out[s] = (pcForName(tuning[s]) + sf) % N;
-    }
+  const noteGeometry = useMemo(
+    () =>
+      buildNoteGeometry({
+        strings,
+        frets,
+        startFretFor,
+        yForString,
+        isFretHidden,
+        openXForString,
+        notePlacementMode,
+        wireX,
+        betweenVisibleFretsX,
+      }),
+    [
+      strings,
+      frets,
+      startFretFor,
+      yForString,
+      isFretHidden,
+      openXForString,
+      notePlacementMode,
+      wireX,
+      betweenVisibleFretsX,
+    ],
+  );
 
-    return out;
-  }, [strings, tuning, startFretFor, system.divisions, pcForName]);
+  const renderedNotes = useMemo(
+    () =>
+      buildRenderedNotes({
+        noteGeometry,
+        openPcByString,
+        divisions: system.divisions,
+        strings,
+        accidental,
+        activeIntervals,
+        scaleSet,
+        rootIx,
+        chordPCs,
+        chordRootPc,
+        display: {
+          show,
+          showOpen,
+          hideNonChord,
+          openOnlyInMode,
+          showAllNotes,
+          colorByDegree,
+          colorByShape,
+        },
+        dotSize: effectiveDotSize,
+        degreeForPc,
+        labelFor,
+        microLabelOpts,
+        fitLabel: fitLabelCached,
+        measureWidth: measureWidthCached,
+      }),
+    [
+      activeIntervals,
+      system.divisions,
+      noteGeometry,
+      openPcByString,
+      scaleSet,
+      chordPCs,
+      chordRootPc,
+      showOpen,
+      openOnlyInMode,
+      hideNonChord,
+      showAllNotes,
+      rootIx,
+      effectiveDotSize,
+      colorByDegree,
+      colorByShape,
+      degreeForPc,
+      labelFor,
+      show,
+      microLabelOpts,
+      accidental,
+      strings,
+      fitLabelCached,
+      measureWidthCached,
+    ],
+  );
 
-  const noteGeometry = useMemo(() => {
-    const out = [];
-    for (let s = 0; s < strings; s += 1) {
-      const sf = startFretFor(s);
-      const cy = yForString(s);
-      for (let f = 0; f <= frets; f += 1) {
-        if (isFretHidden(f)) continue;
-        const isOpen = f === 0;
-        const isPlayable = sf === 0 ? true : isOpen ? true : f > sf;
-        if (!isPlayable) continue;
-        const cx = isOpen
-          ? openXForString(s)
-          : notePlacementMode === "onFret"
-            ? wireX(f)
-            : betweenVisibleFretsX(f);
-        const step = isOpen ? 0 : sf === 0 ? f : f - sf;
-        out.push({
-          key: `${s}-${f}`,
-          s,
-          f,
-          sf,
-          step,
-          cy,
-          cx,
-          isOpen,
-        });
-      }
-    }
-    return out;
-  }, [
-    strings,
-    frets,
-    startFretFor,
-    yForString,
-    isFretHidden,
-    openXForString,
-    notePlacementMode,
-    wireX,
-    betweenVisibleFretsX,
-  ]);
-
-  const renderedNotes = useMemo(() => {
-    if (!activeIntervals.length) return [];
-    const N = system.divisions;
-    const hasChord = Boolean(chordPCs);
-    const baseNotes = [];
-
-    for (const slot of noteGeometry) {
-      const pc = (openPcByString[slot.s] + slot.step) % N;
-      const inScale = scaleSet.has(pc);
-      const inChord = hasChord && chordPCs.has(pc);
-      const visible = isNoteVisible({
-        isOpen: slot.isOpen,
-        inScale,
-        inChord,
-        hasChord,
-        showOpen,
-        hideNonChord,
-        openOnlyInMode,
-        showAllNotes,
-      });
-      if (!visible) continue;
-
-      const isRoot = pc === rootIx;
-      // Open notes always have slot.f === 0, which would always read as
-      // "standard" — for a string whose true position is offset by
-      // stringMeta.startFret (non-12-TET partial-fret setups), the open
-      // note's actual fret is slot.sf, matching the correction the label
-      // below needs too, so both share this one computation.
-      const globalFretForLabel = slot.isOpen ? slot.sf : slot.f;
-      const isStandard = (globalFretForLabel * 12) % N === 0;
-      const isMicro = !isStandard;
-      const rBase =
-        (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
-      const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
-      const isChordRoot = inChord && chordRootPc === pc;
-      const isChordOutsideScale = inChord && !inScale;
-      const fill = resolveNoteFill({
-        colorByDegree,
-        degree: colorByDegree ? degreeForPc(pc) : null,
-        degreeCount: activeIntervals.length,
-        isRoot,
-        isMicro,
-        isChordOutsideScale,
-        isOutsideScale: !inScale,
-      });
-      const label =
-        show === "fret"
-          ? buildFretLabel(globalFretForLabel, N, microLabelOpts)
-          : labelFor(pc, slot.f);
-
-      baseNotes.push({
-        ...slot,
-        pc,
-        isRoot,
-        isStandard,
-        isMicro,
-        inChord,
-        isChordRoot,
-        isChordOutsideScale,
-        r,
-        fill,
-        label,
-      });
-    }
-
-    if (colorByShape) {
-      applyShapeRegionColors(baseNotes, { divisions: N, strings, rootIx });
-    }
-
-    return placeNoteLabels(baseNotes, {
-      splitEnharmonic: accidental === "both" && show === "names",
-      fitLabel: fitLabelCached,
-      measureWidth: measureWidthCached,
-    });
-  }, [
-    activeIntervals,
-    system.divisions,
-    noteGeometry,
-    openPcByString,
-    scaleSet,
-    chordPCs,
-    chordRootPc,
-    showOpen,
-    openOnlyInMode,
-    hideNonChord,
-    showAllNotes,
-    rootIx,
-    effectiveDotSize,
-    colorByDegree,
-    colorByShape,
-    degreeForPc,
-    labelFor,
-    show,
-    microLabelOpts,
-    accidental,
-    strings,
-    fitLabelCached,
-    measureWidthCached,
-  ]);
-
-  const fretMarkers = useMemo(() => {
-    const baseMarkers = visibleFrets.map((f, index) => {
-      const leftBoundary =
-        index === 0 ? padLeft : (wireX(visibleFrets[index - 1]) + wireX(f)) / 2;
-      const rightBoundary =
-        index === visibleFrets.length - 1
-          ? boardEndX
-          : (wireX(f) + wireX(visibleFrets[index + 1])) / 2;
-      const maxWidth = Math.max(6, (rightBoundary - leftBoundary) * 0.9);
-      const fit = fitFretMarkerLabel(
-        fitLabelCached,
-        buildFretLabel(f, system.divisions, microLabelOpts),
-        maxWidth,
-        MARKER_FONT_MAX,
-      );
-
-      return {
-        fret: f,
-        xForFretNum: betweenVisibleFretsX(f),
-        maxWidth,
-        labelNum: fit?.text ?? null,
-        markerFontSize: fit?.fontSize ?? MARKER_FONT_MIN,
-      };
-    });
-
-    return placeFretMarkerLabels(baseMarkers, {
-      capoFret: safeCapoFret,
-      fitLabel: fitLabelCached,
-      measureWidth: measureWidthCached,
-    });
-  }, [
-    visibleFrets,
-    system.divisions,
-    microLabelOpts,
-    betweenVisibleFretsX,
-    padLeft,
-    boardEndX,
-    fitLabelCached,
-    measureWidthCached,
-    safeCapoFret,
-    wireX,
-  ]);
+  const fretMarkers = useMemo(
+    () =>
+      buildFretMarkers({
+        visibleFrets,
+        divisions: system.divisions,
+        microLabelOpts,
+        betweenVisibleFretsX,
+        padLeft,
+        boardEndX,
+        wireX,
+        capoFret: safeCapoFret,
+        fitLabel: fitLabelCached,
+        measureWidth: measureWidthCached,
+      }),
+    [
+      visibleFrets,
+      system.divisions,
+      microLabelOpts,
+      betweenVisibleFretsX,
+      padLeft,
+      boardEndX,
+      fitLabelCached,
+      measureWidthCached,
+      safeCapoFret,
+      wireX,
+    ],
+  );
 
   const selectNoteFromEvent = useCallback(
     (event, { preventContextMenu = false } = {}) => {

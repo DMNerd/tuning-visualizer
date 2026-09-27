@@ -132,44 +132,6 @@ export const TUNINGS: Record<string, TuningSystem> = {
   },
 };
 
-/** Convert frequency to nearest N-TET step offset from reference (A4), as an integer. */
-export function freqToStep(f: number, sys: TuningSystem): number {
-  return Math.round(sys.divisions * Math.log2(f / sys.refFreq));
-}
-
-/** Convert step offset (relative to A4) to frequency. step=0 => A4. */
-export function stepToFreq(step: number, sys: TuningSystem): number {
-  return sys.refFreq * Math.pow(2, step / sys.divisions);
-}
-
-/** MIDI <-> step helpers (keeps your existing MIDI logic usable) */
-export function midiToStep(midi: number, sys: TuningSystem): number {
-  // 12-TET midi to step, generalized: 12 steps per semitone -> N/12 of those
-  return Math.round((midi - sys.refMidi) * (sys.divisions / 12));
-}
-
-export function stepToMidi(step: number, sys: TuningSystem): number {
-  return Math.round(step * (12 / sys.divisions) + sys.refMidi);
-}
-
-/** Pitch-class (0..N-1) from a global step count. */
-export function stepToPc(step: number, sys: TuningSystem): number {
-  return ((step % sys.divisions) + sys.divisions) % sys.divisions;
-}
-
-/** Cents deviation of a frequency from the nearest N-TET step (for your tuner needle). */
-export function centsFromNearest(
-  f: number,
-  sys: TuningSystem,
-): { cents: number; nearestStep: number } {
-  const raw = sys.divisions * Math.log2(f / sys.refFreq);
-  const nearest = Math.round(raw);
-  const deltaSteps = raw - nearest;
-  const centsPerStep = 1200 / sys.divisions;
-  const cents = deltaSteps * centsPerStep;
-  return { cents, nearestStep: nearest };
-}
-
 export type TuningLookupResult = {
   id: string;
   system: TuningSystem;

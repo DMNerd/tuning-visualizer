@@ -19,6 +19,12 @@ Use scoped aliases for ownership boundaries:
 - `@shared/*` for feature-agnostic UI, hooks, helpers, and config.
 - `@domain/*` for pure domain modules.
 - `@styles/*` for global styles.
+- `@vendor/*` for generated third-party bundles in `vendor/` (currently the
+  microtonal fork of Tonal). Bundles are git-ignored; only
+  `vendor/microtonal/SOURCE.json`, which pins the fork commit, is tracked.
+  `pnpm vendor:microtonal [path-to-fork]` rebuilds from a local checkout and
+  updates the pin; `pnpm vendor:microtonal --from-pin` rebuilds the pinned
+  commit (CI and Docker do this). Never edit bundles by hand.
 - `@/*` remains available as a compatibility fallback, but new imports should prefer the scoped aliases above.
 
 ## Import boundary rules

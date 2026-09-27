@@ -23,6 +23,11 @@ async function freshRoutineStore() {
   return useTrainingRoutineStore;
 }
 
+function seedTwoRoutines(store) {
+  store.getState().upsertRoutine({ id: "r1", name: "First" });
+  store.getState().upsertRoutine({ id: "r2", name: "Second" });
+}
+
 function readStoredJson(key) {
   const raw = storage.getItem(key);
   return raw ? JSON.parse(raw) : null;
@@ -31,10 +36,7 @@ function readStoredJson(key) {
 test("upsertRoutine inserts new and updates existing by id", async () => {
   const useTrainingRoutineStore = await freshRoutineStore();
 
-  useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
-  useTrainingRoutineStore
-    .getState()
-    .upsertRoutine({ id: "r2", name: "Second" });
+  seedTwoRoutines(useTrainingRoutineStore);
   useTrainingRoutineStore
     .getState()
     .upsertRoutine({ id: "r1", name: "First (updated)" });
@@ -63,10 +65,7 @@ test("renameRoutine updates name and updatedAt", async () => {
 test("removeRoutine removes by id", async () => {
   const useTrainingRoutineStore = await freshRoutineStore();
 
-  useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
-  useTrainingRoutineStore
-    .getState()
-    .upsertRoutine({ id: "r2", name: "Second" });
+  seedTwoRoutines(useTrainingRoutineStore);
   useTrainingRoutineStore.getState().removeRoutine("r1");
 
   const { routines } = useTrainingRoutineStore.getState();

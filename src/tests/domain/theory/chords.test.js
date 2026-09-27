@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildChordPCsFromPc, degreeForStep } from "@domain/theory/chords";
+import { buildChordPCsFromPc } from "@domain/theory/chords";
 
 const sort = (arr) => [...arr].sort((a, b) => a - b);
 
@@ -13,19 +13,4 @@ test("buildChordPCsFromPc wraps pitch classes for 12-TET", () => {
 test("buildChordPCsFromPc wraps pitch classes for 24-TET", () => {
   const pcs = buildChordPCsFromPc(23, "maj", 24);
   assert.deepEqual(sort(pcs), [7, 13, 23]);
-});
-
-test("degreeForStep maps steps to degrees in 12-TET", () => {
-  assert.equal(degreeForStep(4, 12), "3");
-  assert.equal(degreeForStep(7, 12), "5");
-});
-
-test("degreeForStep approximates degrees in 24-TET", () => {
-  assert.equal(degreeForStep(1, 24), "b2");
-  assert.equal(degreeForStep(10, 24), "4");
-});
-
-test("degreeForStep handles generic EDOs", () => {
-  assert.equal(degreeForStep(9, 19), "b5");
-  assert.equal(degreeForStep(-1, 19), "7");
 });

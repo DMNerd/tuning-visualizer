@@ -26,7 +26,7 @@ const reactRules = {
 };
 
 export default defineConfig([
-  globalIgnores(["dist", "build"]),
+  globalIgnores(["dist", "build", "vendor"]),
   { linterOptions: { reportUnusedDisableDirectives: "error" } },
   {
     files: ["**/*.css"],

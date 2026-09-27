@@ -161,6 +161,10 @@ export default defineConfig(({ command, mode }) => {
       rolldownOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes("/vendor/microtonal/")) {
+              return "theory";
+            }
+
             if (!id.includes("node_modules")) {
               return;
             }
@@ -206,6 +210,7 @@ export default defineConfig(({ command, mode }) => {
         { find: "@shared", replacement: resolve(__dirname, "src/shared") },
         { find: "@domain", replacement: resolve(__dirname, "src/domain") },
         { find: "@styles", replacement: resolve(__dirname, "src/styles") },
+        { find: "@vendor", replacement: resolve(__dirname, "vendor") },
         { find: "@", replacement: resolve(__dirname, "src") },
       ],
     },

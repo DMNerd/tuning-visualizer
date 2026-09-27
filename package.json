@@ -16,7 +16,8 @@
     "test": "tsx --test",
     "dup": "jscpd",
     "dup:report": "jscpd --reporters console,html",
-    "deadcode": "jscpd --dead-code --exit-code"
+    "deadcode": "jscpd --dead-code --exit-code",
+    "vendor:microtonal": "node scripts/vendor-microtonal.mjs"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.9",

@@ -2,7 +2,6 @@ import { useId } from "react";
 import clsx from "clsx";
 import { FiX } from "react-icons/fi";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
-import { degreeForStep } from "@domain/theory/chords";
 import {
   formatChordName,
   formatChordSymbol,
@@ -58,7 +57,6 @@ function ChordFinder({ state, actions, meta }) {
   const headingId = useId();
 
   const [best, ...alternatives] = matches;
-  const referencePc = best?.rootPc ?? pickedPcs[0];
 
   const showMatch = (match) => {
     // Matches are named from sounding pitches; a capo-relative chord root is
@@ -127,8 +125,12 @@ function ChordFinder({ state, actions, meta }) {
                     <span>{nameForPc(pc)}</span>
                   </button>
                   <small className="tv-tone-degree">
-                    {degreeForStep(pc - referencePc, divisions)}
-                    {index === 0 && pc !== referencePc ? " · bass" : ""}
+                    {[
+                      best?.degrees[pc],
+                      index === 0 && best && pc !== best.rootPc ? "bass" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </small>
                 </li>
               ))}
@@ -157,7 +159,7 @@ function ChordFinder({ state, actions, meta }) {
             />
             {alternatives.slice(0, MAX_ALTERNATIVES).map((match) => (
               <MatchRow
-                key={`${match.rootPc}-${match.id}-${match.omitsFifth}`}
+                key={`${match.rootPc}-${match.id}`}
                 match={match}
                 nameForPc={nameForPc}
                 onShow={showMatch}
