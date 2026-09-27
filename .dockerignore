@@ -11,3 +11,6 @@ Dockerfile
 .vscode
 .idea
 coverage
+# Built from the pin inside the image, never copied from a local checkout
+vendor/*/*
+!vendor/*/SOURCE.json

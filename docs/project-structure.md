@@ -22,9 +22,14 @@ Use scoped aliases for ownership boundaries:
 - `@vendor/*` for generated third-party bundles in `vendor/` (currently the
   microtonal fork of Tonal). Bundles are git-ignored; only
   `vendor/microtonal/SOURCE.json`, which pins the fork commit, is tracked.
-  `pnpm vendor:microtonal [path-to-fork]` rebuilds from a local checkout and
-  updates the pin; `pnpm vendor:microtonal --from-pin` rebuilds the pinned
-  commit (CI and Docker do this). Never edit bundles by hand.
+  `pnpm vendor:microtonal [path-to-fork] [--branch <name>]` rebuilds from a
+  local checkout and updates the pin. The fork must be on the pinned branch
+  (or `--branch`): a clean checkout is switched to it, a dirty one is refused,
+  and it warns if the commit isn't pushed. `pnpm vendor:microtonal --from-pin`
+  rebuilds the pinned commit after checking it's on the pinned branch on
+  GitHub (CI does this). `pnpm build` runs `--ensure` first, which rebuilds
+  from the pin only when the bundle is missing or was built from another
+  commit. Never edit bundles by hand.
 - `@/*` remains available as a compatibility fallback, but new imports should prefer the scoped aliases above.
 
 ## Import boundary rules
