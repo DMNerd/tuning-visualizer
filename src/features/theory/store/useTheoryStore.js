@@ -52,13 +52,14 @@ const legacyTheoryKeyCleanup = createLegacyKeyCleanup([
   STORAGE_KEYS.ROOT,
 ]);
 
-// Precedence: valid persisted value, then legacy key, then any persisted
-// value, then the default.
+// Precedence: fully valid persisted payload, then legacy key, then this
+// field's persisted value if it is itself valid, then the default. Blank or
+// non-string persisted values are never used.
 function resolveTheoryField(key, persisted, persistedValid, legacy, fallback) {
   return (
     (persistedValid ? persisted[key] : null) ||
     (legacy.found ? legacy[key] : null) ||
-    persisted?.[key] ||
+    (isNonEmptyString(persisted?.[key]) ? persisted[key] : null) ||
     fallback
   );
 }

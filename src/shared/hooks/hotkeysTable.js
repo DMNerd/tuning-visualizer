@@ -9,7 +9,10 @@ const ACCIDENTAL_CYCLE = ["sharp", "flat", "both"];
 export function buildShortcutTableFromRefs(liveRef) {
   const getLive = () => liveRef.current || {};
 
-  // Calls live[name] (or live.practiceActions[name]); active only when present.
+  // Every shortcut is active only while the action it calls is wired up, so an
+  // unwired key falls through to the browser instead of being swallowed.
+
+  // Calls live[name] (or live.practiceActions[name]).
   const callLive = (combo, name) => ({
     combo,
     handler: () => getLive()[name]?.(),
@@ -27,6 +30,7 @@ export function buildShortcutTableFromRefs(liveRef) {
       const live = getLive();
       live.setDisplayPrefs?.((d) => update(d, live));
     },
+    when: () => typeof getLive().setDisplayPrefs === "function",
   });
   const toggleDisplay = (combo, key) =>
     updateDisplay(combo, (d) => {
@@ -57,15 +61,13 @@ export function buildShortcutTableFromRefs(liveRef) {
         clamp((live[valueKey] ?? 0) + delta, live[minKey], live[maxKey]),
       );
     },
+    when: () => typeof getLive()[setterName] === "function",
   });
 
   const display = [
     callLive(["shift+/", "ctrl+/", "F1"], "onShowCheatsheet"),
     callLive("f", "toggleFs"),
-    {
-      ...cycleDisplay("l", "show", (live) => live.labelValues || []),
-      when: () => typeof getLive().setDisplayPrefs === "function",
-    },
+    cycleDisplay("l", "show", (live) => live.labelValues || []),
     toggleDisplay("o", "showOpen"),
     toggleDisplay("n", "showFretNums"),
     toggleDisplay("d", "colorByDegree"),
@@ -76,8 +78,8 @@ export function buildShortcutTableFromRefs(liveRef) {
   ];
 
   const instrument = [
-    { combo: "c", handler: () => getLive().setShowChord?.() },
-    { combo: "h", handler: () => getLive().setHideNonChord?.() },
+    callLive("c", "setShowChord"),
+    callLive("h", "setHideNonChord"),
     stepLive(
       "[",
       "handleStringsChange",

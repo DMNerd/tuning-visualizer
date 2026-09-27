@@ -1,3 +1,4 @@
+import { getPackId, matchesPack } from "@domain/presets/packIdentity";
 import { trimmedString } from "@shared/lib/strings";
 import { generateId } from "@shared/lib/generateId";
 
@@ -104,11 +105,6 @@ export function normalizePackName(value: unknown): string {
   return trimmedString(value);
 }
 
-// A pack's trimmed meta.id, or "" when missing.
-export function getPackId(pack: unknown): string {
-  return trimmedString((pack as Pack | null | undefined)?.meta?.id);
-}
-
 export function generatePackId(): string {
   return generateId("pack");
 }
@@ -152,22 +148,8 @@ function normalizeIdentifier(value: unknown): Identifier {
 
 function shouldDeletePack(candidate: Pack, identifier?: Identifier): boolean {
   if (!identifier) return false;
-
-  const targetId = identifier.id;
-  const targetName = identifier.name;
-  const targetRef = identifier.ref;
-
-  const candidateId = getPackId(candidate);
-  if (targetId && candidateId && candidateId === targetId) return true;
-
-  if (targetRef && candidate === targetRef) return true;
-
-  if (targetName) {
-    const candidateName = normalizePackName(candidate?.name);
-    if (candidateName && candidateName === targetName) return true;
-  }
-
-  return false;
+  if (identifier.ref && candidate === identifier.ref) return true;
+  return matchesPack(candidate, identifier);
 }
 
 export function removePackByIdentifier(
@@ -198,3 +180,5 @@ export function removePackByIdentifier(
     (pack) => !shouldDeletePack(pack, normalizedIdentifier),
   );
 }
+
+export { getPackId };

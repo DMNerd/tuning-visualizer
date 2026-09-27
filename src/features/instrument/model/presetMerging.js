@@ -1,3 +1,4 @@
+import { matchesPack } from "@domain/presets/packIdentity";
 import { isPlainObject } from "@shared/lib/object";
 
 const RESERVED_PRESET_NAMES = new Set(["Factory default", "Saved default"]);
@@ -44,5 +45,5 @@ export function filterCompatibleCustoms(
 }
 
 export function findPackByName(packs, name) {
-  return packs.find((p) => p?.name === name) ?? null;
+  return packs.find((p) => matchesPack(p, { name })) ?? null;
 }

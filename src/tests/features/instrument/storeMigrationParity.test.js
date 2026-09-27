@@ -8,6 +8,7 @@ import {
 } from "../../helpers/storeTestUtils.js";
 
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
+import { SYSTEM_DEFAULT } from "@shared/config/appDefaults";
 import { scopeKey } from "@shared/lib/storage/windowScope";
 
 const storage = new MemoryStorage();
@@ -131,6 +132,26 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
   assert.equal(state.root, "F#");
   assert.equal(storage.getItem(STORAGE_KEYS.SYSTEM_ID), null);
   assert.equal(storage.getItem(STORAGE_KEYS.ROOT), null);
+});
+
+test("theory store ignores blank persisted fields but keeps valid siblings", async () => {
+  storage.clear();
+  storage.setItem(
+    STORAGE_KEYS.THEORY_PREFS,
+    JSON.stringify({
+      state: { systemId: "   ", root: "F#" },
+      version: 1,
+    }),
+  );
+
+  const useTheoryStore = await rehydrateFresh(
+    "@features/theory/store/useTheoryStore.js",
+    "useTheoryStore",
+  );
+  const state = useTheoryStore.getState();
+
+  assert.equal(state.systemId, SYSTEM_DEFAULT);
+  assert.equal(state.root, "F#");
 });
 
 test("musical reset clears capo-relative chord mode through theory reset", async () => {

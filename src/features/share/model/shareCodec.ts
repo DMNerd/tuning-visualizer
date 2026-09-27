@@ -19,6 +19,7 @@ import {
   isNeckFilterMode,
   NECK_FILTER_MODES,
 } from "@domain/presets/neckFilterModes";
+import { matchesPack } from "@domain/presets/packIdentity";
 import { isObjectLike, isPlainObject } from "@shared/lib/object";
 import { trimmedString } from "@shared/lib/strings";
 
@@ -104,10 +105,8 @@ function resolveSelectedCustomPack(values: ShareValues) {
   const list = Array.isArray(values.customTunings) ? values.customTunings : [];
   if (!selectedPreset || !list.length) return null;
 
-  const match = list.find(
-    (entry) =>
-      isObjectLike(entry) &&
-      (entry as Record<string, unknown>).name === selectedPreset,
+  const match = list.find((entry) =>
+    matchesPack(entry, { name: selectedPreset }),
   );
   const normalized = normalizePackPayload(match);
   if (!normalized) return null;

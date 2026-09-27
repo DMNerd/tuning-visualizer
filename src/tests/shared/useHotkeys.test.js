@@ -215,6 +215,16 @@ test("hotkey table preserves modal gating and supports updated practice actions 
   assert.equal(latestToggleCalls, 1);
 });
 
+test("hotkey table lets keys pass through when their action is not wired", () => {
+  const shortcuts = buildShortcutTableFromRefs(makeLiveRef());
+  const handler = createShortcutHandler(shortcuts, { enabled: true });
+
+  // makeLiveRef leaves setDisplayPrefs/setFrets/setShowChord unset.
+  for (const key of ["o", "-", "c"]) {
+    assert.equal(fireKey(handler, key), false, key);
+  }
+});
+
 test("accidental hotkey cycles sharp -> flat -> both -> sharp", () => {
   const state = { accidental: "sharp" };
   const liveRef = {

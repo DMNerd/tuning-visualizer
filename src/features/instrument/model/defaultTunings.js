@@ -39,7 +39,7 @@ export function resolveFactoryDefault(
   saved,
 ) {
   const systemDefaults = defaultTunings?.[systemId]?.[strings];
-  if (isNonEmptyArray(systemDefaults)) return systemDefaults;
+  if (isNonEmptyArray(systemDefaults)) return systemDefaults.slice();
   if (isNonEmptyArray(saved)) return saved.slice();
   const twelveTetFallback = defaultTunings?.["12-TET"]?.[strings];
   if (isNonEmptyArray(twelveTetFallback)) return twelveTetFallback.slice();
@@ -60,7 +60,7 @@ export function resolveDefaultForCount({
   ).tuning;
   if (isNonEmptyArray(saved)) return saved.slice();
   const systemDefaults = defaultTunings?.[systemId]?.[count];
-  if (isNonEmptyArray(systemDefaults)) return systemDefaults;
+  if (isNonEmptyArray(systemDefaults)) return systemDefaults.slice();
   const fallbackDefaults = defaultTunings?.["12-TET"]?.[count];
   if (isNonEmptyArray(fallbackDefaults)) return fallbackDefaults.slice();
   if (Array.isArray(tuning) && tuning.length === count) return tuning.slice();

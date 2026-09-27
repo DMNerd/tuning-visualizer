@@ -1,3 +1,4 @@
+import { matchesPack } from "@domain/presets/packIdentity";
 import { isObjectLike } from "@shared/lib/object";
 import { trimmedString } from "@shared/lib/strings";
 
@@ -9,16 +10,11 @@ function hasAnyValues(payload) {
 
 // Finds a local custom pack matching the shared meta.id or preset name.
 export function findPackByReference(customTunings, { packId, presetName }) {
-  if (!Array.isArray(customTunings) || !customTunings.length) return null;
-  const wantedId = trimmedString(packId);
-  const wantedName = trimmedString(presetName);
+  if (!Array.isArray(customTunings)) return null;
   return (
-    customTunings.find(
-      (entry) =>
-        isObjectLike(entry) &&
-        ((wantedId && trimmedString(entry.meta?.id) === wantedId) ||
-          (wantedName && trimmedString(entry.name) === wantedName)),
-    ) || null
+    customTunings.find((entry) =>
+      matchesPack(entry, { id: packId, name: presetName }),
+    ) ?? null
   );
 }
 
