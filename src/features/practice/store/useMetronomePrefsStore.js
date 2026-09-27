@@ -142,11 +142,9 @@ export const useMetronomePrefsStore = create(
 
 export const selectMetronomePrefs = (state) => state.prefs;
 export const selectMetronomeSetPrefs = (state) => state.setPrefs;
-export const selectMetronomeResetPrefs = (state) => state.resetPrefs;
 export const selectMetronomeRandomizeMode = (state) => state.randomizeMode;
 export const selectMetronomeSetRandomizeMode = (state) =>
   state.setRandomizeMode;
 export const selectMetronomeSetters = (state) => state.setters;
 export const selectMetronomeHydrateWithDefaults = (state) =>
   state.hydrateWithDefaults;
-export const selectMetronomeIsHydrated = (state) => state.isHydrated;

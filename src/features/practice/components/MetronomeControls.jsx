@@ -72,8 +72,8 @@ function MetronomeControls({ state, actions, meta }) {
         {isRoutinePlaying ? (
           <div className="tv-field">
             <small className="tv-field__hint">
-              BPM, time signature, and auto-advance are controlled by the
-              active training routine.
+              BPM, time signature, and auto-advance are controlled by the active
+              training routine.
             </small>
           </div>
         ) : null}

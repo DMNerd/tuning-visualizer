@@ -1,39 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { MemoryStorage, importFresh } from "../../helpers/storeTestUtils.js";
+
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
-
-class MemoryStorage {
-  constructor() {
-    this.map = new Map();
-  }
-
-  getItem(key) {
-    return this.map.has(key) ? this.map.get(key) : null;
-  }
-
-  setItem(key, value) {
-    this.map.set(key, String(value));
-  }
-
-  removeItem(key) {
-    this.map.delete(key);
-  }
-
-  clear() {
-    this.map.clear();
-  }
-}
 
 const storage = new MemoryStorage();
 const sessionStorage = new MemoryStorage();
 globalThis.localStorage = storage;
 globalThis.sessionStorage = sessionStorage;
-
-async function importFresh(specifier) {
-  const cacheKey = `${Date.now()}-${Math.random()}`;
-  return import(`${specifier}?t=${cacheKey}`);
-}
 
 function readStoredJson(key) {
   const raw = storage.getItem(key);

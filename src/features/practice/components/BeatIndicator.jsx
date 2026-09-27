@@ -1,16 +1,10 @@
 import { memo, useMemo } from "react";
 import clsx from "clsx";
+import { formatRemainingTime } from "@features/practice/model/formatRemainingTime";
 
 function parseBeats(timeSig) {
   const beats = Number.parseInt(String(timeSig).split("/")[0], 10);
   return Number.isFinite(beats) && beats > 0 ? beats : 4;
-}
-
-function formatRemainingTime(totalSeconds) {
-  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
-  const minutes = Math.floor(safeSeconds / 60);
-  const seconds = safeSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function BeatIndicator({

@@ -5,20 +5,10 @@ import {
   coerceWithFallback,
   resolveNextValue,
 } from "@shared/hooks/validatedStorageUtils";
-import { clamp } from "@shared/lib/math";
+import { clampNumeric } from "@shared/lib/math";
 
-const numberInRange = (min, max, fallback) => (value) => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return clamp(value, min, max);
-  }
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return clamp(parsed, min, max);
-    }
-  }
-  return fallback;
-};
+const numberInRange = (min, max, fallback) => (value) =>
+  clampNumeric(value, min, max, fallback);
 
 test("coerceWithFallback returns fallback for invalid stored values", () => {
   const coerce = numberInRange(4, 8, 6);

@@ -14,6 +14,37 @@ import {
 } from "@features/fretboard/model/renderFilters";
 import { buildFretLabel } from "@shared/lib/fretLabels";
 
+const BASE_FRETBOARD_PROPS = {
+  strings: 1,
+  frets: 3,
+  tuning: ["E"],
+  rootIx: 0,
+  intervals: [],
+  accidental: "sharp",
+  noteNaming: "english",
+  microLabelStyle: "letters",
+  show: "fret",
+  showOpen: true,
+  showFretNums: true,
+  dotSize: 12,
+  lefty: false,
+  system: TUNINGS["12-TET"],
+  chordPCs: null,
+  chordRootPc: null,
+  openOnlyInMode: "none",
+  colorByDegree: false,
+  hideNonChord: false,
+  stringMeta: null,
+  boardMeta: null,
+  capoFret: 0,
+  onSetCapo: () => {},
+};
+
+const renderFretboard = (props) =>
+  renderToStaticMarkup(
+    React.createElement(Fretboard, { ...BASE_FRETBOARD_PROPS, ...props }),
+  );
+
 test("King Gizzard 24-TET preset meta includes hidden fret board config", () => {
   const meta = PRESET_TUNING_META["24-TET"]?.[6]?.["King Gizzard (C#F#C#F#BE)"];
   assert.ok(meta?.board, "expected board metadata for King Gizzard preset");
@@ -109,33 +140,7 @@ test("unit: reconcileCapoState normalizes hidden input capo values", () => {
 });
 
 test("integration: Fretboard render excludes hidden-fret wires, markers, and note artifacts", () => {
-  const markup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 3,
-      tuning: ["E"],
-      rootIx: 0,
-      intervals: [],
-      accidental: "sharp",
-      noteNaming: "english",
-      microLabelStyle: "letters",
-      show: "fret",
-      showOpen: true,
-      showFretNums: true,
-      dotSize: 12,
-      lefty: false,
-      system: TUNINGS["12-TET"],
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: { hiddenFrets: [1, 3] },
-      capoFret: 0,
-      onSetCapo: () => {},
-    }),
-  );
+  const markup = renderFretboard({ boardMeta: { hiddenFrets: [1, 3] } });
 
   const fretWireCount = (
     markup.match(/class="[^"]*\btv-fretboard__fret\b[^"]*"/g) ?? []
@@ -156,61 +161,15 @@ test("integration: Fretboard render excludes hidden-fret wires, markers, and not
 });
 
 test("integration: hidden capo fret is remapped to a visible fallback", () => {
-  const hiddenCapoMarkup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 3,
-      tuning: ["E"],
-      rootIx: 0,
-      intervals: [],
-      accidental: "sharp",
-      noteNaming: "english",
-      microLabelStyle: "letters",
-      show: "fret",
-      showOpen: true,
-      showFretNums: true,
-      dotSize: 12,
-      lefty: false,
-      system: TUNINGS["12-TET"],
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: { hiddenFrets: [1, 3] },
-      capoFret: 3,
-      onSetCapo: () => {},
-    }),
-  );
+  const hiddenCapoMarkup = renderFretboard({
+    boardMeta: { hiddenFrets: [1, 3] },
+    capoFret: 3,
+  });
 
-  const explicitFallbackMarkup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 3,
-      tuning: ["E"],
-      rootIx: 0,
-      intervals: [],
-      accidental: "sharp",
-      noteNaming: "english",
-      microLabelStyle: "letters",
-      show: "fret",
-      showOpen: true,
-      showFretNums: true,
-      dotSize: 12,
-      lefty: false,
-      system: TUNINGS["12-TET"],
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: { hiddenFrets: [1, 3] },
-      capoFret: 2,
-      onSetCapo: () => {},
-    }),
-  );
+  const explicitFallbackMarkup = renderFretboard({
+    boardMeta: { hiddenFrets: [1, 3] },
+    capoFret: 2,
+  });
 
   const hiddenNutX = hiddenCapoMarkup.match(
     /class="tv-fretboard__nut" x="([^"]+)"/,
@@ -237,41 +196,12 @@ test("integration: colorByShape applies multiple palette colors across the neck"
     strings: 6,
     frets: 24,
     tuning: ["E", "B", "G", "D", "A", "E"],
-    rootIx: 0,
     intervals: [0, 2, 4, 5, 7, 9, 11],
-    accidental: "sharp",
-    noteNaming: "english",
-    microLabelStyle: "letters",
     show: "names",
-    showOpen: true,
-    showFretNums: true,
-    dotSize: 12,
-    lefty: false,
-    system: TUNINGS["12-TET"],
-    chordPCs: null,
-    chordRootPc: null,
-    openOnlyInMode: "none",
-    hideNonChord: false,
-    stringMeta: null,
-    boardMeta: null,
-    capoFret: 0,
-    onSetCapo: () => {},
   };
 
-  const shapeMarkup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      ...sharedProps,
-      colorByDegree: false,
-      colorByShape: true,
-    }),
-  );
-  const plainMarkup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      ...sharedProps,
-      colorByDegree: false,
-      colorByShape: false,
-    }),
-  );
+  const shapeMarkup = renderFretboard({ ...sharedProps, colorByShape: true });
+  const plainMarkup = renderFretboard({ ...sharedProps, colorByShape: false });
 
   const fillsFromMarkup = (markup) =>
     Array.from(
@@ -298,33 +228,13 @@ test("integration: micro fret marker abbreviations preserve multi-part identity 
   const nineteenTet = findSystemByEdo(TUNINGS, 19)?.system;
   assert.ok(nineteenTet, "expected 19-TET system to resolve");
 
-  const markup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 36,
-      tuning: ["E"],
-      rootIx: 0,
-      intervals: [0, 1, 2, 3, 4, 5, 6, 7],
-      accidental: "sharp",
-      noteNaming: "english",
-      microLabelStyle: "fractions",
-      show: "fret",
-      showOpen: true,
-      showFretNums: true,
-      dotSize: 8,
-      lefty: false,
-      system: nineteenTet,
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: null,
-      capoFret: 0,
-      onSetCapo: () => {},
-    }),
-  );
+  const markup = renderFretboard({
+    frets: 36,
+    intervals: [0, 1, 2, 3, 4, 5, 6, 7],
+    microLabelStyle: "fractions",
+    dotSize: 8,
+    system: nineteenTet,
+  });
 
   const microMarkerTexts = Array.from(
     markup.matchAll(
@@ -350,33 +260,14 @@ test("integration: dense marker overlap hides non-capo labels while preserving c
   assert.ok(nineteenTet, "expected 19-TET system to resolve");
 
   const capoFret = 9;
-  const markup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 48,
-      tuning: ["E"],
-      rootIx: 0,
-      intervals: [0, 1, 2, 3, 4, 5, 6, 7],
-      accidental: "sharp",
-      noteNaming: "english",
-      microLabelStyle: "fractions",
-      show: "fret",
-      showOpen: true,
-      showFretNums: true,
-      dotSize: 8,
-      lefty: false,
-      system: nineteenTet,
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: null,
-      capoFret,
-      onSetCapo: () => {},
-    }),
-  );
+  const markup = renderFretboard({
+    frets: 48,
+    intervals: [0, 1, 2, 3, 4, 5, 6, 7],
+    microLabelStyle: "fractions",
+    dotSize: 8,
+    system: nineteenTet,
+    capoFret,
+  });
 
   const markerCount = (
     markup.match(/class="[^"]*\btv-fretboard__marker\b[^"]*"/g) ?? []
@@ -396,33 +287,16 @@ test("integration: dense marker overlap hides non-capo labels while preserving c
 });
 
 test("integration: both accidental mode uses split note rendering for enharmonics", () => {
-  const markup = renderToStaticMarkup(
-    React.createElement(Fretboard, {
-      strings: 1,
-      frets: 2,
-      tuning: ["F"],
-      rootIx: 5,
-      intervals: [0, 1],
-      accidental: "both",
-      noteNaming: "english",
-      microLabelStyle: "letters",
-      show: "names",
-      showOpen: true,
-      showFretNums: false,
-      dotSize: 10,
-      lefty: false,
-      system: TUNINGS["12-TET"],
-      chordPCs: null,
-      chordRootPc: null,
-      openOnlyInMode: "none",
-      colorByDegree: false,
-      hideNonChord: false,
-      stringMeta: null,
-      boardMeta: null,
-      capoFret: 0,
-      onSetCapo: () => {},
-    }),
-  );
+  const markup = renderFretboard({
+    frets: 2,
+    tuning: ["F"],
+    rootIx: 5,
+    intervals: [0, 1],
+    accidental: "both",
+    show: "names",
+    showFretNums: false,
+    dotSize: 10,
+  });
 
   assert.match(markup, /note-top-/);
   assert.match(markup, /note-bottom-/);

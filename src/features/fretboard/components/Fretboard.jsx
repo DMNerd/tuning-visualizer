@@ -13,7 +13,6 @@ import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
 import { useScaleAndChord } from "@features/theory/hooks/useScaleAndChord";
 import { useInlays } from "@features/fretboard/hooks/useInlays";
 import { useLabels } from "@features/fretboard/hooks/useLabels";
-import { getDegreeColor } from "@shared/lib/degreeColors";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@shared/lib/fretLabels";
 import {
   arrayRefAndLengthEqual,
@@ -27,20 +26,11 @@ import {
   resolveClosestDatasetElement,
 } from "@shared/lib/svgDelegation";
 import {
-  collides1D,
-  collides2D,
-  addBounds1D,
-  addBounds2D,
-} from "@features/fretboard/model/collisionGrid";
-import {
-  NOTE_FONT_MIN,
   NOTE_FONT_MAX,
   SPLIT_NOTE_FONT_MIN,
-  SPLIT_NOTE_FONT_MAX,
   MARKER_FONT_MIN,
   MARKER_FONT_MAX,
   estimateMinimumDotSize,
-  buildLabelVariants,
   buildFitCacheKey,
   buildWidthCacheKey,
 } from "@features/fretboard/model/labelFit";
@@ -51,8 +41,16 @@ import {
   resolveVisibleCapoFret,
   reconcileCapoState,
 } from "@features/fretboard/model/renderFilters";
-import { findDistinctWindowShapeOccurrences } from "@domain/theory/fretboardShapes";
-import { getShapeColor } from "@shared/lib/shapeColors";
+import {
+  isNoteVisible,
+  resolveNoteFill,
+} from "@features/fretboard/model/noteAppearance";
+import { applyShapeRegionColors } from "@features/fretboard/model/shapeRegions";
+import {
+  placeNoteLabels,
+  placeFretMarkerLabels,
+  fitFretMarkerLabel,
+} from "@features/fretboard/model/labelPlacement";
 
 const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
 const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
@@ -64,7 +62,6 @@ const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
 const NUT_VERTICAL_PADDING = 8;
 const APP_FONT_STACK =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
-const SPATIAL_BUCKET_SIZE = 36;
 
 const Fretboard = forwardRef(function Fretboard(
   {
@@ -351,33 +348,22 @@ const Fretboard = forwardRef(function Fretboard(
   const renderedNotes = useMemo(() => {
     if (!activeIntervals.length) return [];
     const N = system.divisions;
+    const hasChord = Boolean(chordPCs);
     const baseNotes = [];
 
-    for (let i = 0; i < noteGeometry.length; i += 1) {
-      const slot = noteGeometry[i];
+    for (const slot of noteGeometry) {
       const pc = (openPcByString[slot.s] + slot.step) % N;
       const inScale = scaleSet.has(pc);
-      const inChord = chordPCs ? chordPCs.has(pc) : false;
-      // Open notes only ever count toward visibility when showOpen is on —
-      // shared by the chord-overlay term below and the hideNonChord branch.
-      const openVisible = !slot.isOpen || showOpen;
-      const isOverlayOutsideScaleChord =
-        Boolean(chordPCs) && !hideNonChord && inChord && !inScale && openVisible;
-
-      let visible;
-      if (hideNonChord && chordPCs) {
-        visible = openVisible && inChord;
-      } else {
-        // openOnlyInMode === "chord" only restricts opens while a chord is
-        // actually overlaid (chordPCs set) — with no chord active it would
-        // hide every open string, since inChord is always false without one.
-        const baselineVisible = slot.isOpen
-          ? showOpen &&
-            (openOnlyInMode !== "scale" || inScale) &&
-            (openOnlyInMode !== "chord" || !chordPCs || inChord)
-          : inScale;
-        visible = baselineVisible || isOverlayOutsideScaleChord;
-      }
+      const inChord = hasChord && chordPCs.has(pc);
+      const visible = isNoteVisible({
+        isOpen: slot.isOpen,
+        inScale,
+        inChord,
+        hasChord,
+        showOpen,
+        hideNonChord,
+        openOnlyInMode,
+      });
       if (!visible) continue;
 
       const isRoot = pc === rootIx;
@@ -392,33 +378,20 @@ const Fretboard = forwardRef(function Fretboard(
       const rBase =
         (isRoot ? ROOT_NOTE_RADIUS_MULTIPLIER : 1) * effectiveDotSize;
       const r = inChord ? rBase * CHORD_NOTE_RADIUS_MULTIPLIER : rBase;
-
-      let fill;
-      if (colorByDegree) {
-        const deg = degreeForPc(pc);
-        fill =
-          deg != null
-            ? getDegreeColor(deg, activeIntervals.length)
-            : isMicro
-              ? "var(--note-micro)"
-              : "var(--note)";
-      } else {
-        fill = isRoot
-          ? "var(--root)"
-          : isMicro
-            ? "var(--note-micro)"
-            : "var(--note)";
-      }
-
       const isChordRoot = inChord && chordRootPc === pc;
       const isChordOutsideScale = inChord && !inScale;
-      if (isChordOutsideScale) fill = "var(--chord-outside-fill)";
-
-      const raw = labelFor(pc, slot.f);
+      const fill = resolveNoteFill({
+        colorByDegree,
+        degree: colorByDegree ? degreeForPc(pc) : null,
+        degreeCount: activeIntervals.length,
+        isRoot,
+        isMicro,
+        isChordOutsideScale,
+      });
       const label =
         show === "fret"
           ? buildFretLabel(globalFretForLabel, N, microLabelOpts)
-          : raw;
+          : labelFor(pc, slot.f);
 
       baseNotes.push({
         ...slot,
@@ -435,215 +408,15 @@ const Fretboard = forwardRef(function Fretboard(
       });
     }
 
-    if (colorByShape && baseNotes.length > 0) {
-      let fretMin = baseNotes[0].f;
-      let fretMax = baseNotes[0].f;
-      for (const note of baseNotes) {
-        if (note.f < fretMin) fretMin = note.f;
-        if (note.f > fretMax) fretMax = note.f;
-      }
-      const windowWidth = Math.max(2, Math.round(system.divisions / 4));
-      const minShapeNotes = Math.max(2, Math.floor(strings / 2));
-      const shapeInputNotes = baseNotes.map((note) => ({
-        string: note.s,
-        fret: note.f,
-        pc: note.pc,
-        degree: (note.pc - rootIx + N) % N,
-        isRoot: note.isRoot,
-      }));
-      const { occurrences } = findDistinctWindowShapeOccurrences(
-        shapeInputNotes,
-        {
-          fretMin,
-          fretMax,
-          width: windowWidth,
-          minNotes: minShapeNotes,
-          requireRoot: true,
-        },
-      );
-
-      const rawStarts = [
-        ...new Set(
-          occurrences
-            .map((occurrence) => occurrence.startFret)
-            .sort((a, b) => a - b),
-        ),
-      ];
-      const regionStarts = [];
-      for (const start of rawStarts) {
-        const previous = regionStarts[regionStarts.length - 1];
-        if (previous == null || start - previous >= windowWidth) {
-          regionStarts.push(start);
-        }
-      }
-      if (regionStarts.length === 0 && baseNotes.length > 0) {
-        regionStarts.push(Math.min(...baseNotes.map((note) => note.f)));
-      }
-      const shapeColorByKey = new Map();
-
-      for (const note of baseNotes) {
-        if (note.isChordOutsideScale) continue;
-        if (regionStarts.length === 0) continue;
-
-        const memberships = [];
-        for (let i = 0; i < regionStarts.length; i += 1) {
-          const start = regionStarts[i];
-          const endInclusive = start + windowWidth;
-          if (note.f >= start && note.f <= endInclusive) {
-            memberships.push(i);
-          }
-        }
-        if (memberships.length === 0) {
-          for (let i = 0; i < regionStarts.length; i += 1) {
-            if (note.f >= regionStarts[i]) note.shapeRegionIndex = i;
-            else break;
-          }
-          memberships.push(note.shapeRegionIndex ?? 0);
-        }
-
-        const shapeFills = memberships
-          .map((regionIndex) => getShapeColor(regionIndex))
-          .filter((fill, index, all) => all.indexOf(fill) === index)
-          .slice(0, 2);
-
-        if (!shapeColorByKey.has(note.key)) {
-          shapeColorByKey.set(note.key, shapeFills[0]);
-        }
-        note.fill = shapeColorByKey.get(note.key);
-        note.shapeSplitFills = shapeFills;
-        note.splitByShape = shapeFills.length > 1;
-      }
+    if (colorByShape) {
+      applyShapeRegionColors(baseNotes, { divisions: N, strings, rootIx });
     }
 
-    const sorted = [...baseNotes].sort((a, b) => {
-      if (a.isRoot !== b.isRoot) return a.isRoot ? -1 : 1;
-      if (a.inChord !== b.inChord) return a.inChord ? -1 : 1;
-      return b.r - a.r;
+    return placeNoteLabels(baseNotes, {
+      splitEnharmonic: accidental === "both" && show === "names",
+      fitLabel: fitLabelCached,
+      measureWidth: measureWidthCached,
     });
-    const acceptedBoundsBuckets = new Map();
-    const computed = new Map();
-
-    for (let i = 0; i < sorted.length; i += 1) {
-      const note = sorted[i];
-      const shouldSplitEnharmonicLabel =
-        accidental === "both" &&
-        show === "names" &&
-        typeof note.label === "string" &&
-        note.label.includes("/");
-      let renderedLabel = null;
-      let renderedLabelLines = null;
-      let noteFontSize = NOTE_FONT_MIN;
-      let width = 0;
-      let halfH = 0;
-
-      if (shouldSplitEnharmonicLabel) {
-        const [upperRaw = "", lowerRaw = ""] = note.label.split("/");
-        const upperFit = fitLabelCached(
-          buildLabelVariants(upperRaw, {
-            kind: "note",
-            allowSingleCharFallback: note.isRoot,
-          }),
-          note.r * 0.9,
-          {
-            sizeRange: {
-              min: SPLIT_NOTE_FONT_MIN,
-              max: SPLIT_NOTE_FONT_MAX,
-              step: 0.5,
-            },
-            fontWeight: 700,
-            allowSingleCharFallback: note.isRoot,
-          },
-        );
-        const lowerFit = fitLabelCached(
-          buildLabelVariants(lowerRaw, {
-            kind: "note",
-            allowSingleCharFallback: note.isRoot,
-          }),
-          note.r * 0.9,
-          {
-            sizeRange: {
-              min: SPLIT_NOTE_FONT_MIN,
-              max: SPLIT_NOTE_FONT_MAX,
-              step: 0.5,
-            },
-            fontWeight: 700,
-            allowSingleCharFallback: note.isRoot,
-          },
-        );
-        if (!upperFit || !lowerFit) {
-          computed.set(note.key, { ...note, renderedLabel: null });
-          continue;
-        }
-        renderedLabelLines = [upperFit.text, lowerFit.text];
-        noteFontSize = Math.min(upperFit.fontSize, lowerFit.fontSize);
-        width = Math.max(
-          measureWidthCached(upperFit.text, {
-            fontSize: noteFontSize,
-            fontWeight: 700,
-          }),
-          measureWidthCached(lowerFit.text, {
-            fontSize: noteFontSize,
-            fontWeight: 700,
-          }),
-        );
-        halfH = noteFontSize * 1.25;
-      } else {
-        const noteVariants = buildLabelVariants(note.label ?? "", {
-          kind: "note",
-          allowSingleCharFallback: note.isRoot,
-        });
-        const fit = fitLabelCached(noteVariants, note.r * 1.65, {
-          sizeRange: {
-            min: NOTE_FONT_MIN,
-            max: NOTE_FONT_MAX,
-            step: 0.5,
-          },
-          fontWeight: 700,
-          allowSingleCharFallback: note.isRoot,
-        });
-
-        if (!fit) {
-          computed.set(note.key, { ...note, renderedLabel: null });
-          continue;
-        }
-        renderedLabel = fit.text;
-        noteFontSize = fit.fontSize;
-        width = measureWidthCached(fit.text, {
-          fontSize: fit.fontSize,
-          fontWeight: 700,
-        });
-        halfH = fit.fontSize / 2 + 1;
-      }
-
-      const halfW = width / 2 + 1;
-      const bounds = {
-        left: note.cx - halfW,
-        right: note.cx + halfW,
-        top: note.cy - halfH - 1,
-        bottom: note.cy + halfH + 1,
-      };
-      const collides = collides2D(
-        bounds,
-        acceptedBoundsBuckets,
-        SPATIAL_BUCKET_SIZE,
-      );
-
-      if (collides && !note.isRoot) {
-        computed.set(note.key, { ...note, renderedLabel: null });
-        continue;
-      }
-
-      addBounds2D(bounds, acceptedBoundsBuckets, SPATIAL_BUCKET_SIZE);
-      computed.set(note.key, {
-        ...note,
-        renderedLabel,
-        renderedLabelLines,
-        noteFontSize,
-        splitEnharmonic: shouldSplitEnharmonicLabel,
-      });
-    }
-
-    return baseNotes.map((note) => computed.get(note.key) ?? note);
   }, [
     activeIntervals,
     system.divisions,
@@ -671,105 +444,33 @@ const Fretboard = forwardRef(function Fretboard(
 
   const fretMarkers = useMemo(() => {
     const baseMarkers = visibleFrets.map((f, index) => {
-      const labelNum = buildFretLabel(f, system.divisions, microLabelOpts);
-      const xForFretNum = betweenVisibleFretsX(f);
-
       const leftBoundary =
         index === 0 ? padLeft : (wireX(visibleFrets[index - 1]) + wireX(f)) / 2;
       const rightBoundary =
         index === visibleFrets.length - 1
           ? boardEndX
           : (wireX(f) + wireX(visibleFrets[index + 1])) / 2;
-      const fit = fitLabelCached(
-        buildLabelVariants(labelNum, {
-          kind: "fret",
-          allowSingleCharFallback: false,
-        }),
-        Math.max(6, (rightBoundary - leftBoundary) * 0.9),
-        {
-          sizeRange: {
-            min: MARKER_FONT_MIN,
-            max: MARKER_FONT_MAX,
-            step: 0.5,
-          },
-          fontWeight: 500,
-          allowSingleCharFallback: false,
-        },
+      const maxWidth = Math.max(6, (rightBoundary - leftBoundary) * 0.9);
+      const fit = fitFretMarkerLabel(
+        fitLabelCached,
+        buildFretLabel(f, system.divisions, microLabelOpts),
+        maxWidth,
+        MARKER_FONT_MAX,
       );
 
       return {
         fret: f,
-        xForFretNum,
-        maxWidth: Math.max(6, (rightBoundary - leftBoundary) * 0.9),
+        xForFretNum: betweenVisibleFretsX(f),
+        maxWidth,
         labelNum: fit?.text ?? null,
         markerFontSize: fit?.fontSize ?? MARKER_FONT_MIN,
       };
     });
 
-    const acceptedBoundsBuckets = new Map();
-    return baseMarkers.map((marker) => {
-      if (!marker.labelNum) return marker;
-      const buildBounds = (label, fontSize) => {
-        const width = measureWidthCached(label, {
-          fontSize,
-          fontWeight: 500,
-        });
-        return {
-          left: marker.xForFretNum - width / 2 - 1,
-          right: marker.xForFretNum + width / 2 + 1,
-        };
-      };
-
-      let nextLabel = marker.labelNum;
-      let nextSize = marker.markerFontSize;
-      let bounds = buildBounds(nextLabel, nextSize);
-      let collides = collides1D(
-        bounds,
-        acceptedBoundsBuckets,
-        SPATIAL_BUCKET_SIZE,
-      );
-
-      if (collides && marker.fret !== safeCapoFret) {
-        const downgradedFit = fitLabelCached(
-          buildLabelVariants(marker.labelNum, {
-            kind: "fret",
-            allowSingleCharFallback: false,
-          }),
-          marker.maxWidth,
-          {
-            sizeRange: {
-              min: MARKER_FONT_MIN,
-              max: Math.max(MARKER_FONT_MIN, marker.markerFontSize - 1.5),
-              step: 0.5,
-            },
-            fontWeight: 500,
-            allowSingleCharFallback: false,
-          },
-        );
-
-        if (!downgradedFit) {
-          return { ...marker, labelNum: null };
-        }
-
-        nextLabel = downgradedFit.text;
-        nextSize = downgradedFit.fontSize;
-        bounds = buildBounds(nextLabel, nextSize);
-        collides = collides1D(
-          bounds,
-          acceptedBoundsBuckets,
-          SPATIAL_BUCKET_SIZE,
-        );
-        if (collides) {
-          return { ...marker, labelNum: null };
-        }
-      }
-
-      addBounds1D(bounds, acceptedBoundsBuckets, SPATIAL_BUCKET_SIZE);
-      return {
-        ...marker,
-        labelNum: nextLabel,
-        markerFontSize: nextSize,
-      };
+    return placeFretMarkerLabels(baseMarkers, {
+      capoFret: safeCapoFret,
+      fitLabel: fitLabelCached,
+      measureWidth: measureWidthCached,
     });
   }, [
     visibleFrets,
@@ -811,6 +512,10 @@ const Fretboard = forwardRef(function Fretboard(
     },
     [nameForPc, onSelectNote, resolveNotePcFromTarget],
   );
+
+  const inlayCenterX = (f) =>
+    padLeft + nutW + ((f === 1 ? 0 : fretXs[f - 2]) + fretXs[f - 1]) / 2;
+  const inlayCenterY = padTop + (height - padTop - padBottom) / 2;
 
   return (
     <svg
@@ -893,16 +598,12 @@ const Fretboard = forwardRef(function Fretboard(
         {inlaySingles.map((f) => {
           if (isFretHidden(f)) return null;
 
-          const prev = f === 1 ? 0 : fretXs[f - 2];
-          const curr = fretXs[f - 1];
-          const cx = padLeft + nutW + (prev + curr) / 2;
-          const cy = padTop + (height - padTop - padBottom) / 2;
           return (
             <circle
               key={`inlay-s-${f}`}
               className="tv-fretboard__inlay"
-              cx={cx}
-              cy={cy}
+              cx={inlayCenterX(f)}
+              cy={inlayCenterY}
               r={INLAY_RADIUS}
             />
           );
@@ -911,17 +612,9 @@ const Fretboard = forwardRef(function Fretboard(
         {inlayDoubles.map((f) => {
           if (isFretHidden(f)) return null;
 
-          const prev = f === 1 ? 0 : fretXs[f - 2];
-          const curr = fretXs[f - 1];
-          const cx = padLeft + nutW + (prev + curr) / 2;
-          const cy1 =
-            padTop +
-            (height - padTop - padBottom) / 2 -
-            DOUBLE_INLAY_VERTICAL_OFFSET;
-          const cy2 =
-            padTop +
-            (height - padTop - padBottom) / 2 +
-            DOUBLE_INLAY_VERTICAL_OFFSET;
+          const cx = inlayCenterX(f);
+          const cy1 = inlayCenterY - DOUBLE_INLAY_VERTICAL_OFFSET;
+          const cy2 = inlayCenterY + DOUBLE_INLAY_VERTICAL_OFFSET;
           return (
             <g key={`inlay-d-${f}`}>
               <circle

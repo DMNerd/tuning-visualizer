@@ -11,3 +11,19 @@ export function clamp(value: number, min: number, max: number): number {
 export function mod(n: number, m: number): number {
   return ((n % m) + m) % m;
 }
+
+/** Clamps a number or numeric string into range; anything else yields `fallback`. */
+export function clampNumeric<T>(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: T,
+): number | T {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : NaN;
+  return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
+}

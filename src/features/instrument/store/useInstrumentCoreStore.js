@@ -16,7 +16,7 @@ import {
   getLocalStorage,
   readLegacyJSON,
 } from "@shared/lib/storage/scopedStorage";
-import { clamp } from "@shared/lib/math";
+import { clamp, clampNumeric } from "@shared/lib/math";
 import { isPlainObject } from "@shared/lib/object";
 import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
 import {
@@ -26,28 +26,35 @@ import {
 
 let lastSerializedGlobalDefaultTuningMap = null;
 
-function clampMaybeNumber(value, min, max, fallback) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return clamp(value, min, max);
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return clamp(parsed, min, max);
-    }
-  }
-
-  return fallback;
-}
-
 function readLegacyNumber(key, min, max, fallback) {
   const storage = getLocalStorage();
   if (!storage) return { value: fallback, found: false };
   const raw = storage.getItem(key);
   return {
-    value: clampMaybeNumber(raw, min, max, fallback),
+    value: clampNumeric(raw, min, max, fallback),
     found: raw !== null,
+  };
+}
+
+function readLegacyInstrumentCore() {
+  const strings = readLegacyNumber(
+    STORAGE_KEYS.STRINGS,
+    STR_MIN,
+    STR_MAX,
+    STR_FACTORY,
+  );
+  const frets = readLegacyNumber(
+    STORAGE_KEYS.FRETS,
+    FRETS_MIN,
+    FRETS_MAX,
+    FRETS_FACTORY,
+  );
+  const defaults = readLegacyDefaultTuningMap();
+  return {
+    strings,
+    frets,
+    defaults,
+    hasLegacyKeys: strings.found || frets.found || defaults.found,
   };
 }
 
@@ -112,23 +119,16 @@ function applyTuningDraft(state, valueOrUpdater, { atomic = false } = {}) {
 export const useInstrumentCoreStore = create(
   persist(
     immer((set) => {
-      const legacyStrings = readLegacyNumber(
-        STORAGE_KEYS.STRINGS,
-        STR_MIN,
-        STR_MAX,
-        STR_FACTORY,
-      );
-      const legacyFrets = readLegacyNumber(
-        STORAGE_KEYS.FRETS,
-        FRETS_MIN,
-        FRETS_MAX,
-        FRETS_FACTORY,
-      );
-      const legacyDefaults = readLegacyDefaultTuningMap();
+      const {
+        strings: legacyStrings,
+        frets: legacyFrets,
+        defaults: legacyDefaults,
+        hasLegacyKeys,
+      } = readLegacyInstrumentCore();
       lastSerializedGlobalDefaultTuningMap = serializeDefaultTuningMap(
         legacyDefaults.value,
       );
-      if (legacyStrings.found || legacyFrets.found || legacyDefaults.found) {
+      if (hasLegacyKeys) {
         shouldCleanupLegacyInstrumentCoreKeys = true;
       }
       return {
@@ -232,21 +232,12 @@ export const useInstrumentCoreStore = create(
           typeof persistedState === "object" &&
           !Array.isArray(persistedState);
 
-        const legacyStrings = readLegacyNumber(
-          STORAGE_KEYS.STRINGS,
-          STR_MIN,
-          STR_MAX,
-          STR_FACTORY,
-        );
-        const legacyFrets = readLegacyNumber(
-          STORAGE_KEYS.FRETS,
-          FRETS_MIN,
-          FRETS_MAX,
-          FRETS_FACTORY,
-        );
-        const legacyDefaults = readLegacyDefaultTuningMap();
-        const hasLegacyKeys =
-          legacyStrings.found || legacyFrets.found || legacyDefaults.found;
+        const {
+          strings: legacyStrings,
+          frets: legacyFrets,
+          defaults: legacyDefaults,
+          hasLegacyKeys,
+        } = readLegacyInstrumentCore();
 
         if (!hasPersisted) {
           if (hasLegacyKeys) {
@@ -263,13 +254,13 @@ export const useInstrumentCoreStore = create(
 
         return {
           ...persistedState,
-          strings: clampMaybeNumber(
+          strings: clampNumeric(
             persistedState.strings,
             STR_MIN,
             STR_MAX,
             legacyStrings.value,
           ),
-          frets: clampMaybeNumber(
+          frets: clampNumeric(
             persistedState.frets,
             FRETS_MIN,
             FRETS_MAX,
@@ -293,21 +284,12 @@ export const useInstrumentCoreStore = create(
         if (!persisted) {
           return current;
         }
-        const legacyStrings = readLegacyNumber(
-          STORAGE_KEYS.STRINGS,
-          STR_MIN,
-          STR_MAX,
-          STR_FACTORY,
-        );
-        const legacyFrets = readLegacyNumber(
-          STORAGE_KEYS.FRETS,
-          FRETS_MIN,
-          FRETS_MAX,
-          FRETS_FACTORY,
-        );
-        const legacyDefaults = readLegacyDefaultTuningMap();
-        const hasLegacyKeys =
-          legacyStrings.found || legacyFrets.found || legacyDefaults.found;
+        const {
+          strings: legacyStrings,
+          frets: legacyFrets,
+          defaults: legacyDefaults,
+          hasLegacyKeys,
+        } = readLegacyInstrumentCore();
         if (hasLegacyKeys) {
           shouldCleanupLegacyInstrumentCoreKeys = true;
         }
@@ -316,13 +298,13 @@ export const useInstrumentCoreStore = create(
         return {
           ...current,
           ...(persisted || {}),
-          strings: clampMaybeNumber(
+          strings: clampNumeric(
             persisted?.strings,
             STR_MIN,
             STR_MAX,
             legacyStrings.found ? legacyStrings.value : STR_FACTORY,
           ),
-          frets: clampMaybeNumber(
+          frets: clampNumeric(
             persisted?.frets,
             FRETS_MIN,
             FRETS_MAX,

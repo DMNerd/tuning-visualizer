@@ -46,9 +46,7 @@ export const TuningPackSchema = v.object({
 
 export const TuningPackArraySchema = v.array(TuningPackSchema);
 
-export type TuningString = v.InferOutput<typeof TuningStringSchema>;
 export type TuningPack = v.InferOutput<typeof TuningPackSchema>;
-export type TuningPackArray = v.InferOutput<typeof TuningPackArraySchema>;
 
 export function stripVersionField(pack: unknown) {
   if (pack === null || typeof pack !== "object" || Array.isArray(pack)) {

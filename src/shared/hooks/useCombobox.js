@@ -300,40 +300,31 @@ export default function useCombobox({
     [handleInputRef, handleInputPress],
   );
 
+  const moveActiveIndex = (event, step) => {
+    event.preventDefault();
+    setIsOpen(true);
+    setActiveIndex((prev) => {
+      const total = optionsRef.current.length;
+      if (!total) return -1;
+      const first = step > 0 ? 0 : total - 1;
+      const last = total - 1 - first;
+      const inRange = prev >= 0 && prev < total;
+      const next = inRange ? prev + step : first;
+      if (next < 0 || next >= total) {
+        return allowCycleRef.current ? first : last;
+      }
+      return next;
+    });
+  };
+
   useKey(
     (event) => event.key === "ArrowDown" && event.target === inputRef.current,
-    (event) => {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((prev) => {
-        const total = optionsRef.current.length;
-        if (!total) return -1;
-        const inRange = prev >= 0 && prev < total;
-        const next = inRange ? prev + 1 : 0;
-        if (next >= total) {
-          return allowCycleRef.current ? 0 : total - 1;
-        }
-        return next;
-      });
-    },
+    (event) => moveActiveIndex(event, 1),
   );
 
   useKey(
     (event) => event.key === "ArrowUp" && event.target === inputRef.current,
-    (event) => {
-      event.preventDefault();
-      setIsOpen(true);
-      setActiveIndex((prev) => {
-        const total = optionsRef.current.length;
-        if (!total) return -1;
-        const inRange = prev >= 0 && prev < total;
-        const next = inRange ? prev - 1 : total - 1;
-        if (next < 0) {
-          return allowCycleRef.current ? total - 1 : 0;
-        }
-        return next;
-      });
-    },
+    (event) => moveActiveIndex(event, -1),
   );
 
   useKey(

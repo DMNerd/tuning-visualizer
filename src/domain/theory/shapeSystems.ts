@@ -256,6 +256,48 @@ function shapeMeetsDegreeCoverage(
   return coverage.covered >= constraint.count;
 }
 
+function shapeWithinSizeAndSpanLimits(
+  shape: readonly ShapeNote[],
+  spec: ShapeSystemSpec,
+): boolean {
+  if (spec.minNotes != null && shape.length < spec.minNotes) return false;
+  if (spec.maxNotes != null && shape.length > spec.maxNotes) return false;
+  if (spec.maxFretSpan != null && shapeFretSpan(shape) > spec.maxFretSpan)
+    return false;
+  if (spec.maxStringSpan != null && shapeStringSpan(shape) > spec.maxStringSpan)
+    return false;
+  return true;
+}
+
+function shapeSatisfiesSystemSpec(
+  shape: readonly ShapeNote[],
+  spec: ShapeSystemSpec,
+  degreePcs: Iterable<number>,
+): boolean {
+  if (shape.length === 0) return false;
+  if (!shapeWithinSizeAndSpanLimits(shape, spec)) return false;
+  if (spec.requireRoot && !shapeHasRoot(shape)) return false;
+  if (spec.contiguousStringsOnly && !shapeHasContiguousStrings(shape))
+    return false;
+  if (
+    spec.degreeCoverage &&
+    !shapeMeetsDegreeCoverage(shape, degreePcs, spec.degreeCoverage)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function groupOccurrencesByTemplate(
+  occurrences: readonly ShapeOccurrence[],
+): Record<string, ShapeOccurrence[]> {
+  const templateToOccurrences: Record<string, ShapeOccurrence[]> = {};
+  for (const occurrence of occurrences) {
+    (templateToOccurrences[occurrence.templateId] ??= []).push(occurrence);
+  }
+  return templateToOccurrences;
+}
+
 function generateCandidates(
   noteMap: readonly ShapeNote[],
   strategy: ExtractionStrategy,
@@ -473,34 +515,8 @@ export function generateChordAnchoredShapeFamily({
   );
 
   const filtered = neighborhoodCandidates.filter((shape) => {
-    if (shape.length === 0) return false;
-    if (systemSpec.minNotes != null && shape.length < systemSpec.minNotes)
+    if (!shapeSatisfiesSystemSpec(shape, systemSpec, resolvedScalePcs))
       return false;
-    if (systemSpec.maxNotes != null && shape.length > systemSpec.maxNotes)
-      return false;
-    if (systemSpec.requireRoot && !shapeHasRoot(shape)) return false;
-    if (
-      systemSpec.maxFretSpan != null &&
-      shapeFretSpan(shape) > systemSpec.maxFretSpan
-    )
-      return false;
-    if (
-      systemSpec.maxStringSpan != null &&
-      shapeStringSpan(shape) > systemSpec.maxStringSpan
-    )
-      return false;
-    if (systemSpec.contiguousStringsOnly && !shapeHasContiguousStrings(shape))
-      return false;
-    if (
-      systemSpec.degreeCoverage &&
-      !shapeMeetsDegreeCoverage(
-        shape,
-        resolvedScalePcs,
-        systemSpec.degreeCoverage,
-      )
-    ) {
-      return false;
-    }
     const chordToneCoverage = shapeDegreeCoverage(shape, resolvedChordPcs);
     if (
       systemSpec.chordAnchor?.minChordToneCount != null &&
@@ -516,18 +532,11 @@ export function generateChordAnchoredShapeFamily({
     const shape = buildShape(notes);
     return makeOccurrence(shape.notes, shape.templateId, index);
   });
-  const templateToOccurrences: Record<string, ShapeOccurrence[]> = {};
-  for (const occurrence of occurrences) {
-    if (!templateToOccurrences[occurrence.templateId]) {
-      templateToOccurrences[occurrence.templateId] = [];
-    }
-    templateToOccurrences[occurrence.templateId].push(occurrence);
-  }
   return {
     systemId: systemSpec.systemId,
     templates,
     occurrences,
-    templateToOccurrences,
+    templateToOccurrences: groupOccurrencesByTemplate(occurrences),
   };
 }
 
@@ -589,64 +598,16 @@ export function generateShapeFamily({
       : candidates.flatMap((candidate) =>
           makeStringWindowsForExact(candidate, exactNotesPerStringValue, {
             requireContiguousStrings: systemSpec.contiguousStringsOnly,
-          }).filter((shape) => {
-            if (
-              systemSpec.maxFretSpan != null &&
-              shapeFretSpan(shape) > systemSpec.maxFretSpan
-            )
-              return false;
-            if (
-              systemSpec.maxStringSpan != null &&
-              shapeStringSpan(shape) > systemSpec.maxStringSpan
-            )
-              return false;
-            if (
-              systemSpec.minNotes != null &&
-              shape.length < systemSpec.minNotes
-            )
-              return false;
-            if (
-              systemSpec.maxNotes != null &&
-              shape.length > systemSpec.maxNotes
-            )
-              return false;
-            return true;
-          }),
+          }).filter((shape) => shapeWithinSizeAndSpanLimits(shape, systemSpec)),
         );
   const filtered = normalizedCandidates.filter((shape) => {
-    if (shape.length === 0) return false;
-    if (systemSpec.minNotes != null && shape.length < systemSpec.minNotes)
-      return false;
-    if (systemSpec.maxNotes != null && shape.length > systemSpec.maxNotes)
-      return false;
-    if (systemSpec.requireRoot && !shapeHasRoot(shape)) return false;
-    if (
-      systemSpec.maxFretSpan != null &&
-      shapeFretSpan(shape) > systemSpec.maxFretSpan
-    )
-      return false;
-    if (
-      systemSpec.maxStringSpan != null &&
-      shapeStringSpan(shape) > systemSpec.maxStringSpan
-    )
-      return false;
-    if (systemSpec.contiguousStringsOnly && !shapeHasContiguousStrings(shape))
+    if (!shapeSatisfiesSystemSpec(shape, systemSpec, resolvedSystemPcs))
       return false;
     if (
       systemSpec.notesPerString &&
       !shapeMatchesNotesPerString(shape, systemSpec.notesPerString, {
         stringCount: fretboardInput.tuning.length,
       })
-    ) {
-      return false;
-    }
-    if (
-      systemSpec.degreeCoverage &&
-      !shapeMeetsDegreeCoverage(
-        shape,
-        resolvedSystemPcs,
-        systemSpec.degreeCoverage,
-      )
     ) {
       return false;
     }
@@ -665,19 +626,11 @@ export function generateShapeFamily({
     })
     .filter((occ) => templateIds.has(occ.templateId));
 
-  const templateToOccurrences: Record<string, ShapeOccurrence[]> = {};
-  for (const occurrence of occurrences) {
-    if (!templateToOccurrences[occurrence.templateId]) {
-      templateToOccurrences[occurrence.templateId] = [];
-    }
-    templateToOccurrences[occurrence.templateId].push(occurrence);
-  }
-
   return {
     systemId: systemSpec.systemId,
     templates: dedupedTemplates,
     occurrences,
-    templateToOccurrences,
+    templateToOccurrences: groupOccurrencesByTemplate(occurrences),
   };
 }
 

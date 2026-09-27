@@ -1,41 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-class MemoryStorage {
-  constructor() {
-    this.map = new Map();
-  }
-
-  getItem(key) {
-    return this.map.has(key) ? this.map.get(key) : null;
-  }
-
-  setItem(key, value) {
-    this.map.set(key, String(value));
-  }
-
-  removeItem(key) {
-    this.map.delete(key);
-  }
-
-  clear() {
-    this.map.clear();
-  }
-}
+import { MemoryStorage, importFresh } from "../../helpers/storeTestUtils.js";
 
 globalThis.localStorage = new MemoryStorage();
-
-async function importFresh(specifier) {
-  const cacheKey = `${Date.now()}-${Math.random()}`;
-  const isAliasedSpecifier =
-    /^@(app|features|shared|domain|styles)\//.test(specifier) ||
-    specifier.startsWith("@/");
-  if (isAliasedSpecifier) {
-    return import(`${specifier}?t=${cacheKey}`);
-  }
-  const url = new URL(specifier, import.meta.url);
-  return import(`${url.href}?t=${cacheKey}`);
-}
 
 function trackSelectorChanges(store, selector) {
   let selected = selector(store.getState());

@@ -27,38 +27,38 @@ export function transposePitchClassSet<T extends number>(
   return new Set(Array.from(pcs, (pc) => mod(pc + amount, divisions)));
 }
 
-export function resolveCapoRelativeChordRootPc({
-  pc,
-  capoFret = 0,
-  chordCapoRelative = false,
-  divisions,
-}: {
+type CapoRelativeChordRootInput = {
   pc: number;
   capoFret?: number;
   chordCapoRelative?: boolean;
   divisions: number;
-}): number {
+};
+
+function shiftCapoRelativeChordRootPc(
+  {
+    pc,
+    capoFret = 0,
+    chordCapoRelative = false,
+    divisions,
+  }: CapoRelativeChordRootInput,
+  direction: 1 | -1,
+): number {
   if (!Number.isFinite(pc)) return pc;
   if (!chordCapoRelative) return pc;
   if (!Number.isFinite(divisions) || divisions <= 0) return pc;
 
-  return mod(pc - getEffectiveCapoPitchOffset(capoFret, divisions), divisions);
+  const offset = getEffectiveCapoPitchOffset(capoFret, divisions);
+  return mod(pc + direction * offset, divisions);
 }
 
-export function transposeCapoRelativeChordRootPc({
-  pc,
-  capoFret = 0,
-  chordCapoRelative = false,
-  divisions,
-}: {
-  pc: number;
-  capoFret?: number;
-  chordCapoRelative?: boolean;
-  divisions: number;
-}): number {
-  if (!Number.isFinite(pc)) return pc;
-  if (!chordCapoRelative) return pc;
-  if (!Number.isFinite(divisions) || divisions <= 0) return pc;
+export function resolveCapoRelativeChordRootPc(
+  input: CapoRelativeChordRootInput,
+): number {
+  return shiftCapoRelativeChordRootPc(input, -1);
+}
 
-  return mod(pc + getEffectiveCapoPitchOffset(capoFret, divisions), divisions);
+export function transposeCapoRelativeChordRootPc(
+  input: CapoRelativeChordRootInput,
+): number {
+  return shiftCapoRelativeChordRootPc(input, 1);
 }

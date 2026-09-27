@@ -717,7 +717,8 @@ html.is-fs {
   cursor: pointer;
 }
 
-.tv-binary-toggle__input {
+.tv-binary-toggle__input,
+.tv-toggle__input {
   position: absolute;
   inline-size: 1px;
   block-size: 1px;
@@ -807,19 +808,6 @@ html.is-fs {
   --tv-toggle-disabled-label-opacity: 0.7;
 
   min-width: 0;
-}
-
-.tv-toggle__input {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  border: 0;
-  padding: 0;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .tv-toggle__switch {
@@ -1323,12 +1311,16 @@ svg {
   font-weight: 600;
 }
 
-.tv-fallback__summary {
+.tv-fallback__summary,
+.tv-fallback__details {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8125rem;
   background: var(--card-muted-bg, transparent);
   border: 1px solid var(--card-border);
   border-radius: 8px;
+}
+
+.tv-fallback__summary {
   padding: 8px 10px;
   overflow-wrap: anywhere;
 }
@@ -1336,11 +1328,6 @@ svg {
 .tv-fallback__details {
   margin: 0;
   white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8125rem;
-  background: var(--card-muted-bg, transparent);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
   padding: 10px 12px;
   max-height: 260px;
   overflow: auto;

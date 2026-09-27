@@ -5,49 +5,84 @@ import { buildTheoryControlModel } from "@features/theory/model/controlModel";
 import { resolveCapoRelativeChordRootPc } from "@domain/theory/capoChords";
 import { buildChordFit } from "@features/theory/model/theoryPanelModel";
 
+const NOTE_NAMES_12 = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+];
+const MAJOR_12 = [0, 2, 4, 5, 7, 9, 11];
+const noop = () => {};
+
+function buildModel({
+  divisions = 12,
+  sysNames = NOTE_NAMES_12,
+  nameForPc = (pc) => sysNames[pc],
+  rootName = sysNames[0],
+  scalePcs = MAJOR_12,
+  chord = {},
+  capo,
+} = {}) {
+  return buildTheoryControlModel({
+    system: {
+      system: { divisions },
+      sysNames,
+      nameForPc,
+      rootIx: 0,
+    },
+    scale: {
+      root: rootName,
+      setRoot: noop,
+      scale: "Major",
+      setScale: noop,
+      scaleOptions: [{ label: "Major", pcs: scalePcs }],
+      intervals: scalePcs,
+    },
+    chord: {
+      chordRoot: rootName,
+      setChordRoot: noop,
+      chordType: "maj",
+      setChordType: noop,
+      showChord: true,
+      setShowChord: noop,
+      hideNonChord: false,
+      setHideNonChord: noop,
+      chordRootIx: 0,
+      ...chord,
+    },
+    ...(capo ? { capo } : {}),
+    randomize: {
+      randomizeMode: "both",
+      setRandomizeMode: noop,
+      onRandomize: noop,
+    },
+    defaults: {
+      root: rootName,
+      scale: "Major",
+      chordRoot: rootName,
+      chordType: "maj",
+    },
+  });
+}
+
+const capoRelative = { chordCapoRelative: true, setChordCapoRelative: noop };
+
 test("buildTheoryControlModel carries canonical chord PC set names", () => {
   const chordTonePcs = new Set([0, 4, 7]);
   const chordOverlayPcs = new Set([0, 4, 7]);
 
-  const model = buildTheoryControlModel({
-    system: {
-      system: { divisions: 12 },
-      sysNames: ["C", "D", "E", "F", "G", "A", "B"],
-      nameForPc: (pc) => `N${pc}`,
-      rootIx: 0,
-    },
-    scale: {
-      root: "C",
-      setRoot: () => {},
-      scale: "Major",
-      setScale: () => {},
-      scaleOptions: [{ label: "Major", pcs: [0, 2, 4, 5, 7, 9, 11] }],
-      intervals: [0, 2, 4, 5, 7, 9, 11],
-    },
-    chord: {
-      chordRoot: "C",
-      setChordRoot: () => {},
-      chordType: "maj",
-      setChordType: () => {},
-      showChord: true,
-      setShowChord: () => {},
-      hideNonChord: false,
-      setHideNonChord: () => {},
-      chordRootIx: 0,
-      chordTonePcs,
-      chordOverlayPcs,
-    },
-    randomize: {
-      randomizeMode: "both",
-      setRandomizeMode: () => {},
-      onRandomize: () => {},
-    },
-    defaults: {
-      root: "C",
-      scale: "Major",
-      chordRoot: "C",
-      chordType: "maj",
-    },
+  const model = buildModel({
+    sysNames: ["C", "D", "E", "F", "G", "A", "B"],
+    nameForPc: (pc) => `N${pc}`,
+    chord: { chordTonePcs, chordOverlayPcs },
   });
 
   assert.equal(model.meta.chordTonePcs, chordTonePcs);
@@ -77,65 +112,13 @@ test("buildChordFit handles hidden overlay state without dropping chord tones", 
 });
 
 test("buildTheoryControlModel transposes capo-relative chord display and sets", () => {
-  const chordTonePcs = new Set([0, 4, 7]);
-  const chordOverlayPcs = new Set([0, 4, 7]);
-
-  const model = buildTheoryControlModel({
-    system: {
-      system: { divisions: 12 },
-      sysNames: [
-        "C",
-        "C#",
-        "D",
-        "D#",
-        "E",
-        "F",
-        "F#",
-        "G",
-        "G#",
-        "A",
-        "A#",
-        "B",
-      ],
-      nameForPc: (pc) =>
-        ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][pc],
-      rootIx: 0,
-    },
-    scale: {
-      root: "C",
-      setRoot: () => {},
-      scale: "Major",
-      setScale: () => {},
-      scaleOptions: [{ label: "Major", pcs: [0, 2, 4, 5, 7, 9, 11] }],
-      intervals: [0, 2, 4, 5, 7, 9, 11],
-    },
+  const model = buildModel({
     chord: {
-      chordRoot: "C",
-      setChordRoot: () => {},
-      chordType: "maj",
-      setChordType: () => {},
-      showChord: true,
-      setShowChord: () => {},
-      hideNonChord: false,
-      setHideNonChord: () => {},
-      chordCapoRelative: true,
-      setChordCapoRelative: () => {},
-      chordRootIx: 0,
-      chordTonePcs,
-      chordOverlayPcs,
+      ...capoRelative,
+      chordTonePcs: new Set([0, 4, 7]),
+      chordOverlayPcs: new Set([0, 4, 7]),
     },
     capo: { capoFret: 2 },
-    randomize: {
-      randomizeMode: "both",
-      setRandomizeMode: () => {},
-      onRandomize: () => {},
-    },
-    defaults: {
-      root: "C",
-      scale: "Major",
-      chordRoot: "C",
-      chordType: "maj",
-    },
   });
 
   assert.deepEqual([...model.meta.chordTonePcs], [2, 6, 9]);
@@ -146,21 +129,7 @@ test("buildTheoryControlModel transposes capo-relative chord display and sets", 
 });
 
 test("capo-relative fretboard chord selection stores shape root and displays sounding root", () => {
-  const noteNames = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
-  const nameForPc = (pc) => noteNames[pc];
+  const nameForPc = (pc) => NOTE_NAMES_12[pc];
   const clickedSoundingPc = 2;
   const shapeRootPc = resolveCapoRelativeChordRootPc({
     pc: clickedSoundingPc,
@@ -170,48 +139,16 @@ test("capo-relative fretboard chord selection stores shape root and displays sou
   });
   const storedChordRoot = nameForPc(shapeRootPc);
 
-  const model = buildTheoryControlModel({
-    system: {
-      system: { divisions: 12 },
-      sysNames: noteNames,
-      nameForPc,
-      rootIx: 0,
-    },
-    scale: {
-      root: "C",
-      setRoot: () => {},
-      scale: "Major",
-      setScale: () => {},
-      scaleOptions: [{ label: "Major", pcs: [0, 2, 4, 5, 7, 9, 11] }],
-      intervals: [0, 2, 4, 5, 7, 9, 11],
-    },
+  const model = buildModel({
+    nameForPc,
     chord: {
+      ...capoRelative,
       chordRoot: storedChordRoot,
-      setChordRoot: () => {},
-      chordType: "maj",
-      setChordType: () => {},
-      showChord: true,
-      setShowChord: () => {},
-      hideNonChord: false,
-      setHideNonChord: () => {},
-      chordCapoRelative: true,
-      setChordCapoRelative: () => {},
       chordRootIx: shapeRootPc,
       chordTonePcs: new Set([0, 4, 7]),
       chordOverlayPcs: new Set([0, 4, 7]),
     },
     capo: { capoFret: 2 },
-    randomize: {
-      randomizeMode: "both",
-      setRandomizeMode: () => {},
-      onRandomize: () => {},
-    },
-    defaults: {
-      root: "C",
-      scale: "Major",
-      chordRoot: "C",
-      chordType: "maj",
-    },
   });
 
   assert.equal(storedChordRoot, "C");
@@ -220,65 +157,13 @@ test("capo-relative fretboard chord selection stores shape root and displays sou
 });
 
 test("buildTheoryControlModel treats capo 12 as untransposed in 12-TET", () => {
-  const noteNames = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
-  const chordTonePcs = new Set([0, 4, 7]);
-  const chordOverlayPcs = new Set([0, 4, 7]);
-
-  const model = buildTheoryControlModel({
-    system: {
-      system: { divisions: 12 },
-      sysNames: noteNames,
-      nameForPc: (pc) => noteNames[pc],
-      rootIx: 0,
-    },
-    scale: {
-      root: "C",
-      setRoot: () => {},
-      scale: "Major",
-      setScale: () => {},
-      scaleOptions: [{ label: "Major", pcs: [0, 2, 4, 5, 7, 9, 11] }],
-      intervals: [0, 2, 4, 5, 7, 9, 11],
-    },
+  const model = buildModel({
     chord: {
-      chordRoot: "C",
-      setChordRoot: () => {},
-      chordType: "maj",
-      setChordType: () => {},
-      showChord: true,
-      setShowChord: () => {},
-      hideNonChord: false,
-      setHideNonChord: () => {},
-      chordCapoRelative: true,
-      setChordCapoRelative: () => {},
-      chordRootIx: 0,
-      chordTonePcs,
-      chordOverlayPcs,
+      ...capoRelative,
+      chordTonePcs: new Set([0, 4, 7]),
+      chordOverlayPcs: new Set([0, 4, 7]),
     },
     capo: { capoFret: 12 },
-    randomize: {
-      randomizeMode: "both",
-      setRandomizeMode: () => {},
-      onRandomize: () => {},
-    },
-    defaults: {
-      root: "C",
-      scale: "Major",
-      chordRoot: "C",
-      chordType: "maj",
-    },
   });
 
   assert.deepEqual([...model.meta.chordTonePcs], [0, 4, 7]);
@@ -289,52 +174,16 @@ test("buildTheoryControlModel treats capo 12 as untransposed in 12-TET", () => {
 });
 
 test("buildTheoryControlModel treats capo 24 as untransposed in 24-TET", () => {
-  const noteNames = Array.from({ length: 24 }, (_, pc) => `N${pc}`);
-  const chordTonePcs = new Set([0, 8, 14]);
-  const chordOverlayPcs = new Set([0, 8, 14]);
-
-  const model = buildTheoryControlModel({
-    system: {
-      system: { divisions: 24 },
-      sysNames: noteNames,
-      nameForPc: (pc) => noteNames[pc],
-      rootIx: 0,
-    },
-    scale: {
-      root: "N0",
-      setRoot: () => {},
-      scale: "Major",
-      setScale: () => {},
-      scaleOptions: [{ label: "Major", pcs: [0, 4, 8, 10, 14, 18, 22] }],
-      intervals: [0, 4, 8, 10, 14, 18, 22],
-    },
+  const model = buildModel({
+    divisions: 24,
+    sysNames: Array.from({ length: 24 }, (_, pc) => `N${pc}`),
+    scalePcs: [0, 4, 8, 10, 14, 18, 22],
     chord: {
-      chordRoot: "N0",
-      setChordRoot: () => {},
-      chordType: "maj",
-      setChordType: () => {},
-      showChord: true,
-      setShowChord: () => {},
-      hideNonChord: false,
-      setHideNonChord: () => {},
-      chordCapoRelative: true,
-      setChordCapoRelative: () => {},
-      chordRootIx: 0,
-      chordTonePcs,
-      chordOverlayPcs,
+      ...capoRelative,
+      chordTonePcs: new Set([0, 8, 14]),
+      chordOverlayPcs: new Set([0, 8, 14]),
     },
     capo: { capoFret: 24 },
-    randomize: {
-      randomizeMode: "both",
-      setRandomizeMode: () => {},
-      onRandomize: () => {},
-    },
-    defaults: {
-      root: "N0",
-      scale: "Major",
-      chordRoot: "N0",
-      chordType: "maj",
-    },
   });
 
   assert.deepEqual([...model.meta.chordTonePcs], [0, 8, 14]);

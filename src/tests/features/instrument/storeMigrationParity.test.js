@@ -1,37 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { MemoryStorage, importFresh } from "../../helpers/storeTestUtils.js";
+
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { scopeKey } from "@shared/lib/storage/windowScope";
-
-class MemoryStorage {
-  constructor() {
-    this.map = new Map();
-    this.setItemCounts = new Map();
-  }
-
-  getItem(key) {
-    return this.map.has(key) ? this.map.get(key) : null;
-  }
-
-  setItem(key, value) {
-    this.map.set(key, String(value));
-    this.setItemCounts.set(key, (this.setItemCounts.get(key) || 0) + 1);
-  }
-
-  removeItem(key) {
-    this.map.delete(key);
-  }
-
-  clear() {
-    this.map.clear();
-    this.setItemCounts.clear();
-  }
-
-  getSetItemCount(key) {
-    return this.setItemCounts.get(key) || 0;
-  }
-}
 
 const storage = new MemoryStorage();
 const sessionStorage = new MemoryStorage();
@@ -46,18 +19,6 @@ function setActiveWindowId(windowId) {
   }
   sessionStorage.setItem("tv.windowId", windowId);
   globalThis.__TV_WINDOW_ID__ = windowId;
-}
-
-async function importFresh(specifier) {
-  const cacheKey = `${Date.now()}-${Math.random()}`;
-  const isAliasedSpecifier =
-    /^@(app|features|shared|domain|styles)\//.test(specifier) ||
-    specifier.startsWith("@/");
-  if (isAliasedSpecifier) {
-    return import(`${specifier}?t=${cacheKey}`);
-  }
-  const url = new URL(specifier, import.meta.url);
-  return import(`${url.href}?t=${cacheKey}`);
 }
 
 function readStoredJson(key) {

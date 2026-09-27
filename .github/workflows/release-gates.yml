@@ -30,6 +30,9 @@ jobs:
       - name: Check unused files & deps (knip)
         run: pnpm knip
 
+      - name: Check code duplication (jscpd)
+        run: pnpm dup
+
       - name: Lint
         run: pnpm lint
 

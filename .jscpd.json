@@ -1,0 +1,8 @@
+{
+  "path": ["src"],
+  "minTokens": 50,
+  "crossFormats": "js-ts",
+  "reporters": ["console"],
+  "output": "reports/jscpd",
+  "threshold": 2
+}

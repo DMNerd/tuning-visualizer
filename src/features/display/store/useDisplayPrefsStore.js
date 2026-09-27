@@ -34,7 +34,11 @@ function migrateOpenOnlyPrefs(prefs) {
   const { openOnlyInScale, openOnlyInChord, ...rest } = prefs;
   return {
     ...rest,
-    openOnlyInMode: openOnlyInChord ? "chord" : openOnlyInScale ? "scale" : "none",
+    openOnlyInMode: openOnlyInChord
+      ? "chord"
+      : openOnlyInScale
+        ? "scale"
+        : "none",
   };
 }
 
