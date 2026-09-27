@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { MemoryStorage, importFresh } from "../../helpers/storeTestUtils.js";
+import {
+  MemoryStorage,
+  importFresh,
+  rehydrateFresh,
+} from "../../helpers/storeTestUtils.js";
 
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 
@@ -10,16 +14,22 @@ const sessionStorage = new MemoryStorage();
 globalThis.localStorage = storage;
 globalThis.sessionStorage = sessionStorage;
 
+// Clears storage and returns a freshly imported (empty) routine store.
+async function freshRoutineStore() {
+  storage.clear();
+  const { useTrainingRoutineStore } = await importFresh(
+    "@features/training/store/useTrainingRoutineStore.js",
+  );
+  return useTrainingRoutineStore;
+}
+
 function readStoredJson(key) {
   const raw = storage.getItem(key);
   return raw ? JSON.parse(raw) : null;
 }
 
 test("upsertRoutine inserts new and updates existing by id", async () => {
-  storage.clear();
-  const { useTrainingRoutineStore } = await importFresh(
-    "@features/training/store/useTrainingRoutineStore.js",
-  );
+  const useTrainingRoutineStore = await freshRoutineStore();
 
   useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
   useTrainingRoutineStore
@@ -36,10 +46,7 @@ test("upsertRoutine inserts new and updates existing by id", async () => {
 });
 
 test("renameRoutine updates name and updatedAt", async () => {
-  storage.clear();
-  const { useTrainingRoutineStore } = await importFresh(
-    "@features/training/store/useTrainingRoutineStore.js",
-  );
+  const useTrainingRoutineStore = await freshRoutineStore();
 
   useTrainingRoutineStore
     .getState()
@@ -54,10 +61,7 @@ test("renameRoutine updates name and updatedAt", async () => {
 });
 
 test("removeRoutine removes by id", async () => {
-  storage.clear();
-  const { useTrainingRoutineStore } = await importFresh(
-    "@features/training/store/useTrainingRoutineStore.js",
-  );
+  const useTrainingRoutineStore = await freshRoutineStore();
 
   useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
   useTrainingRoutineStore
@@ -71,10 +75,7 @@ test("removeRoutine removes by id", async () => {
 });
 
 test("routines persist under STORAGE_KEYS.TRAINING_ROUTINES and rehydrate", async () => {
-  storage.clear();
-  const { useTrainingRoutineStore } = await importFresh(
-    "@features/training/store/useTrainingRoutineStore.js",
-  );
+  const useTrainingRoutineStore = await freshRoutineStore();
 
   useTrainingRoutineStore
     .getState()
@@ -84,18 +85,15 @@ test("routines persist under STORAGE_KEYS.TRAINING_ROUTINES and rehydrate", asyn
   assert.equal(Array.isArray(persisted?.state?.routines), true);
   assert.equal(persisted.state.routines[0].name, "Persisted routine");
 
-  const { useTrainingRoutineStore: reloadedStore } = await importFresh(
+  const reloadedStore = await rehydrateFresh(
     "@features/training/store/useTrainingRoutineStore.js",
+    "useTrainingRoutineStore",
   );
-  await reloadedStore.persist.rehydrate();
   assert.equal(reloadedStore.getState().routines[0].name, "Persisted routine");
 });
 
 test("resetTrainingRoutines clears the list", async () => {
-  storage.clear();
-  const { useTrainingRoutineStore } = await importFresh(
-    "@features/training/store/useTrainingRoutineStore.js",
-  );
+  const useTrainingRoutineStore = await freshRoutineStore();
 
   useTrainingRoutineStore.getState().upsertRoutine({ id: "r1", name: "First" });
   useTrainingRoutineStore.getState().resetTrainingRoutines();

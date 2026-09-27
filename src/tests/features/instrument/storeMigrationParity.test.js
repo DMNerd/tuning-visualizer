@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { MemoryStorage, importFresh } from "../../helpers/storeTestUtils.js";
+import {
+  MemoryStorage,
+  importFresh,
+  rehydrateFresh,
+} from "../../helpers/storeTestUtils.js";
 
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { scopeKey } from "@shared/lib/storage/windowScope";
@@ -42,11 +46,10 @@ test("legacy metronome prefs shape hydrates into normalized prefs store shape", 
     }),
   );
 
-  const { useMetronomePrefsStore } = await importFresh(
+  const useMetronomePrefsStore = await rehydrateFresh(
     "@features/practice/store/useMetronomePrefsStore.js",
+    "useMetronomePrefsStore",
   );
-
-  await useMetronomePrefsStore.persist.rehydrate();
   const state = useMetronomePrefsStore.getState();
 
   assert.equal(state.prefs.bpm, 97);
@@ -80,11 +83,10 @@ test("metronome store falls back for invalid persisted randomizeMode", async () 
     }),
   );
 
-  const { useMetronomePrefsStore } = await importFresh(
+  const useMetronomePrefsStore = await rehydrateFresh(
     "@features/practice/store/useMetronomePrefsStore.js",
+    "useMetronomePrefsStore",
   );
-
-  await useMetronomePrefsStore.persist.rehydrate();
   const state = useMetronomePrefsStore.getState();
   assert.equal(state.prefs.bpm, 101);
   assert.equal(state.randomizeMode, "both");
@@ -95,11 +97,10 @@ test("legacy theory keys hydrate into new theory store and clear old keys", asyn
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const { useTheoryStore } = await importFresh(
+  const useTheoryStore = await rehydrateFresh(
     "@features/theory/store/useTheoryStore.js",
+    "useTheoryStore",
   );
-
-  await useTheoryStore.persist.rehydrate();
   const state = useTheoryStore.getState();
 
   assert.equal(state.systemId, "24-TET");
@@ -120,11 +121,10 @@ test("theory store prefers valid persisted payload over legacy keys", async () =
   storage.setItem(STORAGE_KEYS.SYSTEM_ID, "24-TET");
   storage.setItem(STORAGE_KEYS.ROOT, "D");
 
-  const { useTheoryStore } = await importFresh(
+  const useTheoryStore = await rehydrateFresh(
     "@features/theory/store/useTheoryStore.js",
+    "useTheoryStore",
   );
-
-  await useTheoryStore.persist.rehydrate();
   const state = useTheoryStore.getState();
 
   assert.equal(state.systemId, "19-TET");
@@ -182,11 +182,10 @@ test("legacy custom tuning payload array remains compatible in workflow store", 
   ];
   storage.setItem(STORAGE_KEYS.CUSTOM_TUNINGS, JSON.stringify(legacyPayload));
 
-  const { useInstrumentWorkflowStore } = await importFresh(
+  const useInstrumentWorkflowStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentWorkflowStore.js",
+    "useInstrumentWorkflowStore",
   );
-
-  await useInstrumentWorkflowStore.persist.rehydrate();
   const state = useInstrumentWorkflowStore.getState();
 
   assert.equal(Array.isArray(state.customTunings), true);
@@ -204,11 +203,10 @@ test("instrument core migration clamps strings/frets and reset action restores f
   storage.setItem(STORAGE_KEYS.STRINGS, "100");
   storage.setItem(STORAGE_KEYS.FRETS, "1");
 
-  const { useInstrumentCoreStore } = await importFresh(
+  const useInstrumentCoreStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
   );
-
-  await useInstrumentCoreStore.persist.rehydrate();
   let state = useInstrumentCoreStore.getState();
 
   assert.equal(state.strings, 8);
@@ -246,11 +244,10 @@ test("instrument core keeps global default tunings while using persisted strings
     JSON.stringify({ legacy: ["E", "A", "D", "G", "B", "E"] }),
   );
 
-  const { useInstrumentCoreStore } = await importFresh(
+  const useInstrumentCoreStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
   );
-
-  await useInstrumentCoreStore.persist.rehydrate();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.strings, 7);
@@ -350,10 +347,10 @@ test("instrument core migration defaults neckFilterMode to none when mode is abs
     }),
   );
 
-  const { useInstrumentCoreStore } = await importFresh(
+  const useInstrumentCoreStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
   );
-  await useInstrumentCoreStore.persist.rehydrate();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.neckFilterMode, "none");
@@ -373,10 +370,10 @@ test("instrument core migration keeps explicit canonical neckFilterMode", async 
     }),
   );
 
-  const { useInstrumentCoreStore } = await importFresh(
+  const useInstrumentCoreStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
   );
-  await useInstrumentCoreStore.persist.rehydrate();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.neckFilterMode, "fretless");
@@ -396,10 +393,10 @@ test("instrument core migration preserves explicit fretless neck filter mode", a
     }),
   );
 
-  const { useInstrumentCoreStore } = await importFresh(
+  const useInstrumentCoreStore = await rehydrateFresh(
     "@features/instrument/store/useInstrumentCoreStore.js",
+    "useInstrumentCoreStore",
   );
-  await useInstrumentCoreStore.persist.rehydrate();
   const state = useInstrumentCoreStore.getState();
 
   assert.equal(state.neckFilterMode, "fretless");
@@ -431,10 +428,10 @@ test("display prefs store hydrates via globalThis localStorage adapter", async (
     }),
   );
 
-  const { useDisplayPrefsStore } = await importFresh(
+  const useDisplayPrefsStore = await rehydrateFresh(
     "@features/display/store/useDisplayPrefsStore.js",
+    "useDisplayPrefsStore",
   );
-  await useDisplayPrefsStore.persist.rehydrate();
 
   const state = useDisplayPrefsStore.getState();
   assert.equal(state.prefs.accidental, "flat");
@@ -457,10 +454,10 @@ test("global stores migrate scoped payloads back to unscoped keys", async () => 
     }),
   );
 
-  const { useTrainingRoutineStore } = await importFresh(
+  const useTrainingRoutineStore = await rehydrateFresh(
     "@features/training/store/useTrainingRoutineStore.js",
+    "useTrainingRoutineStore",
   );
-  await useTrainingRoutineStore.persist.rehydrate();
 
   const unscopedPersisted = readStoredJson(STORAGE_KEYS.TRAINING_ROUTINES);
   assert.deepEqual(useTrainingRoutineStore.getState().routines, routines);

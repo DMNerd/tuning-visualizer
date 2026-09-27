@@ -75,6 +75,14 @@ function buildModel({
 
 const capoRelative = { chordCapoRelative: true, setChordCapoRelative: noop };
 
+// Capo-relative major triad (C E G shape) with fresh pitch-class sets.
+const capoTriadChord = (extra = {}) => ({
+  ...capoRelative,
+  chordTonePcs: new Set([0, 4, 7]),
+  chordOverlayPcs: new Set([0, 4, 7]),
+  ...extra,
+});
+
 test("buildTheoryControlModel carries canonical chord PC set names", () => {
   const chordTonePcs = new Set([0, 4, 7]);
   const chordOverlayPcs = new Set([0, 4, 7]);
@@ -113,11 +121,7 @@ test("buildChordFit handles hidden overlay state without dropping chord tones", 
 
 test("buildTheoryControlModel transposes capo-relative chord display and sets", () => {
   const model = buildModel({
-    chord: {
-      ...capoRelative,
-      chordTonePcs: new Set([0, 4, 7]),
-      chordOverlayPcs: new Set([0, 4, 7]),
-    },
+    chord: capoTriadChord(),
     capo: { capoFret: 2 },
   });
 
@@ -141,13 +145,10 @@ test("capo-relative fretboard chord selection stores shape root and displays sou
 
   const model = buildModel({
     nameForPc,
-    chord: {
-      ...capoRelative,
+    chord: capoTriadChord({
       chordRoot: storedChordRoot,
       chordRootIx: shapeRootPc,
-      chordTonePcs: new Set([0, 4, 7]),
-      chordOverlayPcs: new Set([0, 4, 7]),
-    },
+    }),
     capo: { capoFret: 2 },
   });
 
@@ -158,11 +159,7 @@ test("capo-relative fretboard chord selection stores shape root and displays sou
 
 test("buildTheoryControlModel treats capo 12 as untransposed in 12-TET", () => {
   const model = buildModel({
-    chord: {
-      ...capoRelative,
-      chordTonePcs: new Set([0, 4, 7]),
-      chordOverlayPcs: new Set([0, 4, 7]),
-    },
+    chord: capoTriadChord(),
     capo: { capoFret: 12 },
   });
 
@@ -191,4 +188,53 @@ test("buildTheoryControlModel treats capo 24 as untransposed in 24-TET", () => {
   assert.equal(model.meta.chordRootPc, 0);
   assert.equal(model.meta.transposedChordRoot, "N0");
   assert.equal(model.meta.isChordTransposed, false);
+});
+
+test("independent-of-scale chord-only mode uses the chord as the fretboard scale", () => {
+  // A minor chord (A C E) over C major: the chord root replaces the scale
+  // root and the chord's intervals replace the scale's.
+  const chordTonePcs = new Set([9, 0, 4]);
+  const chord = {
+    chordRoot: "A",
+    chordRootIx: 9,
+    chordTonePcs,
+    chordOverlayPcs: chordTonePcs,
+    hideNonChord: true,
+    chordIgnoresScale: true,
+  };
+
+  const model = buildModel({ chord });
+  assert.equal(model.state.chordIgnoresScale, true);
+  assert.equal(model.meta.fretboardRootIx, 9);
+  assert.deepEqual(model.meta.fretboardIntervals, [0, 3, 7]);
+  // The scale panel keeps the real scale.
+  assert.equal(model.meta.rootIx, 0);
+  assert.deepEqual(model.state.intervals, MAJOR_12);
+
+  for (const override of [
+    { chordIgnoresScale: false },
+    { hideNonChord: false },
+    { showChord: false },
+  ]) {
+    const inactive = buildModel({ chord: { ...chord, ...override } });
+    assert.equal(inactive.meta.fretboardRootIx, 0);
+    assert.equal(inactive.meta.fretboardIntervals, MAJOR_12);
+  }
+});
+
+test("independent-of-scale mode follows the capo-transposed chord root", () => {
+  const chordTonePcs = new Set([0, 4, 7]);
+  const model = buildModel({
+    chord: {
+      chordTonePcs,
+      chordOverlayPcs: chordTonePcs,
+      hideNonChord: true,
+      chordIgnoresScale: true,
+      ...capoRelative,
+    },
+    capo: { capoFret: 2 },
+  });
+  assert.equal(model.meta.fretboardRootIx, model.meta.chordRootPc);
+  assert.equal(model.meta.fretboardRootIx, 2);
+  assert.deepEqual(model.meta.fretboardIntervals, [0, 4, 7]);
 });

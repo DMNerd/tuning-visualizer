@@ -72,8 +72,8 @@ export default function StageShell({
             strings={strings}
             frets={drawFrets}
             tuning={tuning}
-            rootIx={theoryDomain.system.rootIx}
-            intervals={theoryDomain.scale.intervals}
+            rootIx={theoryPanel.controlModel.meta.fretboardRootIx}
+            intervals={theoryPanel.controlModel.meta.fretboardIntervals}
             accidental={accidental}
             noteNaming={noteNaming}
             microLabelStyle={microLabelStyle}

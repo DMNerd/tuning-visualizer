@@ -2,24 +2,31 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { commitNumberField } from "@shared/hooks/useNumberField";
 
-test("commitNumberField submits valid in-range values", () => {
-  let error = "";
-  let text = "";
-  let submitted = null;
+// Runs commitNumberField and captures everything it reported.
+function runCommit({ textValue, min, max }) {
+  const result = { error: "", text: "", submitted: null };
+  result.ok = commitNumberField({
+    textValue,
+    min,
+    max,
+    setError: (value) => {
+      result.error = value;
+    },
+    setText: (value) => {
+      result.text = value;
+    },
+    onSubmit: (value) => {
+      result.submitted = value;
+    },
+  });
+  return result;
+}
 
-  const ok = commitNumberField({
+test("commitNumberField submits valid in-range values", () => {
+  const { ok, submitted, text, error } = runCommit({
     textValue: "42",
     min: 20,
     max: 300,
-    setError: (value) => {
-      error = value;
-    },
-    setText: (value) => {
-      text = value;
-    },
-    onSubmit: (value) => {
-      submitted = value;
-    },
   });
 
   assert.equal(ok, true);
@@ -29,20 +36,10 @@ test("commitNumberField submits valid in-range values", () => {
 });
 
 test("commitNumberField rejects invalid numeric input", () => {
-  let error = "";
-  let submitted = null;
-
-  const ok = commitNumberField({
+  const { ok, submitted, error } = runCommit({
     textValue: "abc",
     min: 1,
     max: 10,
-    setError: (value) => {
-      error = value;
-    },
-    setText: () => {},
-    onSubmit: (value) => {
-      submitted = value;
-    },
   });
 
   assert.equal(ok, false);
@@ -51,23 +48,10 @@ test("commitNumberField rejects invalid numeric input", () => {
 });
 
 test("commitNumberField clamps out-of-range values and reports adjustment", () => {
-  let error = "";
-  let text = "";
-  let submitted = null;
-
-  const ok = commitNumberField({
+  const { ok, submitted, text, error } = runCommit({
     textValue: "500",
     min: 20,
     max: 300,
-    setError: (value) => {
-      error = value;
-    },
-    setText: (value) => {
-      text = value;
-    },
-    onSubmit: (value) => {
-      submitted = value;
-    },
   });
 
   assert.equal(ok, true);

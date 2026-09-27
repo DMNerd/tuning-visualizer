@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo } from "react";
 import { useLatest } from "react-use";
 import { toast } from "react-hot-toast";
 
@@ -16,10 +16,7 @@ import {
 import {
   ROUTINE_BEATS_MAX,
   ROUTINE_BEATS_MIN,
-  ROUTINE_BPM_MAX,
-  ROUTINE_BPM_MIN,
 } from "@features/training/model/routineLimits";
-import { ROUTINE_TIME_SIGNATURES } from "@features/training/model/routineTimeSignatures";
 import { buildRoutineShareModel } from "@features/training/model/routineShareModel";
 import { useRoutineDraft } from "@features/training/hooks/useRoutineDraft";
 import { useTrainingRoutines } from "@features/training/hooks/useTrainingRoutines";
@@ -28,14 +25,10 @@ import {
   selectActiveRoutine,
   selectIsRoutinePlaying,
 } from "@features/training/store/useRoutinePlaybackStore";
-import ShareQrCode from "@features/share/components/ShareQrCode";
-
-function optionsWithFallback(options, currentValue) {
-  if (!currentValue || options.includes(currentValue)) return options;
-  // Preserve a value decoded from a link/older catalog that no longer
-  // matches a current option, rather than silently dropping it.
-  return [...options, currentValue];
-}
+import RoutineLibrary from "@features/training/components/RoutineLibrary";
+import RoutineScaleBlock from "@features/training/components/RoutineScaleBlock";
+import RoutineSharePreview from "@features/training/components/RoutineSharePreview";
+import { optionsWithFallback } from "@features/training/model/routineOptions";
 
 export default function RoutineBuilderModal({
   isOpen,
@@ -67,9 +60,6 @@ export default function RoutineBuilderModal({
     removeScaleBlock,
     moveScaleBlock,
   } = useRoutineDraft(initialRoutine, liveDefaults);
-
-  const [renamingId, setRenamingId] = useState(null);
-  const [renameValue, setRenameValue] = useState("");
 
   const onConsumedInitialRoutineRef = useLatest(onConsumedInitialRoutine);
 
@@ -118,6 +108,8 @@ export default function RoutineBuilderModal({
       ),
     [draft.startBlock.systemId, draft.startBlock.strings],
   );
+  const rootLabel = (pc) =>
+    nameForRootPc(draft.startBlock.systemId, pc, accidental, noteNaming);
   const rootPcOptions = useMemo(
     () => Array.from({ length: divisions }, (_, pc) => pc),
     [divisions],
@@ -143,23 +135,9 @@ export default function RoutineBuilderModal({
     toast.success("Routine saved.", { id: "training-routine-save" });
   };
 
-  const handleLoad = (routine) => {
-    loadDraft(routine);
-  };
-
   const handlePlay = (routine) => {
     routinePlayback?.play?.(routine);
     onClose();
-  };
-
-  const startRename = (routine) => {
-    setRenamingId(routine.id);
-    setRenameValue(routine.name || "");
-  };
-
-  const commitRename = (id) => {
-    renameRoutine(id, renameValue.trim() || "Untitled routine");
-    setRenamingId(null);
   };
 
   const handleDelete = async (routine) => {
@@ -273,132 +251,18 @@ export default function RoutineBuilderModal({
           </div>
 
           {draft.steps.map((step, index) => (
-            <div key={step.id}>
-              <div className="tv-routine-chain__connector" aria-hidden="true" />
-              <div className="tv-routine-block tv-routine-block--scale">
-                <div className="tv-routine-block__header">
-                  <h3>Scale block {index + 1}</h3>
-                  <div className="tv-routine-block__actions">
-                    <button
-                      type="button"
-                      className="tv-button tv-button--icon tv-button--ghost"
-                      onClick={() => moveScaleBlock(step.id, "up")}
-                      disabled={index === 0}
-                      aria-label="Move block up"
-                      title="Move up"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      className="tv-button tv-button--icon tv-button--ghost"
-                      onClick={() => moveScaleBlock(step.id, "down")}
-                      disabled={index === draft.steps.length - 1}
-                      aria-label="Move block down"
-                      title="Move down"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
-                      onClick={() => removeScaleBlock(step.id)}
-                      aria-label="Remove block"
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                <div className="tv-controls__grid--two">
-                  <label className="tv-field">
-                    <span className="tv-field__label">Scale</span>
-                    <select
-                      value={step.scaleLabel}
-                      onChange={(event) =>
-                        updateScaleBlock(step.id, {
-                          scaleLabel: event.target.value,
-                        })
-                      }
-                    >
-                      <option value="">(choose a scale)</option>
-                      {optionsWithFallback(
-                        scaleLabelOptions,
-                        step.scaleLabel,
-                      ).map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-field__label">Root</span>
-                    <select
-                      value={step.rootPc}
-                      onChange={(event) =>
-                        updateScaleBlock(step.id, {
-                          rootPc: Number(event.target.value),
-                        })
-                      }
-                    >
-                      {rootPcOptions.map((pc) => (
-                        <option key={pc} value={pc}>
-                          {nameForRootPc(
-                            draft.startBlock.systemId,
-                            pc,
-                            accidental,
-                            noteNaming,
-                          )}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <NumberField
-                    id={`routine-step-beats-${step.id}`}
-                    label="Beats"
-                    value={step.beats}
-                    min={ROUTINE_BEATS_MIN}
-                    max={ROUTINE_BEATS_MAX}
-                    onSubmit={(value) =>
-                      updateScaleBlock(step.id, { beats: value })
-                    }
-                  />
-
-                  <NumberField
-                    id={`routine-step-bpm-${step.id}`}
-                    label="Tempo (BPM)"
-                    value={step.bpm}
-                    min={ROUTINE_BPM_MIN}
-                    max={ROUTINE_BPM_MAX}
-                    onSubmit={(value) =>
-                      updateScaleBlock(step.id, { bpm: value })
-                    }
-                  />
-
-                  <label className="tv-field">
-                    <span className="tv-field__label">Time signature</span>
-                    <select
-                      value={step.timeSig}
-                      onChange={(event) =>
-                        updateScaleBlock(step.id, {
-                          timeSig: event.target.value,
-                        })
-                      }
-                    >
-                      {ROUTINE_TIME_SIGNATURES.map((sig) => (
-                        <option key={sig} value={sig}>
-                          {sig}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </div>
-            </div>
+            <RoutineScaleBlock
+              key={step.id}
+              step={step}
+              index={index}
+              stepCount={draft.steps.length}
+              scaleLabelOptions={scaleLabelOptions}
+              rootPcOptions={rootPcOptions}
+              rootLabel={rootLabel}
+              onMove={moveScaleBlock}
+              onRemove={removeScaleBlock}
+              onUpdate={updateScaleBlock}
+            />
           ))}
 
           <button
@@ -410,142 +274,26 @@ export default function RoutineBuilderModal({
           </button>
         </section>
 
-        <section aria-label="My Routines" className="tv-modal__manager">
-          <div className="tv-modal__manager-toolbar">
-            <h3>My Routines</h3>
-            <button
-              type="button"
-              className="tv-button"
-              onClick={() =>
-                resetDraft(
-                  liveDefaults?.systemId ?? draft.startBlock.systemId,
-                  liveDefaults?.strings,
-                  liveDefaults?.presetName,
-                )
-              }
-            >
-              New routine
-            </button>
-          </div>
-          {isRoutinePlaying ? (
-            <p className="tv-field__help">
-              Currently playing: {playingRoutine.name || "Untitled routine"}
-              {" — "}
-              <button
-                type="button"
-                className="tv-button tv-button--danger"
-                onClick={() => routinePlayback?.stop?.()}
-              >
-                Stop
-              </button>
-            </p>
-          ) : null}
-          {routines.length ? (
-            <ul className="tv-modal__manager-list">
-              {routines.map((routine) => (
-                <li key={routine.id} className="tv-modal__manager-item">
-                  {renamingId === routine.id ? (
-                    <input
-                      type="text"
-                      value={renameValue}
-                      autoFocus
-                      onChange={(event) => setRenameValue(event.target.value)}
-                      onBlur={() => commitRename(routine.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") commitRename(routine.id);
-                        if (event.key === "Escape") setRenamingId(null);
-                      }}
-                    />
-                  ) : (
-                    <span className="tv-modal__manager-pack-name">
-                      {routine.name || "Untitled routine"}
-                    </span>
-                  )}
-                  <div className="tv-modal__manager-actions">
-                    <button
-                      type="button"
-                      className="tv-button tv-button--primary"
-                      onClick={() => handlePlay(routine)}
-                      disabled={isRoutinePlaying}
-                    >
-                      Play
-                    </button>
-                    <button
-                      type="button"
-                      className="tv-button"
-                      onClick={() => handleLoad(routine)}
-                    >
-                      Load
-                    </button>
-                    <button
-                      type="button"
-                      className="tv-button"
-                      onClick={() => startRename(routine)}
-                    >
-                      Rename
-                    </button>
-                    <button
-                      type="button"
-                      className="tv-button tv-button--danger"
-                      onClick={() => void handleDelete(routine)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="tv-field__help">No saved routines yet.</p>
-          )}
-        </section>
+        <RoutineLibrary
+          routines={routines}
+          isRoutinePlaying={isRoutinePlaying}
+          playingRoutine={playingRoutine}
+          onNewRoutine={() =>
+            resetDraft(
+              liveDefaults?.systemId ?? draft.startBlock.systemId,
+              liveDefaults?.strings,
+              liveDefaults?.presetName,
+            )
+          }
+          onStop={() => routinePlayback?.stop?.()}
+          onPlay={handlePlay}
+          onLoad={loadDraft}
+          onRename={renameRoutine}
+          onDelete={(routine) => void handleDelete(routine)}
+        />
 
         {hasSteps ? (
-          <div className="tv-share-modal__grid">
-            <section
-              className="tv-share-modal__panel"
-              aria-label="Routine link preview"
-            >
-              <label className="tv-field">
-                <span className="tv-field__label">Routine link</span>
-                <pre className="tv-textarea" aria-label="Routine link preview">
-                  {shareModel.presentableUrl}
-                </pre>
-                <span
-                  className="tv-field__help"
-                  data-warn={shareModel.sizeEvaluation.warn ? "true" : "false"}
-                >
-                  Length: {shareModel.sizeEvaluation.length}
-                  {shareModel.sizeEvaluation.reasonCode === "warning-threshold"
-                    ? " (Long URL warning)"
-                    : ""}
-                  {shareModel.sizeEvaluation.reasonCode === "qr-hard-limit"
-                    ? " (Too long for QR)"
-                    : ""}
-                </span>
-              </label>
-            </section>
-
-            <section
-              className="tv-share-modal__panel tv-share-modal__panel--qr"
-              aria-label="Routine QR preview"
-            >
-              <span className="tv-field__label">QR preview</span>
-              {shareModel.sizeEvaluation.allowQr ? (
-                <div className="tv-share-modal__qr-wrap" aria-live="polite">
-                  <ShareQrCode value={shareModel.canonicalUrl} size={176} />
-                </div>
-              ) : (
-                <p
-                  className="tv-field__help tv-field__help--error"
-                  role="status"
-                >
-                  Routine is too long for QR generation. Try fewer blocks or use
-                  link copy instead.
-                </p>
-              )}
-            </section>
-          </div>
+          <RoutineSharePreview shareModel={shareModel} />
         ) : (
           <p className="tv-field__help">
             Add at least one scale block to generate a shareable link.

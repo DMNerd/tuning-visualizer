@@ -13,6 +13,7 @@ import {
 } from "@shared/lib/storage/scopedStorage";
 import { clampNumeric } from "@shared/lib/math";
 import { isPlainObject } from "@shared/lib/object";
+import { createLegacyKeyCleanup } from "@shared/lib/storage/legacyKeyCleanup";
 
 // Pre-persist instrument storage: strings/frets under their own keys, and the
 // user default-tuning map under a global (unscoped) key that stays the source
@@ -86,23 +87,16 @@ export function syncGlobalDefaultTunings(value) {
   }
 }
 
-const LEGACY_CORE_KEYS = [STORAGE_KEYS.STRINGS, STORAGE_KEYS.FRETS];
-let shouldCleanupLegacyInstrumentCoreKeys = false;
+const legacyCoreKeyCleanup = createLegacyKeyCleanup([
+  STORAGE_KEYS.STRINGS,
+  STORAGE_KEYS.FRETS,
+]);
 
 export function primeGlobalDefaultTuningCache(value) {
   lastSerializedGlobalDefaultTuningMap = serializeDefaultTuningMap(value);
 }
 
-export function markLegacyInstrumentCoreKeysForCleanup() {
-  shouldCleanupLegacyInstrumentCoreKeys = true;
-}
+export const markLegacyInstrumentCoreKeysForCleanup = legacyCoreKeyCleanup.mark;
 
 // Removes the pre-persist per-key entries once, after a successful rehydrate.
-export function cleanupLegacyInstrumentCoreKeys() {
-  if (!shouldCleanupLegacyInstrumentCoreKeys) return;
-  shouldCleanupLegacyInstrumentCoreKeys = false;
-  if (typeof globalThis.localStorage === "undefined") return;
-  for (const key of LEGACY_CORE_KEYS) {
-    globalThis.localStorage.removeItem(key);
-  }
-}
+export const cleanupLegacyInstrumentCoreKeys = legacyCoreKeyCleanup.run;

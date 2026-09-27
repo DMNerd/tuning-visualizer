@@ -49,6 +49,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
           state.showChord,
           state.hideNonChord,
           state.chordCapoRelative,
+          state.chordIgnoresScale,
         ]}
         onReset={reset.resetMusicalState}
       >
@@ -59,6 +60,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             showChord: state.showChord,
             hideNonChord: state.hideNonChord,
             chordCapoRelative: state.chordCapoRelative,
+            chordIgnoresScale: state.chordIgnoresScale,
             defaultRoot: state.defaultChordRoot,
             defaultType: state.defaultChordType,
           }}
@@ -68,6 +70,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             setShowChord: actions.setShowChord,
             setHideNonChord: actions.setHideNonChord,
             setChordCapoRelative: actions.setChordCapoRelative,
+            setChordIgnoresScale: actions.setChordIgnoresScale,
           }}
           meta={{
             sysNames: meta.sysNames,

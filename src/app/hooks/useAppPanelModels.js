@@ -42,6 +42,8 @@ export function useAppPanelModels({
     setHideNonChord,
     chordCapoRelative,
     setChordCapoRelative,
+    chordIgnoresScale,
+    setChordIgnoresScale,
     chordRootIx,
     chordOverlayPcs,
     chordTonePcs,
@@ -88,6 +90,8 @@ export function useAppPanelModels({
           setHideNonChord,
           chordCapoRelative,
           setChordCapoRelative,
+          chordIgnoresScale,
+          setChordIgnoresScale,
           chordRootIx,
           chordOverlayPcs,
           chordTonePcs,
@@ -130,6 +134,8 @@ export function useAppPanelModels({
       setHideNonChord,
       chordCapoRelative,
       setChordCapoRelative,
+      chordIgnoresScale,
+      setChordIgnoresScale,
       chordRootIx,
       chordOverlayPcs,
       chordTonePcs,
@@ -153,9 +159,13 @@ export function useAppPanelModels({
       buildDisplayControlModel({
         displayPrefs,
         displaySetters,
-        degreeCount: intervals.length,
+        degreeCount: theoryControlModel.meta.fretboardIntervals.length,
       }),
-    [displayPrefs, displaySetters, intervals.length],
+    [
+      displayPrefs,
+      displaySetters,
+      theoryControlModel.meta.fretboardIntervals.length,
+    ],
   );
 
   const shareState = useMemo(

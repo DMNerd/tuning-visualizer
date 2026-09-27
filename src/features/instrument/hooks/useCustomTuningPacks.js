@@ -10,36 +10,10 @@ import {
   selectWorkflowManagerOpen,
   selectWorkflowPendingPresetName,
 } from "@features/instrument/store/useInstrumentWorkflowStore";
-
-function resolvePackLabel(target) {
-  if (target && typeof target === "object") {
-    const name = typeof target?.name === "string" ? target.name.trim() : "";
-    const displayName =
-      typeof target?.displayName === "string"
-        ? target.displayName.trim()
-        : name
-          ? ""
-          : "Untitled pack";
-    return name || displayName;
-  }
-
-  if (typeof target === "string") {
-    return target.trim();
-  }
-
-  return "";
-}
-
-function resolvePackKey(target) {
-  if (target && typeof target === "object") {
-    const id =
-      typeof target?.meta?.id === "string" ? target.meta.id.trim() : "";
-    if (id) return id;
-  }
-
-  const label = resolvePackLabel(target);
-  return label || "custom-tuning";
-}
+import {
+  resolvePackKey,
+  resolvePackLabel,
+} from "@features/instrument/model/packNaming";
 
 export function useCustomTuningPacks({
   confirm,
@@ -71,6 +45,15 @@ export function useCustomTuningPacks({
   const queuePresetByNameRef = useLatest(queuePresetByName);
 
   const isMounted = useMountedState();
+
+  // Proceeds without prompting when no confirm function was supplied.
+  const confirmIfAvailable = useCallback(
+    (options) =>
+      typeof confirmRef.current === "function"
+        ? confirmRef.current(options)
+        : true,
+    [confirmRef],
+  );
 
   const openCreate = useCallback(() => {
     if (typeof getCurrentTuningPackRef.current !== "function") return;
@@ -145,17 +128,14 @@ export function useCustomTuningPacks({
       const label = resolvePackLabel(target) || "this tuning pack";
       const key = slug(resolvePackKey(target));
 
-      let ok = true;
-      if (typeof confirmRef.current === "function") {
-        ok = await confirmRef.current({
-          title: "Remove custom tuning?",
-          message:
-            "This will permanently delete the selected custom tuning pack.",
-          confirmText: "Remove pack",
-          cancelText: "Cancel",
-          toastId: `confirm-delete-${key}`,
-        });
-      }
+      const ok = await confirmIfAvailable({
+        title: "Remove custom tuning?",
+        message:
+          "This will permanently delete the selected custom tuning pack.",
+        confirmText: "Remove pack",
+        cancelText: "Cancel",
+        toastId: `confirm-delete-${key}`,
+      });
       if (!ok) return false;
 
       return runWithCleanup(
@@ -168,7 +148,7 @@ export function useCustomTuningPacks({
         `delete-custom-${key}`,
       );
     },
-    [confirmRef, deleteCustomTuningRef, runWithCleanup],
+    [confirmIfAvailable, deleteCustomTuningRef, runWithCleanup],
   );
 
   const cancelEditor = useCallback(() => {
@@ -214,17 +194,15 @@ export function useCustomTuningPacks({
   const clearAllPacks = useCallback(async () => {
     if (typeof clearCustomTuningsRef.current !== "function") return false;
 
-    if (typeof confirmRef.current === "function") {
-      const ok = await confirmRef.current({
-        title: "Clear all custom tunings?",
-        message:
-          "This will permanently remove every saved custom tuning pack. This action cannot be undone.",
-        confirmText: "Clear custom tunings",
-        cancelText: "Cancel",
-        toastId: "confirm-clear-custom",
-      });
-      if (!ok) return false;
-    }
+    const ok = await confirmIfAvailable({
+      title: "Clear all custom tunings?",
+      message:
+        "This will permanently remove every saved custom tuning pack. This action cannot be undone.",
+      confirmText: "Clear custom tunings",
+      cancelText: "Cancel",
+      toastId: "confirm-clear-custom",
+    });
+    if (!ok) return false;
 
     return runWithCleanup(
       () => clearCustomTuningsRef.current(),
@@ -235,7 +213,7 @@ export function useCustomTuningPacks({
       },
       "clear-custom-tunings",
     );
-  }, [confirmRef, clearCustomTuningsRef, runWithCleanup]);
+  }, [confirmIfAvailable, clearCustomTuningsRef, runWithCleanup]);
 
   useEffect(() => {
     if (!pendingPresetName) return;

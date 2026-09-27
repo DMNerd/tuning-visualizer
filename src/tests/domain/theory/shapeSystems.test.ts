@@ -16,6 +16,15 @@ import {
   shapeMatchesNotesPerString,
 } from "@domain/theory/shapeSystems";
 
+// Standard-tuned 6-string guitar, E root, open position through fret 12.
+const STANDARD_GUITAR_E_INPUT = {
+  n: 12,
+  tuning: [4, 9, 2, 7, 11, 4],
+  rootPc: 4,
+  fretMin: 0,
+  fretMax: 12,
+};
+
 void test("notes-per-string analysis and constraints are generic", () => {
   const shape = [
     { string: 0, fret: 1, pc: 0, degree: 0, isRoot: true },
@@ -77,13 +86,7 @@ void test("relative coverage set resolution is explicit for absolute and relativ
 
 void test("pentatonic preset generates filtered compact families", () => {
   const result = generateShapeFamily({
-    fretboardInput: {
-      n: 12,
-      tuning: [4, 9, 2, 7, 11, 4],
-      rootPc: 4,
-      fretMin: 0,
-      fretMax: 12,
-    },
+    fretboardInput: STANDARD_GUITAR_E_INPUT,
     systemSpec: createPentatonicBoxSpec(),
   });
 
@@ -99,13 +102,7 @@ void test("pentatonic preset generates filtered compact families", () => {
 
 void test("3NPS preset enforces exact notes per participating string", () => {
   const result = generateShapeFamily({
-    fretboardInput: {
-      n: 12,
-      tuning: [4, 9, 2, 7, 11, 4],
-      rootPc: 4,
-      fretMin: 0,
-      fretMax: 12,
-    },
+    fretboardInput: STANDARD_GUITAR_E_INPUT,
     systemSpec: createThreeNpsSpec(),
   });
 
@@ -121,13 +118,7 @@ void test("3NPS preset enforces exact notes per participating string", () => {
 void test("chord-anchored CAGED preset yields neighborhood shapes around chord skeletons", () => {
   const systemSpec = createCagedMajorSpec();
   const result = generateShapeFamily({
-    fretboardInput: {
-      n: 12,
-      tuning: [4, 9, 2, 7, 11, 4],
-      rootPc: 4,
-      fretMin: 0,
-      fretMax: 12,
-    },
+    fretboardInput: STANDARD_GUITAR_E_INPUT,
     systemSpec,
   });
 
@@ -144,13 +135,7 @@ void test("chord-anchored CAGED preset yields neighborhood shapes around chord s
 void test("heuristic CAGED naming remains explicitly non-authoritative", () => {
   const systemSpec = createCagedMajorSpec();
   const result = generateShapeFamily({
-    fretboardInput: {
-      n: 12,
-      tuning: [4, 9, 2, 7, 11, 4],
-      rootPc: 4,
-      fretMin: 0,
-      fretMax: 12,
-    },
+    fretboardInput: STANDARD_GUITAR_E_INPUT,
     systemSpec,
   });
 

@@ -63,6 +63,15 @@ function sizeOfSet(value: unknown) {
   return value instanceof Set ? value.size : 0;
 }
 
+// True when every listed key is Object.is-equal on both (possibly missing) objects.
+export function keysIdentical(
+  prev: AnyRecord | null | undefined,
+  next: AnyRecord | null | undefined,
+  keys: readonly string[],
+) {
+  return keys.every((key) => Object.is(prev?.[key], next?.[key]));
+}
+
 export function arrayRefAndLengthEqual(
   prev: unknown[] | null | undefined,
   next: unknown[] | null | undefined,

@@ -55,6 +55,22 @@ export function buildTheoryControlModel({
     divisions,
   );
 
+  // "Independent of scale" (chord-tones-only mode): the fretboard treats the
+  // chord itself as the scale, so the chord root takes the root color and
+  // degree/interval labels, and no tone is marked as outside the scale.
+  const chordAsScale =
+    Boolean(chord?.showChord) &&
+    Boolean(chord?.hideNonChord) &&
+    Boolean(chord?.chordIgnoresScale) &&
+    Number.isFinite(transposedChordRootPc) &&
+    chordTonePcs?.size > 0;
+  const fretboardRootIx = chordAsScale ? transposedChordRootPc : safeRootIx;
+  const fretboardIntervals = chordAsScale
+    ? [...chordTonePcs]
+        .map((pc) => (pc - transposedChordRootPc + divisions) % divisions)
+        .sort((a, b) => a - b)
+    : scaleIntervals;
+
   return {
     state: {
       root: scale?.root,
@@ -66,6 +82,7 @@ export function buildTheoryControlModel({
       showChord: chord?.showChord,
       hideNonChord: chord?.hideNonChord,
       chordCapoRelative,
+      chordIgnoresScale: Boolean(chord?.chordIgnoresScale),
       defaultRoot: defaults?.root,
       defaultScale: defaults?.scale,
       defaultChordRoot: defaults?.chordRoot,
@@ -81,6 +98,7 @@ export function buildTheoryControlModel({
       setShowChord: chord?.setShowChord,
       setHideNonChord: chord?.setHideNonChord,
       setChordCapoRelative: chord?.setChordCapoRelative,
+      setChordIgnoresScale: chord?.setChordIgnoresScale,
     },
     meta: {
       sysNames: system?.sysNames ?? [],
@@ -92,6 +110,8 @@ export function buildTheoryControlModel({
       supportsMicrotonal: Number(system?.system?.divisions) > 12,
       system: system?.system,
       rootIx: safeRootIx,
+      fretboardRootIx,
+      fretboardIntervals,
       nameForPc: system?.nameForPc,
       chordRootPc: transposedChordRootPc,
       capoFret,

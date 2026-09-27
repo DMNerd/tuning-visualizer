@@ -15,6 +15,7 @@ import { useLabels } from "@features/fretboard/hooks/useLabels";
 import { buildFretLabel, MICRO_LABEL_STYLES } from "@shared/lib/fretLabels";
 import {
   arrayRefAndLengthEqual,
+  keysIdentical,
   objectRefAndKeyEqual,
   setRefAndSizeEqual,
 } from "@shared/lib/memo";
@@ -718,7 +719,7 @@ const IDENTITY_PROPS = [
 
 function areFretboardPropsEqual(prev, next) {
   return (
-    IDENTITY_PROPS.every((key) => Object.is(prev[key], next[key])) &&
+    keysIdentical(prev, next, IDENTITY_PROPS) &&
     objectRefAndKeyEqual(prev.system, next.system, "id") &&
     objectRefAndKeyEqual(prev.system, next.system, "divisions") &&
     arrayRefAndLengthEqual(prev.intervals, next.intervals) &&

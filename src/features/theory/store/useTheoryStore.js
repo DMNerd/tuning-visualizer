@@ -14,6 +14,7 @@ import {
   getLocalStorage,
 } from "@shared/lib/storage/scopedStorage";
 import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
+import { createLegacyKeyCleanup } from "@shared/lib/storage/legacyKeyCleanup";
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -46,8 +47,21 @@ function readLegacyTheoryPrefs() {
   };
 }
 
-const LEGACY_THEORY_KEYS = [STORAGE_KEYS.SYSTEM_ID, STORAGE_KEYS.ROOT];
-let shouldCleanupLegacyTheoryKeys = false;
+const legacyTheoryKeyCleanup = createLegacyKeyCleanup([
+  STORAGE_KEYS.SYSTEM_ID,
+  STORAGE_KEYS.ROOT,
+]);
+
+// Precedence: valid persisted value, then legacy key, then any persisted
+// value, then the default.
+function resolveTheoryField(key, persisted, persistedValid, legacy, fallback) {
+  return (
+    (persistedValid ? persisted[key] : null) ||
+    (legacy.found ? legacy[key] : null) ||
+    persisted?.[key] ||
+    fallback
+  );
+}
 
 export const useTheoryStore = create(
   persist(
@@ -63,10 +77,13 @@ export const useTheoryStore = create(
         "chordRoot",
         "chordType",
       ]);
+      // Explicit boolean sets the flag; anything else toggles it.
+      const setOrToggle = (key) => (value) =>
+        set((state) => {
+          state[key] = typeof value === "boolean" ? value : !state[key];
+        });
       const legacy = readLegacyTheoryPrefs();
-      if (legacy.found) {
-        shouldCleanupLegacyTheoryKeys = true;
-      }
+      if (legacy.found) legacyTheoryKeyCleanup.mark();
       return {
         systemId: legacy.found ? legacy.systemId : SYSTEM_DEFAULT,
         root: legacy.found ? legacy.root : ROOT_DEFAULT,
@@ -77,26 +94,16 @@ export const useTheoryStore = create(
         showChord: false,
         hideNonChord: false,
         chordCapoRelative: false,
+        chordIgnoresScale: false,
         ...baseSetters,
         setHydrated: (isHydrated = true) =>
           set((state) => {
             state.isHydrated = Boolean(isHydrated);
           }),
-        setShowChord: (value) =>
-          set((state) => {
-            state.showChord =
-              typeof value === "boolean" ? value : !state.showChord;
-          }),
-        setHideNonChord: (value) =>
-          set((state) => {
-            state.hideNonChord =
-              typeof value === "boolean" ? value : !state.hideNonChord;
-          }),
-        setChordCapoRelative: (value) =>
-          set((state) => {
-            state.chordCapoRelative =
-              typeof value === "boolean" ? value : !state.chordCapoRelative;
-          }),
+        setShowChord: setOrToggle("showChord"),
+        setHideNonChord: setOrToggle("hideNonChord"),
+        setChordCapoRelative: setOrToggle("chordCapoRelative"),
+        setChordIgnoresScale: setOrToggle("chordIgnoresScale"),
         resetTheory: () =>
           set({
             systemId: SYSTEM_DEFAULT,
@@ -107,6 +114,7 @@ export const useTheoryStore = create(
             showChord: false,
             hideNonChord: false,
             chordCapoRelative: false,
+            chordIgnoresScale: false,
           }),
       };
     }),
@@ -126,7 +134,7 @@ export const useTheoryStore = create(
           return persistedState;
         }
 
-        shouldCleanupLegacyTheoryKeys = true;
+        legacyTheoryKeyCleanup.mark();
 
         return {
           ...(persistedState || {}),
@@ -144,33 +152,31 @@ export const useTheoryStore = create(
           return current;
         }
         const legacy = readLegacyTheoryPrefs();
-        if (legacy.found) {
-          shouldCleanupLegacyTheoryKeys = true;
-        }
+        if (legacy.found) legacyTheoryKeyCleanup.mark();
         const persistedValid = hasValidPersistedTheory(persisted);
         return {
           ...current,
-          ...(persisted || {}),
-          systemId:
-            (persistedValid ? persisted.systemId : null) ||
-            (legacy.found ? legacy.systemId : null) ||
-            persisted?.systemId ||
+          ...persisted,
+          systemId: resolveTheoryField(
+            "systemId",
+            persisted,
+            persistedValid,
+            legacy,
             SYSTEM_DEFAULT,
-          root:
-            (persistedValid ? persisted.root : null) ||
-            (legacy.found ? legacy.root : null) ||
-            persisted?.root ||
+          ),
+          root: resolveTheoryField(
+            "root",
+            persisted,
+            persistedValid,
+            legacy,
             ROOT_DEFAULT,
+          ),
         };
       },
       onRehydrateStorage: () => (_state, error) => {
         _state?.setHydrated?.(true);
-        if (error || !shouldCleanupLegacyTheoryKeys) return;
-        shouldCleanupLegacyTheoryKeys = false;
-        if (typeof globalThis.localStorage === "undefined") return;
-        for (const key of LEGACY_THEORY_KEYS) {
-          globalThis.localStorage.removeItem(key);
-        }
+        if (error) return;
+        legacyTheoryKeyCleanup.run();
       },
     },
   ),
@@ -185,6 +191,7 @@ export const selectTheoryState = (state) => ({
   showChord: state.showChord,
   hideNonChord: state.hideNonChord,
   chordCapoRelative: state.chordCapoRelative,
+  chordIgnoresScale: state.chordIgnoresScale,
 });
 
 export const selectTheoryActions = (state) => ({
@@ -196,6 +203,7 @@ export const selectTheoryActions = (state) => ({
   setShowChord: state.setShowChord,
   setHideNonChord: state.setHideNonChord,
   setChordCapoRelative: state.setChordCapoRelative,
+  setChordIgnoresScale: state.setChordIgnoresScale,
   resetTheory: state.resetTheory,
 });
 
@@ -207,4 +215,5 @@ export const selectTheoryChordType = (state) => state.chordType;
 export const selectTheoryShowChord = (state) => state.showChord;
 export const selectTheoryHideNonChord = (state) => state.hideNonChord;
 export const selectTheoryChordCapoRelative = (state) => state.chordCapoRelative;
+export const selectTheoryChordIgnoresScale = (state) => state.chordIgnoresScale;
 export const selectTheoryIsHydrated = (state) => state.isHydrated;

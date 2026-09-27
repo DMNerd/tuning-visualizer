@@ -6,7 +6,7 @@ import {
   clearUrlSearchParams,
   evaluateUrlShareNoticeState,
   shouldApplyUrlHydration,
-} from "@features/share/hooks/useUrlShareHydration";
+} from "@features/share/model/urlShareHydration";
 import {
   parseSharePayload,
   resolveInstrumentHydrationValues,

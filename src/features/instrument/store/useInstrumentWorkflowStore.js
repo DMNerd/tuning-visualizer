@@ -15,6 +15,10 @@ function readLegacyCustomTunings() {
   return Array.isArray(parsed) ? parsed : null;
 }
 
+function trimmedString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 let didHydrateLegacyWorkflowPayload = false;
 
 export const useInstrumentWorkflowStore = create(
@@ -57,17 +61,12 @@ export const useInstrumentWorkflowStore = create(
             }
 
             const list = state.customTunings;
-            const packId =
-              typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
-            const packName =
-              typeof pack?.name === "string" ? pack.name.trim() : "";
+            const packId = trimmedString(pack.meta?.id);
+            const packName = trimmedString(pack.name);
             const index = list.findIndex((entry) => {
-              const entryId =
-                typeof entry?.meta?.id === "string" ? entry.meta.id.trim() : "";
+              const entryId = trimmedString(entry?.meta?.id);
               if (packId && entryId) return entryId === packId;
-              const entryName =
-                typeof entry?.name === "string" ? entry.name.trim() : "";
-              return !!packName && entryName === packName;
+              return !!packName && trimmedString(entry?.name) === packName;
             });
             if (index >= 0) {
               list[index] = pack;
@@ -79,37 +78,21 @@ export const useInstrumentWorkflowStore = create(
           set((state) => {
             if (!Array.isArray(state.customTunings)) return;
 
+            // First string found among meta.id, name, or the identifier itself.
             const id =
               typeof identifier?.meta?.id === "string"
                 ? identifier.meta.id.trim()
                 : typeof identifier?.name === "string"
                   ? identifier.name.trim()
-                  : typeof identifier === "string"
-                    ? identifier.trim()
-                    : "";
-
+                  : trimmedString(identifier);
             if (!id) return;
 
-            let removedAny = false;
-            for (
-              let index = state.customTunings.length - 1;
-              index >= 0;
-              index -= 1
-            ) {
-              const entry = state.customTunings[index];
-              const entryId =
-                typeof entry?.meta?.id === "string" ? entry.meta.id.trim() : "";
-              const entryName =
-                typeof entry?.name === "string" ? entry.name.trim() : "";
-
-              const isMatch = entryId ? entryId === id : entryName === id;
-              if (isMatch) {
-                state.customTunings.splice(index, 1);
-                removedAny = true;
-              }
-            }
-
-            if (!removedAny) return;
+            state.customTunings = state.customTunings.filter((entry) => {
+              const entryId = trimmedString(entry?.meta?.id);
+              return entryId
+                ? entryId !== id
+                : trimmedString(entry?.name) !== id;
+            });
           }),
         touchWorkflowState: () =>
           set((state) => {

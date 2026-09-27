@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   usePrevious,
@@ -133,6 +133,9 @@ export function useMergedPresets({
     [mergedPresetMap, compatibleCustoms],
   );
 
+  // Neck filter mode applied by the last explicitly selected preset's meta.
+  const presetAppliedModeRef = useRef(null);
+
   const setPreset = useCallback(
     (name, options = {}) => {
       // syncNeckFilterFromPresetMeta=true when user selects a preset so preset
@@ -159,9 +162,13 @@ export function useMergedPresets({
       if (!areTuningsEqual(currentTuningRef.current, coerced)) {
         setTuning(coerced);
       }
-      const meta =
-        normalizePresetMeta(mergedPresetMetaMap?.[name]) ||
-        normalizePresetMeta(findPackByName(compatibleCustoms, name)?.meta);
+      // Consumers of the store's stringMeta expect an array, not the Map form.
+      const metaSource =
+        mergedPresetMetaMap?.[name] ??
+        findPackByName(compatibleCustoms, name)?.meta;
+      const meta = normalizePresetMeta(metaSource, {
+        stringMetaFormat: "array",
+      });
       setStringMeta(meta?.stringMeta || null);
 
       const presetMode = resolveNeckFilterModeIntentFromBoardMeta(meta?.board);
@@ -169,10 +176,16 @@ export function useMergedPresets({
         presetMode,
         syncFromPresetMeta: syncNeckFilterFromPresetMeta,
         currentMode: neckFilterMode,
+        presetAppliedMode: presetAppliedModeRef.current,
         currentEdo,
         boardMeta: meta?.board ?? null,
       });
       setNeckFilterMode?.(resolvedNeckFilterMode);
+      if (syncNeckFilterFromPresetMeta) {
+        presetAppliedModeRef.current = presetMode
+          ? resolvedNeckFilterMode
+          : null;
+      }
 
       const nextBoardMeta = applyNeckFilterModeToBoardMeta(meta?.board, {
         mode: resolvedNeckFilterMode,

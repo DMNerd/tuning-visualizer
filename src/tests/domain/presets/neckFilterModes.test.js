@@ -258,6 +258,45 @@ test("selecting a fretless preset resolves neck filter mode to fretless outside 
   assert.equal(resolved, NECK_FILTER_MODES.FRETLESS);
 });
 
+test("selecting a preset without meta drops a mode the previous preset applied", () => {
+  const resolved = resolvePresetNeckFilterMode({
+    presetMode: null,
+    syncFromPresetMeta: true,
+    currentMode: NECK_FILTER_MODES.FRETLESS,
+    presetAppliedMode: NECK_FILTER_MODES.FRETLESS,
+    currentEdo: 12,
+    boardMeta: null,
+  });
+
+  assert.equal(resolved, NECK_FILTER_MODES.NONE);
+});
+
+test("selecting a preset without meta keeps a mode the user picked by hand", () => {
+  const resolved = resolvePresetNeckFilterMode({
+    presetMode: null,
+    syncFromPresetMeta: true,
+    currentMode: NECK_FILTER_MODES.FRETLESS,
+    presetAppliedMode: null,
+    currentEdo: 12,
+    boardMeta: null,
+  });
+
+  assert.equal(resolved, NECK_FILTER_MODES.FRETLESS);
+});
+
+test("reapplying a preset keeps the current mode even if a preset applied it", () => {
+  const resolved = resolvePresetNeckFilterMode({
+    presetMode: null,
+    syncFromPresetMeta: false,
+    currentMode: NECK_FILTER_MODES.FRETLESS,
+    presetAppliedMode: NECK_FILTER_MODES.FRETLESS,
+    currentEdo: 12,
+    boardMeta: null,
+  });
+
+  assert.equal(resolved, NECK_FILTER_MODES.FRETLESS);
+});
+
 test("preset meta normalization preserves board.neckFilterMode when valid", () => {
   const normalized = normalizePresetMeta({
     board: { neckFilterMode: "fretless" },

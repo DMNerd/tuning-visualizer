@@ -38,6 +38,12 @@ export type NeckFilterOption = {
   disabled: boolean;
 };
 
+function nonEmptyOrNull(
+  value: Record<string, unknown>,
+): Record<string, unknown> | null {
+  return Object.keys(value).length > 0 ? value : null;
+}
+
 function normalizeHiddenFretList(hiddenFrets: unknown): number[] {
   if (!Array.isArray(hiddenFrets)) return [];
   return hiddenFrets
@@ -68,7 +74,7 @@ export function stripHiddenFrets(
 ): Record<string, unknown> | null {
   if (!isPlainObject(boardMeta)) return null;
   const { hiddenFrets: _hiddenFrets, ...rest } = boardMeta;
-  return Object.keys(rest).length > 0 ? rest : null;
+  return nonEmptyOrNull(rest);
 }
 
 function stripHiddenFretsIfKg<T>(
@@ -83,27 +89,25 @@ export function stripFretlessStyle(
   boardMeta: unknown,
 ): Record<string, unknown> | null {
   if (!isPlainObject(boardMeta)) return null;
-  const next = { ...boardMeta };
-  if (
-    next.fretStyle === FRETLESS_BOARD_META.fretStyle &&
-    next.notePlacement === FRETLESS_BOARD_META.notePlacement
-  ) {
-    delete next.fretStyle;
-    delete next.notePlacement;
-  }
-  return Object.keys(next).length > 0 ? next : null;
+  if (!isFretlessBoardMeta(boardMeta)) return nonEmptyOrNull({ ...boardMeta });
+  const {
+    fretStyle: _fretStyle,
+    notePlacement: _notePlacement,
+    ...rest
+  } = boardMeta;
+  return nonEmptyOrNull(rest);
 }
 
 export function normalizeNeckFilterModeId(mode: unknown): NeckFilterModeId {
   return coerceNeckFilterMode(mode, NECK_FILTER_MODES.NONE);
 }
 
+const NECK_FILTER_MODE_IDS: ReadonlySet<unknown> = new Set(
+  Object.values(NECK_FILTER_MODES),
+);
+
 export function isNeckFilterMode(value: unknown): value is NeckFilterModeId {
-  return (
-    value === NECK_FILTER_MODES.NONE ||
-    value === NECK_FILTER_MODES.KG ||
-    value === NECK_FILTER_MODES.FRETLESS
-  );
+  return NECK_FILTER_MODE_IDS.has(value);
 }
 
 export function coerceNeckFilterMode(
@@ -221,20 +225,33 @@ export function resolveNeckFilterModeIntentFromBoardMeta(
   return detectNeckFilterModeFromPreset(boardMeta);
 }
 
+/**
+ * `presetAppliedMode` is the mode the previous preset's meta applied. If it is
+ * still active when a preset with no intent of its own is selected, it is
+ * dropped rather than carried over; a mode the user picked by hand is kept.
+ */
 export function resolvePresetNeckFilterMode({
   presetMode,
   syncFromPresetMeta,
   currentMode,
+  presetAppliedMode,
   currentEdo,
   boardMeta,
 }: {
   presetMode?: unknown;
   syncFromPresetMeta: boolean;
   currentMode?: unknown;
+  presetAppliedMode?: unknown;
   currentEdo?: number | null;
   boardMeta?: unknown;
 }): NeckFilterModeId {
-  const modeToValidate = presetMode ?? currentMode;
+  const carriedMode =
+    syncFromPresetMeta &&
+    !presetMode &&
+    presetAppliedMode === normalizeNeckFilterModeId(currentMode)
+      ? NECK_FILTER_MODES.NONE
+      : currentMode;
+  const modeToValidate = presetMode ?? carriedMode;
   const presetAllowsMode = shouldApplyNeckFilterMode({
     mode: modeToValidate,
     edo: currentEdo,
@@ -247,7 +264,7 @@ export function resolvePresetNeckFilterMode({
   if (presetMode && syncFromPresetMeta) {
     return normalizeNeckFilterModeId(presetMode);
   }
-  return normalizeNeckFilterModeId(currentMode);
+  return normalizeNeckFilterModeId(carriedMode);
 }
 
 export function getNeckFilterOptions(
@@ -283,5 +300,5 @@ export function sanitizeBoardMetaForModeStorage(
     }
   }
 
-  return Object.keys(normalized).length ? normalized : null;
+  return nonEmptyOrNull(normalized);
 }

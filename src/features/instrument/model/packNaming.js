@@ -53,3 +53,34 @@ export function ensureUniqueName(desiredName, takenNames) {
   takenNames.add(candidate);
   return candidate;
 }
+
+// Human label for a pack (object or name string) used in toasts/confirms.
+export function resolvePackLabel(target) {
+  if (target && typeof target === "object") {
+    const name = typeof target?.name === "string" ? target.name.trim() : "";
+    const displayName =
+      typeof target?.displayName === "string"
+        ? target.displayName.trim()
+        : name
+          ? ""
+          : "Untitled pack";
+    return name || displayName;
+  }
+
+  if (typeof target === "string") {
+    return target.trim();
+  }
+
+  return "";
+}
+
+export function resolvePackKey(target) {
+  if (target && typeof target === "object") {
+    const id =
+      typeof target?.meta?.id === "string" ? target.meta.id.trim() : "";
+    if (id) return id;
+  }
+
+  const label = resolvePackLabel(target);
+  return label || "custom-tuning";
+}

@@ -33,3 +33,11 @@ export function importFresh(specifier) {
   const cacheKey = `${Date.now()}-${Math.random()}`;
   return import(`${specifier}?t=${cacheKey}`);
 }
+
+// Fresh-imports a persisted store module, rehydrates the named store export
+// from storage, and returns it.
+export async function rehydrateFresh(specifier, exportName) {
+  const store = (await importFresh(specifier))[exportName];
+  await store.persist.rehydrate();
+  return store;
+}
