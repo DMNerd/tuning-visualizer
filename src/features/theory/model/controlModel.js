@@ -3,6 +3,7 @@ import {
   transposeCapoRelativeChordRootPc,
   transposePitchClassSet,
 } from "@domain/theory/capoChords";
+import { identifyChord } from "@domain/theory/chordIdentify";
 
 export function buildTheoryControlModel({
   system,
@@ -58,7 +59,15 @@ export function buildTheoryControlModel({
   // "Independent of scale" (chord-tones-only mode): the fretboard treats the
   // chord itself as the scale, so the chord root takes the root color and
   // degree/interval labels, and no tone is marked as outside the scale.
+  const chordFinderActive = Boolean(chord?.chordFinderActive);
+  const pickedPcs = Array.isArray(chord?.pickedPcs) ? chord.pickedPcs : [];
+  const chordFinderMatches = chordFinderActive
+    ? identifyChord(pickedPcs, divisions)
+    : [];
+  const pickedPcSet = pickedPcs.length > 0 ? new Set(pickedPcs) : null;
+
   const chordAsScale =
+    !chordFinderActive &&
     Boolean(chord?.showChord) &&
     Boolean(chord?.hideNonChord) &&
     Boolean(chord?.chordIgnoresScale) &&
@@ -83,6 +92,8 @@ export function buildTheoryControlModel({
       hideNonChord: chord?.hideNonChord,
       chordCapoRelative,
       chordIgnoresScale: Boolean(chord?.chordIgnoresScale),
+      chordFinderActive,
+      pickedPcs,
       defaultRoot: defaults?.root,
       defaultScale: defaults?.scale,
       defaultChordRoot: defaults?.chordRoot,
@@ -99,6 +110,9 @@ export function buildTheoryControlModel({
       setHideNonChord: chord?.setHideNonChord,
       setChordCapoRelative: chord?.setChordCapoRelative,
       setChordIgnoresScale: chord?.setChordIgnoresScale,
+      setChordFinderActive: chord?.setChordFinderActive,
+      togglePickedPc: chord?.togglePickedPc,
+      clearPickedPcs: chord?.clearPickedPcs,
     },
     meta: {
       sysNames: system?.sysNames ?? [],
@@ -112,6 +126,21 @@ export function buildTheoryControlModel({
       rootIx: safeRootIx,
       fretboardRootIx,
       fretboardIntervals,
+      // While picking notes for the chord finder, the fretboard shows every
+      // note (so out-of-scale ones can be picked) and outlines the picks as
+      // a chord rooted on the best match.
+      fretboardShowAllNotes: chordFinderActive,
+      fretboardChordPcs: chordFinderActive ? pickedPcSet : chordOverlayPcs,
+      fretboardChordRootPc: chordFinderActive
+        ? (chordFinderMatches[0]?.rootPc ?? null)
+        : transposedChordRootPc,
+      fretboardHideNonChord: chordFinderActive
+        ? false
+        : Boolean(chord?.hideNonChord),
+      chordFinderMatches,
+      // Picked notes are sounding pitches; a capo-relative chord root is a
+      // shape root, so applying a match must subtract this offset.
+      chordRootOffset: transposeBy,
       nameForPc: system?.nameForPc,
       chordRootPc: transposedChordRootPc,
       capoFret,

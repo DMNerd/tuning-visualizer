@@ -91,6 +91,7 @@ function Fretboard({
   colorByDegree,
   colorByShape,
   hideNonChord,
+  showAllNotes = false,
   stringMeta,
   boardMeta,
 
@@ -367,6 +368,7 @@ function Fretboard({
         showOpen,
         hideNonChord,
         openOnlyInMode,
+        showAllNotes,
       });
       if (!visible) continue;
 
@@ -391,6 +393,7 @@ function Fretboard({
         isRoot,
         isMicro,
         isChordOutsideScale,
+        isOutsideScale: !inScale,
       });
       const label =
         show === "fret"
@@ -432,6 +435,7 @@ function Fretboard({
     showOpen,
     openOnlyInMode,
     hideNonChord,
+    showAllNotes,
     rootIx,
     effectiveDotSize,
     colorByDegree,
@@ -713,6 +717,7 @@ const IDENTITY_PROPS = [
   "colorByDegree",
   "colorByShape",
   "hideNonChord",
+  "showAllNotes",
   "capoFret",
   "chordRootPc",
   "onSelectNote",

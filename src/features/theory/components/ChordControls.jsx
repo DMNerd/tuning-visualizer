@@ -1,6 +1,5 @@
 import { memo, useId, useMemo } from "react";
 import clsx from "clsx";
-import Section from "@shared/ui/Section";
 import {
   CHORD_TYPES,
   CHORD_LABELS,
@@ -147,130 +146,126 @@ function ChordControls({ state, actions, meta }) {
       : "overlay";
 
   return (
-    <Section id="chord-controls" title="Chord Controls" size="sm">
-      <div className={clsx("tv-controls", "tv-controls--chord")}>
-        <div className="tv-controls__grid--two">
-          <div className="tv-field">
-            <label
-              className="tv-field__label"
-              htmlFor={rootInputId}
-              id={rootLabelId}
-            >
-              Root
-            </label>
-            <select
-              id={rootInputId}
-              name="chord-root"
-              value={root}
-              aria-labelledby={rootLabelId}
-              onChange={(e) => onRootChange(e.target.value)}
-            >
-              {sysNames.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="tv-field">
-            <label
-              className="tv-field__label"
-              htmlFor={typeInputId}
-              id={typeLabelId}
-            >
-              Type
-            </label>
-            <div className="tv-controls__input-row">
-              <ChordTypePicker
-                id={typeInputId}
-                chordTypes={chordTypes}
-                labels={CHORD_LABELS}
-                selectedType={type}
-                onSelect={onTypeChange}
-                supportsMicrotonal={supportsMicrotonal}
-                ariaLabelledBy={typeLabelId}
-              />
-              <button
-                type="button"
-                className="tv-button tv-button--icon"
-                aria-label="Reset chord controls to defaults"
-                title="Reset to default"
-                onClick={resetDefaults}
-              >
-                <FiRotateCcw size={16} aria-hidden />
-              </button>
-            </div>
-          </div>
+    <div className={clsx("tv-controls", "tv-controls--chord")}>
+      <div className="tv-controls__grid--two">
+        <div className="tv-field">
+          <label
+            className="tv-field__label"
+            htmlFor={rootInputId}
+            id={rootLabelId}
+          >
+            Root
+          </label>
+          <select
+            id={rootInputId}
+            name="chord-root"
+            value={root}
+            aria-labelledby={rootLabelId}
+            onChange={(e) => onRootChange(e.target.value)}
+          >
+            {sysNames.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="tv-field">
-          <ToggleSwitch
-            id={capoRelativeId}
-            name="chord-capo-relative"
-            checked={Boolean(chordCapoRelative)}
-            onChange={(e) => setChordCapoRelative?.(e.target.checked)}
+          <label
+            className="tv-field__label"
+            htmlFor={typeInputId}
+            id={typeLabelId}
           >
-            Capo-relative chord
-          </ToggleSwitch>
-          <small className="tv-field__help">{capoChordDisplay.helpText}</small>
-        </div>
-
-        {chordCapoRelative ? (
-          <CapoChordField display={capoChordDisplay} />
-        ) : null}
-
-        <ChordToneField
-          chordTones={chordTones}
-          chordSummary={chordSummary}
-          showChord={showChord}
-          chordOverlayPcs={chordOverlayPcs}
-        />
-
-        <SegmentedRadioGroup
-          label="Chord overlay"
-          name="chord-overlay-mode"
-          value={chordOverlayMode}
-          onChange={(mode) => {
-            const [nextShowChord, nextHideNonChord] =
-              OVERLAY_MODE_FLAGS[mode] ?? OVERLAY_MODE_FLAGS["chord-only"];
-            setShowChord(nextShowChord);
-            setHideNonChord(nextHideNonChord);
-          }}
-          options={[
-            { value: "off", label: "Off" },
-            { value: "overlay", label: "Overlay" },
-            { value: "chord-only", label: "Chord tones only" },
-          ]}
-        />
-        {chordOverlayMode === "chord-only" ? (
-          <div className="tv-field">
-            <ToggleSwitch
-              id={ignoresScaleId}
-              name="chord-ignores-scale"
-              checked={Boolean(chordIgnoresScale)}
-              onChange={(e) => setChordIgnoresScale?.(e.target.checked)}
+            Type
+          </label>
+          <div className="tv-controls__input-row">
+            <ChordTypePicker
+              id={typeInputId}
+              chordTypes={chordTypes}
+              labels={CHORD_LABELS}
+              selectedType={type}
+              onSelect={onTypeChange}
+              supportsMicrotonal={supportsMicrotonal}
+              ariaLabelledBy={typeLabelId}
+            />
+            <button
+              type="button"
+              className="tv-button tv-button--icon"
+              aria-label="Reset chord controls to defaults"
+              title="Reset to default"
+              onClick={resetDefaults}
             >
-              Independent of scale
-            </ToggleSwitch>
-            <small className="tv-field__help">
-              Colors, degrees and intervals follow the chord root instead of the
-              selected scale and root.
-            </small>
+              <FiRotateCcw size={16} aria-hidden />
+            </button>
           </div>
-        ) : null}
-        {chordFit?.text ? (
-          <small
-            className={clsx("tv-fit-indicator", {
-              "is-warning": chordFit.kind === "warning",
-              "is-success": chordFit.kind === "success",
-            })}
-          >
-            {chordFit.text}
-          </small>
-        ) : null}
+        </div>
       </div>
-    </Section>
+
+      <div className="tv-field">
+        <ToggleSwitch
+          id={capoRelativeId}
+          name="chord-capo-relative"
+          checked={Boolean(chordCapoRelative)}
+          onChange={(e) => setChordCapoRelative?.(e.target.checked)}
+        >
+          Capo-relative chord
+        </ToggleSwitch>
+        <small className="tv-field__help">{capoChordDisplay.helpText}</small>
+      </div>
+
+      {chordCapoRelative ? <CapoChordField display={capoChordDisplay} /> : null}
+
+      <ChordToneField
+        chordTones={chordTones}
+        chordSummary={chordSummary}
+        showChord={showChord}
+        chordOverlayPcs={chordOverlayPcs}
+      />
+
+      <SegmentedRadioGroup
+        label="Chord overlay"
+        name="chord-overlay-mode"
+        value={chordOverlayMode}
+        onChange={(mode) => {
+          const [nextShowChord, nextHideNonChord] =
+            OVERLAY_MODE_FLAGS[mode] ?? OVERLAY_MODE_FLAGS["chord-only"];
+          setShowChord(nextShowChord);
+          setHideNonChord(nextHideNonChord);
+        }}
+        options={[
+          { value: "off", label: "Off" },
+          { value: "overlay", label: "Overlay" },
+          { value: "chord-only", label: "Chord tones only" },
+        ]}
+      />
+      {chordOverlayMode === "chord-only" ? (
+        <div className="tv-field">
+          <ToggleSwitch
+            id={ignoresScaleId}
+            name="chord-ignores-scale"
+            checked={Boolean(chordIgnoresScale)}
+            onChange={(e) => setChordIgnoresScale?.(e.target.checked)}
+          >
+            Independent of scale
+          </ToggleSwitch>
+          <small className="tv-field__help">
+            Colors, degrees and intervals follow the chord root instead of the
+            selected scale and root.
+          </small>
+        </div>
+      ) : null}
+      {chordFit?.text ? (
+        <small
+          className={clsx("tv-fit-indicator", {
+            "is-warning": chordFit.kind === "warning",
+            "is-success": chordFit.kind === "success",
+          })}
+        >
+          {chordFit.text}
+        </small>
+      ) : null}
+    </div>
   );
 }
 

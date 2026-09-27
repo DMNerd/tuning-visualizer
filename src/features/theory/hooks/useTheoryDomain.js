@@ -15,11 +15,13 @@ import {
   useTheoryStore,
   selectTheoryActions,
   selectTheoryChordCapoRelative,
+  selectTheoryChordFinderActive,
   selectTheoryChordIgnoresScale,
   selectTheoryChordRoot,
   selectTheoryChordType,
   selectTheoryHideNonChord,
   selectTheoryIsHydrated,
+  selectTheoryPickedPcs,
   selectTheoryRoot,
   selectTheoryScale,
   selectTheoryShowChord,
@@ -36,6 +38,8 @@ const selectTheoryDomainStore = (state) => ({
   hideNonChord: selectTheoryHideNonChord(state),
   chordCapoRelative: selectTheoryChordCapoRelative(state),
   chordIgnoresScale: selectTheoryChordIgnoresScale(state),
+  chordFinderActive: selectTheoryChordFinderActive(state),
+  pickedPcs: selectTheoryPickedPcs(state),
   isHydrated: selectTheoryIsHydrated(state),
   ...selectTheoryActions(state),
 });
@@ -60,6 +64,8 @@ export function useTheoryDomain({
     hideNonChord,
     chordCapoRelative,
     chordIgnoresScale,
+    chordFinderActive,
+    pickedPcs,
     isHydrated,
     setSystemId,
     setRoot,
@@ -70,6 +76,9 @@ export function useTheoryDomain({
     setHideNonChord,
     setChordCapoRelative,
     setChordIgnoresScale,
+    setChordFinderActive,
+    togglePickedPc,
+    clearPickedPcs,
     resetTheory,
   } = theoryStore;
 
@@ -165,10 +174,19 @@ export function useTheoryDomain({
     setChordType(CHORD_DEFAULT);
   }, [system.divisions, chordType, setChordType]);
 
+  // Picked pitch classes are only meaningful within one division count.
+  useEffect(() => {
+    clearPickedPcs();
+  }, [system.divisions, clearPickedPcs]);
+
   const handleSelectNote = useCallback(
     (pc, providedName, event, selectionContext = {}) => {
       const isChordRootSelection =
         event?.type === "contextmenu" || event?.button === 2;
+      if (chordFinderActive && !isChordRootSelection) {
+        togglePickedPc(pc);
+        return;
+      }
       const notePc = isChordRootSelection
         ? resolveCapoRelativeChordRootPc({
             pc,
@@ -193,6 +211,8 @@ export function useTheoryDomain({
     },
     [
       chordCapoRelative,
+      chordFinderActive,
+      togglePickedPc,
       nameForPc,
       sysNames,
       setChordRoot,
@@ -235,6 +255,11 @@ export function useTheoryDomain({
           setChordCapoRelative,
           chordIgnoresScale,
           setChordIgnoresScale,
+          chordFinderActive,
+          setChordFinderActive,
+          pickedPcs,
+          togglePickedPc,
+          clearPickedPcs,
           resetTheory,
           chordRootIx,
           chordOverlayPcs,
@@ -270,6 +295,11 @@ export function useTheoryDomain({
       setChordCapoRelative,
       chordIgnoresScale,
       setChordIgnoresScale,
+      chordFinderActive,
+      setChordFinderActive,
+      pickedPcs,
+      togglePickedPc,
+      clearPickedPcs,
       resetTheory,
       chordRootIx,
       chordOverlayPcs,

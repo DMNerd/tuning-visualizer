@@ -8,10 +8,12 @@ export function isNoteVisible({
   showOpen,
   hideNonChord,
   openOnlyInMode,
+  showAllNotes = false,
 }) {
   // Open notes only ever count toward visibility when showOpen is on —
   // shared by the chord-overlay term below and the hideNonChord branch.
   const openVisible = !isOpen || showOpen;
+  if (showAllNotes) return openVisible;
   if (hideNonChord && hasChord) return openVisible && inChord;
 
   const isOverlayOutsideScaleChord =
@@ -34,8 +36,10 @@ export function resolveNoteFill({
   isRoot,
   isMicro,
   isChordOutsideScale,
+  isOutsideScale = false,
 }) {
   if (isChordOutsideScale) return "var(--chord-outside-fill)";
+  if (isOutsideScale) return "var(--note-outside)";
   const plainFill = isMicro ? "var(--note-micro)" : "var(--note)";
   if (colorByDegree) {
     return degree != null ? getDegreeColor(degree, degreeCount) : plainFill;

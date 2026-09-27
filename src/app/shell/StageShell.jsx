@@ -83,12 +83,13 @@ export default function StageShell({
             dotSize={dotSize}
             lefty={lefty}
             system={theoryDomain.system.system}
-            chordPCs={theoryPanel.controlModel.meta.chordOverlayPcs}
-            chordRootPc={theoryPanel.controlModel.meta.chordRootPc}
+            chordPCs={theoryPanel.controlModel.meta.fretboardChordPcs}
+            chordRootPc={theoryPanel.controlModel.meta.fretboardChordRootPc}
+            showAllNotes={theoryPanel.controlModel.meta.fretboardShowAllNotes}
             openOnlyInMode={openOnlyInMode}
             colorByDegree={colorByDegree}
             colorByShape={colorByShape}
-            hideNonChord={theoryDomain.chord.hideNonChord}
+            hideNonChord={theoryPanel.controlModel.meta.fretboardHideNonChord}
             stringMeta={effectiveStringMeta}
             boardMeta={boardMeta}
             onSelectNote={handleSelectNote}

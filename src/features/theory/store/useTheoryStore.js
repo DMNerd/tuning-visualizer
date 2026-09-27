@@ -96,6 +96,9 @@ export const useTheoryStore = create(
         hideNonChord: false,
         chordCapoRelative: false,
         chordIgnoresScale: false,
+        // Chord finder ("What's this chord?") — session-only, not persisted.
+        chordFinderActive: false,
+        pickedPcs: [],
         ...baseSetters,
         setHydrated: (isHydrated = true) =>
           set((state) => {
@@ -105,6 +108,17 @@ export const useTheoryStore = create(
         setHideNonChord: setOrToggle("hideNonChord"),
         setChordCapoRelative: setOrToggle("chordCapoRelative"),
         setChordIgnoresScale: setOrToggle("chordIgnoresScale"),
+        setChordFinderActive: setOrToggle("chordFinderActive"),
+        togglePickedPc: (pc) =>
+          set((state) => {
+            const ix = state.pickedPcs.indexOf(pc);
+            if (ix === -1) state.pickedPcs.push(pc);
+            else state.pickedPcs.splice(ix, 1);
+          }),
+        clearPickedPcs: () =>
+          set((state) => {
+            if (state.pickedPcs.length) state.pickedPcs = [];
+          }),
         resetTheory: () =>
           set({
             systemId: SYSTEM_DEFAULT,
@@ -116,6 +130,8 @@ export const useTheoryStore = create(
             hideNonChord: false,
             chordCapoRelative: false,
             chordIgnoresScale: false,
+            chordFinderActive: false,
+            pickedPcs: [],
           }),
       };
     }),
@@ -193,6 +209,8 @@ export const selectTheoryState = (state) => ({
   hideNonChord: state.hideNonChord,
   chordCapoRelative: state.chordCapoRelative,
   chordIgnoresScale: state.chordIgnoresScale,
+  chordFinderActive: state.chordFinderActive,
+  pickedPcs: state.pickedPcs,
 });
 
 export const selectTheoryActions = (state) => ({
@@ -205,6 +223,9 @@ export const selectTheoryActions = (state) => ({
   setHideNonChord: state.setHideNonChord,
   setChordCapoRelative: state.setChordCapoRelative,
   setChordIgnoresScale: state.setChordIgnoresScale,
+  setChordFinderActive: state.setChordFinderActive,
+  togglePickedPc: state.togglePickedPc,
+  clearPickedPcs: state.clearPickedPcs,
   resetTheory: state.resetTheory,
 });
 
@@ -217,4 +238,6 @@ export const selectTheoryShowChord = (state) => state.showChord;
 export const selectTheoryHideNonChord = (state) => state.hideNonChord;
 export const selectTheoryChordCapoRelative = (state) => state.chordCapoRelative;
 export const selectTheoryChordIgnoresScale = (state) => state.chordIgnoresScale;
+export const selectTheoryChordFinderActive = (state) => state.chordFinderActive;
+export const selectTheoryPickedPcs = (state) => state.pickedPcs;
 export const selectTheoryIsHydrated = (state) => state.isHydrated;

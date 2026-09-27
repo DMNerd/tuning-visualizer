@@ -609,6 +609,89 @@ html.is-fs {
   color: var(--root);
 }
 
+.tv-tone-chip--button {
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.tv-tone-chip--button:hover,
+.tv-tone-chip--button:focus-visible {
+  border-color: var(--root);
+  text-decoration: line-through;
+}
+
+.tv-controls--chord-finder {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--line);
+}
+
+.tv-subsection__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.tv-chord-finder__picked {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tv-chord-finder__picked .tv-tone-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tv-chord-finder__matches {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tv-chord-finder__match {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.tv-chord-finder__match--primary {
+  padding: 8px 10px;
+  border-color: color-mix(in oklab, var(--line) 70%, var(--accent));
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.tv-chord-finder__names {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  min-width: 0;
+}
+
+.tv-chord-finder__names small {
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+.tv-chord-finder__symbol {
+  font-size: 0.875rem;
+}
+
+.tv-chord-finder__match--primary .tv-chord-finder__symbol {
+  font-size: 1.25rem;
+}
+
 .tv-capo-chord-map {
   display: inline-flex;
   align-items: center;

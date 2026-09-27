@@ -1,6 +1,6 @@
 import { mod } from "@shared/lib/math";
 
-type ChordType =
+export type ChordType =
   // Standard triads & sevenths
   | "maj"
   | "min"

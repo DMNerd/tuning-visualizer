@@ -238,3 +238,48 @@ test("independent-of-scale mode follows the capo-transposed chord root", () => {
   assert.equal(model.meta.fretboardRootIx, 2);
   assert.deepEqual(model.meta.fretboardIntervals, [0, 4, 7]);
 });
+
+test("chord finder drives the fretboard overlay while active", () => {
+  const overlay = new Set([0, 4, 7]);
+  const model = buildModel({
+    chord: {
+      chordOverlayPcs: overlay,
+      chordTonePcs: overlay,
+      hideNonChord: true,
+      chordFinderActive: true,
+      pickedPcs: [9, 0, 4, 7],
+    },
+  });
+
+  assert.equal(model.meta.fretboardShowAllNotes, true);
+  assert.equal(model.meta.fretboardHideNonChord, false);
+  assert.deepEqual([...model.meta.fretboardChordPcs], [9, 0, 4, 7]);
+  assert.equal(model.meta.chordFinderMatches[0].id, "m7");
+  assert.equal(model.meta.fretboardChordRootPc, 9);
+});
+
+test("chord finder leaves the regular overlay alone when inactive", () => {
+  const overlay = new Set([0, 4, 7]);
+  const model = buildModel({
+    chord: {
+      chordOverlayPcs: overlay,
+      chordTonePcs: overlay,
+      hideNonChord: true,
+      pickedPcs: [9, 0, 4, 7],
+    },
+  });
+
+  assert.equal(model.meta.fretboardShowAllNotes, false);
+  assert.equal(model.meta.fretboardHideNonChord, true);
+  assert.equal(model.meta.fretboardChordPcs, overlay);
+  assert.equal(model.meta.fretboardChordRootPc, 0);
+  assert.deepEqual(model.meta.chordFinderMatches, []);
+});
+
+test("chord finder exposes the capo offset for loading matches", () => {
+  const model = buildModel({
+    chord: { ...capoRelative, chordFinderActive: true },
+    capo: { capoFret: 2 },
+  });
+  assert.equal(model.meta.chordRootOffset, 2);
+});

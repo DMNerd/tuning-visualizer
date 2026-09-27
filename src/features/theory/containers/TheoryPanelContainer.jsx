@@ -1,8 +1,10 @@
 import { ErrorBoundary } from "react-error-boundary";
 
 import ErrorFallback from "@shared/ui/ErrorFallback";
+import Section from "@shared/ui/Section";
 import ScaleControls from "@features/theory/components/ScaleControls";
 import ChordControls from "@features/theory/components/ChordControls";
+import ChordFinder from "@features/theory/components/ChordFinder";
 import { buildChordFit } from "@features/theory/model/theoryPanelModel";
 
 export default function TheoryPanelContainer({ controlModel, reset }) {
@@ -41,55 +43,83 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
           }}
         />
       </ErrorBoundary>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        resetKeys={[
-          state.chordRoot,
-          state.chordType,
-          state.showChord,
-          state.hideNonChord,
-          state.chordCapoRelative,
-          state.chordIgnoresScale,
-        ]}
-        onReset={reset.resetMusicalState}
-      >
-        <ChordControls
-          state={{
-            root: state.chordRoot,
-            type: state.chordType,
-            showChord: state.showChord,
-            hideNonChord: state.hideNonChord,
-            chordCapoRelative: state.chordCapoRelative,
-            chordIgnoresScale: state.chordIgnoresScale,
-            defaultRoot: state.defaultChordRoot,
-            defaultType: state.defaultChordType,
-          }}
-          actions={{
-            onRootChange: actions.onRootChange,
-            onTypeChange: actions.onTypeChange,
-            setShowChord: actions.setShowChord,
-            setHideNonChord: actions.setHideNonChord,
-            setChordCapoRelative: actions.setChordCapoRelative,
-            setChordIgnoresScale: actions.setChordIgnoresScale,
-          }}
-          meta={{
-            sysNames: meta.sysNames,
-            nameForPc: meta.nameForPc,
-            supportsMicrotonal: meta.supportsMicrotonal,
-            system: meta.system,
-            rootIx: meta.rootIx,
-            intervals: state.intervals,
-            chordTonePcs: meta.chordTonePcs,
-            chordOverlayPcs: meta.chordOverlayPcs,
-            chordRootPc: meta.chordRootPc,
-            capoFret: meta.capoFret,
-            originalChordRoot: meta.originalChordRoot,
-            transposedChordRoot: meta.transposedChordRoot,
-            isChordTransposed: meta.isChordTransposed,
-            chordFit,
-          }}
-        />
-      </ErrorBoundary>
+      <Section id="chord-controls" title="Chord" size="sm">
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[
+            state.chordRoot,
+            state.chordType,
+            state.showChord,
+            state.hideNonChord,
+            state.chordCapoRelative,
+            state.chordIgnoresScale,
+          ]}
+          onReset={reset.resetMusicalState}
+        >
+          <ChordControls
+            state={{
+              root: state.chordRoot,
+              type: state.chordType,
+              showChord: state.showChord,
+              hideNonChord: state.hideNonChord,
+              chordCapoRelative: state.chordCapoRelative,
+              chordIgnoresScale: state.chordIgnoresScale,
+              defaultRoot: state.defaultChordRoot,
+              defaultType: state.defaultChordType,
+            }}
+            actions={{
+              onRootChange: actions.onRootChange,
+              onTypeChange: actions.onTypeChange,
+              setShowChord: actions.setShowChord,
+              setHideNonChord: actions.setHideNonChord,
+              setChordCapoRelative: actions.setChordCapoRelative,
+              setChordIgnoresScale: actions.setChordIgnoresScale,
+            }}
+            meta={{
+              sysNames: meta.sysNames,
+              nameForPc: meta.nameForPc,
+              supportsMicrotonal: meta.supportsMicrotonal,
+              system: meta.system,
+              rootIx: meta.rootIx,
+              intervals: state.intervals,
+              chordTonePcs: meta.chordTonePcs,
+              chordOverlayPcs: meta.chordOverlayPcs,
+              chordRootPc: meta.chordRootPc,
+              capoFret: meta.capoFret,
+              originalChordRoot: meta.originalChordRoot,
+              transposedChordRoot: meta.transposedChordRoot,
+              isChordTransposed: meta.isChordTransposed,
+              chordFit,
+            }}
+          />
+        </ErrorBoundary>
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[state.chordFinderActive, state.pickedPcs]}
+          onReset={actions.clearPickedPcs}
+        >
+          <ChordFinder
+            state={{
+              chordFinderActive: state.chordFinderActive,
+              pickedPcs: state.pickedPcs,
+            }}
+            actions={{
+              setChordFinderActive: actions.setChordFinderActive,
+              togglePickedPc: actions.togglePickedPc,
+              clearPickedPcs: actions.clearPickedPcs,
+              onRootChange: actions.onRootChange,
+              onTypeChange: actions.onTypeChange,
+              setShowChord: actions.setShowChord,
+            }}
+            meta={{
+              nameForPc: meta.nameForPc,
+              divisions: meta.system?.divisions,
+              matches: meta.chordFinderMatches,
+              chordRootOffset: meta.chordRootOffset,
+            }}
+          />
+        </ErrorBoundary>
+      </Section>
     </>
   );
 }
