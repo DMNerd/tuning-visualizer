@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { buildBaselineScalesForSystem } from "@domain/theory/scales";
+import { migrateScaleLabel, scalesForSystem } from "@domain/theory/scales";
 import {
   buildChordPCsFromPc,
   isMicrotonalChordType,
 } from "@domain/theory/chords";
 import { CHORD_DEFAULT, ROOT_DEFAULT } from "@shared/config/appDefaults";
+import { supportsMicrotonal } from "@domain/theory/tonalAdapter";
 import { resolveCapoRelativeChordRootPc } from "@domain/theory/capoChords";
 
 import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
@@ -50,7 +51,6 @@ export function useTheoryDomain({
   defaultRoot,
   accidental,
   noteNaming,
-  allScales,
   defaultScale,
 }) {
   const theoryStore = useTheoryStore(useShallow(selectTheoryDomainStore));
@@ -126,26 +126,19 @@ export function useTheoryDomain({
   }, [setRoot, sysNames, defaultRoot, pcFromName, nameForPc]);
 
   const scaleOptions = useMemo(() => {
-    if (!system?.id) return [];
-
-    const matches = allScales.filter(
-      (candidate) => candidate.systemId === system.id,
-    );
-    if (matches.length) return matches;
-
-    if (typeof system.divisions === "number") {
-      return buildBaselineScalesForSystem(system.id, system.divisions);
-    }
-
-    return [];
-  }, [allScales, system]);
+    if (!system?.id || typeof system.divisions !== "number") return [];
+    return scalesForSystem(system.id, system.divisions);
+  }, [system]);
 
   useEffect(() => {
     if (!scaleOptions.length) return;
-    const stillValid = scaleOptions.some(
-      (candidate) => candidate.label === scale,
-    );
-    if (!stillValid) setScale(defaultScale || scaleOptions[0].label);
+    const isOffered = (label) =>
+      scaleOptions.some((candidate) => candidate.label === label);
+    if (isOffered(scale)) return;
+    // A label saved by an older version may have been renamed
+    const migrated = migrateScaleLabel(scale);
+    if (isOffered(migrated)) setScale(migrated);
+    else setScale(defaultScale || scaleOptions[0].label);
   }, [scaleOptions, scale, setScale, defaultScale]);
 
   const intervals = useMemo(() => {
@@ -169,7 +162,7 @@ export function useTheoryDomain({
   const chordOverlayPcs = showChord ? chordTonePcs : null;
 
   useEffect(() => {
-    if (system.divisions === 24) return;
+    if (supportsMicrotonal(system.divisions)) return;
     if (!isMicrotonalChordType(chordType)) return;
     setChordType(CHORD_DEFAULT);
   }, [system.divisions, chordType, setChordType]);

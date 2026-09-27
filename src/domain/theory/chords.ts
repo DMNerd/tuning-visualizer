@@ -1,5 +1,5 @@
 import { mod } from "@shared/lib/math";
-import { Interval } from "@vendor/microtonal/index.mjs";
+import { intervalSteps, supportsMicrotonal } from "@domain/theory/tonalAdapter";
 
 export type ChordType =
   // Standard triads & sevenths
@@ -102,21 +102,19 @@ const CHORDS: Record<ChordType, ChordDef> = {
 };
 
 const stepsOf = (intervals: string, divisions: number): number[] =>
-  intervals.split(" ").map((ivl) => Interval.edoSteps(ivl, divisions));
+  intervals.split(" ").map((ivl) => intervalSteps(ivl, divisions));
 
 /**
- * Steps from the root in `divisions`. 12- and 24-EDO use the chord's
- * intervals exactly (24-EDO is where the microtonal chords live); other EDOs
- * scale the 12-TET steps proportionally, which approximates chords better
- * than stacked fifths in EDOs with poor fifths.
+ * Steps from the root in `divisions`, sized by the theory engine (stacked
+ * fifths where the EDO's fifths fit, 12-TET scaled proportionally elsewhere).
+ * Microtonal chords use their 12-TET stand-in where ups and downs aren't
+ * distinct from sharps and flats.
  */
 function chordSteps(type: ChordType, divisions: number): number[] {
   const { intervals, fallback } = CHORDS[type];
-  if (divisions === 24) return stepsOf(intervals, 24);
-  const steps12 = stepsOf(fallback ?? intervals, 12);
-  if (divisions === 12) return steps12;
-  const factor = divisions / 12;
-  return steps12.map((step) => Math.round(step * factor));
+  const spelled =
+    fallback && !supportsMicrotonal(divisions) ? fallback : intervals;
+  return stepsOf(spelled, divisions);
 }
 
 export function buildChordPCsFromPc(

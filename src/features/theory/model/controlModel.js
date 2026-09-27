@@ -4,6 +4,7 @@ import {
   transposePitchClassSet,
 } from "@domain/theory/capoChords";
 import { identifyChord } from "@domain/theory/chordIdentify";
+import { supportsMicrotonal } from "@domain/theory/tonalAdapter";
 
 export function buildTheoryControlModel({
   system,
@@ -121,7 +122,7 @@ export function buildTheoryControlModel({
       scaleToneLabels,
       chordTonePcs,
       chordOverlayPcs,
-      supportsMicrotonal: Number(system?.system?.divisions) > 12,
+      supportsMicrotonal: supportsMicrotonal(divisions),
       system: system?.system,
       rootIx: safeRootIx,
       fretboardRootIx,

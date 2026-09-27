@@ -1,10 +1,6 @@
 import { TUNINGS } from "@domain/theory/tuning";
 import { nameForPcWithDisplayAccidentals } from "@features/fretboard";
-import {
-  ALL_SCALES,
-  buildBaselineScalesForSystem,
-  type ScaleDef,
-} from "@domain/theory/scales";
+import { scalesForSystem, type ScaleDef } from "@domain/theory/scales";
 import {
   PRESET_TUNINGS,
   DEFAULT_PRESET_NAME,
@@ -42,15 +38,12 @@ export type Routine = {
   steps: RoutineScaleBlock[];
 };
 
-/** Curated catalog first, falling back to the generic baseline builder for
- * any tuning system without hand-authored scales. */
+/** The scales offered for a tuning system (the same list the app shows). */
 export function resolveScaleOptionsForSystem(
   systemId: string,
   divisions: number,
 ): ScaleDef[] {
-  const curated = ALL_SCALES.filter((scale) => scale.systemId === systemId);
-  if (curated.length > 0) return curated;
-  return buildBaselineScalesForSystem(systemId, divisions);
+  return scalesForSystem(systemId, divisions);
 }
 
 /** Note name for a pitch class within a tuning system, respecting the app's

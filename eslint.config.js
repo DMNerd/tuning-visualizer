@@ -77,6 +77,27 @@ export default defineConfig([
     },
   },
 
+  // The microtonal fork is only used through the theory adapter
+  // (docs/microtonal-migration-plan.md)
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    ignores: ["src/domain/theory/tonalAdapter.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@vendor/microtonal", "@vendor/microtonal/*"],
+              message:
+                "Use @domain/theory/tonalAdapter instead of importing the fork directly.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Node-run config files (build tooling, not app/browser code)
   {
     files: ["eslint.config.js", "vite.config.js"],

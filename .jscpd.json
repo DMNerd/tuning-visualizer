@@ -4,5 +4,6 @@
   "crossFormats": "js-ts",
   "reporters": ["console"],
   "output": "reports/jscpd",
-  "threshold": 2
+  "threshold": 2,
+  "ignore": ["**/tests/fixtures/**"]
 }

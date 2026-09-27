@@ -79,9 +79,7 @@ function ChordControls({ state, actions, meta }) {
     setChordIgnoresScale?.(false);
   };
 
-  const divisions = Number(system?.divisions);
-  const allowMicrotonal =
-    Boolean(supportsMicrotonal) && Number.isFinite(divisions) && divisions > 12;
+  const allowMicrotonal = Boolean(supportsMicrotonal);
 
   const chordTypes = allowMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
 

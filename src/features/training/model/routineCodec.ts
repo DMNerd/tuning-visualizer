@@ -1,4 +1,5 @@
 import { TUNINGS } from "@domain/theory/tuning";
+import { migrateScaleLabel } from "@domain/theory/scales";
 import { STR_MAX, STR_MIN, STR_FACTORY } from "@shared/config/appDefaults";
 import { clamp } from "@shared/lib/math";
 import { encodeBase64Url, decodeBase64Url } from "@shared/lib/base64url";
@@ -93,7 +94,7 @@ function coerceScaleBlock(
 
   return {
     id,
-    scaleLabel: coerceString(raw.scaleLabel, ""),
+    scaleLabel: migrateScaleLabel(coerceString(raw.scaleLabel, "")),
     rootPc: coerceClampedInt(raw.rootPc, 0, Math.max(0, divisions - 1), 0),
     beats: coerceClampedInt(
       raw.beats,

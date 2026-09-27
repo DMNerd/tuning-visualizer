@@ -1,5 +1,10 @@
 import { useMemo, useCallback } from "react";
-import { buildNoteAliases, renderNoteName } from "@domain/theory/notation";
+import {
+  buildNoteAliases,
+  germanToEnglishNoteName,
+  renderNoteName,
+} from "@domain/theory/notation";
+import { nameToPc, pcToName } from "@domain/theory/tonalAdapter";
 
 function getDisplayAccidentals(accidental) {
   if (accidental === "both") return ["sharp", "flat"];
@@ -15,13 +20,13 @@ export function nameForPcWithDisplayAccidentals(
   const [primaryAccidental, secondaryAccidental] =
     getDisplayAccidentals(accidental);
   const primary = renderNoteName(
-    system.nameForPc(pc, primaryAccidental),
+    pcToName(pc, system.divisions, primaryAccidental),
     noteNaming,
   );
   if (accidental !== "both") return primary;
 
   const alternate = renderNoteName(
-    system.nameForPc(pc, secondaryAccidental),
+    pcToName(pc, system.divisions, secondaryAccidental),
     noteNaming,
   );
   return primary === alternate ? primary : `${primary}/${alternate}`;
@@ -35,7 +40,7 @@ export function buildNameToPcMap(
   const map = new Map();
   for (let pc = 0; pc < system.divisions; pc++) {
     for (const acc of ["sharp", "flat"]) {
-      const canonical = system.nameForPc(pc, acc);
+      const canonical = pcToName(pc, system.divisions, acc);
       for (const alias of buildNoteAliases(canonical)) {
         map.set(alias, pc);
       }
@@ -47,12 +52,39 @@ export function buildNameToPcMap(
   // were saved under a different accidental preference.
   for (let pc = 0; pc < system.divisions; pc++) {
     for (const acc of getDisplayAccidentals(accidental)) {
-      const preferred = renderNoteName(system.nameForPc(pc, acc), noteNaming);
+      const preferred = renderNoteName(
+        pcToName(pc, system.divisions, acc),
+        noteNaming,
+      );
       map.set(preferred, pc);
     }
   }
 
   return map;
+}
+
+// Custom EDOs used to be named "N0".."N<n>"; saved tunings may still use it.
+const LEGACY_PC_NAME = /^N(\d+)$/;
+
+/**
+ * Pitch class of a note name: the display names first (they settle the
+ * German/English B ambiguity for the current naming), then any spelling the
+ * theory engine parses ("Db↑", "^C", "C##", German "Desih"), then the legacy
+ * "N<pc>" names. Unknown names are pitch class 0.
+ */
+export function resolvePcForName(nameToPcMap, name, divisions) {
+  const known = nameToPcMap.get(name);
+  if (typeof known === "number") return known;
+  if (typeof name !== "string" || !name) return 0;
+
+  const parsed =
+    nameToPc(name, divisions) ??
+    nameToPc(germanToEnglishNoteName(name), divisions);
+  if (parsed !== null) return parsed;
+
+  const legacy = LEGACY_PC_NAME.exec(name);
+  const legacyPc = legacy ? Number(legacy[1]) : NaN;
+  return legacyPc < divisions ? legacyPc : 0;
 }
 
 /**
@@ -62,16 +94,13 @@ export function buildNameToPcMap(
  *  - nameForPc(pc) → string (using current accidental preference)
  */
 export function usePitchMapping(system, accidental, noteNaming = "english") {
-  const nameToPc = useMemo(() => {
+  const nameToPcMap = useMemo(() => {
     return buildNameToPcMap(system, noteNaming, accidental);
   }, [system, noteNaming, accidental]);
 
   const pcForName = useCallback(
-    (name) => {
-      const pc = nameToPc.get(name);
-      return typeof pc === "number" ? pc : 0;
-    },
-    [nameToPc],
+    (name) => resolvePcForName(nameToPcMap, name, system.divisions),
+    [nameToPcMap, system.divisions],
   );
 
   const nameForPc = useCallback(

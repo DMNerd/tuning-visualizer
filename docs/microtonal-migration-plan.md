@@ -24,13 +24,13 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
 
 ## Current state (before this plan)
 
-| Area                    | State                                                                                                                                                    |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fork stages 1–3         | Done: ups/downs, `edoSteps`/`edoChroma`/`edoFreq`/`fromEdoSteps`, `Pcset {edo}`, `forEdo`, `Chord.detect {edo}`, tier ranking, maqamat                  |
-| gv: fork wiring         | Vendored bundle, `@vendor/*` alias, CI and Docker rebuild from the pin                                                                                  |
-| gv: chord identification | `chordIdentify.ts` wraps `Chord.detect`                                                                                                                 |
-| gv: chord formulas      | `chords.ts` defines chords by intervals; the fork computes 12/24 steps; other EDOs still use proportional 12-TET scaling                                |
-| gv: removed             | `degreeForStep`, the step tables, `projectStepsFrom12TET`, and the unused freq/midi/cents helpers (the fork's `Note.edoFreq` covers them if ever needed) |
+| Area                     | State                                                                                                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fork stages 1–3          | Done: ups/downs, `edoSteps`/`edoChroma`/`edoFreq`/`fromEdoSteps`, `Pcset {edo}`, `forEdo`, `Chord.detect {edo}`, tier ranking, maqamat                   |
+| gv: fork wiring          | Vendored bundle, `@vendor/*` alias, CI and Docker rebuild from the pin                                                                                   |
+| gv: chord identification | `chordIdentify.ts` wraps `Chord.detect`                                                                                                                  |
+| gv: chord formulas       | `chords.ts` defines chords by intervals; the fork computes 12/24 steps; other EDOs still use proportional 12-TET scaling                                 |
+| gv: removed              | `degreeForStep`, the step tables, `projectStepsFrom12TET`, and the unused freq/midi/cents helpers (the fork's `Note.edoFreq` covers them if ever needed) |
 
 ## Decisions
 
@@ -52,7 +52,7 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
 ## Fork work (F) — each with tests and a README entry
 
 - **F1: spelling with accidental preference.** `Note.fromEdoSteps(steps, edo,
-  { accidental: "sharp" | "flat", pitchClass })`, plus
+{ accidental: "sharp" | "flat", pitchClass })`, plus
   `Note.edoNames(edo, accidental)`. Sharp: nearest sharp-or-natural at or
   below, plus ups. Flat: nearest flat-or-natural at or above, minus downs.
   Tests: 12-TET both views, 24-TET both views (per D2), and a round trip
@@ -123,4 +123,46 @@ fork commit.
 
 ## Progress log
 
-(Updated as steps land.)
+All steps done (2026-09-27). Fork changes are uncommitted until pushed; gv's
+pin (`vendor/microtonal/SOURCE.json`) must be refreshed after that.
+
+- **G0** — `src/tests/domain/theory/characterization.test.js` with the fixture
+  `src/tests/fixtures/theoryCharacterization.json`: names and parsing (12/24,
+  all accidental and naming modes), chord pitch classes (EDOs 5–72), scale
+  lists, chord detection (12/24). 12/24 must match; other EDOs are reported
+  (`CHARACTERIZE_REPORT=<file>`). Intentional 12/24 changes are listed in the
+  test with the decision that allows them.
+- **G1** — `tonalAdapter.ts`; `chords.ts` and `chordIdentify.ts` go through it;
+  ESLint `no-restricted-imports` blocks `@vendor/microtonal` elsewhere.
+- **F1** — fork: `Note.edoNames(edo, "sharp" | "flat")` and
+  `Note.fromEdoSteps(…, { accidental })`. Beyond the plan, two tie-breaks keep
+  other EDOs idiomatic: a double accidental costs as much as an up (31-EDO
+  step 1 is `C↑`, not `B##`), and `E#`/`B#`/`Cb`/`Fb` lose ties (17-EDO step 1
+  is `Db`).
+- **G2** — names from the adapter; `TuningSystem` is
+  `{ id, divisions, refFreq, refMidi }`; the name tables, `nameFallback` and
+  per-system `nameForPc` are gone. Parsing tries the display names, then any
+  spelling the fork parses (incl. German via `germanToEnglishNoteName`), then
+  legacy `N<k>` names. `notation.ts` keeps its arrow handling: it is the
+  German/Czech rendering layer (↑/↓ ↔ ih/eh), not a parser.
+- **F2** — fork: `edoProfile(edo)`; proportional EDOs size pitches by scaling
+  12-TET. The threshold (sharp ≥ 1, fifth within 15¢) was confirmed: exactly
+  the EDOs where stacked fifths collapse chords are proportional.
+- **G3** — deviation: `chords.ts` keeps short interval strings instead of fork
+  chord-type names, because gv's `quartal` is the 3-note `1P 4P 7m` and the
+  fork only has a 4-note quartal. gv's proportional branch is gone; the
+  microtonal chord types (and the chord picker) follow the fork's rule (EDOs
+  spelled by fifths with a sharp of 2+ steps) instead of "24-TET only".
+- **F3** — deviation: nothing was ported into the fork. All 22 standard gv
+  scales already exist in the fork's dictionary with identical notes, and gv's
+  9 microtonal scales are app content, so they stay in gv as ups/downs
+  interval strings (`scales.ts`) that the fork sizes for every EDO.
+- **G4** — `scalesForSystem(systemId, divisions)` replaces `SCALES_12`,
+  `SCALES_24`, `ALL_SCALES`, `BASELINE_PATTERNS_FROM_12`, `projectFrom12TET`
+  and `buildBaselineScalesForSystem`; `migrateScaleLabel` handles old
+  custom-EDO labels (theory store validation, routine decoding).
+- **G5** — no code change needed: `useAccidentalRespell` parses and renders
+  through the pitch mapping, which uses the adapter since G2.
+  `useRandomScale` draws from the fork-computed scale options.
+- **G6** — every value that changed outside 12/24-TET:
+  [microtonal-migration-changes.md](microtonal-migration-changes.md).

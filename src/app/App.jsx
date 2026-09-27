@@ -15,7 +15,6 @@ import { useRoutinePlayback } from "@features/training";
 import { PanelHeader } from "@shared/ui";
 import { confirm } from "@shared/ui/confirm";
 import { TUNINGS } from "@domain/theory/tuning";
-import { ALL_SCALES } from "@domain/theory/scales";
 import { PRESET_TUNING_META } from "@domain/presets/presets";
 import { DEFAULT_TUNINGS, PRESET_TUNINGS } from "@domain/presets/presetState";
 import {
@@ -56,7 +55,6 @@ export default function App() {
     defaultRoot: ROOT_DEFAULT,
     accidental: displayPrefs.accidental,
     noteNaming: displayPrefs.noteNaming,
-    allScales: ALL_SCALES,
     defaultScale: SCALE_DEFAULT,
   });
 

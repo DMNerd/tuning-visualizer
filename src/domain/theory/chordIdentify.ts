@@ -1,7 +1,7 @@
 import { mod } from "@shared/lib/math";
 import { CHORD_TYPES, buildChordPCsFromPc } from "@domain/theory/chords";
 import type { ChordType as AppChordType } from "@domain/theory/chords";
-import { Chord, ChordType, Interval, Note } from "@vendor/microtonal/index.mjs";
+import { detectChords } from "@domain/theory/tonalAdapter";
 
 /**
  * Chord naming for a user-picked pitch-class set, backed by the microtonal
@@ -71,37 +71,22 @@ export function identifyChord(
     bassPc != null && ordered.includes(mod(bassPc, divisions))
       ? mod(bassPc, divisions)
       : ordered[0];
-  // Tonal treats the first note as the bass.
-  const notes = [bass, ...ordered.filter((pc) => pc !== bass)].map((pc) =>
-    Note.fromEdoSteps(pc, divisions, { pitchClass: true }),
-  );
-
   const appTypes = appTypesFor(divisions);
-  const matches: ChordMatch[] = [];
-  for (const symbol of Chord.detect(notes, { edo: divisions })) {
-    const [tonic, type] = Chord.tokenize(symbol);
-    const chordType = ChordType.get(type);
-    const rootPc = Note.edoChroma(tonic, divisions);
-    if (chordType.empty || !Number.isFinite(rootPc)) continue;
-    const steps = ordered.map((pc) => mod(pc - rootPc, divisions));
-    const degrees: Record<number, string> = {};
-    for (const ivl of chordType.intervals) {
-      degrees[mod(rootPc + Interval.edoSteps(ivl, divisions), divisions)] = ivl;
-    }
-    matches.push({
-      rootPc,
-      bassPc: bass,
-      id: type,
-      // Tonal's major symbol is "M"; a bare root reads better
-      suffix: type === "M" ? "" : type,
-      name: chordType.name || type,
-      appType: appTypes.get(signature(steps)) ?? null,
-      degrees,
-    });
-  }
-  // Already ranked by Tonal: common chords first, root position before
+  // Already ranked by the fork: common chords first, root position before
   // inversions of the same kind of chord.
-  return matches;
+  return detectChords(ordered, divisions, bass).map((chord) => {
+    const steps = ordered.map((pc) => mod(pc - chord.rootPc, divisions));
+    return {
+      rootPc: chord.rootPc,
+      bassPc: chord.bassPc,
+      id: chord.symbol,
+      // Tonal's major symbol is "M"; a bare root reads better
+      suffix: chord.symbol === "M" ? "" : chord.symbol,
+      name: chord.name || chord.symbol,
+      appType: appTypes.get(signature(steps)) ?? null,
+      degrees: chord.intervalsByPc,
+    };
+  });
 }
 
 type NameForPc = (pc: number) => string;

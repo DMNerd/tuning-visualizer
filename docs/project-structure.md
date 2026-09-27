@@ -35,4 +35,11 @@ Use scoped aliases for ownership boundaries:
 - Feature internals should avoid importing another feature's internal files; use the other feature's `index.js` when a dependency is intentional.
 - `src/shared/*` should remain feature-agnostic. If a shared helper must coordinate app-wide stores, keep the dependency isolated and document it in review.
 
-These boundaries are enforced during code review rather than by an ESLint boundary plugin.
+- Music theory (note names, interval and chord sizes, chord detection, scale
+  formulas) comes from the microtonal fork of Tonal, and only through
+  `src/domain/theory/tonalAdapter.ts`. The adapter converts between gv's
+  integer pitch classes (`0..N-1`) and the fork's spelled names; nothing else
+  imports `@vendor/microtonal` (ESLint `no-restricted-imports` enforces this).
+  See [microtonal-migration-plan.md](microtonal-migration-plan.md).
+
+The other boundaries are enforced during code review rather than by an ESLint boundary plugin.

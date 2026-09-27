@@ -9,8 +9,8 @@ import {
   TUNINGS,
   findSystemByEdo,
   getSystemLabel,
-  nameFallback,
 } from "@domain/theory/tuning";
+import { pcToName } from "@domain/theory/tonalAdapter";
 
 const TEMPLATE_STRINGS = [
   { label: "String 1", note: "E4" },
@@ -139,22 +139,16 @@ export function buildNoteOptionsForPack(pack) {
   const seen = new Set();
   const options = [];
 
-  if (system && Number.isFinite(system.divisions) && system.divisions > 0) {
-    for (let pc = 0; pc < system.divisions; pc += 1) {
-      pushUnique(
-        options,
-        seen,
-        renderNoteName(system.nameForPc(pc, "sharp"), noteNaming),
-      );
-      pushUnique(
-        options,
-        seen,
-        renderNoteName(system.nameForPc(pc, "flat"), noteNaming),
-      );
-    }
-  } else if (Number.isFinite(edo) && edo > 0) {
-    for (let pc = 0; pc < edo; pc += 1) {
-      pushUnique(options, seen, renderNoteName(nameFallback(pc), noteNaming));
+  const divisions = system?.divisions ?? edo;
+  if (Number.isInteger(divisions) && divisions > 0) {
+    for (let pc = 0; pc < divisions; pc += 1) {
+      for (const accidental of ["sharp", "flat"]) {
+        pushUnique(
+          options,
+          seen,
+          renderNoteName(pcToName(pc, divisions, accidental), noteNaming),
+        );
+      }
     }
   }
 
