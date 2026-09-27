@@ -6,52 +6,16 @@ import {
   selectMetronomeEnginePlaybackState,
   selectMetronomeEngineCursorState,
 } from "@features/practice/store/useMetronomeEngineStore";
+import {
+  clampBpm,
+  parseBeatsPerBar,
+  resolveStepPosition,
+  scheduleClick,
+  SUBDIVISION_STEPS,
+} from "@features/practice/model/metronomeTiming";
 
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SEC = 0.1;
-const CLICK_DURATION_SEC = 0.03;
-
-const SUBDIVISION_STEPS = {
-  Quarter: 1,
-  Eighth: 2,
-  Triplet: 3,
-  Sixteenth: 4,
-};
-
-function parseBeatsPerBar(timeSig) {
-  const beats = Number.parseInt(String(timeSig).split("/")[0], 10);
-  return Number.isFinite(beats) && beats > 0 ? beats : 4;
-}
-
-function clampBpm(value) {
-  const bpm = Number(value);
-  if (!Number.isFinite(bpm)) return 80;
-  return Math.max(20, Math.min(300, Math.round(bpm)));
-}
-
-function scheduleClick(
-  ctx,
-  when,
-  { accent = false, subdivision = false } = {},
-) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const baseFreq = accent ? 1480 : subdivision ? 900 : 1180;
-  const peak = accent ? 0.26 : subdivision ? 0.08 : 0.14;
-
-  osc.type = "square";
-  osc.frequency.setValueAtTime(baseFreq, when);
-
-  gain.gain.setValueAtTime(0.0001, when);
-  gain.gain.exponentialRampToValueAtTime(peak, when + 0.003);
-  gain.gain.exponentialRampToValueAtTime(0.0001, when + CLICK_DURATION_SEC);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(when);
-  osc.stop(when + CLICK_DURATION_SEC + 0.01);
-}
-
 export function scheduleBeatUiUpdateWithAudioClock({
   ctx,
   when,
@@ -229,10 +193,11 @@ export function useMetronomePlayback({
   // One real (beat-and-bar-tracked) click, main or subdivision.
   const scheduleBeatStep = useCallback(
     (ctx, secPerSubStep) => {
-      const stepInBeat = beatCursorRef.current % stepsPerBeat;
-      const beatIndex = Math.floor(beatCursorRef.current / stepsPerBeat);
-      const beatNumber = (beatIndex % beatsPerBar) + 1;
-      const barNumber = Math.floor(beatIndex / beatsPerBar) + 1;
+      const { stepInBeat, beatNumber, barNumber } = resolveStepPosition(
+        beatCursorRef.current,
+        stepsPerBeat,
+        beatsPerBar,
+      );
 
       const isDownBeat = stepInBeat === 0 && beatNumber === 1;
       const isMainBeat = stepInBeat === 0;

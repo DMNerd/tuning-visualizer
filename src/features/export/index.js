@@ -8,12 +8,13 @@ export {
   PNG_EXPORT_SCALE,
   printFretboard,
   slug,
-} from "@features/export/model/scales";
+} from "@features/export/model/svgExport";
 export {
   buildTuningPack,
   downloadJsonFile,
   ensurePackHasId,
   generatePackId,
+  getPackId,
   normalizePackName,
   removePackByIdentifier,
 } from "@features/export/model/tuningIO";

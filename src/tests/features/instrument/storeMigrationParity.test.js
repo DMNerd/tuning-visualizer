@@ -588,8 +588,6 @@ test("theory and workflow action names and behaviors remain stable", async () =>
   const workflowActions = useInstrumentWorkflowStore.getState();
   assert.equal(typeof workflowActions.setCustomTunings, "function");
   assert.equal(typeof workflowActions.updateCustomTunings, "function");
-  assert.equal(typeof workflowActions.upsertCustomTuning, "function");
-  assert.equal(typeof workflowActions.removeCustomTuning, "function");
   assert.equal(typeof workflowActions.setSelectedPreset, "function");
   assert.equal(typeof workflowActions.setQueuedPresetName, "function");
   assert.equal(typeof workflowActions.setEditorState, "function");
@@ -604,12 +602,6 @@ test("theory and workflow action names and behaviors remain stable", async () =>
     draft.push({ name: "Custom C", meta: { id: "custom-c" } });
     draft.push({ name: "NameOnly Pack" });
   });
-  workflowActions.upsertCustomTuning({
-    name: "Custom C+",
-    meta: { id: "custom-c" },
-  });
-  workflowActions.removeCustomTuning("Custom A");
-  workflowActions.removeCustomTuning({ name: "NameOnly Pack" });
   workflowActions.setSelectedPreset("Custom B");
   workflowActions.setQueuedPresetName("Custom B");
   workflowActions.setEditorState({ mode: "edit" });
@@ -621,9 +613,10 @@ test("theory and workflow action names and behaviors remain stable", async () =>
   assert.deepEqual(workflowState.editorState, { mode: "edit" });
   assert.equal(workflowState.isManagerOpen, true);
   assert.equal(workflowState.pendingPresetName, "Custom B");
-  assert.equal(workflowState.customTunings.length, 2);
-  assert.equal(workflowState.customTunings[0].name, "Custom B");
-  assert.equal(workflowState.customTunings[1].name, "Custom C+");
+  assert.deepEqual(
+    workflowState.customTunings.map((pack) => pack.name),
+    ["Custom A", "Custom B", "Custom C", "NameOnly Pack"],
+  );
 });
 
 test("resetAllStores restores defaults and clears only app-owned keys", async () => {

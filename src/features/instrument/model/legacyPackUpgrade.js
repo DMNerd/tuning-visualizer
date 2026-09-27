@@ -1,11 +1,8 @@
 import { isPlainObject } from "@shared/lib/object";
+import { trimmedString } from "@shared/lib/strings";
 
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
-}
-
-function nonEmptyTrimmed(value) {
-  return typeof value === "string" ? value.trim() : "";
 }
 
 function flattenOnce(arr) {
@@ -48,7 +45,7 @@ const LEGACY_NOTE_KEYS = ["note", "token", "pitch", "value"];
 function normalizeLegacyObjectEntry(entry) {
   const normalized = {};
   if (typeof entry.label === "string") normalized.label = entry.label;
-  const note = LEGACY_NOTE_KEYS.map((k) => nonEmptyTrimmed(entry[k])).find(
+  const note = LEGACY_NOTE_KEYS.map((k) => trimmedString(entry[k])).find(
     Boolean,
   );
   if (note) normalized.note = note;
@@ -62,7 +59,7 @@ function normalizeLegacyObjectEntry(entry) {
 
 function normalizeLegacyStringEntry(entry) {
   if (isPlainObject(entry)) return normalizeLegacyObjectEntry(entry);
-  const note = nonEmptyTrimmed(entry);
+  const note = trimmedString(entry);
   if (note) return { note };
   if (isFiniteNumber(entry)) return { midi: entry };
   return null;

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { slug } from "@features/export/model/scales";
+import { slug } from "@features/export/model/svgExport";
 import { PANEL_CONTRACTS } from "@shared/lib/panelContracts";
 import { buildExportCustomTuningDomainReturn } from "@shared/lib/domainReturnBuilders";
 

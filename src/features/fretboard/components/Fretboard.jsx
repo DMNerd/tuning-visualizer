@@ -195,12 +195,15 @@ function Fretboard({
       }
 
       if (visibleIndex < visibleCount && visibleFrets[visibleIndex] === fret) {
-        xByFret[fret] = (wireX(prevVisible) + wireX(fret)) / 2;
+        // The fret space right after the nut starts at the nut's right edge.
+        const leftX =
+          wireX(prevVisible) + (prevVisible === safeCapoFret ? nutW : 0);
+        xByFret[fret] = (leftX + wireX(fret)) / 2;
       }
     }
 
     return xByFret;
-  }, [frets, betweenFretsX, visibleFrets, wireX]);
+  }, [frets, betweenFretsX, visibleFrets, wireX, safeCapoFret, nutW]);
 
   const betweenVisibleFretsX = useCallback(
     (fret) => betweenVisibleFretsXByFret[fret] ?? betweenFretsX(fret),

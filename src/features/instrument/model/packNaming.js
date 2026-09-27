@@ -1,4 +1,5 @@
-import { generatePackId, normalizePackName } from "@features/export";
+import { generatePackId, getPackId, normalizePackName } from "@features/export";
+import { trimmedString } from "@shared/lib/strings";
 
 function getTakenValues(existing, pluck, { exclude } = {}) {
   return new Set(
@@ -15,9 +16,7 @@ export function getTakenNames(existing, options) {
 }
 
 export function getTakenIds(existing) {
-  return getTakenValues(existing, (item) =>
-    typeof item?.meta?.id === "string" ? item.meta.id.trim() : "",
-  );
+  return getTakenValues(existing, getPackId);
 }
 
 // Re-importing a pack that was previously exported carries its original
@@ -27,8 +26,7 @@ export function getTakenIds(existing) {
 // later delete every pack sharing the id when just one of them is deleted
 // — so give the newcomer a fresh id instead of letting them collide.
 export function ensureUniquePackId(pack, takenIds) {
-  const currentId =
-    typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
+  const currentId = getPackId(pack);
   if (!currentId || takenIds.has(currentId)) {
     const nextPack = { ...pack, meta: { ...pack.meta, id: generatePackId() } };
     takenIds.add(nextPack.meta.id);
@@ -57,7 +55,7 @@ export function ensureUniqueName(desiredName, takenNames) {
 // Human label for a pack (object or name string) used in toasts/confirms.
 export function resolvePackLabel(target) {
   if (target && typeof target === "object") {
-    const name = typeof target?.name === "string" ? target.name.trim() : "";
+    const name = trimmedString(target.name);
     const displayName =
       typeof target?.displayName === "string"
         ? target.displayName.trim()
@@ -76,8 +74,7 @@ export function resolvePackLabel(target) {
 
 export function resolvePackKey(target) {
   if (target && typeof target === "object") {
-    const id =
-      typeof target?.meta?.id === "string" ? target.meta.id.trim() : "";
+    const id = getPackId(target);
     if (id) return id;
   }
 

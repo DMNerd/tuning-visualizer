@@ -7,7 +7,7 @@ import { memoWithKeys } from "@shared/lib/memo";
 import {
   PNG_EXPORT_SCALE,
   EXPORT_PADDING,
-} from "@features/export/model/scales";
+} from "@features/export/model/svgExport";
 import {
   getImportPipelineErrorMessage,
   IMPORT_PIPELINE_ERROR_CODES,

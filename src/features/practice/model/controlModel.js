@@ -1,3 +1,8 @@
+import {
+  METRONOME_BPM_MAX,
+  METRONOME_BPM_MIN,
+} from "@features/practice/model/metronomeTiming";
+
 const METRONOME_TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const METRONOME_SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
 
@@ -35,8 +40,8 @@ export function buildMetronomeControlModel({ metronome, controls }) {
       randomizeScaleNow: controls.randomizeScaleNow,
     },
     meta: {
-      bpmMin: 20,
-      bpmMax: 300,
+      bpmMin: METRONOME_BPM_MIN,
+      bpmMax: METRONOME_BPM_MAX,
       barsPerScaleMin: 1,
       barsPerScaleMax: 64,
       practiceDurationMin: 1,

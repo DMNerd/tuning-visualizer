@@ -6,8 +6,14 @@ import { useDrawFrets } from "@features/instrument/hooks/useDrawFrets";
 import { useCapo } from "@features/instrument/hooks/useCapo";
 import { useStringsChange } from "@features/instrument/hooks/useStringsChange";
 import { usePresetBuilder } from "@features/instrument/hooks/usePresetBuilder";
-import { normalizePresetMeta } from "@domain/meta/meta";
-import { isPlainObject } from "@shared/lib/object";
+import {
+  buildSavedDefaultEntry,
+  defaultTuningKey,
+  isSameTuning,
+  normalizeSavedEntry,
+  resolveDefaultForCount,
+  resolveFactoryDefault,
+} from "@features/instrument/model/defaultTunings";
 import {
   useInstrumentCoreStore,
   selectInstrumentCoreActions,
@@ -36,24 +42,6 @@ const selectInstrumentConfigStore = (state) => ({
   neckFilterMode: selectNeckFilterMode(state),
   ...selectInstrumentCoreActions(state),
 });
-
-function keyOf(systemId, strings) {
-  return `${systemId}:${strings}`;
-}
-
-function normalizeSavedEntry(raw) {
-  if (Array.isArray(raw)) {
-    return { tuning: raw, meta: null };
-  }
-  if (isPlainObject(raw)) {
-    const tuning = Array.isArray(raw.tuning) ? raw.tuning : null;
-    const meta = normalizePresetMeta(raw.meta, { stringMetaFormat: "array" });
-    if (Array.isArray(tuning) && tuning.length) {
-      return { tuning, meta };
-    }
-  }
-  return { tuning: null, meta: null };
-}
 
 export function useInstrumentConfig({
   system,
@@ -88,7 +76,7 @@ export function useInstrumentConfig({
     resetInstrumentPrefs,
   } = instrumentStore;
 
-  const storeKey = keyOf(systemId, strings);
+  const storeKey = defaultTuningKey(systemId, strings);
   const savedEntry = useMemo(
     () => normalizeSavedEntry(userDefaultTuningMap?.[storeKey]),
     [userDefaultTuningMap, storeKey],
@@ -97,23 +85,10 @@ export function useInstrumentConfig({
   const savedMeta = savedEntry.meta;
   const savedExists = Array.isArray(saved) && saved.length > 0;
 
-  const factoryDefault = useMemo(() => {
-    const systemDefaults = defaultTunings?.[systemId]?.[strings];
-    if (Array.isArray(systemDefaults) && systemDefaults.length) {
-      return systemDefaults;
-    }
-
-    if (savedExists) {
-      return Array.isArray(saved) ? saved.slice() : [];
-    }
-
-    const twelveTetFallback = defaultTunings?.["12-TET"]?.[strings];
-    if (Array.isArray(twelveTetFallback) && twelveTetFallback.length) {
-      return twelveTetFallback.slice();
-    }
-
-    return Array.isArray(saved) ? saved.slice() : [];
-  }, [defaultTunings, systemId, strings, savedExists, saved]);
+  const factoryDefault = useMemo(
+    () => resolveFactoryDefault(defaultTunings, systemId, strings, saved),
+    [defaultTunings, systemId, strings, saved],
+  );
 
   const getPreferredDefault = useCallback(() => {
     if (savedExists) return Array.isArray(saved) ? saved.slice() : [];
@@ -160,31 +135,17 @@ export function useInstrumentConfig({
 
   const saveDefault = useCallback(
     (nextStringMeta, nextBoardMeta) => {
-      const isFactory =
-        Array.isArray(factoryDefault) &&
-        tuning.length === factoryDefault.length &&
-        tuning.every((value, index) => value === factoryDefault[index]);
-
+      const isFactory = isSameTuning(tuning, factoryDefault);
       updateUserDefaultTuningMap((next) => {
         if (isFactory) {
           delete next[storeKey];
           return;
         }
-
-        const metaInput = {
-          ...(Array.isArray(nextStringMeta) && nextStringMeta.length
-            ? { stringMeta: nextStringMeta }
-            : {}),
-          ...(isPlainObject(nextBoardMeta) ? { board: nextBoardMeta } : {}),
-        };
-        const normalizedMeta = normalizePresetMeta(metaInput, {
-          stringMetaFormat: "array",
-        });
-
-        next[storeKey] = {
-          tuning: Array.isArray(tuning) ? tuning.slice() : [],
-          ...(normalizedMeta ? { meta: normalizedMeta } : {}),
-        };
+        next[storeKey] = buildSavedDefaultEntry(
+          tuning,
+          nextStringMeta,
+          nextBoardMeta,
+        );
       });
     },
     [factoryDefault, tuning, updateUserDefaultTuningMap, storeKey],
@@ -195,29 +156,14 @@ export function useInstrumentConfig({
   }, [boardMeta, saveDefault, stringMeta]);
 
   const defaultForCount = useCallback(
-    (count) => {
-      const key = keyOf(systemId, count);
-      const savedForCount = normalizeSavedEntry(userDefaultTuningMap?.[key]);
-      if (Array.isArray(savedForCount.tuning) && savedForCount.tuning.length) {
-        return savedForCount.tuning.slice();
-      }
-
-      const systemDefaults = defaultTunings?.[systemId]?.[count];
-      if (Array.isArray(systemDefaults) && systemDefaults.length) {
-        return systemDefaults;
-      }
-
-      const fallbackDefaults = defaultTunings?.["12-TET"]?.[count];
-      if (Array.isArray(fallbackDefaults) && fallbackDefaults.length) {
-        return fallbackDefaults.slice();
-      }
-
-      if (Array.isArray(tuning) && tuning.length === count) {
-        return tuning.slice();
-      }
-
-      return [];
-    },
+    (count) =>
+      resolveDefaultForCount({
+        userDefaultTuningMap,
+        defaultTunings,
+        systemId,
+        count,
+        tuning,
+      }),
     [defaultTunings, systemId, userDefaultTuningMap, tuning],
   );
 

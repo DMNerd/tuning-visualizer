@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 
 import { applyResolvedTuning } from "@shared/lib/applyResolvedTuning";
+import { trimmedString } from "@shared/lib/strings";
 import {
   parseSharePayload,
   resolveInstrumentHydrationValues,
@@ -92,8 +93,7 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
       safeInvoke(instrumentActions.setBoardMeta, values.boardMeta);
       safeInvoke(instrumentActions.setNeckFilterMode, values.neckFilterMode);
 
-      const presetName =
-        typeof values.presetName === "string" ? values.presetName.trim() : "";
+      const presetName = trimmedString(values.presetName);
       const packPayload =
         values.packPayload && typeof values.packPayload === "object"
           ? values.packPayload

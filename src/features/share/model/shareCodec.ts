@@ -19,7 +19,8 @@ import {
   isNeckFilterMode,
   NECK_FILTER_MODES,
 } from "@domain/presets/neckFilterModes";
-import { isPlainObject } from "@shared/lib/object";
+import { isObjectLike, isPlainObject } from "@shared/lib/object";
+import { trimmedString } from "@shared/lib/strings";
 
 type ShareValues = Partial<{
   systemId: string;
@@ -117,14 +118,6 @@ function resolveSelectedCustomPack(values: ShareValues) {
     packPayloadVersion: SHARE_PACK_PAYLOAD_VERSION,
     packPayload: normalized,
   };
-}
-
-function isObjectLike(value: unknown): value is object {
-  return Boolean(value) && typeof value === "object";
-}
-
-function trimmedString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
 }
 
 function normalizePackPayloadVersion(value: unknown): number | undefined {

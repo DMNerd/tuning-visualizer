@@ -1,10 +1,5 @@
-function trimmedString(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function isObjectLike(value) {
-  return Boolean(value) && typeof value === "object";
-}
+import { isObjectLike } from "@shared/lib/object";
+import { trimmedString } from "@shared/lib/strings";
 
 function hasAnyValues(payload) {
   return (

@@ -15,10 +15,6 @@ function readLegacyCustomTunings() {
   return Array.isArray(parsed) ? parsed : null;
 }
 
-function trimmedString(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
 let didHydrateLegacyWorkflowPayload = false;
 
 export const useInstrumentWorkflowStore = create(
@@ -51,48 +47,6 @@ export const useInstrumentWorkflowStore = create(
         updateCustomTunings: (draftUpdater) =>
           set((state) => {
             applyValueOrUpdaterOnDraft(state, "customTunings", draftUpdater);
-          }),
-        upsertCustomTuning: (pack) =>
-          set((state) => {
-            if (!pack || typeof pack !== "object") return;
-
-            if (!Array.isArray(state.customTunings)) {
-              state.customTunings = [];
-            }
-
-            const list = state.customTunings;
-            const packId = trimmedString(pack.meta?.id);
-            const packName = trimmedString(pack.name);
-            const index = list.findIndex((entry) => {
-              const entryId = trimmedString(entry?.meta?.id);
-              if (packId && entryId) return entryId === packId;
-              return !!packName && trimmedString(entry?.name) === packName;
-            });
-            if (index >= 0) {
-              list[index] = pack;
-            } else {
-              list.push(pack);
-            }
-          }),
-        removeCustomTuning: (identifier) =>
-          set((state) => {
-            if (!Array.isArray(state.customTunings)) return;
-
-            // First string found among meta.id, name, or the identifier itself.
-            const id =
-              typeof identifier?.meta?.id === "string"
-                ? identifier.meta.id.trim()
-                : typeof identifier?.name === "string"
-                  ? identifier.name.trim()
-                  : trimmedString(identifier);
-            if (!id) return;
-
-            state.customTunings = state.customTunings.filter((entry) => {
-              const entryId = trimmedString(entry?.meta?.id);
-              return entryId
-                ? entryId !== id
-                : trimmedString(entry?.name) !== id;
-            });
           }),
         touchWorkflowState: () =>
           set((state) => {
@@ -157,8 +111,6 @@ export const selectInstrumentWorkflowState = (state) => ({
 export const selectInstrumentWorkflowActions = (state) => ({
   setCustomTunings: state.setCustomTunings,
   updateCustomTunings: state.updateCustomTunings,
-  upsertCustomTuning: state.upsertCustomTuning,
-  removeCustomTuning: state.removeCustomTuning,
   setSelectedPreset: state.setSelectedPreset,
   setQueuedPresetName: state.setQueuedPresetName,
   setEditorState: state.setEditorState,

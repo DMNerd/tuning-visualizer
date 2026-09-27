@@ -1,3 +1,4 @@
+import { trimmedString } from "@shared/lib/strings";
 import { generateId } from "@shared/lib/generateId";
 
 export type TuningString = {
@@ -100,7 +101,12 @@ interface Identifier {
 }
 
 export function normalizePackName(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
+  return trimmedString(value);
+}
+
+// A pack's trimmed meta.id, or "" when missing.
+export function getPackId(pack: unknown): string {
+  return trimmedString((pack as Pack | null | undefined)?.meta?.id);
 }
 
 export function generatePackId(): string {
@@ -112,9 +118,7 @@ export function ensurePackHasId<T extends { meta?: PackMeta }>(pack: T): T {
 
   const obj = pack as Pack;
 
-  const existingId =
-    typeof obj?.meta?.id === "string" ? obj.meta.id.trim() : "";
-  if (existingId) return pack;
+  if (getPackId(obj)) return pack;
 
   const meta: PackMeta = isPlainObject(obj.meta) ? { ...obj.meta } : {};
   meta.id = generatePackId();
@@ -134,7 +138,7 @@ function normalizeIdentifier(value: unknown): Identifier {
 
   if (isPlainObject(value)) {
     const pack = value as Pack;
-    const id = typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
+    const id = getPackId(pack);
     const name = normalizePackName(pack?.name);
     return {
       id: id || null,
@@ -153,8 +157,7 @@ function shouldDeletePack(candidate: Pack, identifier?: Identifier): boolean {
   const targetName = identifier.name;
   const targetRef = identifier.ref;
 
-  const candidateId =
-    typeof candidate?.meta?.id === "string" ? candidate.meta.id.trim() : "";
+  const candidateId = getPackId(candidate);
   if (targetId && candidateId && candidateId === targetId) return true;
 
   if (targetRef && candidate === targetRef) return true;
