@@ -1,7 +1,7 @@
 import css from "@eslint/css";
 import js from "@eslint/js";
 import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
+import eslintReact from "@eslint-react/eslint-plugin";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -18,6 +18,11 @@ const bestPracticeRules = {
   "object-shorthand": "error",
   "no-console": ["warn", { allow: ["warn", "error"] }],
   "no-restricted-globals": ["error", "event", "name"],
+};
+
+// Compiler-style rule; existing effects intentionally sync state
+const reactRules = {
+  "@eslint-react/set-state-in-effect": "off",
 };
 
 export default defineConfig([
@@ -55,11 +60,12 @@ export default defineConfig([
     },
     extends: [
       js.configs.recommended,
-      reactHooks.configs["recommended-latest"],
+      eslintReact.configs.recommended,
       reactRefresh.configs.vite,
     ],
     rules: {
       ...bestPracticeRules,
+      ...reactRules,
       "no-unused-vars": [
         "error",
         {
@@ -68,9 +74,6 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-    },
-    settings: {
-      react: { version: "detect" },
     },
   },
 
@@ -109,11 +112,12 @@ export default defineConfig([
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked, // strong TS rules that need type info
-      reactHooks.configs["recommended-latest"],
+      eslintReact.configs["recommended-type-checked"],
       reactRefresh.configs.vite,
     ],
     rules: {
       ...bestPracticeRules,
+      ...reactRules,
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -137,9 +141,6 @@ export default defineConfig([
       ],
       "@typescript-eslint/no-shadow": "error",
       "@typescript-eslint/no-import-type-side-effects": "error",
-    },
-    settings: {
-      react: { version: "detect" },
     },
   },
 ]);

@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 
 import ModalFrame from "@shared/ui/ModalFrame";
 import NumberField from "@shared/ui/NumberField";
-import { useConfirm } from "@shared/hooks/useConfirm";
+import { confirm } from "@shared/ui/confirm";
 import { copyTextWithFallback } from "@shared/lib/clipboard";
 import { STR_MAX, STR_MIN } from "@shared/config/appDefaults";
 import { TUNINGS } from "@domain/theory/tuning";
@@ -45,7 +45,6 @@ export default function RoutineBuilderModal({
   routinePlayback,
   liveDefaults,
 }) {
-  const { confirm } = useConfirm();
   const accidental = liveDefaults?.accidental;
   const noteNaming = liveDefaults?.noteNaming;
   // Single-field selectors, not the full playback state — this modal only

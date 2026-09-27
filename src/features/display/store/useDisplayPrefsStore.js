@@ -5,8 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { createScopedStorage } from "@shared/lib/storage/scopedStorage";
 import { DISPLAY_DEFAULTS } from "@shared/config/appDefaults";
-import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
-import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
+import { createPrefsActions } from "@shared/lib/createPrefsActions";
 
 const SETTER_KEYS = [
   "show",
@@ -44,30 +43,10 @@ function migrateOpenOnlyPrefs(prefs) {
 
 export const useDisplayPrefsStore = create(
   persist(
-    immer((set, get) => {
-      const setPrefs = (update) => {
-        set((state) => {
-          applyValueOrUpdaterOnDraft(state, "prefs", update);
-        });
-      };
-
-      return {
-        prefs: DISPLAY_DEFAULTS,
-        // Generic persist-rehydrate lifecycle flag for app bootstrap/UI timing.
-        // Not consumed by URL-share hydration flow.
-        isHydrated: false,
-        setPrefs,
-        setHydrated: (isHydrated = true) =>
-          set({ isHydrated: Boolean(isHydrated) }),
-        resetPrefs: () => set({ prefs: DISPLAY_DEFAULTS }),
-        setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
-        hydrateWithDefaults: (defaults) => {
-          if (!defaults) return;
-          const { prefs } = get();
-          set({ prefs: { ...defaults, ...prefs } });
-        },
-      };
-    }),
+    immer((set, get) => ({
+      ...createPrefsActions(set, get, DISPLAY_DEFAULTS, SETTER_KEYS),
+      resetPrefs: () => set({ prefs: DISPLAY_DEFAULTS }),
+    })),
     {
       name: STORAGE_KEYS.DISPLAY_PREFS,
       // Per-window-scoped, not global — matches useInstrumentCoreStore, so

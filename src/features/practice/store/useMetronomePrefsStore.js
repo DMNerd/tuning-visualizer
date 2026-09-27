@@ -8,8 +8,7 @@ import {
   createScopedStorage,
   readLegacyJSON,
 } from "@shared/lib/storage/scopedStorage";
-import { makeImmerSetters } from "@shared/lib/makeImmerSetters";
-import { applyValueOrUpdaterOnDraft } from "@shared/lib/applyValueOrUpdaterOnDraft";
+import { createPrefsActions } from "@shared/lib/createPrefsActions";
 import { isPlainObject } from "@shared/lib/object";
 
 const SETTER_KEYS = [
@@ -53,46 +52,26 @@ let didHydrateLegacyMetronomePayload = false;
 
 export const useMetronomePrefsStore = create(
   persist(
-    immer((set, get) => {
-      const setPrefs = (update) => {
+    immer((set, get) => ({
+      ...createPrefsActions(set, get, METRONOME_DEFAULTS, SETTER_KEYS),
+      randomizeMode: RANDOMIZE_MODE_DEFAULT,
+      _rehydrateRevision: 0,
+      setRandomizeMode: (randomizeMode) =>
+        set({
+          randomizeMode: isValidRandomizeMode(randomizeMode)
+            ? randomizeMode
+            : RANDOMIZE_MODE_DEFAULT,
+        }),
+      resetPrefs: () =>
+        set({
+          prefs: METRONOME_DEFAULTS,
+          randomizeMode: RANDOMIZE_MODE_DEFAULT,
+        }),
+      touchMetronomePrefsState: () =>
         set((state) => {
-          applyValueOrUpdaterOnDraft(state, "prefs", update);
-        });
-      };
-
-      return {
-        prefs: METRONOME_DEFAULTS,
-        randomizeMode: RANDOMIZE_MODE_DEFAULT,
-        // Generic persist-rehydrate lifecycle flag for practice/bootstrap flows.
-        // Not consumed by URL-share hydration flow.
-        isHydrated: false,
-        _rehydrateRevision: 0,
-        setPrefs,
-        setHydrated: (isHydrated = true) =>
-          set({ isHydrated: Boolean(isHydrated) }),
-        setRandomizeMode: (randomizeMode) =>
-          set({
-            randomizeMode: isValidRandomizeMode(randomizeMode)
-              ? randomizeMode
-              : RANDOMIZE_MODE_DEFAULT,
-          }),
-        resetPrefs: () =>
-          set({
-            prefs: METRONOME_DEFAULTS,
-            randomizeMode: RANDOMIZE_MODE_DEFAULT,
-          }),
-        setters: makeImmerSetters((updater) => setPrefs(updater), SETTER_KEYS),
-        touchMetronomePrefsState: () =>
-          set((state) => {
-            state._rehydrateRevision += 1;
-          }),
-        hydrateWithDefaults: (defaults) => {
-          if (!defaults) return;
-          const { prefs } = get();
-          set({ prefs: { ...defaults, ...prefs } });
-        },
-      };
-    }),
+          state._rehydrateRevision += 1;
+        }),
+    })),
     {
       name: STORAGE_KEYS.METRONOME_PREFS,
       version: 1,

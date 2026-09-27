@@ -307,7 +307,7 @@ export function useInstrumentConfig({
   };
 }
 
-export function useInstrumentCapoSlice(instrumentConfig) {
+export function getInstrumentCapoSlice(instrumentConfig) {
   return instrumentConfig.capo;
 }
 

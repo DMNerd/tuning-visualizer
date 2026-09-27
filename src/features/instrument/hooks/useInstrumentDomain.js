@@ -3,7 +3,7 @@ import { buildInstrumentControlModel } from "@features/instrument/model/controlM
 import { PANEL_CONTRACTS } from "@shared/lib/panelContracts";
 import { useCustomTuningPacks } from "@features/instrument/hooks/useCustomTuningPacks";
 import {
-  useInstrumentCapoSlice,
+  getInstrumentCapoSlice,
   useInstrumentConfig,
   useInstrumentFretsSlice,
 } from "@features/instrument/hooks/useInstrumentConfig";
@@ -32,7 +32,7 @@ export function useInstrumentDomain({
     defaultTunings,
     presetTunings,
   });
-  const capo = useInstrumentCapoSlice(instrument);
+  const capo = getInstrumentCapoSlice(instrument);
   const fretsSlice = useInstrumentFretsSlice(instrument);
   const instrumentState = instrument.state;
   const instrumentActions = instrument.actions;

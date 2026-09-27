@@ -137,7 +137,11 @@ function InstrumentControls({ state, actions, meta }) {
               (entry) => entry.value === noteValue,
             );
             return (
-              <div key={i} className="tv-field">
+              <div
+                // eslint-disable-next-line @eslint-react/no-array-index-key -- strings are identified by position
+                key={i}
+                className="tv-field"
+              >
                 <label htmlFor={`string-${stringNum}`}>
                   String {stringNum}
                 </label>

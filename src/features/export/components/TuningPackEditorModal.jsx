@@ -8,7 +8,7 @@ import {
   useWindowSize,
 } from "react-use";
 import { parseTuningPack } from "@features/export/model/schema";
-import { useConfirm } from "@shared/hooks/useConfirm";
+import { confirm } from "@shared/ui/confirm";
 import { toast } from "react-hot-toast";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import {
@@ -134,11 +134,8 @@ function TuningPackEditorModal({
     pendingDraftString,
   ]);
 
-  const { confirm } = useConfirm();
-
   const onCancelRef = useLatest(onCancel);
   const onSubmitRef = useLatest(onSubmit);
-  const confirmRef = useLatest(confirm);
 
   useEffect(() => {
     if (isOpen) {
@@ -176,7 +173,7 @@ function TuningPackEditorModal({
     if (!isOpen) return;
 
     if (hasUnsavedChanges) {
-      const shouldDiscard = await confirmRef.current?.({
+      const shouldDiscard = await confirm({
         title: "Discard unsaved changes?",
         message:
           "You have unsaved edits to this tuning pack. Close the editor without saving?",
@@ -197,7 +194,7 @@ function TuningPackEditorModal({
     }
 
     onCancelRef.current?.();
-  }, [confirmRef, hasUnsavedChanges, isOpen, onCancelRef]);
+  }, [hasUnsavedChanges, isOpen, onCancelRef]);
 
   const handleSave = useCallback(() => {
     if (validationMessage) {

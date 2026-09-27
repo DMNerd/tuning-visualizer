@@ -30,7 +30,7 @@ function ExportControls({
   shareState,
 }) {
   const fileInputRef = useRef(null);
-  const [isShareModalOpen, setShareModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
 
   const doDownloadPNG = () =>
@@ -77,7 +77,7 @@ function ExportControls({
   const doExportAll = () => exportAll?.();
   const doClearCustom = () => onClearCustom?.();
   const doManageCustom = () => onManageCustom?.();
-  const doOpenShareModal = () => setShareModalOpen(true);
+  const doOpenShareModal = () => setIsShareModalOpen(true);
   const triggerImport = () => fileInputRef.current?.click();
 
   const onFileChange = async (e) => {
@@ -193,7 +193,7 @@ function ExportControls({
       </div>
       <ShareConfigModal
         isOpen={isShareModalOpen}
-        onClose={() => setShareModalOpen(false)}
+        onClose={() => setIsShareModalOpen(false)}
         appShareState={shareState}
       />
     </Section>

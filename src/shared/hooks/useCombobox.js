@@ -8,19 +8,13 @@ import {
 } from "react";
 import { useClickAway, useLatest, useKey } from "react-use";
 
+const OPTION_KEY_FIELDS = ["value", "id", "key"];
+const hasOwn = (obj, name) => Object.prototype.hasOwnProperty.call(obj, name);
+
 function defaultGetOptionKey(option) {
-  if (option && typeof option === "object") {
-    if (Object.prototype.hasOwnProperty.call(option, "value")) {
-      return option.value;
-    }
-    if (Object.prototype.hasOwnProperty.call(option, "id")) {
-      return option.id;
-    }
-    if (Object.prototype.hasOwnProperty.call(option, "key")) {
-      return option.key;
-    }
-  }
-  return option;
+  if (!option || typeof option !== "object") return option;
+  const field = OPTION_KEY_FIELDS.find((name) => hasOwn(option, name));
+  return field ? option[field] : option;
 }
 
 export default function useCombobox({
@@ -256,12 +250,9 @@ export default function useCombobox({
 
   const handleInputPress = useCallback(() => {
     syncFilteringStateFromInput();
-    if (!isOpenRef.current) {
-      setIsOpen(true);
-      syncActiveIndex(optionsRef.current, selectedKeyRef.current);
-    } else {
-      setIsOpen(true);
-    }
+    const wasOpen = isOpenRef.current;
+    setIsOpen(true);
+    if (!wasOpen) syncActiveIndex(optionsRef.current, selectedKeyRef.current);
   }, [syncFilteringStateFromInput, syncActiveIndex, selectedKeyRef]);
 
   const getInputProps = useCallback(
@@ -281,15 +272,9 @@ export default function useCombobox({
           handleInputPress();
           onFocus?.(event);
         },
-        onPointerDown: () => {
-          handleInputPress();
-        },
-        onTouchStart: () => {
-          handleInputPress();
-        },
-        onMouseDown: () => {
-          handleInputPress();
-        },
+        onPointerDown: handleInputPress,
+        onTouchStart: handleInputPress,
+        onMouseDown: handleInputPress,
         onKeyDown: (event) => {
           if (!event.defaultPrevented) {
             onKeyDownPropRef.current?.(event);
@@ -317,75 +302,61 @@ export default function useCombobox({
     });
   };
 
-  useKey(
-    (event) => event.key === "ArrowDown" && event.target === inputRef.current,
-    (event) => moveActiveIndex(event, 1),
-  );
+  const jumpActiveIndex = (event, toEnd) => {
+    event.preventDefault();
+    setIsOpen(true);
+    const total = optionsRef.current.length;
+    setActiveIndex(total ? (toEnd ? total - 1 : 0) : -1);
+  };
 
-  useKey(
-    (event) => event.key === "ArrowUp" && event.target === inputRef.current,
-    (event) => moveActiveIndex(event, -1),
-  );
-
-  useKey(
-    (event) => event.key === "Home" && event.target === inputRef.current,
-    (event) => {
+  const handleEnter = (event) => {
+    const options = optionsRef.current;
+    if (!isOpenRef.current) {
       event.preventDefault();
       setIsOpen(true);
-      const total = optionsRef.current.length;
-      setActiveIndex(total ? 0 : -1);
-    },
-  );
-
-  useKey(
-    (event) => event.key === "End" && event.target === inputRef.current,
-    (event) => {
+      syncFilteringStateFromInput();
+      syncActiveIndex(options, selectedKeyRef.current);
+      return;
+    }
+    const total = options.length;
+    const index =
+      activeIndex >= 0 && activeIndex < total
+        ? activeIndex
+        : total === 1
+          ? 0
+          : -1;
+    const option = index >= 0 ? options[index] : undefined;
+    if (option) {
       event.preventDefault();
-      setIsOpen(true);
-      const total = optionsRef.current.length;
-      setActiveIndex(total ? total - 1 : -1);
-    },
-  );
+      onCommitRef.current?.(option, index, event);
+    }
+  };
+
+  const handleEscape = (event) => {
+    event.preventDefault();
+    if (isOpenRef.current) {
+      closeList();
+    } else {
+      setInputValue(selectedTextRef.current);
+      setIsFiltering(false);
+    }
+  };
+
+  // Rebuilt every render (like useKey's own handler) so Enter sees the
+  // current activeIndex.
+  const keyHandlers = {
+    ArrowDown: (event) => moveActiveIndex(event, 1),
+    ArrowUp: (event) => moveActiveIndex(event, -1),
+    Home: (event) => jumpActiveIndex(event, false),
+    End: (event) => jumpActiveIndex(event, true),
+    Enter: handleEnter,
+    Escape: handleEscape,
+  };
 
   useKey(
-    (event) => event.key === "Enter" && event.target === inputRef.current,
-    (event) => {
-      const options = optionsRef.current;
-      if (!isOpenRef.current) {
-        event.preventDefault();
-        setIsOpen(true);
-        syncFilteringStateFromInput();
-        syncActiveIndex(options, selectedKeyRef.current);
-        return;
-      }
-      const total = options.length;
-      const index =
-        activeIndex >= 0 && activeIndex < total
-          ? activeIndex
-          : total === 1
-            ? 0
-            : -1;
-      if (index >= 0) {
-        const option = options[index];
-        if (option) {
-          event.preventDefault();
-          onCommitRef.current?.(option, index, event);
-        }
-      }
-    },
-  );
-
-  useKey(
-    (event) => event.key === "Escape" && event.target === inputRef.current,
-    (event) => {
-      event.preventDefault();
-      if (isOpenRef.current) {
-        closeList();
-      } else {
-        setInputValue(selectedTextRef.current);
-        setIsFiltering(false);
-      }
-    },
+    (event) =>
+      event.target === inputRef.current && hasOwn(keyHandlers, event.key),
+    (event) => keyHandlers[event.key](event),
   );
 
   const listProps = useMemo(

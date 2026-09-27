@@ -130,7 +130,7 @@ export function normalizePresetMeta(
   if (meta == null) return null;
 
   const format = options.stringMetaFormat ?? "map";
-  let stringMetaSource: unknown = null;
+  let stringMetaSource: unknown;
   let boardSource: unknown = null;
 
   if (meta instanceof Map || Array.isArray(meta)) {

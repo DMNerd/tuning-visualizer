@@ -13,7 +13,7 @@ import { useUrlShareHydration } from "@features/share";
 import { useTheoryDomain } from "@features/theory";
 import { useRoutinePlayback } from "@features/training";
 import { PanelHeader } from "@shared/ui";
-import { useConfirm } from "@shared/hooks/useConfirm";
+import { confirm } from "@shared/ui/confirm";
 import { TUNINGS } from "@domain/theory/tuning";
 import { ALL_SCALES } from "@domain/theory/scales";
 import { PRESET_TUNING_META } from "@domain/presets/presets";
@@ -36,7 +36,6 @@ import { useAppPanelModels } from "@app/hooks/useAppPanelModels";
 
 export default function App() {
   const boardRef = useRef(null);
-  const { confirm } = useConfirm();
 
   const {
     display: {

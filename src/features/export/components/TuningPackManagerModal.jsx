@@ -177,10 +177,10 @@ function TuningPackManagerModal({
                   </span>
                 </header>
                 <ul className="tv-modal__manager-list">
-                  {group.packs.map((pack, index) => {
+                  {group.packs.map((pack) => {
                     return (
                       <li
-                        key={`${pack.rawName || pack.displayName}__${index}`}
+                        key={pack.raw?.meta?.id ?? pack.rawName}
                         className="tv-modal__manager-item"
                       >
                         <div className="tv-modal__manager-pack">

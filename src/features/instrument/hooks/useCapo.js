@@ -17,14 +17,14 @@ import { toStringMetaMap } from "@domain/meta/meta";
  *  - effectiveStringMeta: same shape as stringMeta, enhanced to start at capo and grey before
  */
 export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
-  const [capoFret, _setCapoFret] = useState(initialCapo);
+  const [capoFret, setCapoFret] = useState(initialCapo);
 
-  const setCapoFret = useCallback((fret) => {
-    _setCapoFret(Number.isFinite(fret) ? Math.max(0, Math.floor(fret)) : 0);
+  const setClampedCapoFret = useCallback((fret) => {
+    setCapoFret(Number.isFinite(fret) ? Math.max(0, Math.floor(fret)) : 0);
   }, []);
 
   const toggleCapoAt = useCallback((fret) => {
-    _setCapoFret((prev) => (prev === fret ? CAPO_DEFAULT : fret));
+    setCapoFret((prev) => (prev === fret ? CAPO_DEFAULT : fret));
   }, []);
 
   const effectiveStringMeta = useMemo(() => {
@@ -65,7 +65,12 @@ export function useCapo({ strings, stringMeta, initialCapo = CAPO_DEFAULT }) {
   }, [strings, stringMeta, capoFret]);
 
   return useMemo(
-    () => ({ capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta }),
-    [capoFret, setCapoFret, toggleCapoAt, effectiveStringMeta],
+    () => ({
+      capoFret,
+      setCapoFret: setClampedCapoFret,
+      toggleCapoAt,
+      effectiveStringMeta,
+    }),
+    [capoFret, setClampedCapoFret, toggleCapoAt, effectiveStringMeta],
   );
 }

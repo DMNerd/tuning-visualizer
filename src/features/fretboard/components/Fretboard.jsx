@@ -1,6 +1,5 @@
 import {
   memo,
-  forwardRef,
   useLayoutEffect,
   useEffect,
   useCallback,
@@ -26,8 +25,6 @@ import {
   resolveClosestDatasetElement,
 } from "@shared/lib/svgDelegation";
 import {
-  NOTE_FONT_MAX,
-  SPLIT_NOTE_FONT_MIN,
   MARKER_FONT_MIN,
   MARKER_FONT_MAX,
   estimateMinimumDotSize,
@@ -51,11 +48,13 @@ import {
   placeFretMarkerLabels,
   fitFretMarkerLabel,
 } from "@features/fretboard/model/labelPlacement";
+import {
+  NoteCircle,
+  NoteLabel,
+} from "@features/fretboard/components/FretboardNote";
 
 const ROOT_NOTE_RADIUS_MULTIPLIER = 1.1;
 const CHORD_NOTE_RADIUS_MULTIPLIER = 1.05;
-const CHORD_ROOT_STROKE_WIDTH = 2.4;
-const CHORD_NOTE_STROKE_WIDTH = 1.8;
 const PANEL_CORNER_RADIUS = 14;
 const INLAY_RADIUS = 6.5;
 const DOUBLE_INLAY_VERTICAL_OFFSET = 14;
@@ -63,37 +62,42 @@ const NUT_VERTICAL_PADDING = 8;
 const APP_FONT_STACK =
   'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 
-const Fretboard = forwardRef(function Fretboard(
-  {
-    strings,
-    frets,
-    tuning,
-    rootIx,
-    intervals,
-    accidental,
-    noteNaming,
-    microLabelStyle,
-    show,
-    showOpen,
-    showFretNums,
-    dotSize,
-    lefty,
-    system,
-    chordPCs,
-    chordRootPc,
-    openOnlyInMode,
-    colorByDegree,
-    colorByShape,
-    hideNonChord,
-    stringMeta,
-    boardMeta,
+function getOrCompute(cache, key, compute) {
+  if (cache.has(key)) return cache.get(key);
+  const value = compute();
+  cache.set(key, value);
+  return value;
+}
 
-    onSelectNote,
-    capoFret,
-    onSetCapo = () => {},
-  },
+function Fretboard({
+  strings,
+  frets,
+  tuning,
+  rootIx,
+  intervals,
+  accidental,
+  noteNaming,
+  microLabelStyle,
+  show,
+  showOpen,
+  showFretNums,
+  dotSize,
+  lefty,
+  system,
+  chordPCs,
+  chordRootPc,
+  openOnlyInMode,
+  colorByDegree,
+  colorByShape,
+  hideNonChord,
+  stringMeta,
+  boardMeta,
+
+  onSelectNote,
+  capoFret,
+  onSetCapo = () => {},
   ref,
-) {
+}) {
   const svgRef = useRef(null);
   const textFit = useMemo(
     () => createTextFit({ fontFamily: APP_FONT_STACK }),
@@ -266,12 +270,11 @@ const Fretboard = forwardRef(function Fretboard(
         fontWeight: options.fontWeight,
         allowSingleCharFallback: options.allowSingleCharFallback,
       });
-      if (typographyCaches.fitByConfig.has(cacheKey)) {
-        return typographyCaches.fitByConfig.get(cacheKey);
-      }
-      const fit = textFit.fitLabel(variants, maxWidth, options);
-      typographyCaches.fitByConfig.set(cacheKey, fit ?? null);
-      return fit;
+      return getOrCompute(
+        typographyCaches.fitByConfig,
+        cacheKey,
+        () => textFit.fitLabel(variants, maxWidth, options) ?? null,
+      );
     },
     [textFit, typographyCaches],
   );
@@ -283,12 +286,9 @@ const Fretboard = forwardRef(function Fretboard(
         fontSize: options.fontSize,
         fontWeight: options.fontWeight,
       });
-      if (typographyCaches.widthByTextStyle.has(cacheKey)) {
-        return typographyCaches.widthByTextStyle.get(cacheKey);
-      }
-      const measuredWidth = textFit.measureWidth(label, options);
-      typographyCaches.widthByTextStyle.set(cacheKey, measuredWidth);
-      return measuredWidth;
+      return getOrCompute(typographyCaches.widthByTextStyle, cacheKey, () =>
+        textFit.measureWidth(label, options),
+      );
     },
     [textFit, typographyCaches],
   );
@@ -485,32 +485,24 @@ const Fretboard = forwardRef(function Fretboard(
     wireX,
   ]);
 
-  const resolveNotePcFromTarget = useCallback((target) => {
-    const noteElement = resolveClosestDatasetElement(target, "[data-note-pc]");
-    return parseDatasetNumber(noteElement, "notePc");
-  }, []);
-
-  const handleDelegatedNoteClick = useCallback(
-    (event) => {
+  const selectNoteFromEvent = useCallback(
+    (event, { preventContextMenu = false } = {}) => {
       if (!onSelectNote) return;
-      const pc = resolveNotePcFromTarget(event.target);
+      const noteElement = resolveClosestDatasetElement(
+        event.target,
+        "[data-note-pc]",
+      );
+      const pc = parseDatasetNumber(noteElement, "notePc");
       if (pc == null) return;
-      const noteName = nameForPc(pc);
-      onSelectNote(pc, noteName, event);
+      if (preventContextMenu) maybePreventContextMenu(event, true);
+      onSelectNote(pc, nameForPc(pc), event);
     },
-    [nameForPc, onSelectNote, resolveNotePcFromTarget],
+    [nameForPc, onSelectNote],
   );
-
+  const handleDelegatedNoteClick = selectNoteFromEvent;
   const handleDelegatedNoteContextMenu = useCallback(
-    (event) => {
-      if (!onSelectNote) return;
-      const pc = resolveNotePcFromTarget(event.target);
-      if (pc == null) return;
-      maybePreventContextMenu(event, true);
-      const noteName = nameForPc(pc);
-      onSelectNote(pc, noteName, event);
-    },
-    [nameForPc, onSelectNote, resolveNotePcFromTarget],
+    (event) => selectNoteFromEvent(event, { preventContextMenu: true }),
+    [selectNoteFromEvent],
   );
 
   const inlayCenterX = (f) =>
@@ -551,7 +543,10 @@ const Fretboard = forwardRef(function Fretboard(
           const hasGreyStub = !!meta?.greyBefore && startFretFor(s) > 0;
 
           return (
-            <g key={`string-${s}`}>
+            <g
+              // eslint-disable-next-line @eslint-react/no-array-index-key -- strings are identified by position
+              key={`string-${s}`}
+            >
               {hasGreyStub && (
                 <line
                   x1={padLeft}
@@ -633,267 +628,14 @@ const Fretboard = forwardRef(function Fretboard(
           );
         })}
 
-        {renderedNotes.map((n) => {
-          const chordStroke = n.inChord
-            ? n.isChordOutsideScale
-              ? "var(--chord-outside-stroke)"
-              : "var(--fg)"
-            : "none";
-          const chordStrokeWidth = n.isChordRoot
-            ? CHORD_ROOT_STROKE_WIDTH
-            : n.inChord
-              ? n.isChordOutsideScale
-                ? CHORD_NOTE_STROKE_WIDTH * 0.7
-                : CHORD_NOTE_STROKE_WIDTH
-              : 0;
-
-          if (!n.splitEnharmonic && !n.splitByShape) {
-            return (
-              <circle
-                key={`noteCirc-${n.key}`}
-                data-note-pc={n.pc}
-                cx={n.cx}
-                cy={n.cy}
-                r={n.r}
-                fill={n.fill}
-                stroke={chordStroke}
-                strokeWidth={chordStrokeWidth}
-              />
-            );
-          }
-
-          const deriveLowerFill = (baseFill) =>
-            `color-mix(in oklab, ${baseFill} 58%, var(--bg))`;
-
-          return (
-            <g key={`noteCirc-${n.key}`} data-note-pc={n.pc}>
-              {n.splitEnharmonic && n.splitByShape
-                ? (() => {
-                    const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
-                    const rightFill = n.shapeSplitFills?.[1] ?? n.fill;
-                    const lowerLeftFill = deriveLowerFill(leftFill);
-                    const lowerRightFill = deriveLowerFill(rightFill);
-                    const clipTopLeftId = `note-top-left-${n.key}`;
-                    const clipTopRightId = `note-top-right-${n.key}`;
-                    const clipBottomLeftId = `note-bottom-left-${n.key}`;
-                    const clipBottomRightId = `note-bottom-right-${n.key}`;
-
-                    return (
-                      <>
-                        <defs>
-                          <clipPath id={clipTopLeftId}>
-                            <rect
-                              x={n.cx - n.r}
-                              y={n.cy - n.r}
-                              width={n.r}
-                              height={n.r}
-                            />
-                          </clipPath>
-                          <clipPath id={clipTopRightId}>
-                            <rect
-                              x={n.cx}
-                              y={n.cy - n.r}
-                              width={n.r}
-                              height={n.r}
-                            />
-                          </clipPath>
-                          <clipPath id={clipBottomLeftId}>
-                            <rect
-                              x={n.cx - n.r}
-                              y={n.cy}
-                              width={n.r}
-                              height={n.r}
-                            />
-                          </clipPath>
-                          <clipPath id={clipBottomRightId}>
-                            <rect x={n.cx} y={n.cy} width={n.r} height={n.r} />
-                          </clipPath>
-                        </defs>
-                        <circle
-                          cx={n.cx}
-                          cy={n.cy}
-                          r={n.r}
-                          fill={leftFill}
-                          clipPath={`url(#${clipTopLeftId})`}
-                        />
-                        <circle
-                          cx={n.cx}
-                          cy={n.cy}
-                          r={n.r}
-                          fill={rightFill}
-                          clipPath={`url(#${clipTopRightId})`}
-                        />
-                        <circle
-                          cx={n.cx}
-                          cy={n.cy}
-                          r={n.r}
-                          fill={lowerLeftFill}
-                          clipPath={`url(#${clipBottomLeftId})`}
-                        />
-                        <circle
-                          cx={n.cx}
-                          cy={n.cy}
-                          r={n.r}
-                          fill={lowerRightFill}
-                          clipPath={`url(#${clipBottomRightId})`}
-                        />
-                      </>
-                    );
-                  })()
-                : n.splitByShape
-                  ? (() => {
-                      const leftFill = n.shapeSplitFills?.[0] ?? n.fill;
-                      const rightFill =
-                        n.shapeSplitFills?.[1] ?? deriveLowerFill(leftFill);
-                      const clipLeftId = `note-left-${n.key}`;
-                      const clipRightId = `note-right-${n.key}`;
-
-                      return (
-                        <>
-                          <defs>
-                            <clipPath id={clipLeftId}>
-                              <rect
-                                x={n.cx - n.r}
-                                y={n.cy - n.r}
-                                width={n.r}
-                                height={n.r * 2}
-                              />
-                            </clipPath>
-                            <clipPath id={clipRightId}>
-                              <rect
-                                x={n.cx}
-                                y={n.cy - n.r}
-                                width={n.r}
-                                height={n.r * 2}
-                              />
-                            </clipPath>
-                          </defs>
-                          <circle
-                            cx={n.cx}
-                            cy={n.cy}
-                            r={n.r}
-                            fill={leftFill}
-                            clipPath={`url(#${clipLeftId})`}
-                          />
-                          <circle
-                            cx={n.cx}
-                            cy={n.cy}
-                            r={n.r}
-                            fill={rightFill}
-                            clipPath={`url(#${clipRightId})`}
-                          />
-                        </>
-                      );
-                    })()
-                  : (() => {
-                      const topFill = n.fill;
-                      const bottomFill = deriveLowerFill(topFill);
-                      const clipTopId = `note-top-${n.key}`;
-                      const clipBottomId = `note-bottom-${n.key}`;
-
-                      return (
-                        <>
-                          <defs>
-                            <clipPath id={clipTopId}>
-                              <rect
-                                x={n.cx - n.r}
-                                y={n.cy - n.r}
-                                width={n.r * 2}
-                                height={n.r}
-                              />
-                            </clipPath>
-                            <clipPath id={clipBottomId}>
-                              <rect
-                                x={n.cx - n.r}
-                                y={n.cy}
-                                width={n.r * 2}
-                                height={n.r}
-                              />
-                            </clipPath>
-                          </defs>
-                          <circle
-                            cx={n.cx}
-                            cy={n.cy}
-                            r={n.r}
-                            fill={topFill}
-                            clipPath={`url(#${clipTopId})`}
-                          />
-                          <circle
-                            cx={n.cx}
-                            cy={n.cy}
-                            r={n.r}
-                            fill={bottomFill}
-                            clipPath={`url(#${clipBottomId})`}
-                          />
-                        </>
-                      );
-                    })()}
-              <circle
-                cx={n.cx}
-                cy={n.cy}
-                r={n.r}
-                fill="none"
-                stroke={chordStroke}
-                strokeWidth={chordStrokeWidth}
-              />
-            </g>
-          );
-        })}
+        {renderedNotes.map((n) => (
+          <NoteCircle key={`noteCirc-${n.key}`} note={n} />
+        ))}
       </g>
 
-      {renderedNotes.map((n) => {
-        if (!n.renderedLabel && !n.renderedLabelLines) return null;
-        if (n.renderedLabelLines) {
-          const [upper = "", lower = ""] = n.renderedLabelLines;
-          const splitFontSize = n.noteFontSize ?? SPLIT_NOTE_FONT_MIN;
-          const topY = n.cy - splitFontSize * 0.15;
-          const bottomY = n.cy + splitFontSize * 0.9;
-          const splitX = displayX(n.cx);
-          return (
-            <g key={`noteText-${n.key}`}>
-              <text
-                data-note-pc={n.pc}
-                className={clsx("tv-fretboard__note", {
-                  "tv-fretboard__note--root": n.isRoot,
-                })}
-                x={splitX}
-                y={topY}
-                textAnchor="middle"
-                fontSize={splitFontSize}
-              >
-                {upper}
-              </text>
-              <text
-                data-note-pc={n.pc}
-                className={clsx("tv-fretboard__note", {
-                  "tv-fretboard__note--root": n.isRoot,
-                })}
-                x={splitX}
-                y={bottomY}
-                textAnchor="middle"
-                fontSize={splitFontSize}
-              >
-                {lower}
-              </text>
-            </g>
-          );
-        }
-        return (
-          <text
-            key={`noteText-${n.key}`}
-            data-note-pc={n.pc}
-            className={clsx("tv-fretboard__note", {
-              "tv-fretboard__note--root": n.isRoot,
-            })}
-            x={displayX(n.cx)}
-            y={n.cy + (n.noteFontSize ?? NOTE_FONT_MAX) * 0.33}
-            textAnchor="middle"
-            fontSize={n.noteFontSize ?? undefined}
-          >
-            {n.renderedLabel}
-          </text>
-        );
-      })}
+      {renderedNotes.map((n) => (
+        <NoteLabel key={`noteText-${n.key}`} note={n} x={displayX(n.cx)} />
+      ))}
 
       {showFretNums &&
         fretMarkers.map(
@@ -947,54 +689,49 @@ const Fretboard = forwardRef(function Fretboard(
       )}
     </svg>
   );
-});
+}
+
+// Props compared by identity; the rest below use cheaper structural checks
+// (arrays/sets by ref+length, objects by the specific keys Fretboard reads).
+const IDENTITY_PROPS = [
+  "strings",
+  "frets",
+  "rootIx",
+  "accidental",
+  "noteNaming",
+  "microLabelStyle",
+  "show",
+  "showOpen",
+  "showFretNums",
+  "dotSize",
+  "lefty",
+  "openOnlyInMode",
+  "colorByDegree",
+  "colorByShape",
+  "hideNonChord",
+  "capoFret",
+  "chordRootPc",
+  "onSelectNote",
+  "onSetCapo",
+  "ref",
+];
 
 function areFretboardPropsEqual(prev, next) {
-  if (!Object.is(prev.strings, next.strings)) return false;
-  if (!Object.is(prev.frets, next.frets)) return false;
-  if (!Object.is(prev.rootIx, next.rootIx)) return false;
-  if (!Object.is(prev.accidental, next.accidental)) return false;
-  if (!Object.is(prev.noteNaming, next.noteNaming)) return false;
-  if (!Object.is(prev.microLabelStyle, next.microLabelStyle)) return false;
-  if (!Object.is(prev.show, next.show)) return false;
-  if (!Object.is(prev.showOpen, next.showOpen)) return false;
-  if (!Object.is(prev.showFretNums, next.showFretNums)) return false;
-  if (!Object.is(prev.dotSize, next.dotSize)) return false;
-  if (!Object.is(prev.lefty, next.lefty)) return false;
-  if (!Object.is(prev.openOnlyInMode, next.openOnlyInMode)) return false;
-  if (!Object.is(prev.colorByDegree, next.colorByDegree)) return false;
-  if (!Object.is(prev.colorByShape, next.colorByShape)) return false;
-  if (!Object.is(prev.hideNonChord, next.hideNonChord)) return false;
-  if (!Object.is(prev.capoFret, next.capoFret)) return false;
-  if (!Object.is(prev.chordRootPc, next.chordRootPc)) return false;
-  if (!Object.is(prev.onSelectNote, next.onSelectNote)) return false;
-  if (!Object.is(prev.onSetCapo, next.onSetCapo)) return false;
-
-  if (!objectRefAndKeyEqual(prev.system, next.system, "id")) return false;
-  if (!objectRefAndKeyEqual(prev.system, next.system, "divisions")) {
-    return false;
-  }
-  if (!arrayRefAndLengthEqual(prev.intervals, next.intervals)) return false;
-  if (!arrayRefAndLengthEqual(prev.tuning, next.tuning)) return false;
-  if (!arrayRefAndLengthEqual(prev.stringMeta, next.stringMeta)) return false;
-
-  if (!objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "notePlacement")) {
-    return false;
-  }
-  if (!objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "fretStyle")) {
-    return false;
-  }
-  if (
-    !arrayRefAndLengthEqual(
+  return (
+    IDENTITY_PROPS.every((key) => Object.is(prev[key], next[key])) &&
+    objectRefAndKeyEqual(prev.system, next.system, "id") &&
+    objectRefAndKeyEqual(prev.system, next.system, "divisions") &&
+    arrayRefAndLengthEqual(prev.intervals, next.intervals) &&
+    arrayRefAndLengthEqual(prev.tuning, next.tuning) &&
+    arrayRefAndLengthEqual(prev.stringMeta, next.stringMeta) &&
+    objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "notePlacement") &&
+    objectRefAndKeyEqual(prev.boardMeta, next.boardMeta, "fretStyle") &&
+    arrayRefAndLengthEqual(
       prev.boardMeta?.hiddenFrets,
       next.boardMeta?.hiddenFrets,
-    )
-  ) {
-    return false;
-  }
-  if (!setRefAndSizeEqual(prev.chordPCs, next.chordPCs)) return false;
-
-  return true;
+    ) &&
+    setRefAndSizeEqual(prev.chordPCs, next.chordPCs)
+  );
 }
 
 const FretboardMemo = memo(Fretboard, areFretboardPropsEqual);

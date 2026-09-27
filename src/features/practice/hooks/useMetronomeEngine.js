@@ -331,8 +331,13 @@ export function useMetronomePlayback({
         countInRemainingRef.current = beatsPerBar;
       }
     }
-    timerRef.current = window.setInterval(scheduler, LOOKAHEAD_MS);
+    const intervalId = window.setInterval(scheduler, LOOKAHEAD_MS);
+    timerRef.current = intervalId;
     scheduler();
+    return () => {
+      clearInterval(intervalId);
+      if (timerRef.current === intervalId) timerRef.current = null;
+    };
   }, [
     isPlaying,
     safeBpm,

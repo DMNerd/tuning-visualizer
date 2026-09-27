@@ -6,12 +6,12 @@ export default function TrainingRoutinesControls({
   routinePlayback,
   liveDefaults,
 }) {
-  const [isBuilderOpen, setBuilderOpen] = useState(false);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [importedRoutine, setImportedRoutine] = useState(null);
 
   const onRoutineImported = useCallback((routine) => {
     setImportedRoutine(routine);
-    setBuilderOpen(true);
+    setIsBuilderOpen(true);
   }, []);
 
   useTrainingRoutineUrlHydration({ onRoutineImported });
@@ -23,14 +23,14 @@ export default function TrainingRoutinesControls({
         <button
           type="button"
           className="tv-button tv-button--block"
-          onClick={() => setBuilderOpen(true)}
+          onClick={() => setIsBuilderOpen(true)}
         >
           Open routine builder
         </button>
       </div>
       <RoutineBuilderModal
         isOpen={isBuilderOpen}
-        onClose={() => setBuilderOpen(false)}
+        onClose={() => setIsBuilderOpen(false)}
         initialRoutine={importedRoutine}
         onConsumedInitialRoutine={() => setImportedRoutine(null)}
         routinePlayback={routinePlayback}

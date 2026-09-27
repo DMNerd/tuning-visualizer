@@ -47,7 +47,7 @@ function HotkeysCheatsheet({ onClose }) {
         return (
           <span className="tv-hotkeys__alt" key={alt}>
             {parts.map((p, i) => (
-              <span className="tv-hotkeys__combo" key={`${alt}-${p}-${i}`}>
+              <span className="tv-hotkeys__combo" key={p}>
                 <kbd>{p}</kbd>
                 {i < parts.length - 1 ? (
                   <span className="tv-hotkeys__sep" aria-hidden="true">
@@ -68,7 +68,7 @@ function HotkeysCheatsheet({ onClose }) {
     };
 
     return alts.map((alt, i) => (
-      <span className="tv-hotkeys__alt-wrap" key={`alt-${i}`}>
+      <span className="tv-hotkeys__alt-wrap" key={alt}>
         {renderAlt(alt)}
         {i < alts.length - 1 ? (
           <span className="tv-hotkeys__sep" aria-hidden="true">

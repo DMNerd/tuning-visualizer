@@ -11,7 +11,7 @@ function SegmentedRadioGroup({
   labelClassName = "tv-field__label",
 }) {
   const groupLabelId = useId();
-  const idPrefix = useId();
+  const optionBaseId = useId();
   const optionCount = Array.isArray(options) ? options.length : 0;
 
   return (
@@ -27,7 +27,7 @@ function SegmentedRadioGroup({
         })}
       >
         {(options ?? []).map((opt, idx) => {
-          const optionId = `${idPrefix}-${idx}`;
+          const optionId = `${optionBaseId}-${idx}`;
           const isDisabled = Boolean(opt.disabled);
           return (
             <div

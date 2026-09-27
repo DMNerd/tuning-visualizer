@@ -130,7 +130,7 @@ export async function runImportFilePipeline({
     };
   }
 
-  let text = "";
+  let text: string;
   try {
     text = await file.text();
   } catch (cause) {

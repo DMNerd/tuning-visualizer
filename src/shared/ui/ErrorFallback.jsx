@@ -12,7 +12,7 @@ import {
   FiExternalLink,
   FiTrash2,
 } from "react-icons/fi";
-import { useConfirm } from "@shared/hooks/useConfirm";
+import { confirm } from "@shared/ui/confirm";
 import { performFactoryReset } from "@shared/ui/errorFallbackReset";
 
 export default function ErrorFallback({
@@ -22,7 +22,6 @@ export default function ErrorFallback({
 }) {
   const [open, toggleOpen] = useToggle(false);
   const [, copy] = useCopyToClipboard();
-  const { confirm } = useConfirm();
 
   const summary = useMemo(() => {
     const name = error?.name || "Error";

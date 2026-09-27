@@ -4,271 +4,29 @@ import { useShallow } from "zustand/react/shallow";
 import { ordinal } from "@shared/lib/ordinals";
 import * as v from "valibot";
 import {
+  buildTuningPack,
+  downloadJsonFile,
+  ensurePackHasId,
+  normalizePackName,
   parseTuningPack,
+  removePackByIdentifier,
   stripVersionField,
   TuningPackArraySchema,
 } from "@features/export";
-import { buildTuningPack, downloadJsonFile } from "@features/export";
 import { withToastPromise } from "@shared/lib/toast";
-import { isPlainObject } from "@shared/lib/object";
+import { upgradeLegacyPack } from "@features/instrument/model/legacyPackUpgrade";
 import {
-  ensurePackHasId,
-  generatePackId,
-  normalizePackName,
-  removePackByIdentifier,
-} from "@features/export";
+  ensureUniqueName,
+  ensureUniquePackId,
+  getTakenIds,
+  getTakenNames,
+} from "@features/instrument/model/packNaming";
 import {
   useInstrumentWorkflowStore,
   selectInstrumentWorkflowActions,
   selectWorkflowCustomTunings,
 } from "@features/instrument/store/useInstrumentWorkflowStore";
 import { sanitizeBoardMetaForModeStorage } from "@domain/presets/neckFilterModes";
-
-function getTakenValues(existing, pluck, { exclude } = {}) {
-  return new Set(
-    existing.map(pluck).filter((value) => value && value !== exclude),
-  );
-}
-
-function getTakenNames(existing, options) {
-  return getTakenValues(
-    existing,
-    (item) => normalizePackName(item?.name),
-    options,
-  );
-}
-
-function getTakenIds(existing) {
-  return getTakenValues(existing, (item) =>
-    typeof item?.meta?.id === "string" ? item.meta.id.trim() : "",
-  );
-}
-
-// Re-importing a pack that was previously exported carries its original
-// meta.id, which ensurePackHasId leaves untouched since it's already
-// present. If that id still belongs to a pack in the local list (or to
-// another pack in this same import batch), removePackByIdentifier would
-// later delete every pack sharing the id when just one of them is deleted
-// — so give the newcomer a fresh id instead of letting them collide.
-function ensureUniquePackId(pack, takenIds) {
-  const currentId =
-    typeof pack?.meta?.id === "string" ? pack.meta.id.trim() : "";
-  if (!currentId || takenIds.has(currentId)) {
-    const nextPack = { ...pack, meta: { ...pack.meta, id: generatePackId() } };
-    takenIds.add(nextPack.meta.id);
-    return nextPack;
-  }
-  takenIds.add(currentId);
-  return pack;
-}
-
-function ensureUniqueName(desiredName, takenNames) {
-  const base = normalizePackName(desiredName);
-  if (!base) return "";
-
-  if (!takenNames.has(base)) {
-    takenNames.add(base);
-    return base;
-  }
-
-  let suffix = 2;
-  let candidate = `${base} (${suffix})`;
-  while (takenNames.has(candidate)) {
-    suffix += 1;
-    candidate = `${base} (${suffix})`;
-  }
-
-  takenNames.add(candidate);
-  return candidate;
-}
-
-function flattenOnce(arr) {
-  if (!Array.isArray(arr)) return arr;
-  let nested = false;
-  const flat = [];
-  for (const entry of arr) {
-    if (Array.isArray(entry)) {
-      nested = true;
-      flat.push(...entry);
-    } else {
-      flat.push(entry);
-    }
-  }
-  return nested ? flat : arr;
-}
-
-const LEGACY_STRING_KEYS = [
-  "strings",
-  "tuning",
-  "notes",
-  "tokens",
-  "pitches",
-  "values",
-];
-
-function findLegacyStringSource(value) {
-  if (Array.isArray(value)) {
-    return flattenOnce(value);
-  }
-
-  if (!isPlainObject(value)) {
-    return null;
-  }
-
-  const tuning = value.tuning;
-  if (Array.isArray(tuning)) {
-    return flattenOnce(tuning);
-  }
-  if (isPlainObject(tuning) && Array.isArray(tuning.strings)) {
-    return flattenOnce(tuning.strings);
-  }
-
-  for (const key of LEGACY_STRING_KEYS) {
-    const candidate = value[key];
-    if (Array.isArray(candidate)) {
-      return flattenOnce(candidate);
-    }
-  }
-
-  for (const wrapper of ["data", "payload"]) {
-    const nested = value[wrapper];
-    if (!nested) continue;
-    const resolved = findLegacyStringSource(nested);
-    if (resolved) {
-      return resolved;
-    }
-  }
-
-  return null;
-}
-
-function normalizeLegacyStringEntry(entry) {
-  if (isPlainObject(entry)) {
-    const normalized = {};
-    if (typeof entry.label === "string") normalized.label = entry.label;
-    if (typeof entry.note === "string" && entry.note.trim()) {
-      normalized.note = entry.note.trim();
-    } else if (typeof entry.token === "string" && entry.token.trim()) {
-      normalized.note = entry.token.trim();
-    } else if (typeof entry.pitch === "string" && entry.pitch.trim()) {
-      normalized.note = entry.pitch.trim();
-    } else if (typeof entry.value === "string" && entry.value.trim()) {
-      normalized.note = entry.value.trim();
-    }
-    if (typeof entry.midi === "number" && Number.isFinite(entry.midi)) {
-      normalized.midi = entry.midi;
-    }
-    if (
-      typeof entry.startFret === "number" &&
-      Number.isFinite(entry.startFret)
-    ) {
-      normalized.startFret = entry.startFret;
-    }
-    if (typeof entry.greyBefore === "boolean") {
-      normalized.greyBefore = entry.greyBefore;
-    }
-
-    if (
-      typeof normalized.note === "string" ||
-      typeof normalized.midi === "number"
-    ) {
-      return normalized;
-    }
-  }
-
-  if (typeof entry === "string") {
-    const note = entry.trim();
-    if (note) {
-      return { note };
-    }
-  }
-
-  if (typeof entry === "number" && Number.isFinite(entry)) {
-    return { midi: entry };
-  }
-
-  return null;
-}
-
-function normalizeLegacyStrings(value) {
-  const source = findLegacyStringSource(value);
-  if (!Array.isArray(source) || !source.length) {
-    return null;
-  }
-
-  const normalized = source
-    .map(normalizeLegacyStringEntry)
-    .filter(
-      (entry) =>
-        entry &&
-        (typeof entry.note === "string" || typeof entry.midi === "number"),
-    );
-
-  if (!normalized.length) {
-    return null;
-  }
-
-  return normalized;
-}
-
-function resolveLegacyEdo(pack) {
-  const current = Number(pack?.system?.edo);
-  if (Number.isFinite(current) && current > 0) {
-    return Math.trunc(current);
-  }
-
-  const legacy = Number(pack?.edo);
-  if (Number.isFinite(legacy) && legacy > 0) {
-    return Math.trunc(legacy);
-  }
-
-  return null;
-}
-
-function upgradeLegacyPack(pack) {
-  if (!isPlainObject(pack)) {
-    return pack;
-  }
-
-  let changed = false;
-  const next = { ...pack };
-
-  if ("version" in next) {
-    delete next.version;
-    changed = true;
-  }
-
-  const existingStrings = Array.isArray(next?.tuning?.strings)
-    ? next.tuning.strings
-    : null;
-
-  const needsStringUpgrade =
-    !existingStrings || existingStrings.some((entry) => !isPlainObject(entry));
-
-  if (needsStringUpgrade) {
-    const normalized = normalizeLegacyStrings(
-      existingStrings ? { strings: existingStrings } : next,
-    );
-    if (normalized) {
-      next.tuning = { strings: normalized };
-      changed = true;
-    }
-  }
-
-  const edo = resolveLegacyEdo(next);
-  if (Number.isFinite(edo) && edo > 0) {
-    if (!isPlainObject(next.system) || next.system.edo !== edo) {
-      next.system = { edo };
-      changed = true;
-    }
-  }
-
-  return changed ? next : pack;
-}
-
-/* =========================
-   Hook
-========================= */
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
   const customTunings = useInstrumentWorkflowStore(selectWorkflowCustomTunings);
@@ -345,10 +103,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     [systemId, strings, TUNINGS],
   );
 
-  const getAllCustomTunings = useCallback(() => {
-    const existing = getExistingCustomTunings();
-    return existing;
-  }, [getExistingCustomTunings]);
+  const getAllCustomTunings = getExistingCustomTunings;
 
   const saveCustomTuning = useCallback(
     (pack, options = {}) => {
@@ -357,14 +112,11 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const desiredName = normalizePackName(parsed?.name);
       const replaceName = normalizePackName(options?.replaceName);
 
-      let savedPack = null;
-
       const existing = getExistingCustomTunings().map(ensurePackHasId);
       const takenNames = getTakenNames(existing, { exclude: replaceName });
 
       const finalName = ensureUniqueName(desiredName, takenNames);
       const nextPack = ensurePackHasId({ ...parsed, name: finalName });
-      savedPack = nextPack;
 
       const filtered = existing.filter((item) => {
         const itemName = normalizePackName(item?.name);
@@ -375,7 +127,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const nextTunings = [...filtered, nextPack];
       updateCustomTunings(() => nextTunings);
 
-      return savedPack ?? { ...parsed, name: desiredName };
+      return nextPack;
     },
     [getExistingCustomTunings, parsePack, updateCustomTunings],
   );

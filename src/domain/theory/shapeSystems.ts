@@ -256,17 +256,28 @@ function shapeMeetsDegreeCoverage(
   return coverage.covered >= constraint.count;
 }
 
+function withinMax(value: number, max: number | undefined): boolean {
+  return max == null || value <= max;
+}
+
+function shapeWithinSpanLimits(
+  shape: readonly ShapeNote[],
+  maxFretSpan: number | undefined,
+  maxStringSpan: number | undefined,
+): boolean {
+  return (
+    withinMax(shapeFretSpan(shape), maxFretSpan) &&
+    withinMax(shapeStringSpan(shape), maxStringSpan)
+  );
+}
+
 function shapeWithinSizeAndSpanLimits(
   shape: readonly ShapeNote[],
   spec: ShapeSystemSpec,
 ): boolean {
   if (spec.minNotes != null && shape.length < spec.minNotes) return false;
-  if (spec.maxNotes != null && shape.length > spec.maxNotes) return false;
-  if (spec.maxFretSpan != null && shapeFretSpan(shape) > spec.maxFretSpan)
-    return false;
-  if (spec.maxStringSpan != null && shapeStringSpan(shape) > spec.maxStringSpan)
-    return false;
-  return true;
+  if (!withinMax(shape.length, spec.maxNotes)) return false;
+  return shapeWithinSpanLimits(shape, spec.maxFretSpan, spec.maxStringSpan);
 }
 
 function shapeSatisfiesSystemSpec(
@@ -298,23 +309,30 @@ function groupOccurrencesByTemplate(
   return templateToOccurrences;
 }
 
+function windowStartFrets(
+  width: number,
+  search: { fretMin: number; fretMax: number },
+): number[] {
+  const starts: number[] = [];
+  for (
+    let startFret = search.fretMin;
+    startFret + width - 1 <= search.fretMax;
+    startFret += 1
+  ) {
+    starts.push(startFret);
+  }
+  return starts;
+}
+
 function generateCandidates(
   noteMap: readonly ShapeNote[],
   strategy: ExtractionStrategy,
   search: { fretMin: number; fretMax: number },
 ): ShapeNote[][] {
   if (strategy.kind === "window") {
-    const out: ShapeNote[][] = [];
-    for (
-      let startFret = search.fretMin;
-      startFret + strategy.width - 1 <= search.fretMax;
-      startFret += 1
-    ) {
-      out.push(
-        extractWindowShape(noteMap, { startFret, width: strategy.width }),
-      );
-    }
-    return out;
+    return windowStartFrets(strategy.width, search).map((startFret) =>
+      extractWindowShape(noteMap, { startFret, width: strategy.width }),
+    );
   }
 
   if (strategy.kind === "connected") {
@@ -327,26 +345,18 @@ function generateCandidates(
     return extractConnectedComponentShapes(noteMap, options);
   }
 
-  const out: ShapeNote[][] = [];
-  for (
-    let startFret = search.fretMin;
-    startFret + strategy.width - 1 <= search.fretMax;
-    startFret += 1
-  ) {
+  return windowStartFrets(strategy.width, search).flatMap((startFret) => {
     const window = extractWindowShape(noteMap, {
       startFret,
       width: strategy.width,
     });
-    const components = extractConnectedComponentShapes(window, {
+    return extractConnectedComponentShapes(window, {
       maxStringStep: strategy.maxStringStep,
       maxFretStep: strategy.maxFretStep,
       fretMin: startFret,
       fretMax: startFret + strategy.width - 1,
     });
-    out.push(...components);
-  }
-
-  return out;
+  });
 }
 
 function groupedNotesByString(
@@ -414,6 +424,51 @@ function makeStringWindowsForExact(
   return combinations;
 }
 
+function resolveSearchRange(
+  fretboardInput: GenerateShapeFamilyInput["fretboardInput"],
+  search: GenerateShapeFamilyInput["search"],
+): { fretMin: number; fretMax: number } {
+  return {
+    fretMin: search?.fretMin ?? fretboardInput.fretMin,
+    fretMax: search?.fretMax ?? fretboardInput.fretMax,
+  };
+}
+
+function resolveFretboardPcs(
+  fretboardInput: GenerateShapeFamilyInput["fretboardInput"],
+  pcs: number[] | Set<number>,
+  pcsMode: PitchClassMode | undefined,
+): number[] {
+  return resolveRelativePitchClassSet({
+    n: fretboardInput.n,
+    pcs,
+    pcsMode,
+    rootPc: fretboardInput.rootPc,
+    rootLocation: fretboardInput.rootLocation,
+    tuning: fretboardInput.tuning,
+  });
+}
+
+function buildFamilyResult(
+  systemId: string,
+  templates: Shape[],
+  shapes: readonly ShapeNote[][],
+  keepTemplateId: (templateId: string) => boolean = () => true,
+): ShapeFamilyResult {
+  const occurrences = shapes
+    .map((notes, index) => {
+      const shape = buildShape(notes);
+      return makeOccurrence(shape.notes, shape.templateId, index);
+    })
+    .filter((occ) => keepTemplateId(occ.templateId));
+  return {
+    systemId,
+    templates,
+    occurrences,
+    templateToOccurrences: groupOccurrencesByTemplate(occurrences),
+  };
+}
+
 function defaultStrategy(spec: ShapeSystemSpec): ExtractionStrategy {
   if (spec.extractionStrategy) return spec.extractionStrategy;
   return { kind: "connected", maxStringStep: 1, maxFretStep: 2 };
@@ -441,14 +496,11 @@ export function generateChordCandidates(params: {
     if (chordAnchor.requireChordRoot && !shapeContainsChordRoot(candidate))
       return false;
     if (
-      chordAnchor.maxChordFretSpan != null &&
-      shapeFretSpan(candidate) > chordAnchor.maxChordFretSpan
-    ) {
-      return false;
-    }
-    if (
-      chordAnchor.maxChordStringSpan != null &&
-      shapeStringSpan(candidate) > chordAnchor.maxChordStringSpan
+      !shapeWithinSpanLimits(
+        candidate,
+        chordAnchor.maxChordFretSpan,
+        chordAnchor.maxChordStringSpan,
+      )
     ) {
       return false;
     }
@@ -468,26 +520,18 @@ export function generateChordAnchoredShapeFamily({
       "systemSpec.chordAnchor is required for chord-anchored generation",
     );
   }
-  const searchRange = {
-    fretMin: search?.fretMin ?? fretboardInput.fretMin,
-    fretMax: search?.fretMax ?? fretboardInput.fretMax,
-  };
-  const resolvedScalePcs = resolveRelativePitchClassSet({
-    n: fretboardInput.n,
-    pcs: systemSpec.pitchClassSet,
-    pcsMode: systemSpec.pcsMode,
-    rootPc: fretboardInput.rootPc,
-    rootLocation: fretboardInput.rootLocation,
-    tuning: fretboardInput.tuning,
-  });
-  const resolvedChordPcs = resolveRelativePitchClassSet({
-    n: fretboardInput.n,
-    pcs: systemSpec.chordAnchor.chordPitchClassSet,
-    pcsMode: systemSpec.chordAnchor.chordPcsMode ?? systemSpec.pcsMode,
-    rootPc: fretboardInput.rootPc,
-    rootLocation: fretboardInput.rootLocation,
-    tuning: fretboardInput.tuning,
-  });
+  const chordAnchor = systemSpec.chordAnchor;
+  const searchRange = resolveSearchRange(fretboardInput, search);
+  const resolvedScalePcs = resolveFretboardPcs(
+    fretboardInput,
+    systemSpec.pitchClassSet,
+    systemSpec.pcsMode,
+  );
+  const resolvedChordPcs = resolveFretboardPcs(
+    fretboardInput,
+    chordAnchor.chordPitchClassSet,
+    chordAnchor.chordPcsMode ?? systemSpec.pcsMode,
+  );
 
   const scaleNotes = buildFretboardMap({
     ...fretboardInput,
@@ -502,42 +546,33 @@ export function generateChordAnchoredShapeFamily({
 
   const chordCandidates = generateChordCandidates({
     chordNotes,
-    chordAnchor: systemSpec.chordAnchor,
+    chordAnchor,
     search: searchRange,
     contiguousStringsOnly: systemSpec.contiguousStringsOnly,
   });
 
   const neighborhoodCandidates = chordCandidates.map((chordShape) =>
     collectNotesNearShape(chordShape, scaleNotes, {
-      fretRadius: systemSpec.chordAnchor?.neighborhoodFretRadius ?? 2,
-      stringRadius: systemSpec.chordAnchor?.neighborhoodStringRadius ?? 1,
+      fretRadius: chordAnchor.neighborhoodFretRadius ?? 2,
+      stringRadius: chordAnchor.neighborhoodStringRadius ?? 1,
     }),
   );
 
   const filtered = neighborhoodCandidates.filter((shape) => {
     if (!shapeSatisfiesSystemSpec(shape, systemSpec, resolvedScalePcs))
       return false;
-    const chordToneCoverage = shapeDegreeCoverage(shape, resolvedChordPcs);
-    if (
-      systemSpec.chordAnchor?.minChordToneCount != null &&
-      chordToneCoverage.covered < systemSpec.chordAnchor.minChordToneCount
-    ) {
-      return false;
-    }
-    return true;
+    return (
+      chordAnchor.minChordToneCount == null ||
+      shapeDegreeCoverage(shape, resolvedChordPcs).covered >=
+        chordAnchor.minChordToneCount
+    );
   });
 
-  const templates = dedupeShapesByTemplate(filtered);
-  const occurrences = filtered.map((notes, index) => {
-    const shape = buildShape(notes);
-    return makeOccurrence(shape.notes, shape.templateId, index);
-  });
-  return {
-    systemId: systemSpec.systemId,
-    templates,
-    occurrences,
-    templateToOccurrences: groupOccurrencesByTemplate(occurrences),
-  };
+  return buildFamilyResult(
+    systemSpec.systemId,
+    dedupeShapesByTemplate(filtered),
+    filtered,
+  );
 }
 
 function makeOccurrence(
@@ -573,20 +608,14 @@ export function generateShapeFamily({
     pcs: systemSpec.pitchClassSet,
     pcsMode: systemSpec.pcsMode,
   });
-  const resolvedSystemPcs = resolveRelativePitchClassSet({
-    n: fretboardInput.n,
-    pcs: systemSpec.pitchClassSet,
-    pcsMode: systemSpec.pcsMode,
-    rootPc: fretboardInput.rootPc,
-    rootLocation: fretboardInput.rootLocation,
-    tuning: fretboardInput.tuning,
-  });
+  const resolvedSystemPcs = resolveFretboardPcs(
+    fretboardInput,
+    systemSpec.pitchClassSet,
+    systemSpec.pcsMode,
+  );
 
   const strategy = defaultStrategy(systemSpec);
-  const searchRange = {
-    fretMin: search?.fretMin ?? fretboardInput.fretMin,
-    fretMax: search?.fretMax ?? fretboardInput.fretMax,
-  };
+  const searchRange = resolveSearchRange(fretboardInput, search);
   const candidates = generateCandidates(noteMap, strategy, searchRange);
   const exactNotesPerStringValue =
     systemSpec.notesPerString?.kind === "exact"
@@ -600,150 +629,142 @@ export function generateShapeFamily({
             requireContiguousStrings: systemSpec.contiguousStringsOnly,
           }).filter((shape) => shapeWithinSizeAndSpanLimits(shape, systemSpec)),
         );
-  const filtered = normalizedCandidates.filter((shape) => {
-    if (!shapeSatisfiesSystemSpec(shape, systemSpec, resolvedSystemPcs))
-      return false;
-    if (
-      systemSpec.notesPerString &&
-      !shapeMatchesNotesPerString(shape, systemSpec.notesPerString, {
-        stringCount: fretboardInput.tuning.length,
-      })
-    ) {
-      return false;
-    }
-    return true;
-  });
+  const notesPerString = systemSpec.notesPerString;
+  const filtered = normalizedCandidates.filter(
+    (shape) =>
+      shapeSatisfiesSystemSpec(shape, systemSpec, resolvedSystemPcs) &&
+      (!notesPerString ||
+        shapeMatchesNotesPerString(shape, notesPerString, {
+          stringCount: fretboardInput.tuning.length,
+        })),
+  );
 
   const dedupedTemplates = dedupeShapesByTemplate(filtered);
   const templateIds = new Set(
     dedupedTemplates.map((shape) => shape.templateId),
   );
+  return buildFamilyResult(
+    systemSpec.systemId,
+    dedupedTemplates,
+    filtered,
+    (templateId) => templateIds.has(templateId),
+  );
+}
 
-  const occurrences = filtered
-    .map((notes, index) => {
-      const shape = buildShape(notes);
-      return makeOccurrence(shape.notes, shape.templateId, index);
-    })
-    .filter((occ) => templateIds.has(occ.templateId));
+type ShapeSystemSpecParams = Partial<ShapeSystemSpec> & {
+  pitchClassSet?: number[] | Set<number>;
+};
 
-  return {
-    systemId: systemSpec.systemId,
-    templates: dedupedTemplates,
-    occurrences,
-    templateToOccurrences: groupOccurrencesByTemplate(occurrences),
-  };
+// Each field of `defaults` is taken from `params` unless that value is
+// null/undefined. Only keys present in `defaults` are emitted, and systemId is
+// never overridable.
+function withSpecDefaults(
+  defaults: ShapeSystemSpec,
+  params: ShapeSystemSpecParams,
+): ShapeSystemSpec {
+  const spec: Record<string, unknown> = { systemId: defaults.systemId };
+  for (const [key, value] of Object.entries(defaults)) {
+    if (key === "systemId") continue;
+    spec[key] = params[key as keyof ShapeSystemSpec] ?? value;
+  }
+  return spec as ShapeSystemSpec;
 }
 
 export function createPentatonicBoxSpec(
-  params: Partial<ShapeSystemSpec> & {
-    pitchClassSet?: number[] | Set<number>;
-  } = {},
+  params: ShapeSystemSpecParams = {},
 ): ShapeSystemSpec {
-  return {
-    systemId: "pentatonic-box",
-    pitchClassSet: params.pitchClassSet ?? [0, 3, 5, 7, 10],
-    pcsMode: params.pcsMode ?? "relative",
-    requireRoot: params.requireRoot ?? true,
-    maxFretSpan: params.maxFretSpan ?? 4,
-    maxStringSpan: params.maxStringSpan ?? 5,
-    notesPerString:
-      params.notesPerString ??
-      ({ kind: "min-max", min: 1, max: 3 } satisfies NotesPerStringConstraint),
-    degreeCoverage:
-      params.degreeCoverage ??
-      ({ kind: "all-degrees" } satisfies DegreeCoverageConstraint),
-    contiguousStringsOnly: params.contiguousStringsOnly ?? true,
-    minNotes: params.minNotes ?? 5,
-    maxNotes: params.maxNotes,
-    extractionStrategy:
-      params.extractionStrategy ??
-      ({
-        kind: "hybrid",
-        width: 5,
-        maxStringStep: 1,
-        maxFretStep: 2,
-      } satisfies ExtractionStrategy),
-  };
-}
-
-export function createThreeNpsSpec(
-  params: Partial<ShapeSystemSpec> & {
-    pitchClassSet?: number[] | Set<number>;
-  } = {},
-): ShapeSystemSpec {
-  return {
-    systemId: "three-nps",
-    pitchClassSet: params.pitchClassSet ?? [0, 2, 4, 5, 7, 9, 11],
-    pcsMode: params.pcsMode ?? "relative",
-    requireRoot: params.requireRoot ?? true,
-    maxFretSpan: params.maxFretSpan ?? 6,
-    maxStringSpan: params.maxStringSpan,
-    notesPerString:
-      params.notesPerString ??
-      ({ kind: "exact", value: 3 } satisfies NotesPerStringConstraint),
-    degreeCoverage:
-      params.degreeCoverage ??
-      ({ kind: "at-least", count: 5 } satisfies DegreeCoverageConstraint),
-    contiguousStringsOnly: params.contiguousStringsOnly ?? true,
-    minNotes: params.minNotes ?? 6,
-    maxNotes: params.maxNotes,
-    extractionStrategy:
-      params.extractionStrategy ??
-      ({
-        kind: "hybrid",
-        width: 7,
-        maxStringStep: 1,
-        maxFretStep: 3,
-      } satisfies ExtractionStrategy),
-  };
-}
-
-export function createCagedMajorSpec(
-  params: Partial<ShapeSystemSpec> & {
-    pitchClassSet?: number[] | Set<number>;
-  } = {},
-): ShapeSystemSpec {
-  return {
-    systemId: "caged-major",
-    pitchClassSet: params.pitchClassSet ?? [0, 2, 4, 5, 7, 9, 11],
-    pcsMode: params.pcsMode ?? "relative",
-    requireRoot: params.requireRoot ?? true,
-    maxFretSpan: params.maxFretSpan ?? 5,
-    maxStringSpan: params.maxStringSpan ?? 5,
-    notesPerString:
-      params.notesPerString ??
-      ({ kind: "min-max", min: 1, max: 3 } satisfies NotesPerStringConstraint),
-    degreeCoverage:
-      params.degreeCoverage ??
-      ({ kind: "at-least", count: 6 } satisfies DegreeCoverageConstraint),
-    contiguousStringsOnly: params.contiguousStringsOnly ?? true,
-    minNotes: params.minNotes ?? 7,
-    maxNotes: params.maxNotes,
-    extractionStrategy:
-      params.extractionStrategy ??
-      ({
-        kind: "hybrid",
-        width: 6,
-        maxStringStep: 1,
-        maxFretStep: 2,
-      } satisfies ExtractionStrategy),
-    chordAnchor: params.chordAnchor ?? {
-      chordPitchClassSet: [...CHORD_PRESETS.majorTriad],
-      chordPcsMode: "relative",
-      minChordToneCount: 3,
-      requireChordRoot: true,
-      maxChordFretSpan: 4,
-      maxChordStringSpan: 4,
-      chordExtractionStrategy: {
+  return withSpecDefaults(
+    {
+      systemId: "pentatonic-box",
+      pitchClassSet: [0, 3, 5, 7, 10],
+      pcsMode: "relative",
+      requireRoot: true,
+      maxFretSpan: 4,
+      maxStringSpan: 5,
+      notesPerString: { kind: "min-max", min: 1, max: 3 },
+      degreeCoverage: { kind: "all-degrees" },
+      contiguousStringsOnly: true,
+      minNotes: 5,
+      maxNotes: undefined,
+      extractionStrategy: {
         kind: "hybrid",
         width: 5,
         maxStringStep: 1,
         maxFretStep: 2,
       },
-      neighborhoodFretRadius: 2,
-      neighborhoodStringRadius: 1,
     },
-  };
+    params,
+  );
+}
+
+export function createThreeNpsSpec(
+  params: ShapeSystemSpecParams = {},
+): ShapeSystemSpec {
+  return withSpecDefaults(
+    {
+      systemId: "three-nps",
+      pitchClassSet: [0, 2, 4, 5, 7, 9, 11],
+      pcsMode: "relative",
+      requireRoot: true,
+      maxFretSpan: 6,
+      maxStringSpan: undefined,
+      notesPerString: { kind: "exact", value: 3 },
+      degreeCoverage: { kind: "at-least", count: 5 },
+      contiguousStringsOnly: true,
+      minNotes: 6,
+      maxNotes: undefined,
+      extractionStrategy: {
+        kind: "hybrid",
+        width: 7,
+        maxStringStep: 1,
+        maxFretStep: 3,
+      },
+    },
+    params,
+  );
+}
+
+export function createCagedMajorSpec(
+  params: ShapeSystemSpecParams = {},
+): ShapeSystemSpec {
+  return withSpecDefaults(
+    {
+      systemId: "caged-major",
+      pitchClassSet: [0, 2, 4, 5, 7, 9, 11],
+      pcsMode: "relative",
+      requireRoot: true,
+      maxFretSpan: 5,
+      maxStringSpan: 5,
+      notesPerString: { kind: "min-max", min: 1, max: 3 },
+      degreeCoverage: { kind: "at-least", count: 6 },
+      contiguousStringsOnly: true,
+      minNotes: 7,
+      maxNotes: undefined,
+      extractionStrategy: {
+        kind: "hybrid",
+        width: 6,
+        maxStringStep: 1,
+        maxFretStep: 2,
+      },
+      chordAnchor: {
+        chordPitchClassSet: [...CHORD_PRESETS.majorTriad],
+        chordPcsMode: "relative",
+        minChordToneCount: 3,
+        requireChordRoot: true,
+        maxChordFretSpan: 4,
+        maxChordStringSpan: 4,
+        chordExtractionStrategy: {
+          kind: "hybrid",
+          width: 5,
+          maxStringStep: 1,
+          maxFretStep: 2,
+        },
+        neighborhoodFretRadius: 2,
+        neighborhoodStringRadius: 1,
+      },
+    },
+    params,
+  );
 }
 
 function looksLikeStandardGuitar(tuning: readonly number[]): boolean {
