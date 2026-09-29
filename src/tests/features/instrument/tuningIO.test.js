@@ -74,7 +74,7 @@ test("parseTuningPack rejects packs with too few strings", () => {
 
   assert.throws(
     () => parseTuningPack(invalid),
-    new RegExp(`Tuning pack must include at least ${STR_MIN} strings.`),
+    new RegExp(`A custom tuning must include at least ${STR_MIN} strings.`),
   );
 });
 
@@ -88,7 +88,7 @@ test("parseTuningPack rejects packs with too many strings", () => {
 
   assert.throws(
     () => parseTuningPack(invalid),
-    new RegExp(`Tuning pack may include at most ${STR_MAX} strings.`),
+    new RegExp(`A custom tuning may include at most ${STR_MAX} strings.`),
   );
 });
 

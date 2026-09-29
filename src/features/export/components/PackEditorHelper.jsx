@@ -4,7 +4,7 @@ import { SPELLING_MARKER_DISPLAY } from "@domain/theory/notation";
 
 const EXAMPLE_SNIPPET = JSON.stringify(
   {
-    name: "Custom pack example",
+    name: "Custom tuning example",
     spelling: "german",
     system: { edo: 12 },
     tuning: {

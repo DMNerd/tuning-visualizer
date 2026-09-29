@@ -18,6 +18,14 @@ function assignRef(ref, value) {
   ref.current = value;
 }
 
+// Fills the scrolled-past (or not-yet-rendered) height of a virtualized list.
+export function VirtualSpacer({ height }) {
+  if (!(height > 0)) return null;
+  return (
+    <li role="presentation" aria-hidden="true" style={{ height, padding: 0 }} />
+  );
+}
+
 export default function BaseCombobox({
   id,
   value,
@@ -32,6 +40,8 @@ export default function BaseCombobox({
   "aria-labelledby": ariaLabelledby,
   className,
   listClassName,
+  optionClassName,
+  emptyText,
   virtualizationThreshold = DEFAULT_VIRTUALIZATION_THRESHOLD,
   enableVirtualization = true,
   orderFilteredOptions,
@@ -285,6 +295,8 @@ export default function BaseCombobox({
       rowVirtualizer,
       listRef: setListRef,
       getVirtualItems: () => rowVirtualizer.getVirtualItems(),
+      paddingTop: virtualPaddingTop,
+      paddingBottom: virtualPaddingBottom,
     }),
     [
       enableVirtualization,
@@ -293,6 +305,8 @@ export default function BaseCombobox({
       listViewportHeight,
       rowVirtualizer,
       setListRef,
+      virtualPaddingTop,
+      virtualPaddingBottom,
     ],
   );
 
@@ -351,41 +365,36 @@ export default function BaseCombobox({
             <ul
               {...mergedListProps}
               className={clsx("tv-combobox__list", listClassName)}
+              aria-labelledby={ariaLabelledby}
               style={shouldVirtualize ? { gap: 0 } : undefined}
             >
               {filteredOptions.length === 0 ? (
-                <li className="tv-combobox__empty" role="presentation">
-                  {t("common.noMatches")}
+                <li
+                  className="tv-combobox__empty"
+                  role="presentation"
+                  aria-live="polite"
+                >
+                  {emptyText ?? t("common.noMatches")}
                 </li>
               ) : shouldVirtualize ? (
                 <>
-                  {virtualPaddingTop > 0 ? (
-                    <li
-                      role="presentation"
-                      aria-hidden="true"
-                      style={{ height: virtualPaddingTop, padding: 0 }}
-                    />
-                  ) : null}
+                  <VirtualSpacer height={virtualPaddingTop} />
                   {virtualItems.map((item) =>
                     renderOptionItem(filteredOptions[item.index], item.index, {
-                      key: getOptionKey(filteredOptions[item.index]),
+                      className: optionClassName,
                       optionProps: {
                         ref: rowVirtualizer.measureElement,
                         "data-index": item.index,
                       },
                     }),
                   )}
-                  {virtualPaddingBottom > 0 ? (
-                    <li
-                      role="presentation"
-                      aria-hidden="true"
-                      style={{ height: virtualPaddingBottom, padding: 0 }}
-                    />
-                  ) : null}
+                  <VirtualSpacer height={virtualPaddingBottom} />
                 </>
               ) : (
                 filteredOptions.map((option, index) =>
-                  renderOptionItem(option, index),
+                  renderOptionItem(option, index, {
+                    className: optionClassName,
+                  }),
                 )
               )}
             </ul>

@@ -11,56 +11,10 @@ import i18n from "@shared/i18n";
 import { resetAllStores } from "@shared/lib/resetAllStores";
 import { resetMusicalStateFromRefs } from "@features/theory/hooks/resetMusicalState";
 
-export function useResets({
-  system,
-  resetInstrumentPrefs,
-  setCapoFret,
-  setStringMeta,
-  setBoardMeta,
-  setDisplayPrefs,
-  resetDisplayPrefs,
-  setSystemId,
-  setRoot,
-  setScale,
-  setChordRoot,
-  setChordType,
-  setShowChord,
-  setHideNonChord,
-  setChordCapoRelative,
-  resetTheory,
-  setPreset,
-  setTheme,
-  stopMetronome,
-  resetMetronomePrefs,
-  resetPracticeCounters,
-  toast,
-  confirm,
-}) {
-  const refs = useLatest({
-    divisions: system.divisions,
-    resetInstrumentPrefs,
-    setCapoFret,
-    setStringMeta,
-    setBoardMeta,
-    setDisplayPrefs,
-    resetDisplayPrefs,
-    setSystemId,
-    setRoot,
-    setScale,
-    setChordRoot,
-    setChordType,
-    setShowChord,
-    setHideNonChord,
-    setChordCapoRelative,
-    resetTheory,
-    setPreset,
-    setTheme,
-    stopMetronome,
-    resetMetronomePrefs,
-    resetPracticeCounters,
-    toast,
-    confirm,
-  });
+// `deps` carries the store setters/resetters plus `system`, `toast` and
+// `confirm`; the resets read them through a ref so they stay stable.
+export function useResets(deps) {
+  const refs = useLatest({ ...deps, divisions: deps.system.divisions });
 
   const resetInstrumentState = useCallback(
     (divisions) => {

@@ -46,29 +46,11 @@ export function buildChordSummary({
 }) {
   if (!showChord) return null;
   if (!chordTones.length) return null;
-  if (scaleSet.size === 0) {
-    return {
-      kind: "info",
-      text: t("theory.summarySelectScale"),
-    };
-  }
-
-  const outside = chordTones.filter((tone) => !tone.inScale);
-  if (outside.length > 0) {
-    return {
-      kind: "warning",
-      text: t("theory.summaryOutside", {
-        notes: outside.map((tone) => tone.noteName).join(", "),
-      }),
-    };
-  }
-
-  const degreeLabels = chordTones
-    .map((tone) => (tone.degree != null ? String(tone.degree) : "–"))
-    .join(", ");
-
+  // Per-tone degrees/"outside" are on the chips and the in-scale count is in
+  // the chord-fit badge, so only the no-scale case needs a line of its own.
+  if (scaleSet.size > 0) return null;
   return {
-    kind: "success",
-    text: t("theory.summaryAllInScale", { degrees: degreeLabels }),
+    kind: "info",
+    text: t("theory.summarySelectScale"),
   };
 }

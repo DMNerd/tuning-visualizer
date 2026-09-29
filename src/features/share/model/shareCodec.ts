@@ -22,6 +22,7 @@ import {
 import { matchesPack } from "@domain/presets/packIdentity";
 import { isObjectLike, isPlainObject } from "@shared/lib/object";
 import { trimmedString } from "@shared/lib/strings";
+import { clampInteger } from "@shared/lib/math";
 
 type ShareValues = Partial<{
   systemId: string;
@@ -136,17 +137,6 @@ function getByPath(source: unknown, path: string): unknown {
   return cursor;
 }
 
-function clampInt(value: unknown, min: number, max: number) {
-  const numeric =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
-  if (!Number.isFinite(numeric)) return undefined;
-  return Math.min(max, Math.max(min, Math.round(numeric)));
-}
-
 function parseJson(value: string) {
   try {
     const parsed: unknown = JSON.parse(value);
@@ -200,12 +190,12 @@ function normalizeValues(values: ShareValues): ShareValues {
     }
   }
 
-  const strings = clampInt(values.strings, STR_MIN, STR_MAX);
+  const strings = clampInteger(values.strings, STR_MIN, STR_MAX, undefined);
   if (typeof strings === "number" && strings !== STR_FACTORY) {
     next.strings = strings;
   }
 
-  const frets = clampInt(values.frets, FRETS_MIN, FRETS_MAX);
+  const frets = clampInteger(values.frets, FRETS_MIN, FRETS_MAX, undefined);
   if (typeof frets === "number" && frets !== FRETS_FACTORY) {
     next.frets = frets;
   }

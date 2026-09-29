@@ -29,23 +29,23 @@ English is the source language. Every other file has the same keys as
 `en.json`, with the values translated. Keys are grouped by the part of the app
 they belong to:
 
-| Group                                                 | Where it appears                                        |
-| ----------------------------------------------------- | ------------------------------------------------------- |
-| `common`                                              | Words used everywhere (Cancel, Close, Off…)             |
-| `header`                                              | Top bar: theme and language switchers                   |
-| `stageHud`                                            | Buttons and badges over the fretboard                   |
-| `display`                                             | Display panel                                           |
-| `instrument`                                          | Instrument panel, preset picker and preset gallery      |
-| `packs`                                               | Messages about custom tuning packs (toasts, validation) |
-| `theory`                                              | Scale and Chord panels, including "What's this chord?"  |
-| `practice`                                            | Metronome                                               |
-| `training`                                            | Training routine builder and the routine overlay        |
-| `export`                                              | Export / Import panel                                   |
-| `manager`                                             | "Manage custom tunings" window                          |
-| `editor`                                              | Custom pack JSON editor and its helper panel            |
-| `share`                                               | Quickshare window                                       |
-| `hotkeys`                                             | Keyboard shortcut cheatsheet (press F1)                 |
-| `errorFallback`, `resets`, `numberField`, `fretboard` | Errors, reset dialogs, number inputs, empty fretboard   |
+| Group                                                 | Where it appears                                       |
+| ----------------------------------------------------- | ------------------------------------------------------ |
+| `common`                                              | Words used everywhere (Cancel, Close, Off…)            |
+| `header`                                              | Top bar: theme and language switchers                  |
+| `stageHud`                                            | Buttons and badges over the fretboard                  |
+| `display`                                             | Display panel                                          |
+| `instrument`                                          | Instrument panel, preset picker and preset gallery     |
+| `packs`                                               | Messages about custom tunings (toasts, validation)     |
+| `theory`                                              | Scale and Chord panels, including "What's this chord?" |
+| `practice`                                            | Metronome                                              |
+| `training`                                            | Training routine builder and the routine overlay       |
+| `export`                                              | Export / Import panel                                  |
+| `manager`                                             | "Manage custom tunings" window                         |
+| `editor`                                              | Custom tuning JSON editor and its helper panel         |
+| `share`                                               | Quickshare window                                      |
+| `hotkeys`                                             | Keyboard shortcut cheatsheet (press F1)                |
+| `errorFallback`, `resets`, `numberField`, `fretboard` | Errors, reset dialogs, number inputs, empty fretboard  |
 
 Keys ending in `Aria` (and some others) are never shown on screen: screen
 readers read them aloud. Translate them like any other text.
@@ -83,7 +83,7 @@ While you click through, check the places that are easy to miss:
 - **Every panel, and both sides of every switch.** Some text only appears
   when an option is on. For example, "Independent of scale" appears only
   after choosing "Chord tones only".
-- **Windows:** the preset gallery, custom pack editor (including its helper
+- **Windows:** the preset gallery, custom tuning editor (including its helper
   panel), "Manage custom tunings", Quickshare and the training routine
   builder.
 - **Messages:** notifications appear in the top-right corner after actions
@@ -133,7 +133,7 @@ yet", and the app shows the English text instead. Use this when you're unsure,
 rather than guessing.
 
 **Match the app's tone.** Short, plain, sentence case, with no exclamation
-marks. Button labels are verbs ("Uložit balíček"), and headings are nouns.
+marks. Button labels are verbs ("Uložit ladění"), and headings are nouns.
 
 **Describe what a switch does; don't tell the user to turn it on.** Turning
 it on is implied, so the help text under a switch explains the effect. Write
@@ -204,40 +204,40 @@ These stay in English (or as-is) in every language for now:
 - **Tuning system names** (12-TET, 24-TET), interval names (P5, m3), time
   signatures and units (BPM, MB).
 - **The product name**, TuningViz.
-- **Custom pack JSON** field names and values, which are part of the file
+- **Custom tuning JSON** field names and values, which are part of the file
   format.
 
 ## Czech glossary
 
 Terms used in `cs.json`, for consistency:
 
-| English          | Czech            |
-| ---------------- | ---------------- |
-| fretboard        | hmatník          |
-| fret             | pražec           |
-| fretless         | bezpražcový      |
-| string           | struna           |
-| open string      | prázdná struna   |
-| capo             | kapodastr        |
-| chord shape      | hmat             |
-| scale            | stupnice         |
-| root             | základní tón     |
-| key              | tónina           |
-| degree           | stupeň           |
-| tonic            | tónika           |
-| sharps / flats   | křížky / béčka   |
-| accidentals      | posuvky          |
-| tuning           | ladění           |
-| tuning system    | ladicí systém    |
-| preset           | předvolba        |
-| (tuning) pack    | balíček (ladění) |
-| bar / beat       | takt / doba      |
-| time signature   | takt             |
-| subdivision      | dělení doby      |
-| count-in         | předtaktí        |
-| tap tempo        | vyťukat tempo    |
-| training routine | tréninkový plán  |
-| quickshare       | rychlé sdílení   |
+| English          | Czech           |
+| ---------------- | --------------- |
+| fretboard        | hmatník         |
+| fret             | pražec          |
+| fretless         | bezpražcový     |
+| string           | struna          |
+| open string      | prázdná struna  |
+| capo             | kapodastr       |
+| chord shape      | hmat            |
+| scale            | stupnice        |
+| root             | základní tón    |
+| key              | tónina          |
+| degree           | stupeň          |
+| tonic            | tónika          |
+| sharps / flats   | křížky / béčka  |
+| accidentals      | posuvky         |
+| tuning           | ladění          |
+| tuning system    | ladicí systém   |
+| preset           | předvolba       |
+| custom tuning    | vlastní ladění  |
+| bar / beat       | takt / doba     |
+| time signature   | takt            |
+| subdivision      | dělení doby     |
+| count-in         | předtaktí       |
+| tap tempo        | vyťukat tempo   |
+| training routine | tréninkový plán |
+| quickshare       | rychlé sdílení  |
 
 Address the user politely in the plural ("Zvolte stupnici"), as most Czech
 software does.

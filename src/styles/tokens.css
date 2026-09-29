@@ -36,7 +36,13 @@
   --font-xs: 0.65625rem; /* 10.5px */
   --font-sm: 0.71875rem; /* 11.5px */
   --font-body: 0.75rem; /* 12px */
+  --font-control: 0.8125rem; /* 13px — buttons, inputs, selects */
   --font-lg: 1.125rem; /* 18px */
+
+  /* interaction states shared by every control */
+  --control-radius: 8px;
+  --selection-bg: color-mix(in oklab, var(--root) 38%, transparent);
+  --focus-ring: color-mix(in oklab, var(--root) 55%, transparent);
 }
 
 :root:not([data-theme]),

@@ -41,79 +41,6 @@ export default function ScalePicker({
     ),
     [],
   );
-  const renderList = useCallback(
-    ({ options, listProps, renderOptionItem, virtualization }) => {
-      const shouldVirtualize = virtualization?.shouldVirtualize;
-      const virtualItems = shouldVirtualize
-        ? virtualization.getVirtualItems()
-        : [];
-      const virtualPaddingTop = virtualItems[0]?.start ?? 0;
-      const lastVirtualItem = virtualItems[virtualItems.length - 1];
-      const virtualPaddingBottom =
-        shouldVirtualize && lastVirtualItem
-          ? virtualization.rowVirtualizer.getTotalSize() - lastVirtualItem.end
-          : 0;
-
-      return (
-        <div className="tv-scale-picker__popover">
-          <ul
-            {...listProps}
-            ref={virtualization?.listRef ?? listProps.ref}
-            className="tv-combobox__list tv-scale-picker__list"
-            aria-labelledby={ariaLabelledby}
-            style={shouldVirtualize ? { gap: 0 } : undefined}
-          >
-            {options.length === 0 ? (
-              <li
-                className="tv-combobox__empty tv-scale-picker__empty"
-                role="presentation"
-                aria-live="polite"
-              >
-                {t("theory.noMatchingScales")}
-              </li>
-            ) : shouldVirtualize ? (
-              <>
-                {virtualPaddingTop > 0 ? (
-                  <li
-                    role="presentation"
-                    aria-hidden="true"
-                    style={{ height: virtualPaddingTop, padding: 0 }}
-                  />
-                ) : null}
-                {virtualItems.map((item) => {
-                  const option = options[item.index];
-                  return renderOptionItem(option, item.index, {
-                    className: "tv-scale-picker__option",
-                    key: `${option.systemId}-${option.label}`,
-                    optionProps: {
-                      ref: virtualization.rowVirtualizer.measureElement,
-                      "data-index": item.index,
-                    },
-                  });
-                })}
-                {virtualPaddingBottom > 0 ? (
-                  <li
-                    role="presentation"
-                    aria-hidden="true"
-                    style={{ height: virtualPaddingBottom, padding: 0 }}
-                  />
-                ) : null}
-              </>
-            ) : (
-              options.map((option, index) =>
-                renderOptionItem(option, index, {
-                  className: "tv-scale-picker__option",
-                  key: `${option.systemId}-${option.label}`,
-                }),
-              )
-            )}
-          </ul>
-        </div>
-      );
-    },
-    [ariaLabelledby, t],
-  );
-
   return (
     <BaseCombobox
       id={id}
@@ -124,9 +51,11 @@ export default function ScalePicker({
       getOptionLabel={getOptionLabel}
       getFilterTerms={getFilterTerms}
       renderOption={renderOption}
-      renderList={renderList}
+      listClassName="tv-scale-picker__list"
+      optionClassName="tv-scale-picker__option"
+      emptyText={t("theory.noMatchingScales")}
       aria-labelledby={ariaLabelledby}
-      className={clsx("tv-combobox", "tv-scale-picker", className)}
+      className={clsx("tv-scale-picker", className)}
     />
   );
 }

@@ -38,8 +38,8 @@ This app will be free and open source forever and is completely self-hostable
 
 - **Tunings**
   - Presets for **6/7/8-string guitar**, **violin family (G–D–A–E)**, and **experimental** sets (e.g., King Gizzard C#–F#–C#–F#–B–E)
-  - Custom tuning presets with dedicated **New custom pack** and **Edit pack** workflows for organizing instruments
-  - Built-in modal **JSON editor** lets you inspect and fine-tune pack definitions without leaving the app
+  - Custom tunings with dedicated **New custom tuning** and **Edit custom tuning** workflows for organizing instruments
+  - Built-in modal **JSON editor** lets you inspect and fine-tune tuning definitions without leaving the app
   - Per string tuning
 
 - **Display**

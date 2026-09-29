@@ -41,7 +41,8 @@ function toneAriaLabel(t, tone, showChord) {
     : t("theory.toneOutsideAria", { note: tone.noteName });
 }
 
-// Chord tone chips with scale-degree/outside annotations and a summary line.
+// Chord tone chips with scale-degree/outside annotations (plus a hint when no
+// scale is selected).
 export function ChordToneField({
   chordTones,
   chordSummary,
@@ -84,13 +85,7 @@ export function ChordToneField({
         </div>
       ) : null}
       {chordSummary?.text ? (
-        <small
-          className={clsx("tv-field__help", {
-            "tv-field__help--error": chordSummary.kind === "warning",
-          })}
-        >
-          {chordSummary.text}
-        </small>
+        <small className="tv-field__help">{chordSummary.text}</small>
       ) : null}
     </div>
   );

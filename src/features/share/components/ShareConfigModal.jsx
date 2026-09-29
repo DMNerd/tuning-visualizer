@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import ModalFrame from "@shared/ui/ModalFrame";
 import { copyTextWithFallback } from "@shared/lib/clipboard";
 import { buildShareConfigModalModel } from "@features/share/model/shareConfigModalModel";
-import ShareQrCode from "@features/share/components/ShareQrCode";
+import SharePreview from "@features/share/components/SharePreview";
 
 export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
   const { t } = useTranslation();
@@ -14,7 +14,7 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
     locationLike: typeof window === "undefined" ? null : window.location,
   });
   if (!model) return null;
-  const { canonicalUrl, sizeEvaluation, presentableUrl } = model;
+  const { canonicalUrl } = model;
 
   const copyLink = async () => {
     try {
@@ -37,53 +37,14 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
         <p className="tv-modal__summary">{t("share.summary")}</p>
       </header>
 
-      <div className="tv-modal__body tv-share-modal__body">
-        <section aria-label={t("share.contents")}>
-          <p className="tv-field__help">{t("share.contentsHelp")}</p>
-        </section>
-
-        <div className="tv-share-modal__grid">
-          <section
-            className="tv-share-modal__panel"
-            aria-label={t("share.urlPreview")}
-          >
-            <label className="tv-field">
-              <span className="tv-field__label">{t("share.url")}</span>
-              <pre className="tv-textarea" aria-label={t("share.urlPreview")}>
-                {presentableUrl}
-              </pre>
-              <span className="tv-field__help">{t("share.urlHelp")}</span>
-              <span
-                className="tv-field__help"
-                data-warn={sizeEvaluation.warn ? "true" : "false"}
-              >
-                {t("training.length", { length: sizeEvaluation.length })}
-                {sizeEvaluation.reasonCode === "warning-threshold"
-                  ? t("training.longUrl")
-                  : ""}
-                {sizeEvaluation.reasonCode === "qr-hard-limit"
-                  ? t("training.tooLongForQr")
-                  : ""}
-              </span>
-            </label>
-          </section>
-
-          <section
-            className="tv-share-modal__panel tv-share-modal__panel--qr"
-            aria-label={t("share.qrPreviewAria")}
-          >
-            <span className="tv-field__label">{t("training.qrPreview")}</span>
-            {sizeEvaluation.allowQr ? (
-              <div className="tv-share-modal__qr-wrap" aria-live="polite">
-                <ShareQrCode value={canonicalUrl} size={176} />
-              </div>
-            ) : (
-              <p className="tv-field__help tv-field__help--error" role="status">
-                {t("share.qrTooLong")}
-              </p>
-            )}
-          </section>
-        </div>
+      <div className="tv-modal__body">
+        <SharePreview
+          shareModel={model}
+          linkLabel={t("share.url")}
+          linkAriaLabel={t("share.urlPreview")}
+          qrAriaLabel={t("share.qrPreviewAria")}
+          qrTooLongText={t("share.qrTooLong")}
+        />
       </div>
 
       <footer className="tv-modal__footer">

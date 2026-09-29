@@ -28,7 +28,7 @@ import {
 } from "@features/training/store/useRoutinePlaybackStore";
 import RoutineLibrary from "@features/training/components/RoutineLibrary";
 import RoutineScaleBlock from "@features/training/components/RoutineScaleBlock";
-import RoutineSharePreview from "@features/training/components/RoutineSharePreview";
+import SharePreview from "@features/share/components/SharePreview";
 import { optionsWithFallback } from "@features/training/model/routineOptions";
 import { presetDisplayName } from "@features/instrument/model/presetBadges";
 
@@ -299,7 +299,13 @@ export default function RoutineBuilderModal({
         />
 
         {hasSteps ? (
-          <RoutineSharePreview shareModel={shareModel} />
+          <SharePreview
+            shareModel={shareModel}
+            linkLabel={t("training.link")}
+            linkAriaLabel={t("training.linkPreview")}
+            qrAriaLabel={t("training.qrPreviewAria")}
+            qrTooLongText={t("training.qrTooLong")}
+          />
         ) : (
           <p className="tv-field__help">{t("training.needBlockForLink")}</p>
         )}

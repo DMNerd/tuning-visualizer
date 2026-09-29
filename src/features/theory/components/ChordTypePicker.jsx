@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { CHORD_LABELS, isMicrotonalChordType } from "@domain/theory/chords";
 import { normalizeStringList } from "@shared/lib/normalizeStringList";
-import BaseCombobox from "@shared/ui/BaseCombobox";
+import BaseCombobox, { VirtualSpacer } from "@shared/ui/BaseCombobox";
 
 const SECTION_LABEL_KEYS = {
   standard: "theory.sectionStandard",
@@ -88,26 +88,20 @@ export default function ChordTypePicker({
       const visibleIndexes = shouldVirtualize
         ? new Set(virtualItems.map((item) => item.index))
         : null;
-      const virtualPaddingTop = virtualItems[0]?.start ?? 0;
-      const lastVirtualItem = virtualItems[virtualItems.length - 1];
-      const virtualPaddingBottom =
-        shouldVirtualize && lastVirtualItem
-          ? virtualization.rowVirtualizer.getTotalSize() - lastVirtualItem.end
-          : 0;
 
       return (
         <ul
           {...listProps}
           ref={virtualization?.listRef ?? listProps.ref}
-          className={clsx("tv-combobox__list", listProps?.className)}
+          className={clsx(
+            "tv-combobox__list",
+            "tv-chord-type-picker__list",
+            listProps?.className,
+          )}
           style={shouldVirtualize ? { gap: 0 } : undefined}
         >
-          {shouldVirtualize && virtualPaddingTop > 0 ? (
-            <li
-              role="presentation"
-              aria-hidden="true"
-              style={{ height: virtualPaddingTop, padding: 0 }}
-            />
+          {shouldVirtualize ? (
+            <VirtualSpacer height={virtualization.paddingTop} />
           ) : null}
           {sections
             .map((section) => {
@@ -154,12 +148,8 @@ export default function ChordTypePicker({
               );
             })
             .filter(Boolean)}
-          {shouldVirtualize && virtualPaddingBottom > 0 ? (
-            <li
-              role="presentation"
-              aria-hidden="true"
-              style={{ height: virtualPaddingBottom, padding: 0 }}
-            />
+          {shouldVirtualize ? (
+            <VirtualSpacer height={virtualization.paddingBottom} />
           ) : null}
           {options.length === 0 ? (
             <li className="tv-combobox__empty" role="presentation">

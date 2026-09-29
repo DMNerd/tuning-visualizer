@@ -61,7 +61,12 @@
       padding-block-start: clamp(48px, 12vw, 64px);
     }
 
-    :is(select, input[type="number"], input[type="range"], input[type="text"]) {
+    :where(
+      select,
+      input[type="number"],
+      input[type="range"],
+      input[type="text"]
+    ) {
       min-height: 2.5rem;
       font-size: 1rem;
     }
@@ -146,8 +151,14 @@
       gap: 6px;
     }
 
-    .tv-controls__input-row > :first-child {
+    /* Pickers take their own line; plain button rows (Start / Tap tempo,
+       − BPM +) keep their natural widths. */
+    .tv-controls__input-row > :first-child:not(.tv-button) {
       flex: 1 1 100%;
+    }
+
+    .tv-modal__footer .tv-button {
+      flex: 1 1 auto;
     }
 
     .tv-controls__input-row > :not(:first-child) {

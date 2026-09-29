@@ -1,7 +1,7 @@
 import { TUNINGS } from "@domain/theory/tuning";
 import { migrateScaleLabel } from "@domain/theory/scales";
 import { STR_MAX, STR_MIN, STR_FACTORY } from "@shared/config/appDefaults";
-import { clamp } from "@shared/lib/math";
+import { clampInteger } from "@shared/lib/math";
 import { encodeBase64Url, decodeBase64Url } from "@shared/lib/base64url";
 import { stableStringify } from "@shared/lib/stableStringify";
 import { ROUTINE_SCHEMA_VERSION } from "@features/training/model/routineSchema";
@@ -43,22 +43,6 @@ function coerceFiniteNumber(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-function coerceClampedInt(
-  value: unknown,
-  min: number,
-  max: number,
-  fallback: number,
-): number {
-  const numeric =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
-  if (!Number.isFinite(numeric)) return fallback;
-  return clamp(Math.round(numeric), min, max);
-}
-
 function coerceStartBlock(raw: unknown): RoutineStartBlock | null {
   if (!isPlainObject(raw)) return null;
   const systemId = coerceString(raw.systemId);
@@ -66,9 +50,9 @@ function coerceStartBlock(raw: unknown): RoutineStartBlock | null {
 
   return {
     systemId,
-    strings: coerceClampedInt(raw.strings, STR_MIN, STR_MAX, STR_FACTORY),
+    strings: clampInteger(raw.strings, STR_MIN, STR_MAX, STR_FACTORY),
     presetName: coerceString(raw.presetName, ""),
-    beats: coerceClampedInt(
+    beats: clampInteger(
       raw.beats,
       ROUTINE_BEATS_MIN,
       ROUTINE_BEATS_MAX,
@@ -95,14 +79,14 @@ function coerceScaleBlock(
   return {
     id,
     scaleLabel: migrateScaleLabel(coerceString(raw.scaleLabel, "")),
-    rootPc: coerceClampedInt(raw.rootPc, 0, Math.max(0, divisions - 1), 0),
-    beats: coerceClampedInt(
+    rootPc: clampInteger(raw.rootPc, 0, Math.max(0, divisions - 1), 0),
+    beats: clampInteger(
       raw.beats,
       ROUTINE_BEATS_MIN,
       ROUTINE_BEATS_MAX,
       ROUTINE_BEATS_DEFAULT,
     ),
-    bpm: coerceClampedInt(
+    bpm: clampInteger(
       raw.bpm,
       ROUTINE_BPM_MIN,
       ROUTINE_BPM_MAX,

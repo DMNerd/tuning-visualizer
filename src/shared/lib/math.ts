@@ -27,3 +27,14 @@ export function clampNumeric<T>(
         : NaN;
   return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
 }
+
+/** `clampNumeric`, rounded to the nearest integer (expects integer bounds). */
+export function clampInteger<T>(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: T,
+): number | T {
+  const clamped = clampNumeric(value, min, max, null);
+  return clamped === null ? fallback : Math.round(clamped);
+}

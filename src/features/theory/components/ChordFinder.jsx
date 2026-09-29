@@ -71,9 +71,7 @@ function ChordFinder({ state, actions, meta }) {
   };
 
   let status = null;
-  if (chordFinderActive && pickedPcs.length === 0) {
-    status = t("theory.finderStart");
-  } else if (pickedPcs.length === 1) {
+  if (pickedPcs.length === 1) {
     status = t("theory.finderOneMore");
   } else if (pickedPcs.length > 1 && !best) {
     status = t("theory.finderNoMatch");
@@ -97,11 +95,11 @@ function ChordFinder({ state, actions, meta }) {
         >
           {t("theory.finderToggle")}
         </ToggleSwitch>
-        <small className="tv-field__help">
-          {chordFinderActive
-            ? t("theory.finderHelpActive")
-            : t("theory.finderHelpInactive")}
-        </small>
+        {chordFinderActive ? (
+          <small className="tv-field__help">
+            {t("theory.finderHelpActive")}
+          </small>
+        ) : null}
       </div>
 
       {pickedPcs.length > 0 ? (

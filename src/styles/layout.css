@@ -393,19 +393,39 @@ html.is-fs {
 .tv-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   background: color-mix(in oklab, var(--fg) 6%, transparent);
   color: var(--fg);
   cursor: pointer;
   font: inherit;
+  font-size: var(--font-control);
   text-decoration: none;
   transition:
     background var(--speed) var(--ease),
     transform var(--speed) var(--ease),
     opacity var(--speed) var(--ease);
+}
+
+.tv-button:not(:disabled):hover {
+  background: color-mix(in oklab, var(--fg) 11%, transparent);
+}
+
+.tv-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.tv-button--primary {
+  background: var(--selection-bg);
+  border-color: color-mix(in oklab, var(--root) 58%, var(--line));
+}
+
+.tv-button--primary:not(:disabled):hover {
+  background: color-mix(in oklab, var(--root) 48%, transparent);
 }
 
 .tv-button svg {
@@ -540,6 +560,7 @@ html.is-fs {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   min-width: 2rem;
   padding: 4px 8px;
   border-radius: 999px;
@@ -602,6 +623,8 @@ html.is-fs {
 }
 
 .tv-field__help {
+  font-size: var(--font-sm);
+  line-height: 1.2;
   color: var(--muted);
 }
 
@@ -624,13 +647,14 @@ html.is-fs {
 .tv-controls--chord-finder {
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
 }
 
+/* Matches .tv-panel__subtitle so every in-panel section heading reads alike. */
 .tv-subsection__title {
-  font-size: 0.8125rem;
+  font-size: 0.85em;
   font-weight: 600;
-  color: var(--fg);
+  color: var(--muted);
 }
 
 .tv-chord-finder__picked {
@@ -725,14 +749,21 @@ html.is-fs {
   margin-top: 4px;
 }
 
-:is(select, input[type="number"], input[type="range"], input[type="text"]) {
+:where(select, input[type="number"], input[type="range"], input[type="text"]) {
   padding: 6px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   background: transparent;
   color: var(--fg);
+  font: inherit;
+  font-size: var(--font-control);
   min-height: 32px;
   min-width: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -1px;
+  }
 
   &[aria-invalid="true"] {
     border-color: var(--root);
@@ -752,13 +783,6 @@ html.is-fs {
   gap: var(--space-sm);
 }
 
-.tv-controls__radio-row {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
 .tv-binary-toggle {
   --tv-binary-toggle-gap: 4px;
   --tv-binary-toggle-pad: 3px;
@@ -767,16 +791,8 @@ html.is-fs {
   --tv-binary-toggle-option-pad-y: 4px;
   --tv-binary-toggle-option-pad-x: 8px;
   --tv-binary-toggle-surface: color-mix(in oklab, var(--line) 22%, transparent);
-  --tv-binary-toggle-active-bg: color-mix(
-    in oklab,
-    var(--root) 38%,
-    transparent
-  );
-  --tv-binary-toggle-focus-ring: color-mix(
-    in oklab,
-    var(--root) 55%,
-    transparent
-  );
+  --tv-binary-toggle-active-bg: var(--selection-bg);
+  --tv-binary-toggle-focus-ring: var(--focus-ring);
 
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -834,20 +850,7 @@ html.is-fs {
 
 .tv-binary-toggle__input:disabled + .tv-binary-toggle__label {
   cursor: not-allowed;
-  color: color-mix(in oklab, var(--muted) 78%, var(--line));
-  border: 1px solid color-mix(in oklab, var(--line) 82%, transparent);
-  background: color-mix(in oklab, var(--line) 14%, transparent);
-  opacity: 0.68;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 0.2em;
-}
-
-.tv-binary-toggle__input:disabled:checked + .tv-binary-toggle__label {
-  color: color-mix(in oklab, var(--fg) 78%, var(--muted));
-  border-color: color-mix(in oklab, var(--root) 38%, var(--line));
-  background: color-mix(in oklab, var(--root) 22%, var(--line));
-  opacity: 0.82;
+  opacity: 0.5;
 }
 
 .tv-binary-toggle__input:focus-visible + .tv-binary-toggle__label {
@@ -886,7 +889,7 @@ html.is-fs {
     var(--root) 58%,
     var(--line)
   );
-  --tv-toggle-focus-ring: color-mix(in oklab, var(--root) 55%, transparent);
+  --tv-toggle-focus-ring: var(--focus-ring);
   --tv-toggle-disabled-switch-opacity: 0.55;
   --tv-toggle-disabled-label-opacity: 0.7;
 
@@ -972,8 +975,8 @@ html.is-fs {
   min-width: 0;
 }
 
-.tv-controls--instrument input,
-.tv-controls--instrument select {
+/* Visually-hidden radio/checkbox inputs must keep their 1px box. */
+.tv-controls--instrument :is(input[type="number"], input[type="text"], select) {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -1107,16 +1110,6 @@ svg {
   opacity: 0.6;
 }
 
-.tv-fretboard__string--highlight {
-  stroke: var(--accent);
-  stroke-width: 2;
-}
-
-.tv-fretboard__string--muted {
-  stroke: var(--line);
-  opacity: 0.3;
-}
-
 .tv-fretboard__fret {
   stroke: var(--fret);
   stroke-width: var(--fret-w);
@@ -1183,7 +1176,7 @@ svg {
   display: inline-flex;
   background: color-mix(in oklab, var(--panel) 70%, var(--fg) 5%);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -1210,7 +1203,12 @@ svg {
 
 .tv-theme__option.is-active {
   color: var(--fg);
-  background: color-mix(in oklab, var(--accent) 16%, var(--panel) 84%);
+  background: var(--selection-bg);
+}
+
+.tv-theme__option:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .tv-theme__label {
@@ -1226,7 +1224,7 @@ svg {
   color: var(--muted);
   background: color-mix(in oklab, var(--panel) 70%, var(--fg) 5%);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   transition: color var(--speed) var(--ease);
 }
 
@@ -1257,7 +1255,7 @@ svg {
 }
 
 .tv-language:has(.tv-language__select:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
 
@@ -1534,6 +1532,8 @@ svg {
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  /* keep wide children (footer buttons) from stretching the card */
+  grid-template-columns: minmax(0, 1fr);
   width: min(100%, 960px);
   max-width: min(960px, 100%);
   max-height: min(100dvh - clamp(24px, 8vh, 96px), 960px);
@@ -2010,6 +2010,12 @@ svg {
   flex-wrap: wrap;
 }
 
+.tv-modal__manager-toolbar h3 {
+  align-self: center;
+  margin: 0;
+  font-size: 1rem;
+}
+
 .tv-modal__manager-search {
   display: grid;
   gap: 4px;
@@ -2077,19 +2083,14 @@ svg {
   padding: clamp(16px, 3vw, 24px);
   border-top: 1px solid color-mix(in oklab, var(--line) 86%, transparent);
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 12px;
+  gap: var(--space-sm);
   background: color-mix(in oklab, var(--panel) 94%, transparent);
 }
 
 .tv-modal__footer .tv-button {
   min-width: 120px;
-}
-
-.tv-share-modal__body {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
 }
 
 .tv-share-modal__grid {
@@ -2156,6 +2157,8 @@ svg {
 
 .tv-routine-modal__body {
   display: grid;
+  /* many stacked sections: size rows to content so none collapses */
+  grid-template-rows: none;
   gap: var(--gap);
 }
 
@@ -2180,6 +2183,10 @@ input.tv-routine-name-input {
   padding: var(--space-sm);
   display: grid;
   gap: var(--space-xs);
+}
+
+.tv-routine-chain > .tv-button {
+  margin-top: var(--space-sm);
 }
 
 .tv-routine-block--start {
@@ -2259,6 +2266,23 @@ input.tv-routine-name-input {
 
 .tv-combobox__input {
   width: 100%;
+  padding-inline-end: 26px;
+}
+
+/* Dropdown affordance so comboboxes read like the native selects beside them */
+.tv-combobox::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 12px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  color: var(--fg);
+  opacity: 0.75;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
 }
 
 .tv-floating-listbox {
@@ -2573,13 +2597,6 @@ input.tv-routine-name-input {
   min-width: 0;
 }
 
-.tv-scale-picker__popover {
-  position: absolute;
-  inset-inline: 0;
-  top: calc(100% + 4px);
-  z-index: 4;
-}
-
 .tv-scale-picker__list {
   display: grid;
   gap: 4px;
@@ -2600,18 +2617,6 @@ input.tv-routine-name-input {
 
 .tv-scale-picker__option[aria-selected="true"] .tv-scale-picker__option-label {
   font-weight: 600;
-}
-
-.tv-scale-picker__option:hover,
-.tv-scale-picker__option:focus-visible {
-  background: color-mix(in oklab, var(--fg) 18%, transparent);
-  outline: none;
-}
-
-.tv-scale-picker__empty {
-  cursor: default;
-  color: var(--muted);
-  font-style: italic;
 }
 
 /* =========================

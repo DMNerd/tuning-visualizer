@@ -195,15 +195,15 @@ function MetronomeControls({ state, actions, meta }) {
           className="tv-field--number-compact"
           disabled={!timedPracticeEnabled}
         />
-        <div className="tv-field">
-          {timedPracticeEnabled ? (
+        {timedPracticeEnabled ? (
+          <div className="tv-field">
             <small className="tv-field__hint">
               {t("practice.timeRemaining", {
                 time: formatRemainingTime(practiceSecondsRemaining),
               })}
             </small>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <ToggleSwitch
           id="metronome-auto-advance"
@@ -225,13 +225,13 @@ function MetronomeControls({ state, actions, meta }) {
           disabled={isRoutinePlaying}
           className="tv-field--number-compact"
         />
-        <div className="tv-field">
-          {autoAdvanceEnabled ? (
+        {autoAdvanceEnabled ? (
+          <div className="tv-field">
             <small className="tv-field__hint">
               {t("practice.barsUntilNext", { count: barsRemaining })}
             </small>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <ToggleSwitch
           id="metronome-announce-count-in"
