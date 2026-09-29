@@ -1,3 +1,5 @@
+import i18n from "@shared/i18n";
+
 export function buildChordTones({
   chordTonePcs,
   chordRootPc,
@@ -36,13 +38,18 @@ export function buildChordTones({
   });
 }
 
-export function buildChordSummary({ showChord, chordTones, scaleSet }) {
+export function buildChordSummary({
+  showChord,
+  chordTones,
+  scaleSet,
+  t = i18n.t,
+}) {
   if (!showChord) return null;
   if (!chordTones.length) return null;
   if (scaleSet.size === 0) {
     return {
       kind: "info",
-      text: "Select a scale to analyse the chord.",
+      text: t("theory.summarySelectScale"),
     };
   }
 
@@ -50,7 +57,9 @@ export function buildChordSummary({ showChord, chordTones, scaleSet }) {
   if (outside.length > 0) {
     return {
       kind: "warning",
-      text: `Outside selected scale: ${outside.map((tone) => tone.noteName).join(", ")}`,
+      text: t("theory.summaryOutside", {
+        notes: outside.map((tone) => tone.noteName).join(", "),
+      }),
     };
   }
 
@@ -60,6 +69,6 @@ export function buildChordSummary({ showChord, chordTones, scaleSet }) {
 
   return {
     kind: "success",
-    text: `All chord tones are in scale (degrees: ${degreeLabels}).`,
+    text: t("theory.summaryAllInScale", { degrees: degreeLabels }),
   };
 }

@@ -1,12 +1,14 @@
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   buildPresetBadges,
-  stringCountLabel,
+  presetDisplayName,
 } from "@features/instrument/model/presetBadges";
 
 // Shared by the preset dropdown and gallery: the catalog entries, their
 // badges, and the search terms both views filter on.
 export function usePresetCatalogEntries(presetCatalog) {
+  const { t } = useTranslation();
   const entries = useMemo(
     () => (Array.isArray(presetCatalog) ? presetCatalog : []),
     [presetCatalog],
@@ -18,12 +20,12 @@ export function usePresetCatalogEntries(presetCatalog) {
   );
   const getSearchTerms = useCallback(
     (entry) => [
-      entry.name,
-      `${entry.strings}-string`,
-      stringCountLabel(entry.strings),
-      ...(badgesByKey.get(entry.key) ?? []).map((badge) => badge.label),
+      presetDisplayName(t, entry.name),
+      t("instrument.stringCountShort", { count: entry.strings }),
+      t("instrument.stringCount", { count: entry.strings }),
+      ...(badgesByKey.get(entry.key) ?? []).map((badge) => t(badge.labelKey)),
     ],
-    [badgesByKey],
+    [badgesByKey, t],
   );
   return { entries, badgesByKey, getSearchTerms };
 }

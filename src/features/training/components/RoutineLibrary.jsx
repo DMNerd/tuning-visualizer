@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // "My Routines" list: play/load/rename/delete saved routines.
 export default function RoutineLibrary({
@@ -12,6 +13,7 @@ export default function RoutineLibrary({
   onRename,
   onDelete,
 }) {
+  const { t } = useTranslation();
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -21,28 +23,30 @@ export default function RoutineLibrary({
   };
 
   const commitRename = (id) => {
-    onRename(id, renameValue.trim() || "Untitled routine");
+    onRename(id, renameValue.trim() || t("training.untitled"));
     setRenamingId(null);
   };
 
   return (
-    <section aria-label="My Routines" className="tv-modal__manager">
+    <section aria-label={t("training.library")} className="tv-modal__manager">
       <div className="tv-modal__manager-toolbar">
-        <h3>My Routines</h3>
+        <h3>{t("training.library")}</h3>
         <button type="button" className="tv-button" onClick={onNewRoutine}>
-          New routine
+          {t("training.newRoutine")}
         </button>
       </div>
       {isRoutinePlaying ? (
         <p className="tv-field__help">
-          Currently playing: {playingRoutine.name || "Untitled routine"}
+          {t("training.currentlyPlaying", {
+            name: playingRoutine.name || t("training.untitled"),
+          })}
           {" — "}
           <button
             type="button"
             className="tv-button tv-button--danger"
             onClick={onStop}
           >
-            Stop
+            {t("training.stop")}
           </button>
         </p>
       ) : null}
@@ -64,7 +68,7 @@ export default function RoutineLibrary({
                 />
               ) : (
                 <span className="tv-modal__manager-pack-name">
-                  {routine.name || "Untitled routine"}
+                  {routine.name || t("training.untitled")}
                 </span>
               )}
               <div className="tv-modal__manager-actions">
@@ -74,35 +78,35 @@ export default function RoutineLibrary({
                   onClick={() => onPlay(routine)}
                   disabled={isRoutinePlaying}
                 >
-                  Play
+                  {t("training.playShort")}
                 </button>
                 <button
                   type="button"
                   className="tv-button"
                   onClick={() => onLoad(routine)}
                 >
-                  Load
+                  {t("training.load")}
                 </button>
                 <button
                   type="button"
                   className="tv-button"
                   onClick={() => startRename(routine)}
                 >
-                  Rename
+                  {t("training.rename")}
                 </button>
                 <button
                   type="button"
                   className="tv-button tv-button--danger"
                   onClick={() => onDelete(routine)}
                 >
-                  Delete
+                  {t("training.delete")}
                 </button>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="tv-field__help">No saved routines yet.</p>
+        <p className="tv-field__help">{t("training.empty")}</p>
       )}
     </section>
   );

@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import NumberField from "@shared/ui/NumberField";
@@ -6,8 +7,16 @@ import { formatRemainingTime } from "@features/practice/model/formatRemainingTim
 
 const TIME_SIGNATURES = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8"];
 const SUBDIVISIONS = ["Quarter", "Eighth", "Triplet", "Sixteenth"];
+// Subdivision values are stored in prefs; only their labels are translated
+const SUBDIVISION_LABEL_KEYS = {
+  Quarter: "practice.subdivisionQuarter",
+  Eighth: "practice.subdivisionEighth",
+  Triplet: "practice.subdivisionTriplet",
+  Sixteenth: "practice.subdivisionSixteenth",
+};
 
 function MetronomeControls({ state, actions, meta }) {
+  const { t } = useTranslation();
   const {
     isPlaying,
     bpm,
@@ -58,35 +67,34 @@ function MetronomeControls({ state, actions, meta }) {
             className="tv-button"
             onClick={() => toggleMetronome?.()}
           >
-            {isPlaying ? "Stop" : "Start"}
+            {isPlaying ? t("practice.stop") : t("practice.start")}
           </button>
           <button
             type="button"
             className="tv-button"
             onClick={() => tapTempo?.()}
           >
-            Tap tempo
+            {t("practice.tapTempo")}
           </button>
         </div>
 
         {isRoutinePlaying ? (
           <div className="tv-field">
             <small className="tv-field__hint">
-              BPM, time signature, and auto-advance are controlled by the active
-              training routine.
+              {t("practice.routineControlled")}
             </small>
           </div>
         ) : null}
 
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="metronome-bpm">
-            BPM
+            {t("practice.bpm")}
           </label>
           <div className="tv-controls__input-row tv-controls__input-row--align-input">
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Decrease BPM"
+              aria-label={t("practice.bpmDown")}
               disabled={isRoutinePlaying}
               onClick={() => bpmDown?.()}
             >
@@ -94,7 +102,7 @@ function MetronomeControls({ state, actions, meta }) {
             </button>
             <NumberField
               id="metronome-bpm"
-              label="BPM value"
+              label={t("practice.bpmValue")}
               value={bpm}
               min={bpmMin}
               max={bpmMax}
@@ -106,7 +114,7 @@ function MetronomeControls({ state, actions, meta }) {
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Increase BPM"
+              aria-label={t("practice.bpmUp")}
               disabled={isRoutinePlaying}
               onClick={() => bpmUp?.()}
             >
@@ -121,7 +129,7 @@ function MetronomeControls({ state, actions, meta }) {
               className="tv-field__label"
               htmlFor="metronome-time-signature"
             >
-              Time signature
+              {t("practice.timeSignature")}
             </label>
             <select
               id="metronome-time-signature"
@@ -140,7 +148,7 @@ function MetronomeControls({ state, actions, meta }) {
 
           <div className="tv-field">
             <label className="tv-field__label" htmlFor="metronome-subdivision">
-              Subdivision
+              {t("practice.subdivision")}
             </label>
             <select
               id="metronome-subdivision"
@@ -150,7 +158,9 @@ function MetronomeControls({ state, actions, meta }) {
             >
               {subdivisions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {SUBDIVISION_LABEL_KEYS[option]
+                    ? t(SUBDIVISION_LABEL_KEYS[option])
+                    : option}
                 </option>
               ))}
             </select>
@@ -163,7 +173,7 @@ function MetronomeControls({ state, actions, meta }) {
           checked={countInEnabled}
           onChange={(e) => setCountInEnabled(e.target.checked)}
         >
-          Count-in enabled
+          {t("practice.countIn")}
         </ToggleSwitch>
 
         <ToggleSwitch
@@ -172,12 +182,12 @@ function MetronomeControls({ state, actions, meta }) {
           checked={timedPracticeEnabled}
           onChange={(e) => setTimedPracticeEnabled(e.target.checked)}
         >
-          Timed practice
+          {t("practice.timedPractice")}
         </ToggleSwitch>
 
         <NumberField
           id="metronome-practice-duration"
-          label="Practice duration (minutes)"
+          label={t("practice.practiceDuration")}
           value={practiceDurationMinutes}
           min={practiceDurationMin}
           max={practiceDurationMax}
@@ -188,7 +198,9 @@ function MetronomeControls({ state, actions, meta }) {
         <div className="tv-field">
           {timedPracticeEnabled ? (
             <small className="tv-field__hint">
-              Time remaining: {formatRemainingTime(practiceSecondsRemaining)}
+              {t("practice.timeRemaining", {
+                time: formatRemainingTime(practiceSecondsRemaining),
+              })}
             </small>
           ) : null}
         </div>
@@ -200,12 +212,12 @@ function MetronomeControls({ state, actions, meta }) {
           disabled={isRoutinePlaying}
           onChange={(e) => setAutoAdvanceEnabled(e.target.checked)}
         >
-          Auto-advance scale
+          {t("practice.autoAdvance")}
         </ToggleSwitch>
 
         <NumberField
           id="metronome-bars-per-scale"
-          label="Bars per scale"
+          label={t("practice.barsPerScale")}
           value={barsPerScale}
           min={barsPerScaleMin}
           max={barsPerScaleMax}
@@ -216,8 +228,7 @@ function MetronomeControls({ state, actions, meta }) {
         <div className="tv-field">
           {autoAdvanceEnabled ? (
             <small className="tv-field__hint">
-              {barsRemaining} bar{barsRemaining === 1 ? "" : "s"} until next
-              scale
+              {t("practice.barsUntilNext", { count: barsRemaining })}
             </small>
           ) : null}
         </div>
@@ -229,7 +240,7 @@ function MetronomeControls({ state, actions, meta }) {
           onChange={(e) => setAnnounceCountInBeforeChange(e.target.checked)}
           disabled={!autoAdvanceEnabled || isRoutinePlaying}
         >
-          Announce before change
+          {t("practice.announce")}
         </ToggleSwitch>
       </div>
     </div>

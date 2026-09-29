@@ -1,6 +1,7 @@
 import BaseCombobox from "@shared/ui/BaseCombobox";
 import clsx from "clsx";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ScalePicker({
   id,
@@ -10,6 +11,7 @@ export default function ScalePicker({
   setScale,
   "aria-labelledby": ariaLabelledby,
 }) {
+  const { t } = useTranslation();
   const getOptionKey = useCallback(
     (opt) => `${opt.systemId ?? "sys"}-${opt.label}`,
     [],
@@ -67,7 +69,7 @@ export default function ScalePicker({
                 role="presentation"
                 aria-live="polite"
               >
-                No matching scales
+                {t("theory.noMatchingScales")}
               </li>
             ) : shouldVirtualize ? (
               <>
@@ -109,7 +111,7 @@ export default function ScalePicker({
         </div>
       );
     },
-    [ariaLabelledby],
+    [ariaLabelledby, t],
   );
 
   return (

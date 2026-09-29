@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useShallow } from "zustand/react/shallow";
+import i18n from "@shared/i18n";
 
 import { usePracticeActions } from "@features/practice/hooks/usePracticeActions";
 import { useMetronomePlayback } from "@features/practice/hooks/useMetronomeEngine";
@@ -162,8 +163,8 @@ export default function usePracticePanelState({
 
         toast(
           nextLabel
-            ? `Scale change on next downbeat: ${nextLabel}`
-            : "Scale change on next downbeat",
+            ? i18n.t("practice.scaleChangeNext", { scale: nextLabel })
+            : i18n.t("practice.scaleChangeNextPlain"),
           { id: "scale-change-countin" },
         );
       }

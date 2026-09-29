@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@shared/i18n";
 import { clamp } from "@shared/lib/math";
 
 export function commitNumberField({
@@ -14,13 +16,13 @@ export function commitNumberField({
     typeof rawOverride === "number" ? rawOverride : parseInt(textValue, 10);
 
   if (!Number.isFinite(raw)) {
-    setError(`Please enter a number between ${min} and ${max}.`);
+    setError(i18n.t("numberField.notANumber", { min, max }));
     return false;
   }
 
   const val = clamp(raw, min, max);
   if (val !== raw) {
-    setError(`Allowed range is ${min}–${max}. Adjusted to ${val}.`);
+    setError(i18n.t("numberField.clamped", { min, max, value: val }));
   } else {
     setError("");
   }
@@ -30,6 +32,7 @@ export function commitNumberField({
 }
 
 export function useNumberField({ value, min, max, onSubmit }) {
+  const { t } = useTranslation();
   const [text, setText] = useState(String(value));
   const [error, setError] = useState("");
 
@@ -80,6 +83,6 @@ export function useNumberField({ value, min, max, onSubmit }) {
     onBlur,
     onKeyDown,
     placeholder: `${min}–${max}`,
-    helpText: error || `Allowed range: ${min}–${max}`,
+    helpText: error || t("numberField.allowedRange", { min, max }),
   };
 }

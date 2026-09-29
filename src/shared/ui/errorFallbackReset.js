@@ -1,3 +1,4 @@
+import i18n from "@shared/i18n";
 import { resetAllStores } from "@shared/lib/resetAllStores";
 
 export async function performFactoryReset({
@@ -8,11 +9,10 @@ export async function performFactoryReset({
   onError,
 }) {
   const ok = await confirm({
-    title: "Clear saved settings?",
-    message:
-      "This will clear saved settings and custom tunings for this app in this browser.",
-    confirmText: "Clear saved settings",
-    cancelText: "Cancel",
+    title: i18n.t("resets.clearStorageTitle"),
+    message: i18n.t("resets.clearStorageMessage"),
+    confirmText: i18n.t("resets.clearStorageConfirm"),
+    cancelText: i18n.t("common.cancel"),
     toastId: "confirm-clear-storage",
   });
 

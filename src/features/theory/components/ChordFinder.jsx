@@ -1,5 +1,6 @@
 import { useId } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { FiX } from "react-icons/fi";
 import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import {
@@ -11,6 +12,7 @@ import { mod } from "@shared/lib/math";
 const MAX_ALTERNATIVES = 5;
 
 function MatchRow({ match, nameForPc, onShow, primary = false }) {
+  const { t } = useTranslation();
   const symbol = formatChordSymbol(match, nameForPc);
   return (
     <li
@@ -27,10 +29,10 @@ function MatchRow({ match, nameForPc, onShow, primary = false }) {
           type="button"
           className="tv-button tv-button--ghost"
           onClick={() => onShow(match)}
-          aria-label={`Show ${symbol} on the fretboard`}
-          title="Load into the chord controls and show the overlay"
+          aria-label={t("theory.showMatchAria", { chord: symbol })}
+          title={t("theory.showMatchTitle")}
         >
-          Show
+          {t("theory.showMatch")}
         </button>
       ) : null}
     </li>
@@ -38,6 +40,7 @@ function MatchRow({ match, nameForPc, onShow, primary = false }) {
 }
 
 function ChordFinder({ state, actions, meta }) {
+  const { t } = useTranslation();
   const { chordFinderActive = false, pickedPcs = [] } = state;
   const {
     setChordFinderActive,
@@ -69,11 +72,11 @@ function ChordFinder({ state, actions, meta }) {
 
   let status = null;
   if (chordFinderActive && pickedPcs.length === 0) {
-    status = "Click notes on the fretboard to add them.";
+    status = t("theory.finderStart");
   } else if (pickedPcs.length === 1) {
-    status = "Pick at least one more note.";
+    status = t("theory.finderOneMore");
   } else if (pickedPcs.length > 1 && !best) {
-    status = "No chord name found for these notes.";
+    status = t("theory.finderNoMatch");
   }
 
   return (
@@ -83,7 +86,7 @@ function ChordFinder({ state, actions, meta }) {
       aria-labelledby={headingId}
     >
       <span id={headingId} className="tv-subsection__title">
-        What's this chord?
+        {t("theory.finderTitle")}
       </span>
       <div className="tv-field">
         <ToggleSwitch
@@ -92,22 +95,22 @@ function ChordFinder({ state, actions, meta }) {
           checked={chordFinderActive}
           onChange={(e) => setChordFinderActive(e.target.checked)}
         >
-          Pick notes on the fretboard
+          {t("theory.finderToggle")}
         </ToggleSwitch>
         <small className="tv-field__help">
           {chordFinderActive
-            ? "Click a note to add or remove it; the first pick is the bass."
-            : "Turn on, then click notes to name the chord they make."}
+            ? t("theory.finderHelpActive")
+            : t("theory.finderHelpInactive")}
         </small>
       </div>
 
       {pickedPcs.length > 0 ? (
         <div className="tv-field">
-          <span className="tv-field__label">Picked notes</span>
+          <span className="tv-field__label">{t("theory.pickedNotes")}</span>
           <div className="tv-chord-finder__picked">
             <ul
               className="tv-tone-list"
-              aria-label="Picked notes, click to remove"
+              aria-label={t("theory.pickedNotesAria")}
             >
               {pickedPcs.map((pc, index) => (
                 <li key={pc} className="tv-tone-list__item">
@@ -119,15 +122,17 @@ function ChordFinder({ state, actions, meta }) {
                       "tv-tone-chip--in-chord",
                     )}
                     onClick={() => togglePickedPc(pc)}
-                    aria-label={`Remove ${nameForPc(pc)}`}
-                    title="Remove"
+                    aria-label={t("theory.removeNote", { note: nameForPc(pc) })}
+                    title={t("theory.remove")}
                   >
                     <span>{nameForPc(pc)}</span>
                   </button>
                   <small className="tv-tone-degree">
                     {[
                       best?.degrees[pc],
-                      index === 0 && best && pc !== best.rootPc ? "bass" : "",
+                      index === 0 && best && pc !== best.rootPc
+                        ? t("theory.bass")
+                        : "",
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -139,8 +144,8 @@ function ChordFinder({ state, actions, meta }) {
               type="button"
               className="tv-button tv-button--icon tv-button--ghost"
               onClick={clearPickedPcs}
-              aria-label="Clear picked notes"
-              title="Clear"
+              aria-label={t("theory.clearPicked")}
+              title={t("theory.clear")}
             >
               <FiX size={16} aria-hidden />
             </button>
@@ -150,7 +155,10 @@ function ChordFinder({ state, actions, meta }) {
 
       <div aria-live="polite">
         {best ? (
-          <ul className="tv-chord-finder__matches" aria-label="Chord names">
+          <ul
+            className="tv-chord-finder__matches"
+            aria-label={t("theory.chordNames")}
+          >
             <MatchRow
               match={best}
               nameForPc={nameForPc}

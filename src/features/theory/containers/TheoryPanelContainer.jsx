@@ -1,4 +1,5 @@
 import { ErrorBoundary } from "react-error-boundary";
+import { useTranslation } from "react-i18next";
 
 import ErrorFallback from "@shared/ui/ErrorFallback";
 import Section from "@shared/ui/Section";
@@ -8,10 +9,11 @@ import ChordFinder from "@features/theory/components/ChordFinder";
 import { buildChordFit } from "@features/theory/model/theoryPanelModel";
 
 export default function TheoryPanelContainer({ controlModel, reset }) {
+  const { t } = useTranslation();
   const state = controlModel?.state ?? {};
   const actions = controlModel?.actions ?? {};
   const meta = controlModel?.meta ?? {};
-  const chordFit = buildChordFit(meta.scaleTonePcs, meta.chordTonePcs);
+  const chordFit = buildChordFit(meta.scaleTonePcs, meta.chordTonePcs, t);
 
   return (
     <>
@@ -43,7 +45,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
           }}
         />
       </ErrorBoundary>
-      <Section id="chord-controls" title="Chord" size="sm">
+      <Section id="chord-controls" title={t("theory.chordTitle")} size="sm">
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           resetKeys={[

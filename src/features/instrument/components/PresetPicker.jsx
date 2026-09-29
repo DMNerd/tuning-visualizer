@@ -1,9 +1,10 @@
 import { Fragment, useCallback, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { FiGrid } from "react-icons/fi";
 import BaseCombobox from "@shared/ui/BaseCombobox";
 import PresetBadgeList from "@features/instrument/components/PresetBadgeList";
-import { stringCountLabel } from "@features/instrument/model/presetBadges";
+import { presetDisplayName } from "@features/instrument/model/presetBadges";
 import {
   groupPresetsByStringCount,
   presetEntryKey,
@@ -25,9 +26,10 @@ export default function PresetPicker({
   selectedPreset,
   onSelectEntry,
   onOpenGallery,
-  placeholder = "Search presets…",
+  placeholder,
   ariaLabelledBy,
 }) {
+  const { t } = useTranslation();
   const {
     entries: options,
     badgesByKey,
@@ -43,7 +45,10 @@ export default function PresetPicker({
   }, [options, currentStrings, selectedPreset]);
 
   const getOptionKey = useCallback((entry) => entry.key, []);
-  const getOptionLabel = useCallback((entry) => entry.name, []);
+  const getOptionLabel = useCallback(
+    (entry) => presetDisplayName(t, entry.name),
+    [t],
+  );
   const handleOptionSelect = useCallback(
     (entry) => {
       if (typeof entry?.name !== "string") return;
@@ -59,11 +64,13 @@ export default function PresetPicker({
           "is-custom": entry.isCustom,
         })}
       >
-        <span className="tv-combobox__option-title">{entry.name}</span>
+        <span className="tv-combobox__option-title">
+          {presetDisplayName(t, entry.name)}
+        </span>
         <PresetBadgeList badges={badgesByKey.get(entry.key)} />
       </div>
     ),
-    [badgesByKey],
+    [badgesByKey, t],
   );
 
   const renderList = useCallback(
@@ -75,17 +82,17 @@ export default function PresetPicker({
       >
         {visible.length === 0 ? (
           <li className="tv-combobox__empty" role="presentation">
-            No matches.
+            {t("common.noMatches")}
           </li>
         ) : null}
         {visible.map((entry, index) => (
           <Fragment key={entry.key}>
             {entry.strings !== visible[index - 1]?.strings ? (
               <li role="presentation" className="tv-preset-picker__group">
-                {stringCountLabel(entry.strings)}
+                {t("instrument.stringCount", { count: entry.strings })}
                 {entry.strings === currentStrings ? (
                   <span className="tv-preset-picker__group-current">
-                    current
+                    {t("common.current")}
                   </span>
                 ) : null}
               </li>
@@ -112,13 +119,13 @@ export default function PresetPicker({
               }}
             >
               <FiGrid aria-hidden />
-              Browse preset gallery…
+              {t("instrument.browseGallery")}
             </button>
           </li>
         ) : null}
       </ul>
     ),
-    [ariaLabelledBy, currentStrings, onOpenGallery],
+    [ariaLabelledBy, currentStrings, onOpenGallery, t],
   );
 
   return (
@@ -134,7 +141,7 @@ export default function PresetPicker({
       renderOption={renderOption}
       renderList={renderList}
       enableVirtualization={false}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t("instrument.searchPresets")}
       aria-labelledby={ariaLabelledBy}
       className="tv-preset-picker"
     />

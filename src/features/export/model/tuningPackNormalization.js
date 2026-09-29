@@ -11,13 +11,17 @@ import {
   getSystemLabel,
 } from "@domain/theory/tuning";
 import { pcToName } from "@domain/theory/tonalAdapter";
+import i18n from "@shared/i18n";
 
-const TEMPLATE_STRINGS = [
-  { label: "String 1", note: "E4" },
-  { label: "String 2", note: "B3" },
-  { label: "String 3", note: "G3" },
-  { label: "String 4", note: "D3" },
-];
+const TEMPLATE_NOTES = ["E4", "B3", "G3", "D3"];
+
+// Labels are translated when the template is built, not at import time
+function templateStrings() {
+  return TEMPLATE_NOTES.map((note, index) => ({
+    label: i18n.t("editor.stringLabel", { number: index + 1 }),
+    note,
+  }));
+}
 
 export function pushUnique(list, seen, value) {
   if (typeof value !== "string") return;
@@ -107,11 +111,11 @@ export function buildTemplatePack(pack) {
     ? base.tuning.strings.slice(0, STR_MAX)
     : [];
 
-  const seededStrings = strings.length >= STR_MIN ? strings : TEMPLATE_STRINGS;
+  const seededStrings = strings.length >= STR_MIN ? strings : templateStrings();
   const meta = isPlainObject(base?.meta) ? base.meta : {};
 
   const next = {
-    name: base?.name?.trim?.() || "New tuning pack",
+    name: base?.name?.trim?.() || i18n.t("editor.newPackName"),
     system: { edo: normalizedEdo },
     tuning: { strings: seededStrings },
     meta,

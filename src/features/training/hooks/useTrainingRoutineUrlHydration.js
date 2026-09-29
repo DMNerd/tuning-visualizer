@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLatest } from "react-use";
 import { toast } from "react-hot-toast";
+import i18n from "@shared/i18n";
 import { decodeRoutine } from "@features/training/model/routineCodec";
 import { ROUTINE_QUERY_KEY } from "@features/training/model/routineSchema";
 import { removeUrlSearchParams } from "@shared/lib/urlSearchParams";
@@ -26,12 +27,12 @@ export function useTrainingRoutineUrlHydration({ onRoutineImported } = {}) {
 
     const routine = decodeRoutine(token);
     if (routine) {
-      toast.success("Routine loaded from link. Review and save to keep it.", {
+      toast.success(i18n.t("training.loadedFromLink"), {
         id: "training-routine-url-load",
       });
       onRoutineImportedRef.current?.(routine);
     } else {
-      toast("Routine link detected, but no valid routine was found.", {
+      toast(i18n.t("training.invalidLink"), {
         id: "training-routine-url-load",
       });
     }

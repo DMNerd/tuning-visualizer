@@ -1,25 +1,27 @@
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 // "Shape → Sounds" readout for capo-relative chords.
 export function CapoChordField({ display }) {
+  const { t } = useTranslation();
   return (
     <div className="tv-field" aria-label={display.ariaLabel}>
-      <span className="tv-field__label">Capo chord</span>
+      <span className="tv-field__label">{t("theory.capoChord")}</span>
       {display.hasActiveTransposition ? (
         <div className="tv-capo-chord-map">
           <span className="tv-capo-chord-map__part">
-            <small>Shape</small>
+            <small>{t("theory.capoShape")}</small>
             <strong>{display.shapeChordLabel}</strong>
           </span>
           <span className="tv-capo-chord-map__arrow" aria-hidden="true">
             →
           </span>
           <span className="tv-capo-chord-map__part">
-            <small>Sounds</small>
+            <small>{t("theory.capoSounds")}</small>
             <strong>{display.soundingChordLabel}</strong>
           </span>
           <small className="tv-capo-chord-map__capo">
-            capo {display.safeCapoFret}
+            {t("theory.capoFret", { fret: display.safeCapoFret })}
           </small>
         </div>
       ) : (
@@ -29,13 +31,14 @@ export function CapoChordField({ display }) {
   );
 }
 
-function toneAriaLabel(tone, showChord) {
+function toneAriaLabel(t, tone, showChord) {
   if (!showChord) return `${tone.noteName}`;
-  return `${tone.noteName}, ${
-    tone.inScale
-      ? `degree ${tone.degree ?? "unknown"} in selected scale`
-      : "outside selected scale"
-  }`;
+  return tone.inScale
+    ? t("theory.toneDegreeAria", {
+        note: tone.noteName,
+        degree: tone.degree ?? t("theory.unknownDegree"),
+      })
+    : t("theory.toneOutsideAria", { note: tone.noteName });
 }
 
 // Chord tone chips with scale-degree/outside annotations and a summary line.
@@ -45,14 +48,15 @@ export function ChordToneField({
   showChord,
   chordOverlayPcs,
 }) {
+  const { t } = useTranslation();
   return (
     <div className="tv-field tv-field--scale-tones">
-      <span className="tv-field__label">Chord tones</span>
+      <span className="tv-field__label">{t("theory.chordTones")}</span>
       {chordTones.length > 0 ? (
         <div
           className="tv-tone-list tv-tone-list--analysis"
           role="list"
-          aria-label="Chord tones"
+          aria-label={t("theory.chordTones")}
         >
           {chordTones.map((tone) => (
             <div key={tone.pc} className="tv-tone-list__item" role="listitem">
@@ -64,12 +68,14 @@ export function ChordToneField({
                     chordOverlayPcs instanceof Set &&
                     chordOverlayPcs.has(tone.pc),
                 })}
-                aria-label={toneAriaLabel(tone, showChord)}
+                aria-label={toneAriaLabel(t, tone, showChord)}
               >
                 <span>{tone.noteName}</span>
                 {showChord ? (
                   <small className="tv-tone-chip__meta">
-                    {tone.inScale ? `deg ${tone.degree ?? "–"}` : "outside"}
+                    {tone.inScale
+                      ? t("theory.toneDegree", { degree: tone.degree ?? "–" })
+                      : t("theory.toneOutside")}
                   </small>
                 ) : null}
               </span>

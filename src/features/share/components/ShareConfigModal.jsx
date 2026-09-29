@@ -1,4 +1,5 @@
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import ModalFrame from "@shared/ui/ModalFrame";
 import { copyTextWithFallback } from "@shared/lib/clipboard";
@@ -6,6 +7,7 @@ import { buildShareConfigModalModel } from "@features/share/model/shareConfigMod
 import ShareQrCode from "@features/share/components/ShareQrCode";
 
 export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
+  const { t } = useTranslation();
   const model = buildShareConfigModalModel({
     isOpen,
     appShareState,
@@ -17,9 +19,9 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
   const copyLink = async () => {
     try {
       await copyTextWithFallback(canonicalUrl);
-      toast.success("Quickshare link copied.", { id: "quickshare-copy" });
+      toast.success(t("share.copied"), { id: "quickshare-copy" });
     } catch {
-      toast.error("Could not copy quickshare link.", { id: "quickshare-copy" });
+      toast.error(t("share.copyFailed"), { id: "quickshare-copy" });
     }
   };
 
@@ -27,47 +29,40 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
     <ModalFrame
       isOpen={isOpen}
       onClose={onClose}
-      ariaLabel="Quickshare"
+      ariaLabel={t("share.title")}
       cardClassName="tv-modal__card"
     >
       <header className="tv-modal__header">
-        <h2>Quickshare</h2>
-        <p className="tv-modal__summary">
-          Share instrument configuration and system settings with one link.
-        </p>
+        <h2>{t("share.title")}</h2>
+        <p className="tv-modal__summary">{t("share.summary")}</p>
       </header>
 
       <div className="tv-modal__body tv-share-modal__body">
-        <section aria-label="Quickshare contents">
-          <p className="tv-field__help">
-            This quickshare includes instrument configuration and system
-            settings.
-          </p>
+        <section aria-label={t("share.contents")}>
+          <p className="tv-field__help">{t("share.contentsHelp")}</p>
         </section>
 
         <div className="tv-share-modal__grid">
           <section
             className="tv-share-modal__panel"
-            aria-label="Quickshare URL preview"
+            aria-label={t("share.urlPreview")}
           >
             <label className="tv-field">
-              <span className="tv-field__label">Quickshare URL</span>
-              <pre className="tv-textarea" aria-label="Quickshare URL preview">
+              <span className="tv-field__label">{t("share.url")}</span>
+              <pre className="tv-textarea" aria-label={t("share.urlPreview")}>
                 {presentableUrl}
               </pre>
-              <span className="tv-field__help">
-                Display matches the canonical link; copy uses the same URL.
-              </span>
+              <span className="tv-field__help">{t("share.urlHelp")}</span>
               <span
                 className="tv-field__help"
                 data-warn={sizeEvaluation.warn ? "true" : "false"}
               >
-                Length: {sizeEvaluation.length}
+                {t("training.length", { length: sizeEvaluation.length })}
                 {sizeEvaluation.reasonCode === "warning-threshold"
-                  ? " (Long URL warning)"
+                  ? t("training.longUrl")
                   : ""}
                 {sizeEvaluation.reasonCode === "qr-hard-limit"
-                  ? " (Too long for QR)"
+                  ? t("training.tooLongForQr")
                   : ""}
               </span>
             </label>
@@ -75,17 +70,16 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
 
           <section
             className="tv-share-modal__panel tv-share-modal__panel--qr"
-            aria-label="Quickshare QR preview"
+            aria-label={t("share.qrPreviewAria")}
           >
-            <span className="tv-field__label">QR preview</span>
+            <span className="tv-field__label">{t("training.qrPreview")}</span>
             {sizeEvaluation.allowQr ? (
               <div className="tv-share-modal__qr-wrap" aria-live="polite">
                 <ShareQrCode value={canonicalUrl} size={176} />
               </div>
             ) : (
               <p className="tv-field__help tv-field__help--error" role="status">
-                URL is too long for QR generation. Try reducing custom pack
-                metadata or using link copy instead of QR.
+                {t("share.qrTooLong")}
               </p>
             )}
           </section>
@@ -94,14 +88,14 @@ export default function ShareConfigModal({ isOpen, onClose, appShareState }) {
 
       <footer className="tv-modal__footer">
         <button type="button" className="tv-button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
         <button
           type="button"
           className="tv-button tv-button--primary"
           onClick={() => void copyLink()}
         >
-          Copy quickshare link
+          {t("share.copy")}
         </button>
       </footer>
     </ModalFrame>

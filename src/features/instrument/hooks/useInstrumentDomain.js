@@ -71,7 +71,6 @@ export function useInstrumentDomain({
     getCurrentTuningPack: customTunings.getCurrentTuningPack,
     saveCustomTuning: customTunings.saveCustomTuning,
     deleteCustomTuning: customTunings.deleteCustomTuning,
-    clearCustomTunings: customTunings.clearCustomTunings,
     tuning: instrumentState.tuning,
     stringMeta: instrumentState.stringMeta,
     boardMeta: instrumentState.boardMeta,

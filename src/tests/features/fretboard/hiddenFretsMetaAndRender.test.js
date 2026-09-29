@@ -13,6 +13,7 @@ import {
   reconcileCapoState,
 } from "@features/fretboard/model/renderFilters";
 import { buildFretLabel } from "@shared/lib/fretLabels";
+import "@shared/i18n";
 
 const BASE_FRETBOARD_PROPS = {
   strings: 1,

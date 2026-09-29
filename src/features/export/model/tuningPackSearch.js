@@ -1,3 +1,5 @@
+import i18n from "@shared/i18n";
+
 export function buildStringPreview(strings = []) {
   if (!Array.isArray(strings)) return "";
 
@@ -7,13 +9,15 @@ export function buildStringPreview(strings = []) {
     .join(" · ");
 }
 
-export function normalizePack(pack) {
+export function normalizePack(pack, t = i18n.t) {
   if (!pack || typeof pack !== "object") return null;
   const edo = Number(pack?.system?.edo);
   const metaSystemId =
     typeof pack?.meta?.systemId === "string" ? pack.meta.systemId : null;
   const rawName = typeof pack?.name === "string" ? pack.name : "";
-  const displayName = rawName.trim().length ? rawName : "Untitled pack";
+  const displayName = rawName.trim().length
+    ? rawName
+    : t("manager.untitledPack");
   const strings = Array.isArray(pack?.tuning?.strings)
     ? pack.tuning.strings
     : [];
@@ -31,11 +35,11 @@ export function normalizePack(pack) {
   };
 }
 
-export function formatStringsCount(stringsCount) {
+export function formatStringsCount(stringsCount, t = i18n.t) {
   if (!Number.isFinite(stringsCount) || stringsCount <= 0) {
-    return "Unknown string count";
+    return t("manager.unknownStringCount");
   }
-  return `${stringsCount} string${stringsCount === 1 ? "" : "s"}`;
+  return t("instrument.stringCount", { count: stringsCount });
 }
 
 export function packMatchesQuery({

@@ -54,14 +54,8 @@ export function useExportCustomTuningDomain({
     ],
   );
 
-  const { clearAllPacks, openManager } = customPackEditor;
-  const packActions = useMemo(
-    () => ({
-      clearAllPacks,
-      openManager,
-    }),
-    [clearAllPacks, openManager],
-  );
+  const { openManager } = customPackEditor;
+  const packActions = useMemo(() => ({ openManager }), [openManager]);
 
   const { downloadPNG, downloadSVG, printFretboard } = exporters;
   const { exportCurrent, exportAll, importFromJson } = customTunings;

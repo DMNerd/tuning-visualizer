@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { withToastPromise } from "@shared/lib/toast";
 import { useCopyToClipboard, useToggle } from "react-use";
+import { useTranslation } from "react-i18next";
 import {
   FiAlertTriangle,
   FiChevronDown,
@@ -20,14 +21,15 @@ export default function ErrorFallback({
   resetErrorBoundary,
   scope = "section",
 }) {
+  const { t } = useTranslation();
   const [open, toggleOpen] = useToggle(false);
   const [, copy] = useCopyToClipboard();
 
   const summary = useMemo(() => {
     const name = error?.name || "Error";
-    const msg = error?.message || "Unknown error";
+    const msg = error?.message || t("errorFallback.unknownError");
     return `${name}: ${msg}`;
-  }, [error]);
+  }, [error, t]);
 
   const details = useMemo(() => {
     const info = {
@@ -50,9 +52,9 @@ export default function ErrorFallback({
         }
       },
       {
-        loading: "Copying error details…",
-        success: "Error details copied.",
-        error: "Could not copy to clipboard.",
+        loading: t("errorFallback.copyLoading"),
+        success: t("errorFallback.copySuccess"),
+        error: t("errorFallback.copyError"),
       },
       "error-details-copy",
     );
@@ -65,10 +67,10 @@ export default function ErrorFallback({
     await performFactoryReset({
       confirm,
       onSuccess: () => {
-        toast.success("Saved settings cleared.");
+        toast.success(t("errorFallback.storageCleared"));
       },
       onError: () => {
-        toast.error("Failed to clear saved settings.");
+        toast.error(t("errorFallback.storageClearFailed"));
       },
     });
   };
@@ -82,7 +84,7 @@ export default function ErrorFallback({
     >
       <div className="tv-fallback__header">
         <FiAlertTriangle size={20} aria-hidden="true" />
-        <span>Something went wrong</span>
+        <span>{t("errorFallback.heading")}</span>
       </div>
 
       <div className="tv-fallback__summary" title={summary}>
@@ -95,10 +97,14 @@ export default function ErrorFallback({
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls="error-details"
-        title={open ? "Hide technical details" : "Show technical details"}
+        title={
+          open
+            ? t("errorFallback.hideDetailsTitle")
+            : t("errorFallback.showDetailsTitle")
+        }
       >
         {open ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
-        {open ? "Hide details" : "Show details"}
+        {open ? t("errorFallback.hideDetails") : t("errorFallback.showDetails")}
       </button>
 
       {open && (
@@ -113,32 +119,32 @@ export default function ErrorFallback({
           className="tv-button tv-button--block"
           onClick={() => {
             resetErrorBoundary?.();
-            toast.success("Trying again…");
+            toast.success(t("errorFallback.tryingAgain"));
           }}
-          title="Reset the failed UI section"
+          title={t("errorFallback.tryAgainTitle")}
         >
           <FiRefreshCcw size={16} />
-          Try again
+          {t("errorFallback.tryAgain")}
         </button>
 
         <button
           type="button"
           className="tv-button tv-button--block"
           onClick={hardReload}
-          title="Reload the whole app"
+          title={t("errorFallback.reloadTitle")}
         >
           <FiRotateCcw size={16} />
-          Reload app
+          {t("errorFallback.reload")}
         </button>
 
         <button
           type="button"
           className="tv-button tv-button--block"
           onClick={copyDetails}
-          title="Copy error details to clipboard"
+          title={t("errorFallback.copyDetailsTitle")}
         >
           <FiClipboard size={16} />
-          Copy details
+          {t("errorFallback.copyDetails")}
         </button>
 
         <a
@@ -146,10 +152,10 @@ export default function ErrorFallback({
           href="https://github.com/DMNerd/tuning-visualizer/issues"
           target="_blank"
           rel="noreferrer"
-          title="Open your issue tracker to paste details"
+          title={t("errorFallback.reportTitle")}
         >
           <FiExternalLink size={16} />
-          Report issue
+          {t("errorFallback.report")}
         </a>
 
         <button
@@ -158,10 +164,10 @@ export default function ErrorFallback({
           onClick={() => {
             void factoryReset();
           }}
-          title="Clear saved settings and custom tunings"
+          title={t("errorFallback.factoryResetTitle")}
         >
           <FiTrash2 size={16} />
-          Factory reset
+          {t("errorFallback.factoryReset")}
         </button>
       </div>
     </div>

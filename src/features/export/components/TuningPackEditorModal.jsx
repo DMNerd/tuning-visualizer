@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { JsonEditor } from "json-edit-react";
+import { useTranslation } from "react-i18next";
 import {
   useDebounce,
   useKey,
@@ -38,6 +39,7 @@ function TuningPackEditorModal({
   onSubmit,
   themeMode = "light",
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState(() => getSeedSnapshot(initialPack, mode));
   const [error, setError] = useState("");
   const [pointer, setPointer] = useState(null);
@@ -85,11 +87,11 @@ function TuningPackEditorModal({
         parseTuningPack(draft);
         setValidationMessage("");
       } catch (e) {
-        setValidationMessage(e?.message || "Invalid tuning pack.");
+        setValidationMessage(e?.message || t("editor.invalidPack"));
       }
     },
     150,
-    [draft, draftString],
+    [draft, draftString, t],
   );
 
   const handleCancel = useCallback(async () => {
@@ -97,17 +99,16 @@ function TuningPackEditorModal({
 
     if (hasUnsavedChanges) {
       const shouldDiscard = await confirm({
-        title: "Discard unsaved changes?",
-        message:
-          "You have unsaved edits to this tuning pack. Close the editor without saving?",
-        confirmText: "Discard",
-        cancelText: "Keep editing",
+        title: t("editor.discardTitle"),
+        message: t("editor.discardMessage"),
+        confirmText: t("editor.discardConfirm"),
+        cancelText: t("editor.keepEditing"),
         toastId: "confirm-pack-editor-cancel",
         duration: Infinity,
       });
 
       if (!shouldDiscard) {
-        toast("Continue editing to keep your changes.", {
+        toast(t("editor.continueEditing"), {
           id: "warn-pack-editor-unsaved",
           duration: 4000,
           icon: <FiAlertTriangle size={20} color="var(--accent)" />,
@@ -117,7 +118,7 @@ function TuningPackEditorModal({
     }
 
     onCancelRef.current?.();
-  }, [hasUnsavedChanges, isOpen, onCancelRef]);
+  }, [hasUnsavedChanges, isOpen, onCancelRef, t]);
 
   const handleSave = useCallback(() => {
     if (validationMessage) {
@@ -135,9 +136,9 @@ function TuningPackEditorModal({
         replaceName: mode === "edit" ? originalName : undefined,
       });
     } catch (e) {
-      setError(e?.message || "Unable to save pack.");
+      setError(e?.message || t("editor.saveFailed"));
     }
-  }, [draft, mode, onSubmitRef, originalName, validationMessage]);
+  }, [draft, mode, onSubmitRef, originalName, validationMessage, t]);
 
   useKey(
     (event) =>
@@ -155,30 +156,36 @@ function TuningPackEditorModal({
   const title = useMemo(
     () =>
       mode === "edit"
-        ? `Edit custom pack${originalName ? `: ${originalName}` : ""}`
-        : "Create custom pack",
-    [mode, originalName],
+        ? originalName
+          ? t("editor.editTitleNamed", { name: originalName })
+          : t("editor.editTitle")
+        : t("editor.createTitle"),
+    [mode, originalName, t],
   );
 
-  const handleDataChange = useCallback((nextData) => {
-    setDraft(ensurePack(nextData));
-    try {
-      setPendingDraftString(JSON.stringify(ensurePack(nextData)));
-    } catch (serializationError) {
-      const message =
-        serializationError?.message ||
-        "Unable to track changes in the current draft.";
-      toast.error(message, {
-        id: "pack-editor-track-error",
-      });
-    }
-    setError("");
-  }, []);
+  const handleDataChange = useCallback(
+    (nextData) => {
+      setDraft(ensurePack(nextData));
+      try {
+        setPendingDraftString(JSON.stringify(ensurePack(nextData)));
+      } catch (serializationError) {
+        const message = serializationError?.message || t("editor.trackFailed");
+        toast.error(message, {
+          id: "pack-editor-track-error",
+        });
+      }
+      setError("");
+    },
+    [t],
+  );
 
-  const handleError = useCallback((props) => {
-    const message = props?.error?.message ?? "Unable to update pack.";
-    setError(message);
-  }, []);
+  const handleError = useCallback(
+    (props) => {
+      const message = props?.error?.message ?? t("editor.updateFailed");
+      setError(message);
+    },
+    [t],
+  );
 
   const handleEditEvent = useCallback((path, isKey) => {
     if (!path) {
@@ -232,14 +239,17 @@ function TuningPackEditorModal({
       : [];
 
     if (strings.length >= STR_MAX) {
-      toast(`You can include up to ${STR_MAX} strings in a pack.`, {
+      toast(t("editor.maxStrings", { max: STR_MAX }), {
         id: "pack-editor-string-max",
       });
       return;
     }
 
     const nextIndex = strings.length + 1;
-    strings.push({ label: `String ${nextIndex}`, note: "C4" });
+    strings.push({
+      label: t("editor.stringLabel", { number: nextIndex }),
+      note: "C4",
+    });
 
     const nextPack = {
       ...pack,
@@ -247,7 +257,7 @@ function TuningPackEditorModal({
     };
 
     handleDataChange(nextPack);
-  }, [draft, handleDataChange]);
+  }, [draft, handleDataChange, t]);
 
   const handleResetTemplate = useCallback(() => {
     const nextPack = buildTemplatePack(draft);
@@ -264,10 +274,10 @@ function TuningPackEditorModal({
     setPointer("spelling");
     toast.success(
       hasSpellingHint
-        ? "Removed spelling hint."
-        : 'Set spelling hint to "de-h/b".',
+        ? t("editor.spellingRemoved")
+        : t("editor.spellingSet", { spelling: "de-h/b" }),
     );
-  }, [draft, handleDataChange, hasSpellingHint]);
+  }, [draft, handleDataChange, hasSpellingHint, t]);
 
   const handleToggleHelper = useCallback(() => {
     toggleHelper();
@@ -279,10 +289,7 @@ function TuningPackEditorModal({
     <ModalFrame isOpen={isOpen} onClose={handleCancel} ariaLabel={title}>
       <header className="tv-modal__header">
         <h2>{title}</h2>
-        <p className="tv-modal__summary">
-          Edit the JSON to fine-tune your preset. Changes are applied using JSON
-          Patch operations.
-        </p>
+        <p className="tv-modal__summary">{t("editor.summary")}</p>
       </header>
       <div className="tv-modal__body">
         <div
@@ -319,7 +326,11 @@ function TuningPackEditorModal({
           </div>
         </div>
         <div className="tv-modal__status" role="status" aria-live="polite">
-          {pointer ? <span>Focused: {pointer}</span> : <span>&nbsp;</span>}
+          {pointer ? (
+            <span>{t("editor.focused", { pointer })}</span>
+          ) : (
+            <span>&nbsp;</span>
+          )}
           {validationMessage ? (
             <span className="tv-modal__error">{validationMessage}</span>
           ) : null}
@@ -328,7 +339,7 @@ function TuningPackEditorModal({
       </div>
       <footer className="tv-modal__footer">
         <button type="button" className="tv-button" onClick={handleCancel}>
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="button"
@@ -338,7 +349,7 @@ function TuningPackEditorModal({
           aria-disabled={isSaveDisabled}
           title={isSaveDisabled ? validationMessage : undefined}
         >
-          Save pack
+          {t("editor.save")}
         </button>
       </footer>
     </ModalFrame>

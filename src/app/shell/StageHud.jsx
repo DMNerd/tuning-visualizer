@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { FiMaximize, FiMinimize, FiRotateCcw } from "react-icons/fi";
 import { BeatIndicator } from "@features/practice";
 
@@ -17,15 +18,20 @@ function StageHud({
   audioReady,
   audioError,
 }) {
+  const { t } = useTranslation();
+  const fsLabel = isFs
+    ? t("stageHud.exitFullscreen")
+    : t("stageHud.enterFullscreen");
+
   return (
     <div className="tv-stage-hud" aria-live="polite">
       <div className="tv-stage-hud__toolbar">
         <button
           type="button"
           className="tv-button tv-button--icon"
-          aria-label="Reset all to defaults"
+          aria-label={t("stageHud.resetAll")}
           onClick={onResetAll}
-          title="Reset all to defaults"
+          title={t("stageHud.resetAll")}
         >
           <FiRotateCcw size={16} aria-hidden />
         </button>
@@ -37,9 +43,9 @@ function StageHud({
             "tv-button--fullscreen",
             { "is-active": isFs },
           )}
-          aria-label={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
+          aria-label={fsLabel}
           onClick={onToggleFs}
-          title={isFs ? "Exit fullscreen (Esc)" : "Enter fullscreen (F)"}
+          title={fsLabel}
         >
           {isFs ? (
             <FiMinimize size={16} aria-hidden />
@@ -63,7 +69,9 @@ function StageHud({
 
           <div className="tv-stage-hud__badges">
             {countInEnabled ? (
-              <span className="tv-stage-hud__badge">Count-in enabled</span>
+              <span className="tv-stage-hud__badge">
+                {t("stageHud.countIn")}
+              </span>
             ) : null}
             <span
               className={clsx("tv-stage-hud__badge", {
@@ -71,10 +79,10 @@ function StageHud({
               })}
             >
               {audioError
-                ? `Audio error: ${audioError}`
+                ? t("stageHud.audioError", { error: audioError })
                 : audioReady
-                  ? "Audio ready"
-                  : "Audio idle"}
+                  ? t("stageHud.audioReady")
+                  : t("stageHud.audioIdle")}
             </span>
           </div>
         </>

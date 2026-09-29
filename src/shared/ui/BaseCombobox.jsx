@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import FloatingListbox from "@shared/ui/FloatingListbox";
 import useCombobox from "@shared/hooks/useCombobox";
 import useFilteredOptions from "@shared/hooks/useFilteredOptions";
@@ -35,6 +36,7 @@ export default function BaseCombobox({
   enableVirtualization = true,
   orderFilteredOptions,
 }) {
+  const { t } = useTranslation();
   const selectedOption = useMemo(() => {
     if (value == null) return null;
     return (
@@ -353,7 +355,7 @@ export default function BaseCombobox({
             >
               {filteredOptions.length === 0 ? (
                 <li className="tv-combobox__empty" role="presentation">
-                  No matches.
+                  {t("common.noMatches")}
                 </li>
               ) : shouldVirtualize ? (
                 <>

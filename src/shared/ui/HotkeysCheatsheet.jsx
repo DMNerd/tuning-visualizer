@@ -1,27 +1,30 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 
+// [keys, translation key of the description]
 const HOTKEY_ROWS = [
-  ["Shift+/ • Ctrl+/ • F1", "show this help"],
-  ["f", "fullscreen"],
-  ["l", "cycle labels"],
-  ["o", "toggle open notes"],
-  ["n", "toggle fret numbers"],
-  ["d", "color by degree"],
-  ["a", "sharps ↔ flats"],
-  ["g", "left-handed layout"],
-  ["c", "chord overlay"],
-  ["h", "hide non-chord tones"],
-  ["r", "randomise scale and root"],
-  ["m • Space", "toggle metronome playback"],
-  ["Alt+[ / Alt+] • ArrowDown / ArrowUp", "metronome BPM - / +"],
-  ["t • Enter", "tap tempo"],
-  ["[ / ]", "strings - / +"],
-  ["- / =", "frets - / +"],
-  [", / .", "dot size - / +"],
-  ["Ctrl+N • Cmd+N", "create new tuning pack"],
+  ["Shift+/ • Ctrl+/ • F1", "hotkeys.help"],
+  ["f", "hotkeys.fullscreen"],
+  ["l", "hotkeys.cycleLabels"],
+  ["o", "hotkeys.openNotes"],
+  ["n", "hotkeys.fretNumbers"],
+  ["d", "hotkeys.colorByDegree"],
+  ["a", "hotkeys.accidentals"],
+  ["g", "hotkeys.lefty"],
+  ["c", "hotkeys.chordOverlay"],
+  ["h", "hotkeys.hideNonChord"],
+  ["r", "hotkeys.randomize"],
+  ["m • Space", "hotkeys.metronome"],
+  ["Alt+[ / Alt+] • ArrowDown / ArrowUp", "hotkeys.bpm"],
+  ["t • Enter", "hotkeys.tapTempo"],
+  ["[ / ]", "hotkeys.strings"],
+  ["- / =", "hotkeys.frets"],
+  [", / .", "hotkeys.dotSize"],
+  ["Ctrl+N • Cmd+N", "hotkeys.newPack"],
 ];
 
 function HotkeysCheatsheet({ onClose }) {
+  const { t } = useTranslation();
   const renderKeys = (text) => {
     const alts = text
       .split("•")
@@ -81,14 +84,14 @@ function HotkeysCheatsheet({ onClose }) {
   };
 
   return (
-    <div className="tv-hotkeys" role="dialog" aria-label="Keyboard shortcuts">
+    <div className="tv-hotkeys" role="dialog" aria-label={t("hotkeys.dialog")}>
       <div className="tv-hotkeys__title">
-        <span>Hotkeys</span>
+        <span>{t("hotkeys.title")}</span>
         {onClose ? (
           <button
             type="button"
             className="tv-hotkeys__close"
-            aria-label="Close"
+            aria-label={t("common.close")}
             onClick={onClose}
           >
             ×
@@ -96,10 +99,10 @@ function HotkeysCheatsheet({ onClose }) {
         ) : null}
       </div>
       <ul className="tv-hotkeys__list">
-        {HOTKEY_ROWS.map(([keys, desc]) => (
+        {HOTKEY_ROWS.map(([keys, descKey]) => (
           <li className="tv-hotkeys__row" key={keys}>
             <span className="tv-hotkeys__keys">{renderKeys(keys)}</span>
-            <span className="tv-hotkeys__desc">{desc}</span>
+            <span className="tv-hotkeys__desc">{t(descKey)}</span>
           </li>
         ))}
       </ul>

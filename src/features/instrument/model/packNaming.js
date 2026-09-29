@@ -1,3 +1,4 @@
+import i18n from "@shared/i18n";
 import { generatePackId, getPackId, normalizePackName } from "@features/export";
 import { trimmedString } from "@shared/lib/strings";
 
@@ -61,7 +62,7 @@ export function resolvePackLabel(target) {
         ? target.displayName.trim()
         : name
           ? ""
-          : "Untitled pack";
+          : i18n.t("manager.untitledPack");
     return name || displayName;
   }
 

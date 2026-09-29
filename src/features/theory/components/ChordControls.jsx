@@ -1,5 +1,6 @@
 import { memo, useId, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import {
   CHORD_TYPES,
   CHORD_LABELS,
@@ -35,6 +36,7 @@ const OVERLAY_MODE_FLAGS = {
 };
 
 function ChordControls({ state, actions, meta }) {
+  const { t } = useTranslation();
   const {
     root,
     type,
@@ -116,8 +118,8 @@ function ChordControls({ state, actions, meta }) {
   );
 
   const chordSummary = useMemo(
-    () => buildChordSummary({ showChord, chordTones, scaleSet }),
-    [chordTones, scaleSet, showChord],
+    () => buildChordSummary({ showChord, chordTones, scaleSet, t }),
+    [chordTones, scaleSet, showChord, t],
   );
 
   const rootInputId = useId();
@@ -135,6 +137,7 @@ function ChordControls({ state, actions, meta }) {
     transposedChordRoot,
     root,
     chordTypeLabel,
+    t,
   });
 
   const chordOverlayMode = !showChord
@@ -152,7 +155,7 @@ function ChordControls({ state, actions, meta }) {
             htmlFor={rootInputId}
             id={rootLabelId}
           >
-            Root
+            {t("theory.root")}
           </label>
           <select
             id={rootInputId}
@@ -175,7 +178,7 @@ function ChordControls({ state, actions, meta }) {
             htmlFor={typeInputId}
             id={typeLabelId}
           >
-            Type
+            {t("theory.chordType")}
           </label>
           <div className="tv-controls__input-row">
             <ChordTypePicker
@@ -190,8 +193,8 @@ function ChordControls({ state, actions, meta }) {
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Reset chord controls to defaults"
-              title="Reset to default"
+              aria-label={t("theory.resetChordAria")}
+              title={t("theory.resetDefault")}
               onClick={resetDefaults}
             >
               <FiRotateCcw size={16} aria-hidden />
@@ -207,7 +210,7 @@ function ChordControls({ state, actions, meta }) {
           checked={Boolean(chordCapoRelative)}
           onChange={(e) => setChordCapoRelative?.(e.target.checked)}
         >
-          Capo-relative chord
+          {t("theory.capoRelative")}
         </ToggleSwitch>
         <small className="tv-field__help">{capoChordDisplay.helpText}</small>
       </div>
@@ -222,7 +225,7 @@ function ChordControls({ state, actions, meta }) {
       />
 
       <SegmentedRadioGroup
-        label="Chord overlay"
+        label={t("theory.chordOverlay")}
         name="chord-overlay-mode"
         value={chordOverlayMode}
         onChange={(mode) => {
@@ -232,9 +235,9 @@ function ChordControls({ state, actions, meta }) {
           setHideNonChord(nextHideNonChord);
         }}
         options={[
-          { value: "off", label: "Off" },
-          { value: "overlay", label: "Overlay" },
-          { value: "chord-only", label: "Chord tones only" },
+          { value: "off", label: t("common.off") },
+          { value: "overlay", label: t("theory.overlay") },
+          { value: "chord-only", label: t("theory.chordTonesOnly") },
         ]}
       />
       {chordOverlayMode === "chord-only" ? (
@@ -245,11 +248,10 @@ function ChordControls({ state, actions, meta }) {
             checked={Boolean(chordIgnoresScale)}
             onChange={(e) => setChordIgnoresScale?.(e.target.checked)}
           >
-            Independent of scale
+            {t("theory.ignoresScale")}
           </ToggleSwitch>
           <small className="tv-field__help">
-            Colors, degrees and intervals follow the chord root instead of the
-            selected scale and root.
+            {t("theory.ignoresScaleHelp")}
           </small>
         </div>
       ) : null}

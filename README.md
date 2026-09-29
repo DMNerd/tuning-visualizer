@@ -50,6 +50,7 @@ This app will be free and open source forever and is completely self-hostable
   - Toggle **open strings** and **fret numbers**
   - Classic **inlay markers**
   - **Light/Dark** theme with preference saved
+  - Interface in **English** and **Czech**, following the browser's language or picked in the top bar ([help translate](https://github.com/DMNerd/tuning-visualizer/blob/main/docs/translating.md))
   - Option to mirror the fretboard for lefties
 
 - **Layout & Controls**

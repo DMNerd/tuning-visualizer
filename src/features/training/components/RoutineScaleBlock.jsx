@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import NumberField from "@shared/ui/NumberField";
 import {
   ROUTINE_BEATS_MAX,
@@ -20,20 +21,21 @@ export default function RoutineScaleBlock({
   onRemove,
   onUpdate,
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="tv-routine-chain__connector" aria-hidden="true" />
       <div className="tv-routine-block tv-routine-block--scale">
         <div className="tv-routine-block__header">
-          <h3>Scale block {index + 1}</h3>
+          <h3>{t("training.block", { number: index + 1 })}</h3>
           <div className="tv-routine-block__actions">
             <button
               type="button"
               className="tv-button tv-button--icon tv-button--ghost"
               onClick={() => onMove(step.id, "up")}
               disabled={index === 0}
-              aria-label="Move block up"
-              title="Move up"
+              aria-label={t("training.moveUpAria")}
+              title={t("training.moveUp")}
             >
               ↑
             </button>
@@ -42,8 +44,8 @@ export default function RoutineScaleBlock({
               className="tv-button tv-button--icon tv-button--ghost"
               onClick={() => onMove(step.id, "down")}
               disabled={index === stepCount - 1}
-              aria-label="Move block down"
-              title="Move down"
+              aria-label={t("training.moveDownAria")}
+              title={t("training.moveDown")}
             >
               ↓
             </button>
@@ -51,17 +53,17 @@ export default function RoutineScaleBlock({
               type="button"
               className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
               onClick={() => onRemove(step.id)}
-              aria-label="Remove block"
-              title="Remove"
+              aria-label={t("training.removeAria")}
+              title={t("training.remove")}
             >
-              ✕
+              {"✕"}
             </button>
           </div>
         </div>
 
         <div className="tv-controls__grid--two">
           <label className="tv-field">
-            <span className="tv-field__label">Scale</span>
+            <span className="tv-field__label">{t("training.scale")}</span>
             <select
               value={step.scaleLabel}
               onChange={(event) =>
@@ -70,7 +72,7 @@ export default function RoutineScaleBlock({
                 })
               }
             >
-              <option value="">(choose a scale)</option>
+              <option value="">{t("training.chooseScale")}</option>
               {optionsWithFallback(scaleLabelOptions, step.scaleLabel).map(
                 (label) => (
                   <option key={label} value={label}>
@@ -82,7 +84,7 @@ export default function RoutineScaleBlock({
           </label>
 
           <label className="tv-field">
-            <span className="tv-field__label">Root</span>
+            <span className="tv-field__label">{t("training.root")}</span>
             <select
               value={step.rootPc}
               onChange={(event) =>
@@ -101,7 +103,7 @@ export default function RoutineScaleBlock({
 
           <NumberField
             id={`routine-step-beats-${step.id}`}
-            label="Beats"
+            label={t("training.beats")}
             value={step.beats}
             min={ROUTINE_BEATS_MIN}
             max={ROUTINE_BEATS_MAX}
@@ -110,7 +112,7 @@ export default function RoutineScaleBlock({
 
           <NumberField
             id={`routine-step-bpm-${step.id}`}
-            label="Tempo (BPM)"
+            label={t("training.tempo")}
             value={step.bpm}
             min={ROUTINE_BPM_MIN}
             max={ROUTINE_BPM_MAX}
@@ -118,7 +120,9 @@ export default function RoutineScaleBlock({
           />
 
           <label className="tv-field">
-            <span className="tv-field__label">Time signature</span>
+            <span className="tv-field__label">
+              {t("training.timeSignature")}
+            </span>
             <select
               value={step.timeSig}
               onChange={(event) =>

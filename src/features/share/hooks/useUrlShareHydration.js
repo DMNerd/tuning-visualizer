@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
+import i18n from "@shared/i18n";
 
 import { applyResolvedTuning } from "@shared/lib/applyResolvedTuning";
 import { trimmedString } from "@shared/lib/strings";
@@ -47,11 +48,11 @@ export function useUrlShareHydration({ theoryDomain, instrumentDomain }) {
       payload: parsedPayloadRef.current,
     });
     if (noticeState === "valid") {
-      toast.success("Quickshare loaded from URL.", {
+      toast.success(i18n.t("share.loaded"), {
         id: "quickshare-url-load",
       });
     } else if (noticeState === "invalid") {
-      toast("Quickshare URL detected, but no valid payload was found.", {
+      toast(i18n.t("share.invalid"), {
         id: "quickshare-url-load",
       });
     }

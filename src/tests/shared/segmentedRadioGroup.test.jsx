@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
+import "@shared/i18n";
 
 test("segmented group emits disabled styling hooks for disabled options", () => {
   const markup = renderToStaticMarkup(

@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useLatest, useMountedState } from "react-use";
 import { useShallow } from "zustand/react/shallow";
 import { slug } from "@features/export";
+import i18n from "@shared/i18n";
 import { withToastPromise } from "@shared/lib/toast";
 import {
   useInstrumentWorkflowStore,
@@ -20,7 +21,6 @@ export function useCustomTuningPacks({
   getCurrentTuningPack,
   saveCustomTuning,
   deleteCustomTuning,
-  clearCustomTunings,
   tuning,
   stringMeta,
   boardMeta,
@@ -41,7 +41,6 @@ export function useCustomTuningPacks({
   const getCurrentTuningPackRef = useLatest(getCurrentTuningPack);
   const saveCustomTuningRef = useLatest(saveCustomTuning);
   const deleteCustomTuningRef = useLatest(deleteCustomTuning);
-  const clearCustomTuningsRef = useLatest(clearCustomTunings);
   const queuePresetByNameRef = useLatest(queuePresetByName);
 
   const isMounted = useMountedState();
@@ -125,15 +124,14 @@ export function useCustomTuningPacks({
       if (typeof target === "string" && !target.trim()) return false;
       if (!target) return false;
 
-      const label = resolvePackLabel(target) || "this tuning pack";
+      const label = resolvePackLabel(target) || i18n.t("packs.thisPack");
       const key = slug(resolvePackKey(target));
 
       const ok = await confirmIfAvailable({
-        title: "Remove custom tuning?",
-        message:
-          "This will permanently delete the selected custom tuning pack.",
-        confirmText: "Remove pack",
-        cancelText: "Cancel",
+        title: i18n.t("packs.removeTitle"),
+        message: i18n.t("packs.removeMessage"),
+        confirmText: i18n.t("packs.removeConfirm"),
+        cancelText: i18n.t("common.cancel"),
         toastId: `confirm-delete-${key}`,
       });
       if (!ok) return false;
@@ -141,9 +139,9 @@ export function useCustomTuningPacks({
       return runWithCleanup(
         () => deleteCustomTuningRef.current(target),
         {
-          loading: `Removing ${label}…`,
-          success: "Custom tuning removed.",
-          error: "Unable to remove custom tuning.",
+          loading: i18n.t("packs.removeLoading", { name: label }),
+          success: i18n.t("packs.removeSuccess"),
+          error: i18n.t("packs.removeError"),
         },
         `delete-custom-${key}`,
       );
@@ -165,10 +163,14 @@ export function useCustomTuningPacks({
         () => saveCustomTuningRef.current(pack, { replaceName }),
         {
           loading:
-            mode === "edit" ? "Updating custom pack…" : "Saving custom pack…",
+            mode === "edit"
+              ? i18n.t("packs.updateLoading")
+              : i18n.t("packs.saveLoading"),
           success:
-            mode === "edit" ? "Custom pack updated." : "Custom pack created.",
-          error: "Unable to save tuning pack.",
+            mode === "edit"
+              ? i18n.t("packs.updateSuccess")
+              : i18n.t("packs.createSuccess"),
+          error: i18n.t("packs.saveError"),
         },
         "save-custom-pack",
       );
@@ -190,30 +192,6 @@ export function useCustomTuningPacks({
       setPendingPresetName,
     ],
   );
-
-  const clearAllPacks = useCallback(async () => {
-    if (typeof clearCustomTuningsRef.current !== "function") return false;
-
-    const ok = await confirmIfAvailable({
-      title: "Clear all custom tunings?",
-      message:
-        "This will permanently remove every saved custom tuning pack. This action cannot be undone.",
-      confirmText: "Clear custom tunings",
-      cancelText: "Cancel",
-      toastId: "confirm-clear-custom",
-    });
-    if (!ok) return false;
-
-    return runWithCleanup(
-      () => clearCustomTuningsRef.current(),
-      {
-        loading: "Clearing custom tunings…",
-        success: "Custom tunings cleared.",
-        error: "Unable to clear custom tunings.",
-      },
-      "clear-custom-tunings",
-    );
-  }, [confirmIfAvailable, clearCustomTuningsRef, runWithCleanup]);
 
   useEffect(() => {
     if (!pendingPresetName) return;
@@ -243,7 +221,6 @@ export function useCustomTuningPacks({
     closeManager,
     editFromManager,
     deletePack,
-    clearAllPacks,
     submitEditor,
     cancelEditor,
     pendingPresetName,

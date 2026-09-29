@@ -6,7 +6,7 @@ The source tree is organized by product feature/domain rather than by technical 
 
 - `src/app/` contains application composition only: bootstrapping, global providers, app-level orchestration hooks, and shell/layout components.
 - `src/features/*/` contains feature-owned UI, hooks, models, containers, and stores. Public feature APIs are exposed through each feature's `index.js` barrel.
-- `src/shared/` contains reusable feature-agnostic UI primitives, hooks, libraries, and configuration.
+- `src/shared/` contains reusable feature-agnostic UI primitives, hooks, libraries, and configuration. `src/shared/i18n/` holds the i18next setup and the translation files (`locales/*.json`); see [translating.md](translating.md).
 - `src/domain/` contains pure domain data and music-theory/preset/meta modules that do not depend on React app wiring.
 - `src/tests/` mirrors this organization with `features/`, `domain/`, `shared/`, and `app/` folders.
 

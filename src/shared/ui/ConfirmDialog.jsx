@@ -1,15 +1,17 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useKey } from "react-use";
+import { useTranslation } from "react-i18next";
 
 export default function ConfirmDialog({
-  title = "Are you sure?",
+  title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
   onDismiss,
 }) {
+  const { t } = useTranslation();
   const skipFirstCleanupRef = useRef(true);
   const dismissRef = useRef(onDismiss);
 
@@ -57,7 +59,7 @@ export default function ConfirmDialog({
       className="tv-overlay"
     >
       <div id="confirm-title" className="tv-overlay__title">
-        {title}
+        {title ?? t("common.areYouSure")}
       </div>
 
       {message ? <div className="tv-overlay__message">{message}</div> : null}
@@ -69,14 +71,14 @@ export default function ConfirmDialog({
           autoFocus
           className="tv-overlay__button tv-overlay__button--muted"
         >
-          {cancelText}
+          {cancelText ?? t("common.cancel")}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
           className="tv-overlay__button tv-overlay__button--accent"
         >
-          {confirmText}
+          {confirmText ?? t("common.confirm")}
         </button>
       </div>
     </div>

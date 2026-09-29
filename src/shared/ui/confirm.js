@@ -1,12 +1,13 @@
 import { createElement } from "react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@shared/ui/ConfirmDialog";
+import i18n from "@shared/i18n";
 
 export function confirm({
-  title = "Reset all settings?",
-  message = "This will reset instrument, display, scale & root, and chord overlay.",
-  confirmText = "Reset all",
-  cancelText = "Cancel",
+  title = i18n.t("resets.resetAllTitle"),
+  message = i18n.t("resets.resetAllMessage"),
+  confirmText = i18n.t("resets.resetAllConfirm"),
+  cancelText = i18n.t("common.cancel"),
   toastId = "confirm-reset",
   duration = Infinity,
 } = {}) {

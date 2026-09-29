@@ -1,4 +1,5 @@
 import { ErrorBoundary } from "react-error-boundary";
+import { useTranslation } from "react-i18next";
 
 import ErrorFallback from "@shared/ui/ErrorFallback";
 import Section from "@shared/ui/Section";
@@ -12,6 +13,7 @@ export default function PracticePanelContainer({
   routinePlayback,
   routineLiveDefaults,
 }) {
+  const { t } = useTranslation();
   return (
     <ErrorBoundary
       FallbackComponent={ErrorFallback}
@@ -25,7 +27,7 @@ export default function PracticePanelContainer({
     >
       <Section
         id="metronome-training-controls"
-        title="Metronome and Training"
+        title={t("practice.title")}
         size="sm"
       >
         <MetronomeControls

@@ -2,6 +2,7 @@ import css from "@eslint/css";
 import js from "@eslint/js";
 import globals from "globals";
 import eslintReact from "@eslint-react/eslint-plugin";
+import i18next from "eslint-plugin-i18next";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -93,6 +94,25 @@ export default defineConfig([
                 "Use @domain/theory/tonalAdapter instead of importing the fork directly.",
             },
           ],
+        },
+      ],
+    },
+  },
+
+  // UI text goes through react-i18next (docs/translating.md), so no
+  // hard-coded strings in JSX
+  {
+    files: ["src/**/*.{jsx,tsx}"],
+    ignores: ["src/tests/**"],
+    plugins: { i18next },
+    rules: {
+      "i18next/no-literal-string": [
+        "error",
+        {
+          mode: "jsx-text-only",
+          "jsx-attributes": {
+            include: ["aria-label", "title", "placeholder", "label", "alt"],
+          },
         },
       ],
     },

@@ -1,12 +1,13 @@
 import { Fragment, useCallback, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { CHORD_LABELS, isMicrotonalChordType } from "@domain/theory/chords";
 import { normalizeStringList } from "@shared/lib/normalizeStringList";
 import BaseCombobox from "@shared/ui/BaseCombobox";
 
-const SECTION_LABELS = {
-  standard: "Standard triads & sevenths",
-  microtonal: "Microtonal",
+const SECTION_LABEL_KEYS = {
+  standard: "theory.sectionStandard",
+  microtonal: "theory.sectionMicrotonal",
 };
 
 export default function ChordTypePicker({
@@ -16,9 +17,10 @@ export default function ChordTypePicker({
   selectedType,
   onSelect: handleSelect,
   supportsMicrotonal = true,
-  placeholder = "Search chord types…",
+  placeholder,
   ariaLabelledBy,
 }) {
+  const { t } = useTranslation();
   const normalizedOptions = useMemo(() => {
     const seen = new Set();
     return normalizeStringList(chordTypes).reduce((acc, type) => {
@@ -49,19 +51,19 @@ export default function ChordTypePicker({
     if (standard.length > 0) {
       list.push({
         key: "standard",
-        label: SECTION_LABELS.standard,
+        label: t(SECTION_LABEL_KEYS.standard),
         options: standard,
       });
     }
     if (supportsMicrotonal && microtonal.length > 0) {
       list.push({
         key: "microtonal",
-        label: SECTION_LABELS.microtonal,
+        label: t(SECTION_LABEL_KEYS.microtonal),
         options: microtonal,
       });
     }
     return list;
-  }, [normalizedOptions, supportsMicrotonal]);
+  }, [normalizedOptions, supportsMicrotonal, t]);
 
   const getOptionKey = useCallback((opt) => opt.type, []);
   const getOptionLabel = useCallback((opt) => opt.label, []);
@@ -161,13 +163,13 @@ export default function ChordTypePicker({
           ) : null}
           {options.length === 0 ? (
             <li className="tv-combobox__empty" role="presentation">
-              No chord types match.
+              {t("theory.noChordTypes")}
             </li>
           ) : null}
         </ul>
       );
     },
-    [sections],
+    [sections, t],
   );
 
   return (
@@ -180,7 +182,7 @@ export default function ChordTypePicker({
       getOptionLabel={getOptionLabel}
       getFilterTerms={getFilterTerms}
       renderList={renderList}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t("theory.searchChordTypes")}
       aria-labelledby={ariaLabelledBy}
       className="tv-chord-type-picker"
     />

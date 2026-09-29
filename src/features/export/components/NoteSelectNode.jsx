@@ -1,4 +1,5 @@
 import { useId, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { pushUnique } from "@features/export/model/tuningPackNormalization";
 
 // json-edit-react custom node: renders tuning note strings as a <select>
@@ -15,6 +16,7 @@ export default function NoteSelectNode({
   getStyles,
   nodeData,
 }) {
+  const { t } = useTranslation();
   const { noteOptions = [], systemLabel } = customNodeProps ?? {};
   const selectId = useId();
   const stringStyles = getStyles("string", nodeData);
@@ -53,7 +55,7 @@ export default function NoteSelectNode({
         autoFocus
       >
         <option value="" disabled>
-          Select note…
+          {t("editor.selectNote")}
         </option>
         {options.map((option) => (
           <option key={option} value={option}>

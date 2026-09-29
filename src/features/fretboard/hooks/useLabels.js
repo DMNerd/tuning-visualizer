@@ -1,12 +1,13 @@
 import { useMemo, useCallback } from "react";
 
+// `labelKey` is a translation key; render it with t()
 export const LABEL_OPTIONS = [
-  { value: "names", label: "Note names" },
-  { value: "degrees", label: "Degrees" },
-  { value: "intervals", label: "Intervals (12-TET relative)" },
-  { value: "edoSteps", label: "EDO steps" },
-  { value: "fret", label: "Fret number" },
-  { value: "off", label: "Off" },
+  { value: "names", labelKey: "display.labelNames" },
+  { value: "degrees", labelKey: "display.labelDegrees" },
+  { value: "intervals", labelKey: "display.labelIntervals" },
+  { value: "edoSteps", labelKey: "display.labelEdoSteps" },
+  { value: "fret", labelKey: "display.labelFret" },
+  { value: "off", labelKey: "common.off" },
 ];
 
 export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);

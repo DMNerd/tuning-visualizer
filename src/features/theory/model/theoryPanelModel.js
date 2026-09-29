@@ -1,4 +1,10 @@
-export function buildChordFit(scaleTonePcs = [], chordTonePcs = null) {
+import i18n from "@shared/i18n";
+
+export function buildChordFit(
+  scaleTonePcs = [],
+  chordTonePcs = null,
+  t = i18n.t,
+) {
   const chordPcs = chordTonePcs instanceof Set ? [...chordTonePcs] : [];
   const total = chordPcs.length;
   if (total === 0) {
@@ -19,7 +25,7 @@ export function buildChordFit(scaleTonePcs = [], chordTonePcs = null) {
     inScale,
     total,
     outside,
-    text: `Chord fit: ${inScale}/${total} tones in scale`,
+    text: t("theory.chordFit", { inScale, total }),
     kind: outside > 0 ? "warning" : "success",
   };
 }

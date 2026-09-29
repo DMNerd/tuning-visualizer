@@ -7,6 +7,7 @@ import {
   useRef,
 } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { useFretboardLayout } from "@features/fretboard/hooks/useFretboardLayout";
 import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
 import { useScaleAndChord } from "@features/theory/hooks/useScaleAndChord";
@@ -93,6 +94,7 @@ function Fretboard({
   onSetCapo = () => {},
   ref,
 }) {
+  const { t } = useTranslation();
   const svgRef = useRef(null);
   const textFit = useMemo(
     () => createTextFit({ fontFamily: APP_FONT_STACK }),
@@ -597,7 +599,7 @@ function Fretboard({
           textAnchor="middle"
           dominantBaseline="middle"
         >
-          No scale selected
+          {t("fretboard.noScale")}
         </text>
       )}
     </svg>

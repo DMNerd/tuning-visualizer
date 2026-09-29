@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLatest } from "react-use";
 import { useShallow } from "zustand/react/shallow";
-import { ordinal } from "@shared/lib/ordinals";
+import i18n from "@shared/i18n";
 import * as v from "valibot";
 import {
   buildTuningPack,
@@ -30,7 +30,7 @@ import { sanitizeBoardMetaForModeStorage } from "@domain/presets/neckFilterModes
 
 export function useTuningIO({ systemId, strings, TUNINGS }) {
   const customTunings = useInstrumentWorkflowStore(selectWorkflowCustomTunings);
-  const { setCustomTunings, updateCustomTunings } = useInstrumentWorkflowStore(
+  const { updateCustomTunings } = useInstrumentWorkflowStore(
     useShallow(selectInstrumentWorkflowActions),
   );
   const upgradeRef = useRef(false);
@@ -152,7 +152,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       if (!res.success) {
         const msg =
           res.issues?.map((i) => i.message).join("\n") ||
-          "Selected file is not a valid tuning pack.";
+          i18n.t("packs.invalidPack");
         throw new Error(msg);
       }
 
@@ -163,11 +163,14 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       const takenIds = getTakenIds(existing);
 
       const newTunings = parsed.map((p, i) => {
+        const fallbackName = i18n.t("packs.importedName", {
+          ordinal: i18n.t("common.ordinal", { count: i + 1, ordinal: true }),
+        });
         const candidate =
           (typeof p.name === "string" ? p.name : "") ||
           (typeof filenames[i] === "string" ? filenames[i] : "") ||
-          `Imported ${ordinal(i + 1)}`;
-        const label = candidate.trim() || `Imported ${ordinal(i + 1)}`;
+          fallbackName;
+        const label = candidate.trim() || fallbackName;
         const uniqueName = ensureUniqueName(label, takenNames);
         const { system, ...rest } = p;
         const cleanSystem = { edo: system.edo };
@@ -190,9 +193,9 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       return withToastPromise(
         () => onImportTunings(json, filenames),
         {
-          loading: "Importing tunings…",
-          success: "Tunings imported.",
-          error: (e) => e?.message || "Import failed.",
+          loading: i18n.t("packs.importLoading"),
+          success: i18n.t("packs.importSuccess"),
+          error: (e) => e?.message || i18n.t("packs.importError"),
         },
         "import-tunings",
       );
@@ -205,14 +208,13 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
       return withToastPromise(
         () => {
           const pack = getCurrentTuningPack(tuning, stringMeta, boardMeta);
-          if (!pack)
-            throw new Error("Nothing to export for the current tuning.");
+          if (!pack) throw new Error(i18n.t("packs.nothingToExport"));
           downloadJsonFile(pack, "current-tuning.json");
         },
         {
-          loading: "Preparing current tuning…",
-          success: "Current tuning exported.",
-          error: (e) => e?.message || "Export failed.",
+          loading: i18n.t("packs.exportCurrentLoading"),
+          success: i18n.t("packs.exportCurrentSuccess"),
+          error: (e) => e?.message || i18n.t("packs.exportError"),
         },
         "export-current-tuning",
       );
@@ -224,13 +226,13 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     return withToastPromise(
       () => {
         const packs = getAllCustomTunings() || [];
-        if (!packs.length) throw new Error("No custom tunings to export.");
+        if (!packs.length) throw new Error(i18n.t("packs.noCustomToExport"));
         downloadJsonFile(packs, "custom-tunings.json");
       },
       {
-        loading: "Collecting custom tunings…",
-        success: "Custom tunings exported.",
-        error: (e) => e?.message || "Export failed.",
+        loading: i18n.t("packs.exportAllLoading"),
+        success: i18n.t("packs.exportAllSuccess"),
+        error: (e) => e?.message || i18n.t("packs.exportError"),
       },
       "export-all-tunings",
     );
@@ -243,7 +245,6 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     deleteCustomTuning,
     onImportTunings,
     customTunings: customTunings || [],
-    clearCustomTunings: () => setCustomTunings([]),
     importFromJson,
     exportCurrent,
     exportAll,

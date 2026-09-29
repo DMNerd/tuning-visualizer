@@ -1,6 +1,11 @@
 import * as v from "valibot";
 import { STR_MAX, STR_MIN } from "@shared/config/appDefaults";
 import { normalizeSpellingHint } from "@domain/theory/notation";
+import i18n from "@shared/i18n";
+
+// Messages are functions so they are translated when validation runs
+const msg = (key: string, options?: Record<string, unknown>) => () =>
+  i18n.t(key, options);
 
 export const TuningStringSchema = v.pipe(
   v.object({
@@ -14,7 +19,7 @@ export const TuningStringSchema = v.pipe(
     (value) =>
       (typeof value.note === "string" && value.note.trim().length > 0) ||
       typeof value.midi === "number",
-    "Each string must include a note or MIDI value.",
+    msg("packs.stringNeedsNote"),
   ),
 );
 
@@ -24,21 +29,15 @@ export const TuningPackSchema = v.object({
   system: v.object({
     edo: v.pipe(
       v.number(),
-      v.integer("System edo must be an integer value."),
-      v.minValue(12, "System edo must be at least 12."),
+      v.integer(msg("packs.edoInteger")),
+      v.minValue(12, msg("packs.edoMin", { min: 12 })),
     ),
   }),
   tuning: v.object({
     strings: v.pipe(
       v.array(TuningStringSchema),
-      v.minLength(
-        STR_MIN,
-        `Tuning pack must include at least ${STR_MIN} strings.`,
-      ),
-      v.maxLength(
-        STR_MAX,
-        `Tuning pack may include at most ${STR_MAX} strings.`,
-      ),
+      v.minLength(STR_MIN, msg("packs.minStrings", { min: STR_MIN })),
+      v.maxLength(STR_MAX, msg("packs.maxStrings", { max: STR_MAX })),
     ),
   }),
   meta: v.optional(v.record(v.string(), v.unknown())),
@@ -67,13 +66,13 @@ export function parseTuningPack(pack: unknown): TuningPack {
   if (!res.success) {
     const message =
       res.issues?.map((issue) => issue.message).join("; ") ||
-      "Pack is not a valid tuning.";
+      i18n.t("packs.invalidTuning");
     throw new Error(message);
   }
 
   const normalizedName = res.output.name?.trim?.();
   if (!normalizedName) {
-    throw new Error("Custom tuning must include a name.");
+    throw new Error(i18n.t("packs.nameRequired"));
   }
   const normalizedSpelling = normalizeSpellingHint(res.output.spelling);
   const { spelling: _rawSpelling, ...rest } = res.output;

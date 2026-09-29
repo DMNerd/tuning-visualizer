@@ -5,6 +5,7 @@ import path from "node:path";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useFretboardLayout } from "@features/fretboard/hooks/useFretboardLayout";
+import "@shared/i18n";
 
 function LayoutProbe(props) {
   const layout = useFretboardLayout(props);

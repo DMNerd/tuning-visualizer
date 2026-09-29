@@ -1,5 +1,6 @@
 import { useRef, useMemo, useState } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import Section from "@shared/ui/Section";
 import { withToastPromise } from "@shared/lib/toast";
@@ -25,10 +26,10 @@ function ExportControls({
   exportCurrent,
   exportAll,
   importFromJson,
-  onClearCustom,
   onManageCustom,
   shareState,
 }) {
+  const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const safeFileBase = useMemo(() => fileBase || "fretboard", [fileBase]);
@@ -44,9 +45,9 @@ function ExportControls({
           buildHeader?.(),
         ),
       {
-        loading: "Rendering PNG…",
-        success: "PNG saved.",
-        error: "PNG export failed.",
+        loading: t("export.pngLoading"),
+        success: t("export.pngSuccess"),
+        error: t("export.pngError"),
       },
       "export-png",
     );
@@ -55,9 +56,9 @@ function ExportControls({
     withToastPromise(
       () => downloadSVG?.(boardRef?.current, safeFileBase, buildHeader?.()),
       {
-        loading: "Rendering SVG…",
-        success: "SVG saved.",
-        error: "SVG export failed.",
+        loading: t("export.svgLoading"),
+        success: t("export.svgSuccess"),
+        error: t("export.svgError"),
       },
       "export-svg",
     );
@@ -66,16 +67,15 @@ function ExportControls({
     withToastPromise(
       () => printFretboard?.(boardRef?.current, buildHeader?.()),
       {
-        loading: "Opening print dialog…",
-        success: "Print dialog opened.",
-        error: "Print failed.",
+        loading: t("export.printLoading"),
+        success: t("export.printSuccess"),
+        error: t("export.printError"),
       },
       "export-print",
     );
 
   const doExportCurrent = () => exportCurrent?.();
   const doExportAll = () => exportAll?.();
-  const doClearCustom = () => onClearCustom?.();
   const doManageCustom = () => onManageCustom?.();
   const doOpenShareModal = () => setIsShareModalOpen(true);
   const triggerImport = () => fileInputRef.current?.click();
@@ -113,7 +113,7 @@ function ExportControls({
   };
 
   return (
-    <Section id="export-controls" title="Export / Import">
+    <Section id="export-controls" title={t("export.title")}>
       <div className={clsx("tv-controls", "tv-controls--export")}>
         <div className="tv-controls__grid--two">
           <button
@@ -121,35 +121,35 @@ function ExportControls({
             className="tv-button tv-button--block"
             onClick={doDownloadPNG}
           >
-            Export PNG
+            {t("export.png")}
           </button>
           <button
             type="button"
             className="tv-button tv-button--block"
             onClick={doDownloadSVG}
           >
-            Export SVG
+            {t("export.svg")}
           </button>
           <button
             type="button"
             className="tv-button tv-button--block"
             onClick={doPrint}
           >
-            Print
+            {t("export.print")}
           </button>
           <button
             type="button"
             className="tv-button tv-button--block"
             onClick={doExportCurrent}
           >
-            Export current tuning (.json)
+            {t("export.current")}
           </button>
           <button
             type="button"
             className="tv-button tv-button--block"
             onClick={doExportAll}
           >
-            Export all custom (.json)
+            {t("export.all")}
           </button>
           <button
             type="button"
@@ -157,22 +157,14 @@ function ExportControls({
             onClick={doManageCustom}
             disabled={!onManageCustom}
           >
-            Manage custom tunings
-          </button>
-          <button
-            type="button"
-            className="tv-button tv-button--block"
-            onClick={doClearCustom}
-            disabled={!onClearCustom}
-          >
-            Clear custom tunings
+            {t("export.manage")}
           </button>
           <button
             type="button"
             className="tv-button tv-button--block"
             onClick={triggerImport}
           >
-            Import tunings (.json)
+            {t("export.import")}
           </button>
           <button
             type="button"
@@ -180,7 +172,7 @@ function ExportControls({
             onClick={doOpenShareModal}
             disabled={!shareState}
           >
-            Quickshare
+            {t("export.quickshare")}
           </button>
           <input
             ref={fileInputRef}
@@ -212,7 +204,6 @@ const ExportControlsMemo = memoWithKeys(ExportControls, [
   "exportCurrent",
   "exportAll",
   "importFromJson",
-  "onClearCustom",
   "onManageCustom",
   "shareState",
 ]);

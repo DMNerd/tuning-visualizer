@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLatest } from "react-use";
 import { toast } from "react-hot-toast";
+import i18n from "@shared/i18n";
 
 import { PRESET_TUNINGS } from "@domain/presets/presetState";
 import { applyResolvedTuning } from "@shared/lib/applyResolvedTuning";
@@ -104,7 +105,7 @@ export function useRoutinePlayback({
   const play = useCallback(
     (routine) => {
       if (!routine?.steps?.length) {
-        toast.error("This routine has no scale blocks yet.", {
+        toast.error(i18n.t("training.noBlocks"), {
           id: "training-routine-play",
         });
         return;

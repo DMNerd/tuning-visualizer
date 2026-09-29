@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import i18n from "@shared/i18n";
 import { pickRandomScale } from "@shared/lib/random";
 import { useThrottledTrigger } from "@shared/hooks/useThrottledTrigger";
 
@@ -31,14 +32,17 @@ export function formatRandomizedScaleAnnouncement({ result, mode }) {
   if (!result) return "";
 
   if (mode === RANDOMIZE_MODES.KeyOnly) {
-    return `root ${result.root}`;
+    return i18n.t("practice.announceRoot", { root: result.root });
   }
 
   if (mode === RANDOMIZE_MODES.ScaleOnly) {
-    return `scale ${result.scale}`;
+    return i18n.t("practice.announceScale", { scale: result.scale });
   }
 
-  return `${result.root} ${result.scale}`;
+  return i18n.t("practice.announceBoth", {
+    root: result.root,
+    scale: result.scale,
+  });
 }
 
 export function useRandomScale({

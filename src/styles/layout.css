@@ -1217,6 +1217,50 @@ svg {
   display: none;
 }
 
+.tv-language {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-inline: var(--space-sm) var(--space-xs);
+  color: var(--muted);
+  background: color-mix(in oklab, var(--panel) 70%, var(--fg) 5%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: color var(--speed) var(--ease);
+}
+
+.tv-language:hover,
+.tv-language:focus-within {
+  color: var(--fg);
+}
+
+.tv-language__icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: 0 0 auto;
+}
+
+.tv-language__select {
+  padding-block: var(--space-xs);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.tv-language__select:focus-visible {
+  outline: none;
+}
+
+.tv-language:has(.tv-language__select:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .tv-hotkeys {
   line-height: 1.4;
   max-width: 520px;

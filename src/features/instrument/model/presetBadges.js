@@ -1,46 +1,62 @@
+const BUILT_IN_PRESET_LABEL_KEYS = {
+  "Factory default": "instrument.presetFactoryDefault",
+  "Saved default": "instrument.presetSavedDefault",
+};
+
+// Display name for a preset; built-in presets are stored under fixed English
+// names, so only their label is translated.
+export function presetDisplayName(t, name) {
+  const key = BUILT_IN_PRESET_LABEL_KEYS[name];
+  return key ? t(key) : name;
+}
+
 function countStringMeta(stringMeta) {
   if (stringMeta instanceof Map) return stringMeta.size;
   if (Array.isArray(stringMeta)) return stringMeta.length;
   return 0;
 }
 
-function boardLabels(boardMeta) {
-  const labels = [];
+// Badge labels are translation keys (`labelKey`); render them with t()
+function boardLabelKeys(boardMeta) {
+  const labelKeys = [];
   if (boardMeta.notePlacement === "onFret") {
-    labels.push("On-fret notes");
+    labelKeys.push("instrument.badgeOnFret");
   } else if (boardMeta.notePlacement === "between") {
-    labels.push("Between frets");
+    labelKeys.push("instrument.badgeBetweenFrets");
   }
 
   if (boardMeta.fretStyle === "dotted") {
-    labels.push("Dotted frets");
+    labelKeys.push("instrument.badgeDottedFrets");
   } else if (boardMeta.fretStyle === "solid") {
-    labels.push("Solid frets");
+    labelKeys.push("instrument.badgeSolidFrets");
   }
 
-  return labels.length ? labels : ["Board styling"];
+  return labelKeys.length ? labelKeys : ["instrument.badgeBoardStyling"];
 }
 
 export function buildPresetBadges({ isCustom, meta }) {
   const badges = [];
   if (isCustom) {
-    badges.push({ key: "custom", label: "Custom", variant: "accent" });
+    badges.push({
+      key: "custom",
+      labelKey: "instrument.badgeCustom",
+      variant: "accent",
+    });
   }
   if (!meta) return badges;
 
   if (countStringMeta(meta.stringMeta) > 0) {
-    badges.push({ key: "string-meta", label: "String markers" });
+    badges.push({
+      key: "string-meta",
+      labelKey: "instrument.badgeStringMarkers",
+    });
   }
 
   if (meta.board) {
-    boardLabels(meta.board).forEach((label, idx) => {
-      badges.push({ key: `board-${idx}-${label}`, label });
+    boardLabelKeys(meta.board).forEach((labelKey, idx) => {
+      badges.push({ key: `board-${idx}-${labelKey}`, labelKey });
     });
   }
 
   return badges;
-}
-
-export function stringCountLabel(strings) {
-  return `${strings} strings`;
 }

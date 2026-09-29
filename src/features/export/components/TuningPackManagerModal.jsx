@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { useLatest, useWindowSize } from "react-use";
 import { findSystemByEdo, getSystemLabel } from "@domain/theory/tuning";
 import { memoWithShallowPick } from "@shared/lib/memo";
@@ -18,6 +19,7 @@ function TuningPackManagerModal({
   onEdit,
   onDelete,
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const onCloseRef = useLatest(onClose);
   const onEditRef = useLatest(onEdit);
@@ -36,7 +38,7 @@ function TuningPackManagerModal({
     const grouped = new Map();
 
     tunings.forEach((entry) => {
-      const normalized = normalizePack(entry);
+      const normalized = normalizePack(entry, t);
       if (!normalized) return;
 
       const edoValue = Number.isFinite(normalized?.edo)
@@ -53,7 +55,10 @@ function TuningPackManagerModal({
         metaSystemId: normalized?.metaSystemId,
       });
 
-      const formattedStringsCount = formatStringsCount(normalized.stringsCount);
+      const formattedStringsCount = formatStringsCount(
+        normalized.stringsCount,
+        t,
+      );
 
       const matchesQuery = packMatchesQuery({
         normalizedPack: normalized,
@@ -95,7 +100,7 @@ function TuningPackManagerModal({
     });
 
     return result;
-  }, [tunings, systems, normalizedQuery]);
+  }, [tunings, systems, normalizedQuery, t]);
 
   const handleEdit = useCallback(
     (pack) => {
@@ -125,7 +130,7 @@ function TuningPackManagerModal({
     <ModalFrame
       isOpen={isOpen}
       onClose={handleClose}
-      ariaLabel="Manage custom tunings"
+      ariaLabel={t("manager.title")}
       closeHotkeys={[
         (event) =>
           (event.key === "w" || event.key === "W") &&
@@ -133,21 +138,18 @@ function TuningPackManagerModal({
       ]}
     >
       <header className="tv-modal__header">
-        <h2>Manage custom tunings</h2>
-        <p className="tv-modal__summary">
-          Review your saved packs, edit their details, or remove the ones you no
-          longer need.
-        </p>
+        <h2>{t("manager.title")}</h2>
+        <p className="tv-modal__summary">{t("manager.summary")}</p>
         {hasTunings ? (
           <div className="tv-modal__manager-toolbar">
             <div className="tv-modal__manager-search">
-              <label htmlFor="tuning-pack-filter">Filter packs</label>
+              <label htmlFor="tuning-pack-filter">{t("manager.filter")}</label>
               <input
                 id="tuning-pack-filter"
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name, system, string count, or notes"
+                placeholder={t("manager.filterPlaceholder")}
                 aria-controls="tuning-pack-manager-sections"
                 autoComplete="off"
               />
@@ -172,8 +174,7 @@ function TuningPackManagerModal({
                     <h3>{group.systemLabel}</h3>
                   </div>
                   <span className="tv-modal__manager-group-count">
-                    {group.packs.length}{" "}
-                    {group.packs.length === 1 ? "pack" : "packs"}
+                    {t("manager.packCount", { count: group.packs.length })}
                   </span>
                 </header>
                 <ul className="tv-modal__manager-list">
@@ -188,7 +189,7 @@ function TuningPackManagerModal({
                             {pack.displayName}
                           </span>
                           <span className="tv-modal__manager-pack-preview">
-                            {formatStringsCount(pack.stringsCount)}
+                            {formatStringsCount(pack.stringsCount, t)}
                             {pack.stringPreview
                               ? ` · ${pack.stringPreview}`
                               : ""}
@@ -199,21 +200,29 @@ function TuningPackManagerModal({
                             type="button"
                             className="tv-button tv-button--icon tv-button--ghost tv-button--accent"
                             onClick={() => handleEdit(pack.raw)}
-                            aria-label={`Edit ${pack.displayName}`}
-                            title="Edit"
+                            aria-label={t("manager.editAria", {
+                              name: pack.displayName,
+                            })}
+                            title={t("manager.edit")}
                           >
                             <FiEdit2 aria-hidden="true" focusable="false" />
-                            <span className="tv-button__label">Edit</span>
+                            <span className="tv-button__label">
+                              {t("manager.edit")}
+                            </span>
                           </button>
                           <button
                             type="button"
                             className="tv-button tv-button--icon tv-button--ghost tv-button--danger"
                             onClick={() => handleDelete(pack.raw)}
-                            aria-label={`Remove ${pack.displayName}`}
-                            title="Remove"
+                            aria-label={t("manager.removeAria", {
+                              name: pack.displayName,
+                            })}
+                            title={t("manager.remove")}
                           >
                             <FiTrash2 aria-hidden="true" focusable="false" />
-                            <span className="tv-button__label">Remove</span>
+                            <span className="tv-button__label">
+                              {t("manager.remove")}
+                            </span>
                           </button>
                         </div>
                       </li>
@@ -228,19 +237,19 @@ function TuningPackManagerModal({
             id="tuning-pack-manager-sections"
             className="tv-modal__empty tv-modal__empty--muted"
           >
-            <h3>No matches found</h3>
-            <p>Try a different filter to see your saved packs.</p>
+            <h3>{t("manager.noMatchesTitle")}</h3>
+            <p>{t("manager.noMatchesBody")}</p>
           </div>
         ) : (
           <div id="tuning-pack-manager-sections" className="tv-modal__empty">
-            <h3>No custom tunings yet</h3>
-            <p>Save a tuning pack to manage it here.</p>
+            <h3>{t("manager.emptyTitle")}</h3>
+            <p>{t("manager.emptyBody")}</p>
           </div>
         )}
       </div>
       <footer className="tv-modal__footer">
         <button type="button" className="tv-button" onClick={handleClose}>
-          Close
+          {t("common.close")}
         </button>
       </footer>
     </ModalFrame>

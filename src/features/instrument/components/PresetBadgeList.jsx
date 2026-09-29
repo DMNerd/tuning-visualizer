@@ -1,6 +1,8 @@
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 export default function PresetBadgeList({ badges, className }) {
+  const { t } = useTranslation();
   if (!badges?.length) return null;
   return (
     <span className={clsx("tv-preset-picker__option-meta", className)}>
@@ -11,7 +13,7 @@ export default function PresetBadgeList({ badges, className }) {
             "tv-preset-picker__meta-badge--accent": badge.variant === "accent",
           })}
         >
-          {badge.label}
+          {t(badge.labelKey)}
         </span>
       ))}
     </span>

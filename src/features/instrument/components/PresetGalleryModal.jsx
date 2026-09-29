@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import ModalFrame from "@shared/ui/ModalFrame";
 import useFilteredOptions from "@shared/hooks/useFilteredOptions";
 import { renderNoteName } from "@domain/theory/notation";
 import PresetBadgeList from "@features/instrument/components/PresetBadgeList";
-import { stringCountLabel } from "@features/instrument/model/presetBadges";
+import { presetDisplayName } from "@features/instrument/model/presetBadges";
 import { groupPresetsByStringCount } from "@features/instrument/model/presetCatalog";
 import { usePresetCatalogEntries } from "@features/instrument/hooks/usePresetCatalogEntries";
 
@@ -19,6 +20,7 @@ export default function PresetGalleryModal({
   noteNaming,
   onSelectEntry,
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [countFilter, setCountFilter] = useState(ALL_COUNTS);
 
@@ -67,24 +69,23 @@ export default function PresetGalleryModal({
     <ModalFrame
       isOpen={isOpen}
       onClose={onClose}
-      ariaLabel="Preset gallery"
+      ariaLabel={t("instrument.galleryTitle")}
       cardClassName="tv-preset-gallery"
     >
       <header className="tv-modal__header">
-        <h2>Preset gallery</h2>
-        <p className="tv-modal__summary">
-          Every preset for this tuning system. Picking one with a different
-          string count switches the instrument to match.
-        </p>
+        <h2>{t("instrument.galleryTitle")}</h2>
+        <p className="tv-modal__summary">{t("instrument.gallerySummary")}</p>
         <div className="tv-modal__manager-toolbar">
           <div className="tv-modal__manager-search">
-            <label htmlFor="preset-gallery-filter">Search presets</label>
+            <label htmlFor="preset-gallery-filter">
+              {t("instrument.gallerySearchLabel")}
+            </label>
             <input
               id="preset-gallery-filter"
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by name, notes, or string count"
+              placeholder={t("instrument.gallerySearchPlaceholder")}
               aria-controls="preset-gallery-groups"
               autoComplete="off"
             />
@@ -93,7 +94,7 @@ export default function PresetGalleryModal({
         <div
           className="tv-preset-gallery__chips"
           role="group"
-          aria-label="Filter by string count"
+          aria-label={t("instrument.galleryFilterByCount")}
         >
           {[ALL_COUNTS, ...stringCounts].map((count) => (
             <button
@@ -105,7 +106,9 @@ export default function PresetGalleryModal({
               aria-pressed={countFilter === count}
               onClick={() => setCountFilter(count)}
             >
-              {count === ALL_COUNTS ? "All" : `${count}-string`}
+              {count === ALL_COUNTS
+                ? t("common.all")
+                : t("instrument.stringCountShort", { count })}
             </button>
           ))}
         </div>
@@ -113,18 +116,22 @@ export default function PresetGalleryModal({
 
       <div id="preset-gallery-groups" className="tv-preset-gallery__body">
         {groups.length === 0 ? (
-          <p className="tv-preset-gallery__empty">No presets match.</p>
+          <p className="tv-preset-gallery__empty">
+            {t("instrument.galleryEmpty")}
+          </p>
         ) : null}
         {groups.map(([count, groupEntries]) => (
           <section
             key={count}
             className="tv-preset-gallery__group"
-            aria-label={stringCountLabel(count)}
+            aria-label={t("instrument.stringCount", { count })}
           >
             <h3 className="tv-preset-gallery__group-title">
-              {stringCountLabel(count)}
+              {t("instrument.stringCount", { count })}
               {count === currentStrings ? (
-                <span className="tv-preset-picker__group-current">current</span>
+                <span className="tv-preset-picker__group-current">
+                  {t("common.current")}
+                </span>
               ) : null}
             </h3>
             <div className="tv-preset-gallery__grid">
@@ -144,7 +151,7 @@ export default function PresetGalleryModal({
                     onClick={() => handlePick(entry)}
                   >
                     <span className="tv-preset-gallery__card-name">
-                      {entry.name}
+                      {presetDisplayName(t, entry.name)}
                     </span>
                     <span className="tv-preset-gallery__notes">
                       {renderTuning(entry.tuning).map((note, idx) => (
@@ -165,7 +172,7 @@ export default function PresetGalleryModal({
 
       <footer className="tv-modal__footer">
         <button type="button" className="tv-button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
       </footer>
     </ModalFrame>

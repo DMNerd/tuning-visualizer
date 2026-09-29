@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
+import i18n from "@shared/i18n";
 import {
   useMetronomeEngineStore,
   selectMetronomeEngineActions,
@@ -131,7 +132,7 @@ export function useMetronomePlayback({
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) {
-        throw new Error("Web Audio API is not available in this browser.");
+        throw new Error(i18n.t("practice.noWebAudio"));
       }
       const ctx = new Ctx();
       if (ctx.state === "suspended") {
@@ -143,7 +144,9 @@ export function useMetronomePlayback({
       return ctx;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to initialize audio.";
+        error instanceof Error
+          ? error.message
+          : i18n.t("practice.audioInitFailed");
       setAudioError(message);
       throw error;
     }

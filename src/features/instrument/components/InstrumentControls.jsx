@@ -1,5 +1,6 @@
 import { lazy, useState } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import Section from "@shared/ui/Section";
 import PresetPicker from "@features/instrument/components/PresetPicker";
 import {
@@ -18,13 +19,21 @@ import { normalizeIntlNoteName } from "@domain/theory/notation";
 import {
   coerceNeckFilterMode,
   getNeckFilterOptions,
+  NECK_FILTER_MODES,
 } from "@domain/presets/neckFilterModes";
 
 const PresetGalleryModal = lazy(
   () => import("@features/instrument/components/PresetGalleryModal"),
 );
 
+const NECK_FILTER_LABEL_KEYS = {
+  [NECK_FILTER_MODES.NONE]: "instrument.neckFilterNone",
+  [NECK_FILTER_MODES.KG]: "instrument.neckFilterKg",
+  [NECK_FILTER_MODES.FRETLESS]: "instrument.neckFilterFretless",
+};
+
 function InstrumentControls({ state, actions, meta }) {
+  const { t } = useTranslation();
   const { strings, frets, tuning, systemId, selectedPreset, neckFilterMode } =
     state;
   const {
@@ -61,9 +70,9 @@ function InstrumentControls({ state, actions, meta }) {
     withToastPromise(
       () => handleSaveDefault?.(),
       {
-        loading: "Saving default…",
-        success: "Default saved.",
-        error: "Failed to save default.",
+        loading: t("instrument.saveDefaultLoading"),
+        success: t("instrument.saveDefaultSuccess"),
+        error: t("instrument.saveDefaultError"),
       },
       "save-default",
     );
@@ -72,9 +81,9 @@ function InstrumentControls({ state, actions, meta }) {
     withToastPromise(
       () => handleResetFactoryDefault?.(),
       {
-        loading: "Restoring factory settings…",
-        success: "Factory settings restored.",
-        error: "Failed to restore factory settings.",
+        loading: t("instrument.resetFactoryLoading"),
+        success: t("instrument.resetFactorySuccess"),
+        error: t("instrument.resetFactoryError"),
       },
       "reset-factory",
     );
@@ -86,14 +95,17 @@ function InstrumentControls({ state, actions, meta }) {
   const neckFilterOptions = getNeckFilterOptions({
     edo: safeSystems?.[systemId]?.divisions,
     boardMeta: null,
-  });
+  }).map((option) => ({
+    ...option,
+    label: t(NECK_FILTER_LABEL_KEYS[option.value]),
+  }));
 
   return (
-    <Section id="instrument-controls" title="Instrument">
+    <Section id="instrument-controls" title={t("instrument.title")}>
       <div className={clsx("tv-controls", "tv-controls--instrument")}>
         <div className="tv-field">
           <label className="tv-field__label" htmlFor="system">
-            Tuning system
+            {t("instrument.tuningSystem")}
           </label>
           <select
             id="system"
@@ -112,7 +124,7 @@ function InstrumentControls({ state, actions, meta }) {
         <div className="tv-controls__row--two">
           <NumberField
             id="strings"
-            label="Strings"
+            label={t("instrument.strings")}
             value={strings}
             min={STR_MIN}
             max={STR_MAX}
@@ -121,7 +133,7 @@ function InstrumentControls({ state, actions, meta }) {
 
           <NumberField
             id="frets"
-            label="Frets"
+            label={t("instrument.frets")}
             value={frets}
             min={FRETS_MIN}
             max={FRETS_MAX}
@@ -145,7 +157,7 @@ function InstrumentControls({ state, actions, meta }) {
                 className="tv-field"
               >
                 <label htmlFor={`string-${stringNum}`}>
-                  String {stringNum}
+                  {t("instrument.string", { number: stringNum })}
                 </label>
                 <select
                   id={`string-${stringNum}`}
@@ -178,7 +190,7 @@ function InstrumentControls({ state, actions, meta }) {
         </div>
 
         <div className="tv-field tv-field--spaced">
-          <label htmlFor="preset">Preset</label>
+          <label htmlFor="preset">{t("instrument.preset")}</label>
           <PresetPicker
             id="preset"
             presetCatalog={presetCatalog}
@@ -192,7 +204,7 @@ function InstrumentControls({ state, actions, meta }) {
         <SafeLazyModal
           isOpen={isGalleryOpen}
           resetKeys={[isGalleryOpen]}
-          label="preset gallery"
+          label={t("instrument.galleryModalLabel")}
         >
           <PresetGalleryModal
             isOpen={isGalleryOpen}
@@ -211,7 +223,7 @@ function InstrumentControls({ state, actions, meta }) {
             className="tv-button"
             onClick={() => onCreateCustomPack?.()}
           >
-            New custom pack
+            {t("instrument.newPack")}
           </button>
           <button
             type="button"
@@ -219,13 +231,13 @@ function InstrumentControls({ state, actions, meta }) {
             onClick={() => onEditCustomPack?.()}
             disabled={!isCustomPreset}
           >
-            Edit pack
+            {t("instrument.editPack")}
           </button>
         </div>
 
         <div className="tv-controls__defaults">
           <SegmentedRadioGroup
-            label="Neck filter"
+            label={t("instrument.neckFilter")}
             name="neck-filter-mode"
             className="tv-field--neck-filter"
             value={selectedNeckFilterMode}
@@ -236,13 +248,16 @@ function InstrumentControls({ state, actions, meta }) {
             className="tv-button tv-button--block"
             onClick={onSaveDefault}
           >
-            Save as default ({systemId}, {strings}-string)
+            {t("instrument.saveDefault", {
+              system: systemId,
+              count: strings,
+            })}
           </button>
           <button
             className="tv-button tv-button--block"
             onClick={onResetFactory}
           >
-            Reset to factory default
+            {t("instrument.resetFactory")}
           </button>
         </div>
       </div>

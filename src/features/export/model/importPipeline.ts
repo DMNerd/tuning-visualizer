@@ -1,3 +1,5 @@
+import i18n from "@shared/i18n";
+
 export const IMPORT_PIPELINE_ERROR_CODES = {
   NO_FILE: "no_file",
   INVALID_FILE_TYPE: "invalid_file_type",
@@ -65,9 +67,9 @@ function hasAllowedMimeType(mimeType: string): boolean {
 
 function formatMaxFileSizeForDisplay(sizeInBytes: number): string {
   const sizeInMb = sizeInBytes / (1024 * 1024);
-  return Number.isInteger(sizeInMb)
-    ? `${sizeInMb} MB`
-    : `${sizeInMb.toFixed(1)} MB`;
+  return i18n.t("export.sizeMb", {
+    size: Number.isInteger(sizeInMb) ? sizeInMb : sizeInMb.toFixed(1),
+  });
 }
 
 export function getImportPipelineErrorMessage(
@@ -75,19 +77,25 @@ export function getImportPipelineErrorMessage(
 ): string {
   switch (error.code) {
     case IMPORT_PIPELINE_ERROR_CODES.NO_FILE:
-      return "No file selected.";
+      return i18n.t("export.noFile");
     case IMPORT_PIPELINE_ERROR_CODES.INVALID_FILE_TYPE:
-      return "Only JSON files are supported (.json).";
+      return i18n.t("export.invalidType");
     case IMPORT_PIPELINE_ERROR_CODES.FILE_TOO_LARGE:
-      return `Selected file is too large. Maximum allowed size is ${formatMaxFileSizeForDisplay(IMPORT_PIPELINE_MAX_FILE_SIZE_BYTES)}.`;
+      return i18n.t("export.tooLarge", {
+        size: formatMaxFileSizeForDisplay(IMPORT_PIPELINE_MAX_FILE_SIZE_BYTES),
+      });
     case IMPORT_PIPELINE_ERROR_CODES.FILE_READ_FAILED:
-      return `Could not read ${error.fileName || "the selected file"}.`;
+      return i18n.t("export.readFailed", {
+        file: error.fileName || i18n.t("export.theSelectedFile"),
+      });
     case IMPORT_PIPELINE_ERROR_CODES.INVALID_JSON:
-      return `${error.fileName || "Selected file"} is not valid JSON.`;
+      return i18n.t("export.invalidJson", {
+        file: error.fileName || i18n.t("export.selectedFile"),
+      });
     case IMPORT_PIPELINE_ERROR_CODES.IMPORT_FAILED:
-      return error.message || "Import failed.";
+      return error.message || i18n.t("export.importFailed");
     default:
-      return "Import failed.";
+      return i18n.t("export.importFailed");
   }
 }
 

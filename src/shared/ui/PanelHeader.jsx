@@ -1,9 +1,15 @@
 import { memo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { FaGithub } from "react-icons/fa";
-import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
+import { FiGlobe, FiSun, FiMoon, FiMonitor } from "react-icons/fi";
+import { SUPPORTED_LANGUAGES } from "@shared/i18n";
+
+// Product name; not translated
+const APP_NAME = "TuningViz";
 
 function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
+  const { t, i18n } = useTranslation();
   const setAuto = () => setTheme("auto");
   const setLight = () => setTheme("light");
   const setDark = () => setTheme("dark");
@@ -18,44 +24,64 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
   return (
     <div className="tv-header">
       <h1 className="tv-header__title">
-        TuningViz <span className="tv-header__version">{appVersion}</span>
+        {APP_NAME} <span className="tv-header__version">{appVersion}</span>
       </h1>
 
       <div className="tv-header__actions">
         <div className="tv-header__toggles">
           {/* Theme segmented control (Auto / Light / Dark) */}
-          <div className="tv-theme" role="group" aria-label="Theme mode">
+          <div
+            className="tv-theme"
+            role="group"
+            aria-label={t("header.themeGroup")}
+          >
             <button
               type="button"
               className={clsx("tv-theme__option", { "is-active": isAuto })}
               aria-pressed={isAuto}
               onClick={setAuto}
-              title="Auto theme (follow system)"
+              title={t("header.themeAutoTitle")}
             >
               <FiMonitor aria-hidden="true" />
-              <span className="tv-theme__label">Auto</span>
+              <span className="tv-theme__label">{t("header.themeAuto")}</span>
             </button>
             <button
               type="button"
               className={clsx("tv-theme__option", { "is-active": isLight })}
               aria-pressed={isLight}
               onClick={setLight}
-              title="Light theme"
+              title={t("header.themeLightTitle")}
             >
               <FiSun aria-hidden="true" />
-              <span className="tv-theme__label">Light</span>
+              <span className="tv-theme__label">{t("header.themeLight")}</span>
             </button>
             <button
               type="button"
               className={clsx("tv-theme__option", { "is-active": isDark })}
               aria-pressed={isDark}
               onClick={setDark}
-              title="Dark theme"
+              title={t("header.themeDarkTitle")}
             >
               <FiMoon aria-hidden="true" />
-              <span className="tv-theme__label">Dark</span>
+              <span className="tv-theme__label">{t("header.themeDark")}</span>
             </button>
           </div>
+
+          <label className="tv-language" title={t("header.language")}>
+            <FiGlobe className="tv-language__icon" aria-hidden="true" />
+            <span className="tv-u-visually-hidden">{t("header.language")}</span>
+            <select
+              className="tv-language__select"
+              value={i18n.resolvedLanguage}
+              onChange={(e) => void i18n.changeLanguage(e.target.value)}
+            >
+              {SUPPORTED_LANGUAGES.map(({ code, label }) => (
+                <option key={code} value={code} lang={code}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <a
@@ -63,8 +89,8 @@ function PanelHeader({ theme, setTheme /* lefty, setLefty (unused) */ }) {
           href="https://github.com/DMNerd/tuning-visualizer"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="View source on GitHub"
-          title="View source on GitHub"
+          aria-label={t("header.github")}
+          title={t("header.github")}
         >
           <FaGithub />
         </a>

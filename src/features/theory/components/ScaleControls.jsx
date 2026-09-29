@@ -1,5 +1,6 @@
 import { useId, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
 import Section from "@shared/ui/Section";
 import { memoWithKeys } from "@shared/lib/memo";
@@ -8,6 +9,7 @@ import { RANDOMIZE_MODES } from "@features/theory/hooks/useRandomScale";
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
 
 function ScaleControls({ state, actions, meta }) {
+  const { t } = useTranslation();
   const {
     root,
     scale,
@@ -50,7 +52,7 @@ function ScaleControls({ state, actions, meta }) {
   return (
     <Section
       id="scale-controls"
-      title="Scale"
+      title={t("theory.scaleTitle")}
       size="sm"
       className="tv-panel--scale-controls"
     >
@@ -61,7 +63,7 @@ function ScaleControls({ state, actions, meta }) {
             htmlFor={rootInputId}
             id={rootLabelId}
           >
-            Root
+            {t("theory.root")}
           </label>
           <select
             id={rootInputId}
@@ -81,7 +83,7 @@ function ScaleControls({ state, actions, meta }) {
             htmlFor={scaleInputId}
             id={scaleLabelId}
           >
-            Scale
+            {t("theory.scale")}
           </label>
           <div className="tv-controls__input-row">
             <ScalePicker
@@ -94,8 +96,8 @@ function ScaleControls({ state, actions, meta }) {
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Apply randomization based on selected randomize mode"
-              title="Randomize"
+              aria-label={t("theory.randomizeAria")}
+              title={t("theory.randomize")}
               onClick={onRandomize}
             >
               <FiShuffle size={16} aria-hidden />
@@ -103,8 +105,8 @@ function ScaleControls({ state, actions, meta }) {
             <button
               type="button"
               className="tv-button tv-button--icon"
-              aria-label="Reset to default scale and root"
-              title="Reset to default"
+              aria-label={t("theory.resetScaleAria")}
+              title={t("theory.resetDefault")}
               onClick={resetDefaults}
             >
               <FiRotateCcw size={16} aria-hidden />
@@ -114,11 +116,11 @@ function ScaleControls({ state, actions, meta }) {
 
         <div className="tv-field tv-field--scale-tones">
           <span className="tv-field__label" id={scaleTonesLabelId}>
-            Scale tones
+            {t("theory.scaleTones")}
           </span>
           <div
             className="tv-tone-list"
-            aria-label="Scale tones"
+            aria-label={t("theory.scaleTones")}
             aria-labelledby={scaleTonesLabelId}
             role="list"
           >
@@ -146,14 +148,20 @@ function ScaleControls({ state, actions, meta }) {
 
         <SegmentedRadioGroup
           className="tv-field--scale-tones"
-          label="Randomize"
+          label={t("theory.randomize")}
           name="scale-randomize-mode"
           value={randomizeMode}
           onChange={setRandomizeMode}
           options={[
-            { value: RANDOMIZE_MODES.Both, label: "Key + scale" },
-            { value: RANDOMIZE_MODES.ScaleOnly, label: "Scale only" },
-            { value: RANDOMIZE_MODES.KeyOnly, label: "Key only" },
+            { value: RANDOMIZE_MODES.Both, label: t("theory.randomizeBoth") },
+            {
+              value: RANDOMIZE_MODES.ScaleOnly,
+              label: t("theory.randomizeScaleOnly"),
+            },
+            {
+              value: RANDOMIZE_MODES.KeyOnly,
+              label: t("theory.randomizeKeyOnly"),
+            },
           ]}
         />
       </div>

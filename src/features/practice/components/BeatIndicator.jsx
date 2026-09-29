@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import { formatRemainingTime } from "@features/practice/model/formatRemainingTime";
 
 function parseBeats(timeSig) {
@@ -16,6 +17,7 @@ function BeatIndicator({
   practiceSecondsRemaining = null,
   className,
 }) {
+  const { t } = useTranslation();
   const beatsPerBar = useMemo(() => parseBeats(timeSig), [timeSig]);
 
   return (
@@ -28,15 +30,19 @@ function BeatIndicator({
       aria-atomic="true"
     >
       <div className="tv-beat-indicator__meta">
-        <span>Bar {currentBar}</span>
+        <span>{t("practice.bar", { bar: currentBar })}</span>
         <span aria-hidden>•</span>
         <span>
-          Beat {currentBeat}/{beatsPerBar}
+          {t("practice.beat", { beat: currentBeat, beats: beatsPerBar })}
         </span>
         {timedPracticeEnabled && Number.isFinite(practiceSecondsRemaining) ? (
           <>
             <span aria-hidden>•</span>
-            <span>Time {formatRemainingTime(practiceSecondsRemaining)}</span>
+            <span>
+              {t("practice.time", {
+                time: formatRemainingTime(practiceSecondsRemaining),
+              })}
+            </span>
           </>
         ) : null}
       </div>

@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo } from "react";
 import { useLatest } from "react-use";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import ModalFrame from "@shared/ui/ModalFrame";
 import NumberField from "@shared/ui/NumberField";
@@ -29,6 +30,7 @@ import RoutineLibrary from "@features/training/components/RoutineLibrary";
 import RoutineScaleBlock from "@features/training/components/RoutineScaleBlock";
 import RoutineSharePreview from "@features/training/components/RoutineSharePreview";
 import { optionsWithFallback } from "@features/training/model/routineOptions";
+import { presetDisplayName } from "@features/instrument/model/presetBadges";
 
 export default function RoutineBuilderModal({
   isOpen,
@@ -38,6 +40,7 @@ export default function RoutineBuilderModal({
   routinePlayback,
   liveDefaults,
 }) {
+  const { t } = useTranslation();
   const accidental = liveDefaults?.accidental;
   const noteNaming = liveDefaults?.noteNaming;
   // Single-field selectors, not the full playback state — this modal only
@@ -129,10 +132,10 @@ export default function RoutineBuilderModal({
   );
 
   const handleSave = () => {
-    const name = draft.name.trim() || "Untitled routine";
+    const name = draft.name.trim() || t("training.untitled");
     upsertRoutine({ ...draft, name, updatedAt: Date.now() });
     if (draft.name.trim() !== name) renameDraft(name);
-    toast.success("Routine saved.", { id: "training-routine-save" });
+    toast.success(t("training.saved"), { id: "training-routine-save" });
   };
 
   const handlePlay = (routine) => {
@@ -142,10 +145,12 @@ export default function RoutineBuilderModal({
 
   const handleDelete = async (routine) => {
     const ok = await confirm({
-      title: "Delete routine?",
-      message: `This will permanently delete "${routine.name || "Untitled routine"}".`,
-      confirmText: "Delete routine",
-      cancelText: "Cancel",
+      title: t("training.deleteTitle"),
+      message: t("training.deleteMessage", {
+        name: routine.name || t("training.untitled"),
+      }),
+      confirmText: t("training.deleteConfirm"),
+      cancelText: t("common.cancel"),
       toastId: `confirm-delete-routine-${routine.id}`,
     });
     if (!ok) return;
@@ -155,9 +160,11 @@ export default function RoutineBuilderModal({
   const copyLink = async () => {
     try {
       await copyTextWithFallback(shareModel.canonicalUrl);
-      toast.success("Routine link copied.", { id: "training-routine-copy" });
+      toast.success(t("training.linkCopied"), {
+        id: "training-routine-copy",
+      });
     } catch {
-      toast.error("Could not copy routine link.", {
+      toast.error(t("training.linkCopyFailed"), {
         id: "training-routine-copy",
       });
     }
@@ -167,35 +174,34 @@ export default function RoutineBuilderModal({
     <ModalFrame
       isOpen={isOpen}
       onClose={onClose}
-      ariaLabel="Training Routine Builder"
+      ariaLabel={t("training.builderTitle")}
       cardClassName="tv-modal__card"
     >
       <header className="tv-modal__header">
-        <h2>Training Routine Builder</h2>
-        <p className="tv-modal__summary">
-          Chain scale drills into a linear practice routine, then save it or
-          share a link.
-        </p>
+        <h2>{t("training.builderTitle")}</h2>
+        <p className="tv-modal__summary">{t("training.builderSummary")}</p>
       </header>
 
       <div className="tv-modal__body tv-routine-modal__body">
         <label className="tv-field">
-          <span className="tv-field__label">Routine name</span>
+          <span className="tv-field__label">{t("training.name")}</span>
           <input
             type="text"
             className="tv-routine-name-input"
             value={draft.name}
             onChange={(event) => renameDraft(event.target.value)}
-            placeholder="Untitled routine"
+            placeholder={t("training.untitled")}
           />
         </label>
 
-        <section aria-label="Routine chain" className="tv-routine-chain">
+        <section aria-label={t("training.chain")} className="tv-routine-chain">
           <div className="tv-routine-block tv-routine-block--start">
-            <h3>Start</h3>
+            <h3>{t("training.start")}</h3>
             <div className="tv-controls__grid--two">
               <label className="tv-field">
-                <span className="tv-field__label">Tuning system</span>
+                <span className="tv-field__label">
+                  {t("training.tuningSystem")}
+                </span>
                 <select
                   value={draft.startBlock.systemId}
                   onChange={(event) =>
@@ -212,7 +218,7 @@ export default function RoutineBuilderModal({
 
               <NumberField
                 id="routine-start-strings"
-                label="Strings"
+                label={t("training.strings")}
                 value={draft.startBlock.strings}
                 min={STR_MIN}
                 max={STR_MAX}
@@ -220,20 +226,20 @@ export default function RoutineBuilderModal({
               />
 
               <label className="tv-field">
-                <span className="tv-field__label">Preset</span>
+                <span className="tv-field__label">{t("training.preset")}</span>
                 <select
                   value={draft.startBlock.presetName}
                   onChange={(event) =>
                     setStartBlock({ presetName: event.target.value })
                   }
                 >
-                  <option value="">(none)</option>
+                  <option value="">{t("training.noPreset")}</option>
                   {optionsWithFallback(
                     presetOptions,
                     draft.startBlock.presetName,
                   ).map((name) => (
                     <option key={name} value={name}>
-                      {name}
+                      {presetDisplayName(t, name)}
                     </option>
                   ))}
                 </select>
@@ -241,7 +247,7 @@ export default function RoutineBuilderModal({
 
               <NumberField
                 id="routine-start-beats"
-                label="Starting beats"
+                label={t("training.startingBeats")}
                 value={draft.startBlock.beats}
                 min={ROUTINE_BEATS_MIN}
                 max={ROUTINE_BEATS_MAX}
@@ -270,7 +276,7 @@ export default function RoutineBuilderModal({
             className="tv-button tv-button--block"
             onClick={addScaleBlock}
           >
-            Add scale block
+            {t("training.addBlock")}
           </button>
         </section>
 
@@ -295,15 +301,13 @@ export default function RoutineBuilderModal({
         {hasSteps ? (
           <RoutineSharePreview shareModel={shareModel} />
         ) : (
-          <p className="tv-field__help">
-            Add at least one scale block to generate a shareable link.
-          </p>
+          <p className="tv-field__help">{t("training.needBlockForLink")}</p>
         )}
       </div>
 
       <footer className="tv-modal__footer">
         <button type="button" className="tv-button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
         <button
           type="button"
@@ -311,10 +315,10 @@ export default function RoutineBuilderModal({
           onClick={() => void copyLink()}
           disabled={!hasSteps}
         >
-          Copy routine link
+          {t("training.copyLink")}
         </button>
         <button type="button" className="tv-button" onClick={handleSave}>
-          Save to My Routines
+          {t("training.save")}
         </button>
         <button
           type="button"
@@ -322,7 +326,7 @@ export default function RoutineBuilderModal({
           onClick={() => handlePlay(draft)}
           disabled={isRoutinePlaying || !hasSteps}
         >
-          Play routine
+          {t("training.play")}
         </button>
       </footer>
     </ModalFrame>

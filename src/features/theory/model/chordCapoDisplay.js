@@ -1,4 +1,5 @@
 import { normalizeCapoFret } from "@domain/theory/capoChords";
+import i18n from "@shared/i18n";
 
 export function buildCapoChordDisplay({
   chordCapoRelative = false,
@@ -8,6 +9,7 @@ export function buildCapoChordDisplay({
   transposedChordRoot,
   root,
   chordTypeLabel,
+  t = i18n.t,
 }) {
   const shapeRoot = originalChordRoot ?? root;
   const soundingRoot = transposedChordRoot ?? shapeRoot;
@@ -23,16 +25,25 @@ export function buildCapoChordDisplay({
     hasActiveTransposition,
     helpText: chordCapoRelative
       ? safeCapoFret > 0
-        ? "Shape names are interpreted relative to the capo."
-        : "No capo set; shape and sounding chord match."
+        ? t("theory.capoHelpRelative")
+        : t("theory.capoHelpNoCapo")
       : safeCapoFret > 0
-        ? `Use shape names relative to capo ${safeCapoFret}.`
-        : "Enable to name chord roots as capo-relative shapes.",
+        ? t("theory.capoHelpUseRelative", { fret: safeCapoFret })
+        : t("theory.capoHelpEnable"),
     summaryText: hasActiveTransposition
-      ? `Shape: ${shapeChordLabel} → Sounds: ${soundingChordLabel} (capo ${safeCapoFret})`
-      : "No capo set; shape and sounding chord match",
-    ariaLabel: hasActiveTransposition
-      ? `Capo-relative chord mapping: shape ${shapeChordLabel}; sounds ${soundingChordLabel}; capo ${safeCapoFret}.`
-      : `Capo-relative chord mapping: shape ${shapeChordLabel}; sounds ${soundingChordLabel}; no capo set, shape and sounding chord match.`,
+      ? t("theory.capoSummary", {
+          shape: shapeChordLabel,
+          sounding: soundingChordLabel,
+          fret: safeCapoFret,
+        })
+      : t("theory.capoSummaryNoCapo"),
+    ariaLabel: t(
+      hasActiveTransposition ? "theory.capoAria" : "theory.capoAriaNoCapo",
+      {
+        shape: shapeChordLabel,
+        sounding: soundingChordLabel,
+        fret: safeCapoFret,
+      },
+    ),
   };
 }

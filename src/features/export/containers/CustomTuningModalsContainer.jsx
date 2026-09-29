@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { useTranslation } from "react-i18next";
 import SafeLazyModal from "@shared/ui/SafeLazyModal";
 
 const TuningPackEditorModal = lazy(
@@ -15,12 +16,13 @@ export default function CustomTuningModalsContainer({
   themeMode,
   handlers,
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <SafeLazyModal
         isOpen={Boolean(modal.editorState)}
         resetKeys={[modal.editorState]}
-        label="editor"
+        label={t("export.editorModalLabel")}
       >
         <TuningPackEditorModal
           isOpen={Boolean(modal.editorState)}
@@ -35,7 +37,7 @@ export default function CustomTuningModalsContainer({
       <SafeLazyModal
         isOpen={modal.isManagerOpen}
         resetKeys={[modal.isManagerOpen]}
-        label="manager"
+        label={t("export.managerModalLabel")}
       >
         <TuningPackManagerModal
           isOpen={modal.isManagerOpen}

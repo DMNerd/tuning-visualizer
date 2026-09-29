@@ -22,7 +22,6 @@ export default function ExportPanelContainer({
         exportCurrent={exporters.exportCurrent}
         exportAll={exporters.exportAll}
         importFromJson={exporters.importFromJson}
-        onClearCustom={packActions.clearAllPacks}
         onManageCustom={packActions.openManager}
         shareState={shareState}
       />

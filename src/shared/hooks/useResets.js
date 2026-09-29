@@ -7,6 +7,7 @@ import {
   getFactoryFrets,
 } from "@shared/config/appDefaults";
 import { useLatest } from "react-use";
+import i18n from "@shared/i18n";
 import { resetAllStores } from "@shared/lib/resetAllStores";
 import { resetMusicalStateFromRefs } from "@features/theory/hooks/resetMusicalState";
 
@@ -95,11 +96,10 @@ export function useResets({
     async ({ confirm: shouldConfirm = true } = {}) => {
       if (shouldConfirm && typeof refs.current.confirm === "function") {
         const ok = await refs.current.confirm({
-          title: "Reset all settings?",
-          message:
-            "This will reset tuning system, instrument (strings, frets, capo), display, scale & root, chord overlay, and metronome.",
-          confirmText: "Reset all",
-          cancelText: "Cancel",
+          title: i18n.t("resets.resetAllTitle"),
+          message: i18n.t("resets.resetAllMessage"),
+          confirmText: i18n.t("resets.resetAllConfirm"),
+          cancelText: i18n.t("common.cancel"),
           toastId: "confirm-reset",
         });
         if (!ok) return;
@@ -109,7 +109,7 @@ export function useResets({
       refs.current.resetPracticeCounters?.();
       resetAllStores();
 
-      refs.current.toast?.success?.("All settings reset.");
+      refs.current.toast?.success?.(i18n.t("resets.resetAllDone"));
     },
     [refs],
   );

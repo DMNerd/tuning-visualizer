@@ -1,5 +1,6 @@
 import { useId } from "react";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 import Section from "@shared/ui/Section";
 import { LABEL_OPTIONS } from "@features/fretboard";
 import { MICRO_LABEL_STYLES } from "@shared/lib/fretLabels";
@@ -12,13 +13,14 @@ import ToggleSwitch from "@shared/ui/ToggleSwitch";
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
 
 function DegreeLegend({ k = 7 }) {
+  const { t } = useTranslation();
   if (!Number.isFinite(k) || k < 1) return null;
 
   return (
     <div className="tv-legend" aria-live="polite">
       <p>
         <FiInfo className="tv-legend__info-icon" aria-hidden="true" />
-        <span>Degree palette</span>
+        <span>{t("display.degreePalette")}</span>
       </p>
       <div className="tv-legend__swatches">
         {Array.from({ length: k }, (_, i) => {
@@ -28,7 +30,7 @@ function DegreeLegend({ k = 7 }) {
             <div
               className="tv-legend__swatch"
               key={degree}
-              title={`Degree ${degree}`}
+              title={t("display.degree", { degree })}
             >
               <svg
                 className="tv-legend__dot"
@@ -44,23 +46,28 @@ function DegreeLegend({ k = 7 }) {
           );
         })}
       </div>
-      <small>1 = tonic (root)</small>
+      <small>{t("display.degreeLegendNote")}</small>
     </div>
   );
 }
 
 function ShapeLegend({ count = 5 }) {
+  const { t } = useTranslation();
   if (!Number.isFinite(count) || count < 1) return null;
 
   return (
     <div className="tv-legend" aria-live="polite">
       <p>
         <FiInfo className="tv-legend__info-icon" aria-hidden="true" />
-        <span>Shape palette</span>
+        <span>{t("display.shapePalette")}</span>
       </p>
       <div className="tv-legend__swatches">
         {Array.from({ length: count }, (_, i) => (
-          <div className="tv-legend__swatch" key={i} title={`Shape ${i + 1}`}>
+          <div
+            className="tv-legend__swatch"
+            key={i}
+            title={t("display.shape", { shape: i + 1 })}
+          >
             <svg
               className="tv-legend__dot"
               aria-hidden
@@ -80,12 +87,13 @@ function ShapeLegend({ count = 5 }) {
           </div>
         ))}
       </div>
-      <small>Colors follow detected shape windows across the fretboard.</small>
+      <small>{t("display.shapeLegendNote")}</small>
     </div>
   );
 }
 
 function DisplayControls({ state, actions, meta }) {
+  const { t } = useTranslation();
   const {
     show,
     showOpen,
@@ -127,29 +135,33 @@ function DisplayControls({ state, actions, meta }) {
   const dotSizeLabelId = useId();
 
   return (
-    <Section id="display-controls" title="Display">
+    <Section id="display-controls" title={t("display.title")}>
       <div className={clsx("tv-controls", "tv-controls--display")}>
-        <div className="tv-controls__group" role="region" aria-label="Notation">
+        <div
+          className="tv-controls__group"
+          role="region"
+          aria-label={t("display.notation")}
+        >
           <SegmentedRadioGroup
-            label="Accidentals"
+            label={t("display.accidentals")}
             name="accidental"
             value={accidental}
             onChange={setAccidental}
             options={[
-              { value: "sharp", label: "Sharps (C, C#, D…)" },
-              { value: "flat", label: "Flats (C, Db, D…)" },
-              { value: "both", label: "Both (C#, Db)" },
+              { value: "sharp", label: t("display.accidentalSharp") },
+              { value: "flat", label: t("display.accidentalFlat") },
+              { value: "both", label: t("display.accidentalBoth") },
             ]}
           />
 
           <SegmentedRadioGroup
-            label="Note naming"
+            label={t("display.noteNaming")}
             name="noteNaming"
             value={noteNaming}
             onChange={setNoteNaming}
             options={[
-              { value: "english", label: "International (B)" },
-              { value: "german", label: "German/Czech (H/B)" },
+              { value: "english", label: t("display.namingEnglish") },
+              { value: "german", label: t("display.namingGerman") },
             ]}
           />
 
@@ -159,7 +171,7 @@ function DisplayControls({ state, actions, meta }) {
               htmlFor={labelsInputId}
               id={labelsFieldLabelId}
             >
-              Labels
+              {t("display.labels")}
             </label>
             <select
               id={labelsInputId}
@@ -170,26 +182,35 @@ function DisplayControls({ state, actions, meta }) {
             >
               {LABEL_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </option>
               ))}
             </select>
           </div>
 
           <SegmentedRadioGroup
-            label="Micro-fret labels"
+            label={t("display.microLabels")}
             name="microLabelStyle"
             value={microLabelStyle}
             onChange={setMicroLabelStyle}
             options={[
-              { value: MICRO_LABEL_STYLES.Letters, label: "Letters" },
-              { value: MICRO_LABEL_STYLES.Accidentals, label: "Accidentals" },
-              { value: MICRO_LABEL_STYLES.Fractions, label: "Fractions" },
+              {
+                value: MICRO_LABEL_STYLES.Letters,
+                label: t("display.microLetters"),
+              },
+              {
+                value: MICRO_LABEL_STYLES.Accidentals,
+                label: t("display.microAccidentals"),
+              },
+              {
+                value: MICRO_LABEL_STYLES.Fractions,
+                label: t("display.microFractions"),
+              },
             ]}
           />
 
           <SegmentedRadioGroup
-            label="Note colors"
+            label={t("display.noteColors")}
             name="note-color-mode"
             value={colorByDegree ? "degree" : colorByShape ? "shape" : "off"}
             onChange={(nextMode) => {
@@ -207,9 +228,9 @@ function DisplayControls({ state, actions, meta }) {
               setColorByShape(false);
             }}
             options={[
-              { value: "off", label: "Off" },
-              { value: "degree", label: "Degree" },
-              { value: "shape", label: "Shape" },
+              { value: "off", label: t("common.off") },
+              { value: "degree", label: t("display.colorDegree") },
+              { value: "shape", label: t("display.colorShape") },
             ]}
           />
 
@@ -220,10 +241,10 @@ function DisplayControls({ state, actions, meta }) {
         <div
           className="tv-controls__group"
           role="region"
-          aria-label="Open strings"
+          aria-label={t("display.openStrings")}
         >
           <SegmentedRadioGroup
-            label="Open notes"
+            label={t("display.openNotes")}
             name="open-notes-mode"
             value={openNotesMode}
             onChange={(nextMode) => {
@@ -235,10 +256,10 @@ function DisplayControls({ state, actions, meta }) {
               );
             }}
             options={[
-              { value: "off", label: "Off" },
-              { value: "all", label: "All strings" },
-              { value: "scale", label: "Current scale" },
-              { value: "chord", label: "Current chord" },
+              { value: "off", label: t("common.off") },
+              { value: "all", label: t("display.openAll") },
+              { value: "scale", label: t("display.openScale") },
+              { value: "chord", label: t("display.openChord") },
             ]}
           />
         </div>
@@ -246,7 +267,7 @@ function DisplayControls({ state, actions, meta }) {
         <div
           className="tv-controls__group"
           role="region"
-          aria-label="Markers and sizing"
+          aria-label={t("display.markersAndSizing")}
         >
           <ToggleSwitch
             id="showFretNums"
@@ -254,7 +275,7 @@ function DisplayControls({ state, actions, meta }) {
             checked={showFretNums}
             onChange={(e) => setShowFretNums(e.target.checked)}
           >
-            Show fret numbers
+            {t("display.showFretNumbers")}
           </ToggleSwitch>
 
           <div className="tv-field">
@@ -263,7 +284,7 @@ function DisplayControls({ state, actions, meta }) {
               htmlFor={dotSizeInputId}
               id={dotSizeLabelId}
             >
-              Dot size
+              {t("display.dotSize")}
             </label>
             <input
               id={dotSizeInputId}
@@ -283,7 +304,7 @@ function DisplayControls({ state, actions, meta }) {
             checked={lefty}
             onChange={(e) => setLefty(e.target.checked)}
           >
-            Left-handed layout
+            {t("display.lefty")}
           </ToggleSwitch>
         </div>
       </div>
