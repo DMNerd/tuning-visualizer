@@ -9,7 +9,12 @@
     "current": "aktuální",
     "noMatches": "Žádné shody.",
     "ordinal_ordinal_other": "{{count}}.",
-    "loading": "Načítání: {{what}}…"
+    "loading": "Načítání: {{what}}…",
+    "favorites": "Oblíbené",
+    "favorite": "Přidat do oblíbených",
+    "unfavorite": "Odebrat z oblíbených",
+    "favoriteAria": "Přidat {{name}} do oblíbených",
+    "unfavoriteAria": "Odebrat {{name}} z oblíbených"
   },
   "header": {
     "themeGroup": "Barevný režim",

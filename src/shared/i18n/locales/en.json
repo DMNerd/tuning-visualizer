@@ -12,7 +12,12 @@
     "ordinal_ordinal_two": "{{count}}nd",
     "ordinal_ordinal_few": "{{count}}rd",
     "ordinal_ordinal_other": "{{count}}th",
-    "loading": "Loading {{what}}..."
+    "loading": "Loading {{what}}...",
+    "favorites": "Favorites",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "favoriteAria": "Add {{name}} to favorites",
+    "unfavoriteAria": "Remove {{name}} from favorites"
   },
   "header": {
     "themeGroup": "Theme mode",

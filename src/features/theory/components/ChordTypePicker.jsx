@@ -65,6 +65,14 @@ export default function ChordTypePicker({
     return list;
   }, [normalizedOptions, supportsMicrotonal, t]);
 
+  const sectionTypes = useMemo(
+    () =>
+      new Set(
+        sections.flatMap((section) => section.options.map((opt) => opt.type)),
+      ),
+    [sections],
+  );
+
   const getOptionKey = useCallback((opt) => opt.type, []);
   const getOptionLabel = useCallback((opt) => opt.label, []);
   const getFilterTerms = useCallback((opt) => [opt.label, opt.type], []);
@@ -76,8 +84,35 @@ export default function ChordTypePicker({
     [handleSelect],
   );
   const renderList = useCallback(
-    ({ options, listProps, renderOptionItem, virtualization }) => {
+    ({
+      options,
+      favoriteCount,
+      listProps,
+      renderOptionItem,
+      virtualization,
+    }) => {
       const available = new Set(options.map((opt) => opt.type));
+      const favorites = options
+        .slice(0, favoriteCount)
+        .filter((opt) => sectionTypes.has(opt.type));
+      const favoriteTypes = new Set(favorites.map((opt) => opt.type));
+      const listedSections = [
+        ...(favorites.length > 0
+          ? [
+              {
+                key: "favorites",
+                label: t("common.favorites"),
+                options: favorites,
+              },
+            ]
+          : []),
+        ...sections.map((section) => ({
+          ...section,
+          options: section.options.filter(
+            (opt) => available.has(opt.type) && !favoriteTypes.has(opt.type),
+          ),
+        })),
+      ];
       const optionIndexByType = new Map(
         options.map((option, index) => [option.type, index]),
       );
@@ -103,11 +138,9 @@ export default function ChordTypePicker({
           {shouldVirtualize ? (
             <VirtualSpacer height={virtualization.paddingTop} />
           ) : null}
-          {sections
+          {listedSections
             .map((section) => {
-              const sectionOptions = section.options.filter((opt) =>
-                available.has(opt.type),
-              );
+              const sectionOptions = section.options;
               if (sectionOptions.length === 0) return null;
               return (
                 <Fragment key={section.key}>
@@ -159,7 +192,7 @@ export default function ChordTypePicker({
         </ul>
       );
     },
-    [sections, t],
+    [sections, sectionTypes, t],
   );
 
   return (
@@ -172,6 +205,7 @@ export default function ChordTypePicker({
       getOptionLabel={getOptionLabel}
       getFilterTerms={getFilterTerms}
       renderList={renderList}
+      favoritesScope="chord"
       placeholder={placeholder ?? t("theory.searchChordTypes")}
       aria-labelledby={ariaLabelledBy}
       className="tv-chord-type-picker"

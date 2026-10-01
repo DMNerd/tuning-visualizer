@@ -11,4 +11,5 @@ export const STORAGE_KEYS = {
   SYSTEM_ID: "tv.systemId",
   ROOT: "tv.root",
   TRAINING_ROUTINES: "tv.trainingRoutines",
+  FAVORITES: "tv.favorites",
 };

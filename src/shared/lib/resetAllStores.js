@@ -8,6 +8,7 @@ import { useInstrumentWorkflowStore } from "@features/instrument/store/useInstru
 import { useTheoryStore } from "@features/theory/store/useTheoryStore";
 import { useThemeStore } from "@features/display/store/useThemeStore";
 import { useTrainingRoutineStore } from "@features/training/store/useTrainingRoutineStore";
+import { useFavoritesStore } from "@shared/store/useFavoritesStore";
 
 const NON_PERSISTED_APP_KEYS = [
   // Global non-store key intentionally kept outside zustand persist.
@@ -42,6 +43,7 @@ export function resetAllStores() {
   useTheoryStore.getState().resetTheory?.();
   useThemeStore.getState().resetTheme?.();
   useTrainingRoutineStore.getState().resetTrainingRoutines?.();
+  useFavoritesStore.getState().resetFavorites?.();
 
   clearPersistedStoreStorage(useDisplayPrefsStore);
   clearPersistedStoreStorage(useMetronomePrefsStore);
@@ -50,6 +52,7 @@ export function resetAllStores() {
   clearPersistedStoreStorage(useTheoryStore);
   clearPersistedStoreStorage(useThemeStore);
   clearPersistedStoreStorage(useTrainingRoutineStore);
+  clearPersistedStoreStorage(useFavoritesStore);
 
   clearAppOwnedStorageKeys();
 }

@@ -13,7 +13,7 @@ export default function PresetBadgeList({ badges, className }) {
             "tv-preset-picker__meta-badge--accent": badge.variant === "accent",
           })}
         >
-          {t(badge.labelKey)}
+          {t(badge.labelKey, badge.labelOptions)}
         </span>
       ))}
     </span>

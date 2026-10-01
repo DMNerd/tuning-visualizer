@@ -1,11 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
+import { FiStar } from "react-icons/fi";
 import FloatingListbox from "@shared/ui/FloatingListbox";
 import useCombobox from "@shared/hooks/useCombobox";
 import useFilteredOptions from "@shared/hooks/useFilteredOptions";
 import useVirtualListSizing from "@shared/hooks/useVirtualListSizing";
+import { liftFavorites } from "@shared/lib/favorites";
+import {
+  selectFavoriteKeys,
+  selectToggleFavorite,
+  useFavoritesStore,
+} from "@shared/store/useFavoritesStore";
 
 const DEFAULT_VIRTUALIZATION_THRESHOLD = 100;
 
@@ -17,6 +31,11 @@ function assignRef(ref, value) {
   }
   ref.current = value;
 }
+
+const preventFocusSteal = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
 
 // Fills the scrolled-past (or not-yet-rendered) height of a virtualized list.
 export function VirtualSpacer({ height }) {
@@ -45,8 +64,17 @@ export default function BaseCombobox({
   virtualizationThreshold = DEFAULT_VIRTUALIZATION_THRESHOLD,
   enableVirtualization = true,
   orderFilteredOptions,
+  // Store scope for starred options; enables the star toggle and lifts
+  // favourites to the top of the unfiltered list.
+  favoritesScope,
+  canFavorite,
 }) {
   const { t } = useTranslation();
+  const favoriteKeys = useFavoritesStore(
+    selectFavoriteKeys(favoritesScope ?? ""),
+  );
+  const toggleFavorite = useFavoritesStore(selectToggleFavorite);
+  const favoriteKeySet = useMemo(() => new Set(favoriteKeys), [favoriteKeys]);
   const selectedOption = useMemo(() => {
     if (value == null) return null;
     return (
@@ -123,12 +151,43 @@ export default function BaseCombobox({
     });
   // Lets grouped lists restore group order after fuzzy search re-sorts
   // matches, so keyboard navigation follows the rendered order.
-  const filteredOptions = useMemo(
+  const orderedOptions = useMemo(
     () =>
       typeof orderFilteredOptions === "function"
         ? orderFilteredOptions(matchedOptions)
         : matchedOptions,
     [orderFilteredOptions, matchedOptions],
+  );
+
+  // Order by the favourites as they were when the list opened, so starring
+  // a row doesn't move it out from under the pointer.
+  const [openFavoriteKeySet, setOpenFavoriteKeySet] = useState(null);
+  if (isOpen && openFavoriteKeySet === null) {
+    setOpenFavoriteKeySet(favoriteKeySet);
+  } else if (!isOpen && openFavoriteKeySet !== null) {
+    setOpenFavoriteKeySet(null);
+  }
+  const orderingFavoriteKeySet = openFavoriteKeySet ?? favoriteKeySet;
+
+  // Search results keep relevance order; favourites only lead the full list.
+  const { options: filteredOptions, favoriteCount } = useMemo(
+    () =>
+      favoritesScope && !normalizedQuery
+        ? liftFavorites(
+            orderedOptions,
+            (option) =>
+              (canFavorite?.(option) ?? true) &&
+              orderingFavoriteKeySet.has(getOptionKey(option)),
+          )
+        : { options: orderedOptions, favoriteCount: 0 },
+    [
+      favoritesScope,
+      normalizedQuery,
+      orderedOptions,
+      orderingFavoriteKeySet,
+      getOptionKey,
+      canFavorite,
+    ],
   );
 
   useEffect(() => {
@@ -206,6 +265,9 @@ export default function BaseCombobox({
       const optionKey = getOptionKey(option);
       const isSelected = optionKey === selectedKey;
       const isActive = index === activeIndex;
+      const isFavorite = favoriteKeySet.has(optionKey);
+      const showFavoriteToggle =
+        Boolean(favoritesScope) && (canFavorite?.(option) ?? true);
       const optionProps = getOptionProps(index, {
         option,
         onSelect: () => commitSelection(option),
@@ -224,6 +286,7 @@ export default function BaseCombobox({
             {
               "is-active": isActive,
               "is-selected": isSelected,
+              "has-favorite-toggle": showFavoriteToggle,
             },
           )}
         >
@@ -233,8 +296,32 @@ export default function BaseCombobox({
                   isActive,
                   isSelected,
                   index,
+                  inFavorites: index < favoriteCount,
                 })
               : getOptionLabel(option))}
+          {showFavoriteToggle ? (
+            <button
+              type="button"
+              className={clsx("tv-combobox__favorite", {
+                "is-favorite": isFavorite,
+              })}
+              tabIndex={-1}
+              aria-pressed={isFavorite}
+              aria-label={t(
+                isFavorite ? "common.unfavoriteAria" : "common.favoriteAria",
+                { name: getOptionLabel(option) },
+              )}
+              title={t(isFavorite ? "common.unfavorite" : "common.favorite")}
+              onMouseDown={preventFocusSteal}
+              onPointerDown={preventFocusSteal}
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleFavorite(favoritesScope, optionKey);
+              }}
+            >
+              <FiStar aria-hidden />
+            </button>
+          ) : null}
         </li>
       );
     },
@@ -246,6 +333,12 @@ export default function BaseCombobox({
       commitSelection,
       renderOption,
       getOptionLabel,
+      favoriteKeySet,
+      favoriteCount,
+      favoritesScope,
+      canFavorite,
+      toggleFavorite,
+      t,
     ],
   );
 
@@ -350,6 +443,7 @@ export default function BaseCombobox({
           {typeof renderList === "function" ? (
             renderList({
               options: filteredOptions,
+              favoriteCount,
               activeIndex,
               getOptionProps,
               getOptionId,
@@ -391,11 +485,23 @@ export default function BaseCombobox({
                   <VirtualSpacer height={virtualPaddingBottom} />
                 </>
               ) : (
-                filteredOptions.map((option, index) =>
-                  renderOptionItem(option, index, {
-                    className: optionClassName,
-                  }),
-                )
+                filteredOptions.map((option, index) => (
+                  <Fragment key={getOptionKey(option)}>
+                    {favoriteCount > 0 && index === 0 ? (
+                      <li role="presentation" className="tv-combobox__group">
+                        {t("common.favorites")}
+                      </li>
+                    ) : null}
+                    {favoriteCount > 0 && index === favoriteCount ? (
+                      <li role="presentation" className="tv-combobox__group">
+                        {t("common.all")}
+                      </li>
+                    ) : null}
+                    {renderOptionItem(option, index, {
+                      className: optionClassName,
+                    })}
+                  </Fragment>
+                ))
               )}
             </ul>
           )}

@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { FiGrid } from "react-icons/fi";
 import BaseCombobox from "@shared/ui/BaseCombobox";
 import PresetBadgeList from "@features/instrument/components/PresetBadgeList";
-import { presetDisplayName } from "@features/instrument/model/presetBadges";
+import {
+  isBuiltInPreset,
+  presetDisplayName,
+} from "@features/instrument/model/presetBadges";
 import {
   groupPresetsByStringCount,
   presetEntryKey,
@@ -12,6 +15,9 @@ import {
 import { usePresetCatalogEntries } from "@features/instrument/hooks/usePresetCatalogEntries";
 
 const preventBlur = (event) => event.preventDefault();
+
+// Factory/saved defaults already lead their group, so they aren't starrable.
+const canFavoritePreset = (entry) => !isBuiltInPreset(entry.name);
 
 // Keeps each string-count group contiguous (so keyboard order matches the
 // rendered groups) while the top search hit's group stays first.
@@ -57,7 +63,7 @@ export default function PresetPicker({
     [onSelectEntry],
   );
   const renderOption = useCallback(
-    (entry, { isActive }) => (
+    (entry, { isActive, inFavorites }) => (
       <div
         className={clsx("tv-preset-picker__option", {
           "is-active": isActive,
@@ -67,14 +73,34 @@ export default function PresetPicker({
         <span className="tv-combobox__option-title">
           {presetDisplayName(t, entry.name)}
         </span>
-        <PresetBadgeList badges={badgesByKey.get(entry.key)} />
+        {/* The favorites group mixes string counts, so name each one */}
+        <PresetBadgeList
+          badges={
+            inFavorites
+              ? [
+                  {
+                    key: "strings",
+                    labelKey: "instrument.stringCountShort",
+                    labelOptions: { count: entry.strings },
+                  },
+                  ...(badgesByKey.get(entry.key) ?? []),
+                ]
+              : badgesByKey.get(entry.key)
+          }
+        />
       </div>
     ),
     [badgesByKey, t],
   );
 
   const renderList = useCallback(
-    ({ options: visible, listProps, renderOptionItem, closeList }) => (
+    ({
+      options: visible,
+      favoriteCount,
+      listProps,
+      renderOptionItem,
+      closeList,
+    }) => (
       <ul
         {...listProps}
         className="tv-combobox__list tv-preset-picker__list"
@@ -87,7 +113,14 @@ export default function PresetPicker({
         ) : null}
         {visible.map((entry, index) => (
           <Fragment key={entry.key}>
-            {entry.strings !== visible[index - 1]?.strings ? (
+            {favoriteCount > 0 && index === 0 ? (
+              <li role="presentation" className="tv-preset-picker__group">
+                {t("common.favorites")}
+              </li>
+            ) : null}
+            {index >= favoriteCount &&
+            (index === favoriteCount ||
+              entry.strings !== visible[index - 1]?.strings) ? (
               <li role="presentation" className="tv-preset-picker__group">
                 {t("instrument.stringCount", { count: entry.strings })}
                 {entry.strings === currentStrings ? (
@@ -140,6 +173,8 @@ export default function PresetPicker({
       orderFilteredOptions={orderByStringCountGroup}
       renderOption={renderOption}
       renderList={renderList}
+      favoritesScope="preset"
+      canFavorite={canFavoritePreset}
       enableVirtualization={false}
       placeholder={placeholder ?? t("instrument.searchPresets")}
       aria-labelledby={ariaLabelledBy}

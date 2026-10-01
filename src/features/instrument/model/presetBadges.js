@@ -3,6 +3,10 @@ const BUILT_IN_PRESET_LABEL_KEYS = {
   "Saved default": "instrument.presetSavedDefault",
 };
 
+export function isBuiltInPreset(name) {
+  return Object.hasOwn(BUILT_IN_PRESET_LABEL_KEYS, name);
+}
+
 // Display name for a preset; built-in presets are stored under fixed English
 // names, so only their label is translated.
 export function presetDisplayName(t, name) {

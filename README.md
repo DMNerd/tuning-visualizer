@@ -35,6 +35,7 @@ This app will be free and open source forever and is completely self-hostable
   - **Chord Builder**: highlight chord tones on top of the selected scale
   - **Chord fit + tone analysis**: compact chord-fit status plus per-tone chips showing whether each chord tone is in the selected scale (`deg n`) or outside
   - Select any **root** note, choose **sharps/flats**, or use the **Random root & scale** control (`r`)
+  - **Favorites**: star presets, scales and chord types to pin them to the top of their dropdowns (saved in the browser)
 
 - **Tunings**
   - Presets for **6/7/8-string guitar**, **violin family (G–D–A–E)**, and **experimental** sets (e.g., King Gizzard C#–F#–C#–F#–B–E)

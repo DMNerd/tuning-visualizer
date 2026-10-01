@@ -54,6 +54,7 @@ export default function ScalePicker({
       listClassName="tv-scale-picker__list"
       optionClassName="tv-scale-picker__option"
       emptyText={t("theory.noMatchingScales")}
+      favoritesScope="scale"
       aria-labelledby={ariaLabelledby}
       className={clsx("tv-scale-picker", className)}
     />
