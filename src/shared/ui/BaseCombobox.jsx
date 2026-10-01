@@ -10,10 +10,12 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { FiStar } from "react-icons/fi";
+import { isHotkey } from "is-hotkey";
 import FloatingListbox from "@shared/ui/FloatingListbox";
 import useCombobox from "@shared/hooks/useCombobox";
 import useFilteredOptions from "@shared/hooks/useFilteredOptions";
 import useVirtualListSizing from "@shared/hooks/useVirtualListSizing";
+import { FAVORITE_OPTION_HOTKEY } from "@shared/hooks/hotkeysTable";
 import { liftFavorites } from "@shared/lib/favorites";
 import {
   selectFavoriteKeys,
@@ -31,6 +33,9 @@ function assignRef(ref, value) {
   }
   ref.current = value;
 }
+
+// Matches the browser's own "bookmark this page" shortcut.
+const isFavoriteHotkey = isHotkey(FAVORITE_OPTION_HOTKEY.combo);
 
 const preventFocusSteal = (event) => {
   event.preventDefault();
@@ -75,6 +80,7 @@ export default function BaseCombobox({
   );
   const toggleFavorite = useFavoritesStore(selectToggleFavorite);
   const favoriteKeySet = useMemo(() => new Set(favoriteKeys), [favoriteKeys]);
+  const [favoriteAnnouncement, setFavoriteAnnouncement] = useState("");
   const selectedOption = useMemo(() => {
     if (value == null) return null;
     return (
@@ -190,6 +196,39 @@ export default function BaseCombobox({
     ],
   );
 
+  const isFavoritable = useCallback(
+    (option) => Boolean(favoritesScope) && (canFavorite?.(option) ?? true),
+    [favoritesScope, canFavorite],
+  );
+
+  // Shared by the star button and the keyboard shortcut; the live region
+  // announces it since focus stays on the input.
+  const toggleOptionFavorite = useCallback(
+    (option) => {
+      if (!isFavoritable(option)) return;
+      const key = getOptionKey(option);
+      const name = getOptionLabel(option);
+      toggleFavorite(favoritesScope, key);
+      setFavoriteAnnouncement(
+        t(
+          favoriteKeySet.has(key)
+            ? "common.favoriteRemoved"
+            : "common.favoriteAdded",
+          { name },
+        ),
+      );
+    },
+    [
+      isFavoritable,
+      getOptionKey,
+      getOptionLabel,
+      toggleFavorite,
+      favoritesScope,
+      favoriteKeySet,
+      t,
+    ],
+  );
+
   useEffect(() => {
     setOptions(filteredOptions);
   }, [filteredOptions, setOptions]);
@@ -253,6 +292,13 @@ export default function BaseCombobox({
       if (!option) return;
       commitSelection(option);
     },
+    onKeyDown: (event) => {
+      if (!favoritesScope || !isFavoriteHotkey(event)) return;
+      const option = isOpen ? filteredOptions[activeIndex] : undefined;
+      if (!option || !isFavoritable(option)) return;
+      event.preventDefault();
+      toggleOptionFavorite(option);
+    },
   });
 
   const { className: inputClassName, ...restInputProps } = inputProps;
@@ -266,8 +312,7 @@ export default function BaseCombobox({
       const isSelected = optionKey === selectedKey;
       const isActive = index === activeIndex;
       const isFavorite = favoriteKeySet.has(optionKey);
-      const showFavoriteToggle =
-        Boolean(favoritesScope) && (canFavorite?.(option) ?? true);
+      const showFavoriteToggle = isFavoritable(option);
       const optionProps = getOptionProps(index, {
         option,
         onSelect: () => commitSelection(option),
@@ -316,7 +361,7 @@ export default function BaseCombobox({
               onPointerDown={preventFocusSteal}
               onClick={(event) => {
                 event.stopPropagation();
-                toggleFavorite(favoritesScope, optionKey);
+                toggleOptionFavorite(option);
               }}
             >
               <FiStar aria-hidden />
@@ -335,9 +380,8 @@ export default function BaseCombobox({
       getOptionLabel,
       favoriteKeySet,
       favoriteCount,
-      favoritesScope,
-      canFavorite,
-      toggleFavorite,
+      isFavoritable,
+      toggleOptionFavorite,
       t,
     ],
   );
@@ -434,6 +478,11 @@ export default function BaseCombobox({
         aria-haspopup="listbox"
         aria-labelledby={ariaLabelledby}
       />
+      {favoritesScope ? (
+        <span className="tv-u-visually-hidden" aria-live="polite">
+          {favoriteAnnouncement}
+        </span>
+      ) : null}
       {isOpen && (
         <FloatingListbox
           anchorRef={rootRef}

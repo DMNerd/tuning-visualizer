@@ -14,10 +14,12 @@
     "ordinal_ordinal_other": "{{count}}th",
     "loading": "Loading {{what}}...",
     "favorites": "Favorites",
-    "favorite": "Add to favorites",
-    "unfavorite": "Remove from favorites",
+    "favorite": "Add to favorites (Ctrl/Cmd+D)",
+    "unfavorite": "Remove from favorites (Ctrl/Cmd+D)",
     "favoriteAria": "Add {{name}} to favorites",
-    "unfavoriteAria": "Remove {{name}} from favorites"
+    "unfavoriteAria": "Remove {{name}} from favorites",
+    "favoriteAdded": "{{name}} added to favorites",
+    "favoriteRemoved": "{{name}} removed from favorites"
   },
   "header": {
     "themeGroup": "Theme mode",
@@ -88,7 +90,8 @@
     "strings": "strings - / +",
     "frets": "frets - / +",
     "dotSize": "dot size - / +",
-    "newPack": "new custom tuning"
+    "newPack": "new custom tuning",
+    "favorite": "star dropdown option"
   },
   "stageHud": {
     "resetAll": "Reset all to defaults",

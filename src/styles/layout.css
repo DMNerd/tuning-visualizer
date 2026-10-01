@@ -1326,6 +1326,13 @@ svg {
   gap: 4px;
 }
 
+/* Long pairs (Alt+[ / Alt+]) wrap instead of running into the description */
+.tv-hotkeys__alt,
+.tv-hotkeys__alt-wrap {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .tv-hotkeys__alt-wrap {
   margin-inline-end: 2px;
 }

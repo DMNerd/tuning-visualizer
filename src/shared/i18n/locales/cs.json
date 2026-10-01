@@ -11,10 +11,12 @@
     "ordinal_ordinal_other": "{{count}}.",
     "loading": "Načítání: {{what}}…",
     "favorites": "Oblíbené",
-    "favorite": "Přidat do oblíbených",
-    "unfavorite": "Odebrat z oblíbených",
+    "favorite": "Přidat do oblíbených (Ctrl/Cmd+D)",
+    "unfavorite": "Odebrat z oblíbených (Ctrl/Cmd+D)",
     "favoriteAria": "Přidat {{name}} do oblíbených",
-    "unfavoriteAria": "Odebrat {{name}} z oblíbených"
+    "unfavoriteAria": "Odebrat {{name}} z oblíbených",
+    "favoriteAdded": "{{name}} přidáno do oblíbených",
+    "favoriteRemoved": "{{name}} odebráno z oblíbených"
   },
   "header": {
     "themeGroup": "Barevný režim",
@@ -85,7 +87,8 @@
     "strings": "struny - / +",
     "frets": "pražce - / +",
     "dotSize": "velikost teček - / +",
-    "newPack": "nové vlastní ladění"
+    "newPack": "nové vlastní ladění",
+    "favorite": "oblíbená položka nabídky"
   },
   "stageHud": {
     "resetAll": "Obnovit vše na výchozí",

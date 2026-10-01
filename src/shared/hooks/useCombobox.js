@@ -68,8 +68,16 @@ export default function useCombobox({
       const listEl = getListElement();
       if (!listEl) return;
       const optionEl = listEl.querySelector(`#${listId}-option-${index}`);
-      if (optionEl && typeof optionEl.scrollIntoView === "function") {
-        optionEl.scrollIntoView({ block: "nearest" });
+      if (!optionEl) return;
+      // Scroll only the list: scrollIntoView would also scroll the page when
+      // the list overflows the viewport, sliding a row under the pointer,
+      // whose mouseenter then steals the active index.
+      const listRect = listEl.getBoundingClientRect();
+      const optionRect = optionEl.getBoundingClientRect();
+      if (optionRect.top < listRect.top) {
+        listEl.scrollTop -= listRect.top - optionRect.top;
+      } else if (optionRect.bottom > listRect.bottom) {
+        listEl.scrollTop += optionRect.bottom - listRect.bottom;
       }
     },
     [getListElement, listId],
