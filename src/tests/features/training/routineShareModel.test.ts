@@ -32,7 +32,7 @@ void test("buildRoutineShareModel preserves unrelated existing query params", ()
   const decoded = decodeRoutine(
     url.searchParams.get(ROUTINE_QUERY_KEY) as string,
   );
-  assert.equal(decoded?.id, routine.id);
+  assert.equal(decoded?.name, routine.name);
 });
 
 void test("buildRoutineShareModel returns an empty evaluation without a routine", () => {

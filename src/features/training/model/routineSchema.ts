@@ -1,4 +1,6 @@
-export const ROUTINE_SCHEMA_VERSION = 1;
+// First byte of a binary routine link. Version 1 links were JSON and still
+// decode (see routineCodec).
+export const ROUTINE_LINK_FORMAT = 2;
 
 /**
  * Compact query parameter key for routine share URLs.

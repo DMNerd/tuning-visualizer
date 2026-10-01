@@ -2,9 +2,12 @@ import { TUNINGS } from "@domain/theory/tuning";
 import { migrateScaleLabel } from "@domain/theory/scales";
 import { STR_MAX, STR_MIN, STR_FACTORY } from "@shared/config/appDefaults";
 import { clampInteger } from "@shared/lib/math";
-import { encodeBase64Url, decodeBase64Url } from "@shared/lib/base64url";
-import { stableStringify } from "@shared/lib/stableStringify";
-import { ROUTINE_SCHEMA_VERSION } from "@features/training/model/routineSchema";
+import {
+  decodeBase64UrlBytes,
+  encodeBase64UrlBytes,
+} from "@shared/lib/base64url";
+import { ByteReader, ByteWriter } from "@shared/lib/byteStream";
+import { ROUTINE_LINK_FORMAT } from "@features/training/model/routineSchema";
 import {
   ROUTINE_BEATS_DEFAULT,
   ROUTINE_BEATS_MAX,
@@ -24,11 +27,88 @@ import {
   type RoutineStartBlock,
 } from "@features/training/model/routine";
 
-type EncodedEnvelope = { v: number; r: Routine };
+// Version 1 links were base64url JSON (`{"r":…,"v":1}`), so their first
+// byte is "{"; binary links start with ROUTINE_LINK_FORMAT instead.
+const JSON_LINK_FIRST_BYTE = 0x7b;
 
+type StepField = Exclude<keyof RoutineScaleBlock, "id">;
+
+// Mask bit order for a block's changed fields; never reorder.
+const STEP_FIELDS: StepField[] = [
+  "scaleLabel",
+  "rootPc",
+  "beats",
+  "bpm",
+  "timeSig",
+];
+const STRING_STEP_FIELDS = new Set<StepField>(["scaleLabel", "timeSig"]);
+
+// What the first block is diffed against.
+const STEP_BASELINE: Omit<RoutineScaleBlock, "id"> = {
+  scaleLabel: "",
+  rootPc: 0,
+  beats: ROUTINE_BEATS_DEFAULT,
+  bpm: ROUTINE_BPM_DEFAULT,
+  timeSig: ROUTINE_TIME_SIGNATURE_DEFAULT,
+};
+
+/**
+ * Binary link layout (all numbers are varints):
+ *   format byte, string table (count, then each string),
+ *   name, systemId, strings, presetName, start beats,
+ *   block count, then per block a mask of the fields that differ from the
+ *   previous block followed by just those values.
+ * Text fields are string-table indexes, so a scale used by many blocks is
+ * spelled out once. Ids and timestamps are not shared; decoding makes new
+ * ones.
+ */
 export function encodeRoutine(routine: Routine): string {
-  const envelope: EncodedEnvelope = { v: ROUTINE_SCHEMA_VERSION, r: routine };
-  return encodeBase64Url(stableStringify(envelope));
+  const table: string[] = [];
+  const ref = (value: string) => {
+    const index = table.indexOf(value);
+    if (index >= 0) return index;
+    table.push(value);
+    return table.length - 1;
+  };
+
+  const body = new ByteWriter()
+    .varint(ref(routine.name))
+    .varint(ref(routine.startBlock.systemId))
+    .varint(routine.startBlock.strings)
+    .varint(ref(routine.startBlock.presetName))
+    .varint(routine.startBlock.beats)
+    .varint(routine.steps.length);
+
+  let previous = STEP_BASELINE;
+  for (const step of routine.steps) {
+    const changed = STEP_FIELDS.filter(
+      (field) => step[field] !== previous[field],
+    );
+    body.u8(
+      changed.reduce(
+        (mask, field) => mask | (1 << STEP_FIELDS.indexOf(field)),
+        0,
+      ),
+    );
+    for (const field of changed) {
+      body.varint(
+        STRING_STEP_FIELDS.has(field)
+          ? ref(step[field] as string)
+          : (step[field] as number),
+      );
+    }
+    previous = step;
+  }
+
+  const header = new ByteWriter().u8(ROUTINE_LINK_FORMAT).varint(table.length);
+  table.forEach((value) => header.string(value));
+
+  const head = header.toBytes();
+  const tail = body.toBytes();
+  const bytes = new Uint8Array(head.length + tail.length);
+  bytes.set(head);
+  bytes.set(tail, head.length);
+  return encodeBase64UrlBytes(bytes);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -103,19 +183,64 @@ function coerceScaleBlock(
  * place so a partially-tampered link still recovers a usable routine.
  */
 export function decodeRoutine(token: string): Routine | null {
-  const json = decodeBase64Url(token);
-  if (!json) return null;
+  const bytes = decodeBase64UrlBytes(token);
+  if (!bytes?.length) return null;
 
-  let parsed: unknown;
+  let record: Record<string, unknown> | null;
   try {
-    parsed = JSON.parse(json);
+    record =
+      bytes[0] === JSON_LINK_FIRST_BYTE
+        ? readJsonRecord(bytes)
+        : bytes[0] === ROUTINE_LINK_FORMAT
+          ? readBinaryRecord(bytes)
+          : null;
   } catch {
     return null;
   }
+  return record ? coerceRoutine(record) : null;
+}
 
-  if (!isPlainObject(parsed) || !isPlainObject(parsed.r)) return null;
-  const record = parsed.r;
+function readJsonRecord(bytes: Uint8Array): Record<string, unknown> | null {
+  const json = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const parsed: unknown = JSON.parse(json);
+  return isPlainObject(parsed) && isPlainObject(parsed.r) ? parsed.r : null;
+}
 
+// Rebuilds the JSON-shaped record so both formats share the same coercion.
+function readBinaryRecord(bytes: Uint8Array): Record<string, unknown> {
+  const reader = new ByteReader(bytes);
+  reader.u8();
+  const tableSize = reader.varint();
+  const table: string[] = [];
+  for (let i = 0; i < tableSize; i += 1) table.push(reader.string());
+  const text = () => table[reader.varint()];
+
+  const name = text();
+  const startBlock = {
+    systemId: text(),
+    strings: reader.varint(),
+    presetName: text(),
+    beats: reader.varint(),
+  };
+
+  const stepCount = reader.varint();
+  const steps: Record<string, unknown>[] = [];
+  let previous: Record<string, unknown> = STEP_BASELINE;
+  for (let i = 0; i < stepCount; i += 1) {
+    const mask = reader.u8();
+    const step = { ...previous };
+    STEP_FIELDS.forEach((field, bit) => {
+      if (!(mask & (1 << bit))) return;
+      step[field] = STRING_STEP_FIELDS.has(field) ? text() : reader.varint();
+    });
+    steps.push(step);
+    previous = step;
+  }
+
+  return { name, startBlock, steps };
+}
+
+function coerceRoutine(record: Record<string, unknown>): Routine | null {
   const startBlock = coerceStartBlock(record.startBlock);
   if (!startBlock) return null;
 
