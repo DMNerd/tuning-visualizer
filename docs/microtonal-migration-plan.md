@@ -166,3 +166,7 @@ pin (`vendor/microtonal/SOURCE.json`) must be refreshed after that.
   `useRandomScale` draws from the fork-computed scale options.
 - **G6** — every value that changed outside 12/24-TET:
   [microtonal-migration-changes.md](microtonal-migration-changes.md).
+- **Fork update (2026-10-01)** — re-vendored at `d232b5a8`. The fork's
+  default became "every EDO by fifths"; the adapter calls
+  `setEdoSpelling("proportional-fallback")` to keep D1, and looks chord types
+  up with the EDO. Changes: [microtonal-migration-changes.md](microtonal-migration-changes.md#fork-update-to-d232b5a8-2026-10-01).

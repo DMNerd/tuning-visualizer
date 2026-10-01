@@ -12,7 +12,13 @@ import {
   Note,
   ScaleType,
   edoProfile,
+  setEdoSpelling,
 } from "@vendor/microtonal/index.mjs";
+
+// Decision D1: EDOs whose fifths don't make a usable diatonic scale are
+// sized proportionally, so major and minor chords stay apart (the fork's
+// default spells every EDO by fifths)
+setEdoSpelling("proportional-fallback");
 
 /**
  * Whether ups and downs are distinct from sharps and flats in an EDO, so
@@ -64,7 +70,8 @@ export function detectChords(
   const found: DetectedChord[] = [];
   for (const detected of Chord.detect(notes, { edo })) {
     const [tonic, symbol] = Chord.tokenize(detected);
-    const type = ChordType.get(symbol);
+    // EDO-built chords (harmonic, subharmonic) are only found with the EDO
+    const type = ChordType.get(symbol, { edo });
     const rootPc = Note.edoChroma(tonic, edo);
     if (type.empty || !Number.isFinite(rootPc)) continue;
     const intervalsByPc: Record<number, string> = {};

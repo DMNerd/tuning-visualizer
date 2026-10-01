@@ -96,6 +96,18 @@ test("identifyChord works in other EDOs", () => {
   assert.equal(neutral.id, "(↓3)");
 });
 
+test("identifyChord names harmonic chords built for the EDO", () => {
+  // 4:5:6:7 in 19-EDO (C E G Bbb) and 72-EDO (C E↓ G Bb↓↓)
+  for (const [steps, edo] of [
+    [[0, 6, 11, 15], 19],
+    [[0, 23, 42, 58], 72],
+  ]) {
+    const [best] = identifyChord(steps, edo);
+    assert.equal(best.id, "har7", `${edo}-EDO`);
+    assert.equal(best.name, "harmonic seventh");
+  }
+});
+
 test("identifyChord rejects invalid divisions", () => {
   assert.deepEqual(identifyChord([0, 4, 7], 0), []);
   assert.deepEqual(identifyChord([0, 4, 7], 12.5), []);
