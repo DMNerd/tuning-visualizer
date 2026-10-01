@@ -43,7 +43,7 @@ const pinFile = join(outDir, "SOURCE.json");
 const stampFile = join(outDir, "BUILT.json");
 const REPOSITORY = "https://github.com/DMNerd/microtonal";
 // Branch gv tracks when there's no pin yet and no --branch
-const DEFAULT_BRANCH = "edo-ups-downs";
+const DEFAULT_BRANCH = "main";
 
 const fail = (message) => {
   process.stderr.write(`vendor-microtonal: ${message}\n`);

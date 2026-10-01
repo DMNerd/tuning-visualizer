@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/DMNerd/microtonal",
-  "branch": "edo-ups-downs",
-  "commit": "25f445c0b40264c232abf37c63b8d48853bc97b1",
+  "branch": "main",
+  "commit": "f65d1361d5171703378b92650e600bab15bf5fab",
   "dirty": false,
   "note": "Pin written by scripts/vendor-microtonal.mjs. Do not edit by hand."
 }
