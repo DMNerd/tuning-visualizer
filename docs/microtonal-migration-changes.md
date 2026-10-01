@@ -229,3 +229,21 @@ D1 with `setEdoSpelling("proportional-fallback")`.
 - Chord identification can name harmonic and subharmonic chords the fork
   builds per EDO (`har7`, `sub7`…), e.g. 4:5:6:7 in 19- and 72-EDO. The
   adapter looks chord types up with the EDO so these are kept.
+
+## Scales from the fork (decision D4, 2026-10-01)
+
+Every tuning now offers all of the fork's scales for its EDO plus the full
+chromatic scale, sorted by label (fork names, title-cased). The table under
+[Scales (decision D3)](#scales-decision-d3) shows the older counts. In 12- and
+24-TET every scale is still offered with the same notes under its new label,
+except gv's old microtonal scales (checked by the characterization test):
+
+| Old label (24-TET)                                           | Now                                            |
+| ------------------------------------------------------------ | ---------------------------------------------- |
+| Uşşak (Uşşâk)                                                | Husayni (same notes)                           |
+| Major w/ Neutral 3rd                                         | Mahur (same notes)                             |
+| Hüseyni                                                      | Husayni (6th lowered to ↓6M)                   |
+| Hijaz-ish                                                    | Hijaz (Maqam World, Rast on the 4th)           |
+| Neva (¾-sharp LT, KG style)                                  | Bayati (the Uşşak scale)                       |
+| Uşak Maṣri (Hijaz on 5th)                                    | Bayati (the Uşşak scale)                       |
+| Neutral Heptatonic, Minor w/ Neutral 6th, Neutral Pentatonic | removed (no source); the default scale is used |

@@ -25,7 +25,7 @@ export function getFactoryFrets(edo: number): number {
    App-wide defaults
 ========================= */
 export type SystemId = `${number}-TET`;
-export const SCALE_DEFAULT = "Major (Ionian)";
+export const SCALE_DEFAULT = "Major";
 export const CHORD_DEFAULT = "maj";
 export const SYSTEM_DEFAULT: SystemId = "12-TET";
 export const ROOT_DEFAULT = "C";

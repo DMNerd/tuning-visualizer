@@ -15,7 +15,7 @@ import fs from "node:fs";
 
 import { TUNINGS, findSystemByEdo } from "@domain/theory/tuning";
 import { CHORD_TYPES, buildChordPCsFromPc } from "@domain/theory/chords";
-import { scalesForSystem } from "@domain/theory/scales";
+import { migrateScaleLabel, scalesForSystem } from "@domain/theory/scales";
 import { formatChordSymbol, identifyChord } from "@domain/theory/chordIdentify";
 import {
   buildNameToPcMap,
@@ -179,7 +179,6 @@ function main12And24(snapshot) {
     names: snapshot.names,
     parse: snapshot.parse,
     chordPcs: pick(snapshot.chordPcs, (edo) => edo === "12" || edo === "24"),
-    scales: snapshot.scales,
     detection: snapshot.detection,
   };
 }
@@ -210,6 +209,31 @@ test("theory outputs for 12- and 24-TET are unchanged", () => {
   });
   for (const section of Object.keys(expected)) {
     assert.deepEqual(actual[section], expected[section], section);
+  }
+});
+
+// D4: scales come from the fork's dictionary under its names. Every 12/24-TET
+// scale still exists under its migrated label with the same notes, except
+// gv's old microtonal scales: these map to the maqam they meant, or are gone.
+const D4_CHANGED = {
+  "24TET Hüseyni": "Husayni: the makam has a downmajor 6th (↓6M), not 6M",
+  "24TET Hijaz-ish": "Hijaz: Maqam World's hijaz (Rast on the 4th)",
+  "24TET Neva (¾-sharp LT, KG style)": "Bayati: Neva uses the Uşşak scale",
+  "24TET Uşak Maṣri (Hijaz on 5th)": "Bayati: the Uşşak scale",
+  "24TET Neutral Heptatonic": "no maqam or makam source",
+  "24TET Minor w/ Neutral 6th": "no maqam or makam source",
+  "24TET Neutral Pentatonic": "no maqam or makam source",
+};
+
+test("12- and 24-TET scales survive under their migrated labels", () => {
+  const recorded = JSON.parse(fs.readFileSync(FIXTURE, "utf8"));
+  for (const { label, systemId, pcs } of recorded.scales) {
+    if (label in D4_CHANGED) continue;
+    const edo = systemId === "24-TET" ? 24 : 12;
+    const current = scalesForSystem(systemId, edo).find(
+      (scale) => scale.label === migrateScaleLabel(label),
+    );
+    assert.deepEqual(current?.pcs, pcs, `${systemId} ${label}`);
   }
 });
 

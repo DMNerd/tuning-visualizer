@@ -9,7 +9,7 @@ function makeStep(
 ): RoutineScaleBlock {
   return {
     id: "step",
-    scaleLabel: "Major (Ionian)",
+    scaleLabel: "Major",
     rootPc: 0,
     beats: 4,
     bpm: 100,

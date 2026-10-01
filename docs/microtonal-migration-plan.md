@@ -48,6 +48,16 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
   traditional scale list (plus microtonal scales where D1 allows) instead of
   four "Generic …-like" scales. Old baseline labels are migrated (theory store
   `scale`, routine `scaleLabel`).
+- **D4 — scales from the fork (accepted 2026-10-01).** gv defines no scales:
+  every tuning offers all of the fork's scales for its EDO
+  (`ScaleType.forEdo`: traditional, maqamat and other microtonal scales,
+  temperament scales) plus the full chromatic scale, sorted by label, with
+  title-cased fork names ("Major", "Harmonic Minor", "Rast"). Old labels
+  (theory store, routines, favourites) are migrated. gv's microtonal scales
+  were replaced by sourced fork scales: Uşşak (gv's intervals) is husayni,
+  "Major w/ Neutral 3rd" is mahur, Hüseyni and Hijaz-ish map to husayni and
+  hijaz (different notes), Neva and Uşak Maṣri to bayati; the three neutral
+  scales without a source are gone.
 
 ## Fork work (F) — each with tests and a README entry
 

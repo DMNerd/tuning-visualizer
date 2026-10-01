@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+import { migrateScaleFavoriteKey } from "@domain/theory/scales";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
 
@@ -12,10 +13,16 @@ function sanitizeFavorites(value) {
   return Object.fromEntries(
     Object.entries(value)
       .filter(([, keys]) => Array.isArray(keys))
-      .map(([scope, keys]) => [
-        scope,
-        keys.filter((key) => typeof key === "string"),
-      ]),
+      .map(([scope, keys]) => {
+        const valid = keys.filter((key) => typeof key === "string");
+        // scale labels saved by older versions
+        return [
+          scope,
+          scope === "scale"
+            ? [...new Set(valid.map(migrateScaleFavoriteKey))]
+            : valid,
+        ];
+      }),
   );
 }
 

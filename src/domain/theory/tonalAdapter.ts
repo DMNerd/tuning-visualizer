@@ -103,9 +103,16 @@ export function nameToPc(name: string, edo: number): number | null {
   return Number.isFinite(pc) ? pc : null;
 }
 
-/** Interval spelling of a scale in the fork's dictionary, e.g. "dorian". */
-export function scaleIntervals(name: string): string[] {
-  return ScaleType.get(name).intervals;
+/**
+ * Every scale the fork has for an EDO, as names and pitch classes above 0:
+ * the traditional scales, plus maqamat and other microtonal scales where ups
+ * and downs exist, plus temperament scales in their EDOs.
+ */
+export function scalesForEdo(edo: number): { name: string; pcs: number[] }[] {
+  return ScaleType.forEdo(edo).map(({ name, chroma }) => ({
+    name,
+    pcs: [...chroma].flatMap((bit, pc) => (bit === "1" ? [pc] : [])),
+  }));
 }
 
 /** Sorted, distinct pitch classes of intervals above pitch class 0. */
