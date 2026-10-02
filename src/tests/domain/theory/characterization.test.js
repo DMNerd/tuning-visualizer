@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import { TUNINGS, findSystemByEdo } from "@domain/theory/tuning";
-import { CHORD_TYPES, buildChordPCsFromPc } from "@domain/theory/chords";
+import { buildChordPCsFromPc, migrateChordType } from "@domain/theory/chords";
 import { migrateScaleLabel, scalesForSystem } from "@domain/theory/scales";
 import { formatChordSymbol, identifyChord } from "@domain/theory/chordIdentify";
 import {
@@ -31,6 +31,31 @@ const FIXTURE = new URL(
 );
 const EDOS = Array.from({ length: 68 }, (_, i) => i + 5); // 5..72
 const MAIN_SYSTEMS = ["12-TET", "24-TET"];
+// gv's chord types when the fixture was recorded (D5: now the theory
+// engine's chord symbols, see migrateChordType)
+const CHORD_TYPES = [
+  "maj",
+  "min",
+  "dim",
+  "aug",
+  "sus2",
+  "sus4",
+  "6",
+  "m6",
+  "7",
+  "maj7",
+  "m7",
+  "m7b5",
+  "dim7",
+  "add9",
+  "neut",
+  "neut7",
+  "sus2↓",
+  "sus4↑",
+  "maj↑3",
+  "min↓3",
+  "quartal",
+];
 const ACCIDENTALS = ["sharp", "flat", "both"];
 const NAMINGS = ["english", "german"];
 
@@ -86,7 +111,7 @@ function characterize() {
     chordPcs[edo] = Object.fromEntries(
       CHORD_TYPES.map((type) => [
         type,
-        sortedPcs(buildChordPCsFromPc(0, type, edo)),
+        sortedPcs(buildChordPCsFromPc(0, migrateChordType(type), edo)),
       ]),
     );
   }
@@ -112,7 +137,9 @@ function characterize() {
       nameForPcWithDisplayAccidentals(TUNINGS[`${edo}-TET`], pc, "sharp");
     for (const type of CHORD_TYPES) {
       for (let root = 0; root < edo; root += 1) {
-        const pcs = sortedPcs(buildChordPCsFromPc(root, type, edo));
+        const pcs = sortedPcs(
+          buildChordPCsFromPc(root, migrateChordType(type), edo),
+        );
         // bass = root, and the chord's second tone as bass (an inversion)
         for (const bass of [root, pcs.find((pc) => pc !== root)]) {
           const key = `${edo}/${pcs.join(",")}/${bass}`;
@@ -179,7 +206,6 @@ function main12And24(snapshot) {
     names: snapshot.names,
     parse: snapshot.parse,
     chordPcs: pick(snapshot.chordPcs, (edo) => edo === "12" || edo === "24"),
-    detection: snapshot.detection,
   };
 }
 
@@ -209,6 +235,25 @@ test("theory outputs for 12- and 24-TET are unchanged", () => {
   });
   for (const section of Object.keys(expected)) {
     assert.deepEqual(actual[section], expected[section], section);
+  }
+});
+
+// D5: chord types are the fork's chord symbols. Detection is unchanged, but
+// the chord type a match loads into the controls is its symbol: recorded
+// gv types map through migrateChordType, and chords gv didn't have ("-")
+// may now be loadable. The added quartal triad (7sus4no5) is one more match.
+test("12- and 24-TET chord detection is unchanged (D5)", () => {
+  const recorded = JSON.parse(fs.readFileSync(FIXTURE, "utf8")).detection;
+  const current = characterize().detection;
+  for (const [key, matches] of Object.entries(recorded)) {
+    const now = current[key].filter((m) => !m.includes("7sus4no5"));
+    assert.equal(now.length, matches.length, key);
+    matches.forEach((match, i) => {
+      const [symbol, type] = match.split(":");
+      const [nowSymbol, nowType] = now[i].split(":");
+      assert.equal(nowSymbol, symbol, key);
+      if (type !== "-") assert.equal(nowType, migrateChordType(type), key);
+    });
   }
 });
 

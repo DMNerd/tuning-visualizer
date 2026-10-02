@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useMemo } from "react";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import { CHORD_LABELS, isMicrotonalChordType } from "@domain/theory/chords";
+import { isMicrotonalChordType } from "@domain/theory/chords";
 import { normalizeStringList } from "@shared/lib/normalizeStringList";
 import BaseCombobox, { VirtualSpacer } from "@shared/ui/BaseCombobox";
 
@@ -13,7 +13,7 @@ const SECTION_LABEL_KEYS = {
 export default function ChordTypePicker({
   id,
   chordTypes,
-  labels = CHORD_LABELS,
+  labels,
   selectedType,
   onSelect: handleSelect,
   supportsMicrotonal = true,

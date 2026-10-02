@@ -1,5 +1,5 @@
 import { mod } from "@shared/lib/math";
-import { CHORD_TYPES, buildChordPCsFromPc } from "@domain/theory/chords";
+import { isChordTypeOffered } from "@domain/theory/chords";
 import type { ChordType as AppChordType } from "@domain/theory/chords";
 import { detectChords } from "@domain/theory/tonalAdapter";
 
@@ -23,28 +23,6 @@ export interface ChordMatch {
   appType: AppChordType | null;
   /** Interval of each chord tone above the root, by pitch class ("↓3M"). */
   degrees: Record<number, string>;
-}
-
-const signature = (steps: Iterable<number>) =>
-  [...steps].sort((a, b) => a - b).join(",");
-
-const appTypeCache = new Map<number, Map<string, AppChordType>>();
-
-/**
- * App chord types by their step set above the root, for one EDO. When two
- * types share a set (microtonal types fall back to standard formulas outside
- * 24-EDO) the first one in the library wins.
- */
-function appTypesFor(divisions: number): Map<string, AppChordType> {
-  const cached = appTypeCache.get(divisions);
-  if (cached) return cached;
-  const byStepSet = new Map<string, AppChordType>();
-  for (const type of CHORD_TYPES) {
-    const key = signature(buildChordPCsFromPc(0, type, divisions));
-    if (!byStepSet.has(key)) byStepSet.set(key, type);
-  }
-  appTypeCache.set(divisions, byStepSet);
-  return byStepSet;
 }
 
 /**
@@ -71,11 +49,9 @@ export function identifyChord(
     bassPc != null && ordered.includes(mod(bassPc, divisions))
       ? mod(bassPc, divisions)
       : ordered[0];
-  const appTypes = appTypesFor(divisions);
   // Already ranked by the fork: common chords first, root position before
   // inversions of the same kind of chord.
   return detectChords(ordered, divisions, bass).map((chord) => {
-    const steps = ordered.map((pc) => mod(pc - chord.rootPc, divisions));
     return {
       rootPc: chord.rootPc,
       bassPc: chord.bassPc,
@@ -83,7 +59,10 @@ export function identifyChord(
       // Tonal's major symbol is "M"; a bare root reads better
       suffix: chord.symbol === "M" ? "" : chord.symbol,
       name: chord.name || chord.symbol,
-      appType: appTypes.get(signature(steps)) ?? null,
+      // the chord controls offer the same chord types
+      appType: isChordTypeOffered(chord.symbol, divisions)
+        ? chord.symbol
+        : null,
       degrees: chord.intervalsByPc,
     };
   });

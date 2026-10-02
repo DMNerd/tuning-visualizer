@@ -245,7 +245,9 @@ export function formatHeaderSingleLine(h: ExportHeader): string {
   }
   if (h.scale) primary.push(h.scale);
   if (h.chordEnabled && (h.chordRoot || h.chordType)) {
-    primary.push([h.chordRoot, h.chordType].filter(Boolean).join(" "));
+    // chord types are symbols ("m7"); the major symbol "M" reads better bare
+    const type = h.chordType === "M" ? "" : (h.chordType ?? "");
+    primary.push(h.chordRoot ? `${h.chordRoot}${type}` : type);
   }
 
   if (typeof h.strings === "number" && Number.isFinite(h.strings)) {

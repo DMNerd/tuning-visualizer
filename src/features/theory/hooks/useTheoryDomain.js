@@ -4,10 +4,10 @@ import { useShallow } from "zustand/react/shallow";
 import { migrateScaleLabel, scalesForSystem } from "@domain/theory/scales";
 import {
   buildChordPCsFromPc,
-  isMicrotonalChordType,
+  isChordTypeOffered,
+  migrateChordType,
 } from "@domain/theory/chords";
 import { CHORD_DEFAULT, ROOT_DEFAULT } from "@shared/config/appDefaults";
-import { supportsMicrotonal } from "@domain/theory/tonalAdapter";
 import { resolveCapoRelativeChordRootPc } from "@domain/theory/capoChords";
 
 import { useSystemNoteNames } from "@features/theory/hooks/useSystemNoteNames";
@@ -162,9 +162,12 @@ export function useTheoryDomain({
   const chordOverlayPcs = showChord ? chordTonePcs : null;
 
   useEffect(() => {
-    if (supportsMicrotonal(system.divisions)) return;
-    if (!isMicrotonalChordType(chordType)) return;
-    setChordType(CHORD_DEFAULT);
+    if (isChordTypeOffered(chordType, system.divisions)) return;
+    // not every chord type exists in every EDO; older versions used other ids
+    const migrated = migrateChordType(chordType);
+    setChordType(
+      isChordTypeOffered(migrated, system.divisions) ? migrated : CHORD_DEFAULT,
+    );
   }, [system.divisions, chordType, setChordType]);
 
   // Picked pitch classes are only meaningful within one division count.

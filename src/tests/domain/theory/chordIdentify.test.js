@@ -46,10 +46,11 @@ test("identifyChord maps library chords back to app chord types", () => {
   assert.equal(best.appType, "7");
   const [ninth] = identifyChord(pcs("G", "B", "D", "F", "A"), 12);
   assert.equal(formatChordSymbol(ninth, nameForPc), "G9");
-  assert.equal(ninth.appType, null);
+  // every chord type of the theory engine can be loaded
+  assert.equal(ninth.appType, "9");
   // inversions map to the type of their own root
   const [firstInversion] = identifyChord(pcs("E", "C", "G"), 12);
-  assert.equal(firstInversion.appType, "maj");
+  assert.equal(firstInversion.appType, "M");
 });
 
 test("identifyChord names voicings without the fifth", () => {
@@ -71,14 +72,14 @@ test("identifyChord dedupes and wraps pitch classes", () => {
 test("identifyChord finds microtonal chords in 24-EDO", () => {
   const names24 = (pc) => `pc${pc}`;
   const [neutral] = identifyChord([0, 7, 14], 24);
-  assert.equal(neutral.appType, "neut");
+  assert.equal(neutral.appType, "(↓3)");
   assert.equal(formatChordSymbol(neutral, names24), "pc0(↓3)");
   assert.equal(neutral.name, "downmajor");
-  assert.equal(identifyChord([0, 7, 14, 20], 24)[0].appType, "neut7");
-  assert.equal(identifyChord([0, 9, 14], 24)[0].appType, "maj↑3");
-  assert.equal(identifyChord([0, 5, 14], 24)[0].appType, "min↓3");
+  assert.equal(identifyChord([0, 7, 14, 20], 24)[0].appType, "7(↓3)");
+  assert.equal(identifyChord([0, 9, 14], 24)[0].appType, "(↑3)");
+  assert.equal(identifyChord([0, 5, 14], 24)[0].appType, "m(↓3)");
   const [major] = identifyChord([0, 8, 14], 24);
-  assert.equal(major.appType, "maj");
+  assert.equal(major.appType, "M");
 });
 
 test("identifyChord does not report microtonal chords in 12-EDO", () => {
@@ -90,7 +91,7 @@ test("identifyChord works in other EDOs", () => {
   // 19-EDO major triad: 0, 6, 11
   const [best] = identifyChord([0, 6, 11], 19);
   assert.equal(best.suffix, "");
-  assert.equal(best.appType, "maj");
+  assert.equal(best.appType, "M");
   // 31-EDO neutral triad: 0, 9, 18
   const [neutral] = identifyChord([0, 9, 18], 31);
   assert.equal(neutral.id, "(↓3)");

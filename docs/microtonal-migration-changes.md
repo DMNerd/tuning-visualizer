@@ -247,3 +247,14 @@ except gv's old microtonal scales (checked by the characterization test):
 | Neva (¾-sharp LT, KG style)                                  | Bayati (the Uşşak scale)                       |
 | Uşak Maṣri (Hijaz on 5th)                                    | Bayati (the Uşşak scale)                       |
 | Neutral Heptatonic, Minor w/ Neutral 6th, Neutral Pentatonic | removed (no source); the default scale is used |
+
+## Chords from the fork (decision D5, 2026-10-02)
+
+The chord type picker offers every chord type the fork has for the EDO
+(about 108 in 12-TET, plus microtonal chords where ups and downs exist and
+harmonic/subharmonic chords outside 12-TET), sorted by label. In 12- and
+24-TET every old chord type keeps its notes under its new symbol, and chord
+identification names the same chords in the same order; identified chords
+can now be loaded into the picker even when gv's old list lacked them (e.g.
+`G9`). The fork's added quartal triad adds one match, `C7sus4no5`, after the
+existing ones for C F B♭.

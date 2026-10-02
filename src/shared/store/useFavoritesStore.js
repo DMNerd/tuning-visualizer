@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+import { migrateChordType } from "@domain/theory/chords";
 import { migrateScaleFavoriteKey } from "@domain/theory/scales";
 import { STORAGE_KEYS } from "@shared/lib/storage/storageKeys";
 import { createGlobalStorage } from "@shared/lib/storage/scopedStorage";
@@ -15,13 +16,14 @@ function sanitizeFavorites(value) {
       .filter(([, keys]) => Array.isArray(keys))
       .map(([scope, keys]) => {
         const valid = keys.filter((key) => typeof key === "string");
-        // scale labels saved by older versions
-        return [
-          scope,
+        // scale labels and chord types saved by older versions
+        const migrate =
           scope === "scale"
-            ? [...new Set(valid.map(migrateScaleFavoriteKey))]
-            : valid,
-        ];
+            ? migrateScaleFavoriteKey
+            : scope === "chord"
+              ? migrateChordType
+              : null;
+        return [scope, migrate ? [...new Set(valid.map(migrate))] : valid];
       }),
   );
 }

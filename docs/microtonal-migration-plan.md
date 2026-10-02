@@ -58,6 +58,16 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
   "Major w/ Neutral 3rd" is mahur, Hüseyni and Hijaz-ish map to husayni and
   hijaz (different notes), Neva and Uşak Maṣri to bayati; the three neutral
   scales without a source are gone.
+- **D5 — chords from the fork (accepted 2026-10-02).** gv defines no chord
+  types: a chord type is the fork's chord symbol (`M`, `m7`, `(↓3)`,
+  `har7`…), the picker offers every chord type of the EDO
+  (`ChordType.forEdo`), sorted by label ("Major Seventh · maj7"), and any
+  identified chord the picker offers can be loaded. Microtonal chords keep
+  their 12-TET stand-in (the chord without ups and downs) where they aren't
+  offered. gv's quartal (`1P 4P 7m`) was added to the fork as "quartal
+  triad" (`7sus4no5`). Old types (favourites, defaults) are migrated:
+  maj → M, min → m, add9 → Madd9, neut → (↓3), neut7 → 7(↓3),
+  sus2↓ → sus↓2, sus4↑ → sus↑4, maj↑3 → (↑3), min↓3 → m(↓3).
 
 ## Fork work (F) — each with tests and a README entry
 

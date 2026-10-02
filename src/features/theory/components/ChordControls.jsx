@@ -1,11 +1,7 @@
 import { memo, useId, useMemo } from "react";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import {
-  CHORD_TYPES,
-  CHORD_LABELS,
-  STANDARD_CHORD_TYPES,
-} from "@domain/theory/chords";
+import { chordLabel, chordTypesFor } from "@domain/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
 import {
   arrayRefAndLengthEqual,
@@ -58,7 +54,6 @@ function ChordControls({ state, actions, meta }) {
   const {
     sysNames,
     nameForPc = null,
-    supportsMicrotonal = false,
     system,
     rootIx,
     intervals,
@@ -81,9 +76,19 @@ function ChordControls({ state, actions, meta }) {
     setChordIgnoresScale?.(false);
   };
 
-  const allowMicrotonal = Boolean(supportsMicrotonal);
+  const divisions = system?.divisions ?? 12;
 
-  const chordTypes = allowMicrotonal ? CHORD_TYPES : STANDARD_CHORD_TYPES;
+  const chordTypes = useMemo(() => chordTypesFor(divisions), [divisions]);
+  const chordLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        chordTypes.map((chordType) => [
+          chordType,
+          chordLabel(chordType, divisions),
+        ]),
+      ),
+    [chordTypes, divisions],
+  );
 
   const safeIntervals = Array.isArray(intervals) ? intervals : [];
 
@@ -128,7 +133,7 @@ function ChordControls({ state, actions, meta }) {
   const typeLabelId = useId();
   const capoRelativeId = useId();
   const ignoresScaleId = useId();
-  const chordTypeLabel = CHORD_LABELS[type] ?? type;
+  const chordTypeLabel = chordLabels[type] ?? chordLabel(type, divisions);
   const capoChordDisplay = buildCapoChordDisplay({
     chordCapoRelative,
     capoFret,
@@ -184,10 +189,9 @@ function ChordControls({ state, actions, meta }) {
             <ChordTypePicker
               id={typeInputId}
               chordTypes={chordTypes}
-              labels={CHORD_LABELS}
+              labels={chordLabels}
               selectedType={type}
               onSelect={onTypeChange}
-              supportsMicrotonal={supportsMicrotonal}
               ariaLabelledBy={typeLabelId}
             />
             <button

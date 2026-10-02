@@ -103,6 +103,41 @@ export function nameToPc(name: string, edo: number): number | null {
   return Number.isFinite(pc) ? pc : null;
 }
 
+export interface ChordTypeInfo {
+  /** The chord symbol, e.g. "M", "m7", "(↓3)" */
+  type: string;
+  /** Full name, e.g. "major seventh" ("" for Tonal's unnamed chords). */
+  name: string;
+  intervals: string[];
+}
+
+const chordTypeInfoOf = (t: ReturnType<typeof ChordType.get>) => ({
+  type: t.aliases[0],
+  name: t.name,
+  intervals: t.intervals,
+});
+
+/**
+ * Every chord type the fork has for an EDO: the traditional chords, plus
+ * microtonal chords where ups and downs exist, plus chords built for the EDO
+ * from ratios (harmonic and subharmonic chords).
+ */
+export function chordTypesForEdo(edo: number): ChordTypeInfo[] {
+  return ChordType.forEdo(edo).map(chordTypeInfoOf);
+}
+
+/**
+ * A chord type by symbol or name. Chords built from ratios are only found
+ * with the EDO.
+ */
+export function chordTypeInfo(
+  type: string,
+  edo?: number,
+): ChordTypeInfo | null {
+  const found = ChordType.get(type, edo === undefined ? undefined : { edo });
+  return found.empty ? null : chordTypeInfoOf(found);
+}
+
 /**
  * Every scale the fork has for an EDO, as names and pitch classes above 0:
  * the traditional scales, plus maqamat and other microtonal scales where ups
