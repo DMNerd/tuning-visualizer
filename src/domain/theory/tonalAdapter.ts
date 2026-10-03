@@ -40,6 +40,18 @@ export function intervalSteps(interval: string, edo: number): number {
   return Interval.edoSteps(interval, edo);
 }
 
+/**
+ * Label of an interval of `steps` steps above a root, quality first as gv
+ * shows it: 7 in 24-EDO => "↑m3", 16 in 22-EDO => "↓M6". 12-TET's tritone
+ * keeps its usual "TT".
+ */
+export function intervalLabel(steps: number, edo: number): string {
+  if (edo === 12 && mod(steps, 12) === 6) return "TT";
+  const name = Interval.fromEdoSteps(steps, edo);
+  const m = /^(-?)([↑↓]*)(\d+)(.+)$/.exec(name);
+  return m ? `${m[1]}${m[2]}${m[4]}${m[3]}` : name;
+}
+
 export interface DetectedChord {
   rootPc: number;
   bassPc: number;

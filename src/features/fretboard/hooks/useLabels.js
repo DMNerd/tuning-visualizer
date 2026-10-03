@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { intervalLabel } from "@domain/theory/tonalAdapter";
 
 // `labelKey` is a translation key; render it with t()
 export const LABEL_OPTIONS = [
@@ -12,75 +13,15 @@ export const LABEL_OPTIONS = [
 
 export const LABEL_VALUES = LABEL_OPTIONS.map((o) => o.value);
 
-const INTERVAL_12 = [
-  "P1",
-  "m2",
-  "M2",
-  "m3",
-  "M3",
-  "P4",
-  "TT",
-  "P5",
-  "m6",
-  "M6",
-  "m7",
-  "M7",
-];
-
-function roundToInt(x) {
-  const EPS = 1e-9;
-  return Math.abs(x) < EPS ? 0 : Math.round(x);
-}
-
-/**
- * Context-anchored formatter for arbitrary N-TET.
- * - sharp mode: anchor to LOWER semitone
- *   -> upward microsteps display as "+"
- * - flat mode:  anchor to UPPER semitone
- *   -> downward microsteps display as "−"
- *
- * Examples in 24-TET (N=24):
- *  d=1 (≈50¢): sharp => P1+ ; flat => m2−
- *  d=3 (≈150¢): sharp => M2− ; flat => m3− (depends on anchor)
- */
-
-function formatIntervalGenericN(d, N, accidental) {
-  const exactSemis = (d * 12) / N;
-  const baseSemis =
-    accidental === "flat" ? Math.ceil(exactSemis) : Math.floor(exactSemis);
-  const name = INTERVAL_12[((baseSemis % 12) + 12) % 12];
-  const baseSteps = (baseSemis * N) / 12;
-  const offset = roundToInt(d - baseSteps);
-  if (offset === 0) return name;
-  const sign = offset > 0 ? "+" : "−";
-  return name + sign.repeat(Math.abs(offset));
-}
-
-function makeIntervalFormatter(system, rootIx, accidental) {
+function makeIntervalFormatter(system, rootIx) {
   const N = system.divisions;
-  if (N === 12) {
-    return (pc) => {
-      const d = (pc - rootIx + 12) % 12;
-      return INTERVAL_12[d];
-    };
-  }
-  return (pc) => {
-    const d = (pc - rootIx + N) % N;
-    return formatIntervalGenericN(d, N, accidental);
-  };
+  return (pc) => intervalLabel((((pc - rootIx) % N) + N) % N, N);
 }
 
-export function useLabels({
-  mode,
-  system,
-  rootIx,
-  degreeForPc,
-  nameForPc,
-  accidental = "sharp",
-}) {
+export function useLabels({ mode, system, rootIx, degreeForPc, nameForPc }) {
   const intervalOf = useMemo(
-    () => makeIntervalFormatter(system, rootIx, accidental),
-    [system, rootIx, accidental],
+    () => makeIntervalFormatter(system, rootIx),
+    [system, rootIx],
   );
 
   const labelFor = useCallback(

@@ -258,3 +258,13 @@ identification names the same chords in the same order; identified chords
 can now be loaded into the picker even when gv's old list lacked them (e.g.
 `G9`). The fork's added quartal triad adds one match, `C7sus4no5`, after the
 existing ones for C F B♭.
+
+## Interval labels from the fork (2026-10-03)
+
+The fretboard's "Intervals" labels come from the fork (`intervalLabel` in the
+adapter) instead of gv's 12-TET approximation with `+`/`−` per step. 12-TET
+labels are unchanged (`TT` stays). Other EDOs get the fork's spelling, quality
+first: 24-EDO step 1 was `P1+` (sharp view) or `m2−` (flat view) and is now
+`↑P1`; the neutral third (step 7) was `m3+` or `M3−` and is now `↑m3`. The
+sharp/flat preference no longer affects interval labels, since each step has
+one name.
