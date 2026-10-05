@@ -13,7 +13,7 @@ export type ScaleDef = {
   name?: string;
 };
 
-export const CHROMATIC_LABEL = "Chromatic";
+const CHROMATIC_LABEL = "Chromatic";
 
 // "harmonic minor" => "Harmonic Minor", "half-whole diminished" =>
 // "Half-Whole Diminished"

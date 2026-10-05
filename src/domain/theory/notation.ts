@@ -182,7 +182,6 @@ const ALIAS_TO_CANONICAL: Record<string, (typeof CANONICAL_MARKERS)[number]> = {
   "h/b": "de h/b",
 };
 
-export const SPELLING_MARKER_CANONICAL = Object.freeze(CANONICAL_MARKERS);
 export const SPELLING_MARKER_ALIASES = Object.freeze(ALIAS_TO_CANONICAL);
 export const SPELLING_MARKER_DISPLAY = Object.freeze([
   "german",

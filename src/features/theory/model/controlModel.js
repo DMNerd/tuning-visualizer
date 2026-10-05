@@ -6,7 +6,6 @@ import {
 import { identifyChord } from "@domain/theory/chordIdentify";
 import { identifyScales } from "@domain/theory/scaleIdentify";
 import { chordsInScale, modesOfScale } from "@domain/theory/scaleHarmony";
-import { supportsMicrotonal } from "@domain/theory/tonalAdapter";
 
 export function buildTheoryControlModel({
   system,
@@ -141,7 +140,6 @@ export function buildTheoryControlModel({
       refFreq: Number(system?.system?.refFreq) || 440,
       chordTonePcs,
       chordOverlayPcs,
-      supportsMicrotonal: supportsMicrotonal(divisions),
       system: system?.system,
       rootIx: safeRootIx,
       fretboardRootIx,

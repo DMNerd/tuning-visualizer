@@ -16,7 +16,6 @@ export default function ChordTypePicker({
   labels,
   selectedType,
   onSelect: handleSelect,
-  supportsMicrotonal = true,
   placeholder,
   ariaLabelledBy,
 }) {
@@ -55,7 +54,7 @@ export default function ChordTypePicker({
         options: standard,
       });
     }
-    if (supportsMicrotonal && microtonal.length > 0) {
+    if (microtonal.length > 0) {
       list.push({
         key: "microtonal",
         label: t(SECTION_LABEL_KEYS.microtonal),
@@ -63,7 +62,7 @@ export default function ChordTypePicker({
       });
     }
     return list;
-  }, [normalizedOptions, supportsMicrotonal, t]);
+  }, [normalizedOptions, t]);
 
   const sectionTypes = useMemo(
     () =>

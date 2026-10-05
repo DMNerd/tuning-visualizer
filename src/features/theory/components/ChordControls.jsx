@@ -300,7 +300,6 @@ const ACTION_KEYS = [
 const META_IDENTITY_KEYS = [
   "sysNames",
   "nameForPc",
-  "supportsMicrotonal",
   "rootIx",
   "chordRootPc",
   "capoFret",

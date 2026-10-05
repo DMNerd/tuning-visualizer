@@ -12,7 +12,6 @@ import {
   Note,
   Scale,
   ScaleType,
-  edoProfile,
   setEdoSpelling,
 } from "@vendor/microtonal/index.mjs";
 
@@ -20,18 +19,6 @@ import {
 // sized proportionally, so major and minor chords stay apart (the fork's
 // default spells every EDO by fifths)
 setEdoSpelling("proportional-fallback");
-
-/**
- * Whether ups and downs are distinct from sharps and flats in an EDO, so
- * microtonal chords and scales exist there (24-, 17-, 22-, 31-EDO…). In
- * 12- and 19-EDO an up is a sharp; in badly-fitting EDOs pitches are mapped
- * proportionally from 12-TET (see the fork's `edoProfile`).
- */
-export function supportsMicrotonal(edo: number): boolean {
-  if (!Number.isInteger(edo) || edo < 1) return false;
-  const profile = edoProfile(edo);
-  return profile.spelling === "fifths" && profile.sharp >= 2;
-}
 
 /**
  * Signed size of an interval ("3M", "↓3M", "-5P") in steps of an EDO. EDOs
@@ -164,17 +151,6 @@ export function scalesForEdo(edo: number): { name: string; pcs: number[] }[] {
     name,
     pcs: [...chroma].flatMap((bit, pc) => (bit === "1" ? [pc] : [])),
   }));
-}
-
-/** Sorted, distinct pitch classes of intervals above pitch class 0. */
-export function pcsForIntervals(
-  intervals: readonly string[],
-  edo: number,
-): number[] {
-  const pcs = new Set(
-    intervals.map((interval) => mod(intervalSteps(interval, edo), edo)),
-  );
-  return [...pcs].sort((a, b) => a - b);
 }
 
 const pcName = (pc: number, edo: number) =>

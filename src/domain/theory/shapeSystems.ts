@@ -806,12 +806,3 @@ export function labelStandardGuitarCagedTemplatesHeuristically(params: {
   });
   return out;
 }
-
-export function labelStandardGuitarCagedTemplates(params: {
-  n: number;
-  tuning: readonly number[];
-  systemSpec: ShapeSystemSpec;
-  templates: readonly Shape[];
-}): Record<string, "C" | "A" | "G" | "E" | "D"> {
-  return labelStandardGuitarCagedTemplatesHeuristically(params);
-}

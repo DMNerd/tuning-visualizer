@@ -97,7 +97,6 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             meta={{
               sysNames: meta.sysNames,
               nameForPc: meta.nameForPc,
-              supportsMicrotonal: meta.supportsMicrotonal,
               system: meta.system,
               rootIx: meta.rootIx,
               intervals: state.intervals,
