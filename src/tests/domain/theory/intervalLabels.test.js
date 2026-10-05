@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { intervalLabel } from "@domain/theory/tonalAdapter";
+import { edoInfo, intervalLabel } from "@domain/theory/tonalAdapter";
 
 const labels = (edo) =>
   Array.from({ length: edo }, (_, steps) => intervalLabel(steps, edo));
@@ -20,4 +20,16 @@ test("other EDOs name every step, quality first", () => {
   assert.equal(intervalLabel(30, 31), "↓P8");
   // 19-EDO needs no ups or downs
   assert.ok(labels(19).every((label) => !/[↑↓]/.test(label)));
+});
+
+test("edoInfo describes the EDO's fifth and sharp", () => {
+  assert.deepEqual(edoInfo(24), {
+    fifthSteps: 14,
+    fifthCents: 700,
+    fifthErrorCents: -2,
+    sharpSteps: 2,
+    spelling: "fifths",
+  });
+  // gv keeps proportional sizing for EDOs whose fifths don't fit (D1)
+  assert.equal(edoInfo(28).spelling, "proportional");
 });

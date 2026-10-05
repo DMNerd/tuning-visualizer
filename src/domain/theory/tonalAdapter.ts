@@ -10,8 +10,10 @@ import {
   ChordType,
   Interval,
   Note,
+  RomanNumeral,
   Scale,
   ScaleType,
+  edoProfile,
   setEdoSpelling,
 } from "@vendor/microtonal/index.mjs";
 
@@ -111,6 +113,7 @@ export interface ChordTypeInfo {
   intervals: string[];
   /** How common the chord is: 0 core, 1 other named, 2 unnamed. */
   tier: number;
+  quality: "Major" | "Minor" | "Augmented" | "Diminished" | "Unknown";
 }
 
 const chordTypeInfoOf = (t: ReturnType<typeof ChordType.get>) => ({
@@ -118,6 +121,7 @@ const chordTypeInfoOf = (t: ReturnType<typeof ChordType.get>) => ({
   name: t.name,
   intervals: t.intervals,
   tier: ChordType.tier(t),
+  quality: t.quality,
 });
 
 /**
@@ -192,4 +196,36 @@ export function stepsFrequency(
   refFreq = 440,
 ): number | null {
   return Note.edoFreq(Note.fromEdoSteps(steps, edo), edo, { refFreq });
+}
+
+/**
+ * Roman numeral of a scale degree `steps` steps above the tonic, e.g. 5 in
+ * 12-EDO => "IV", 3 => "♭III", 7 in 24-EDO => "↓III".
+ */
+export function degreeNumeral(steps: number, edo: number): string {
+  const interval = Interval.get(Interval.fromEdoSteps(mod(steps, edo), edo));
+  return RomanNumeral.get(interval).name.replace(/b/g, "♭").replace(/#/g, "♯");
+}
+
+export interface EdoInfo {
+  /** The fifth notes are spelled by, in steps and in cents. */
+  fifthSteps: number;
+  fifthCents: number;
+  /** How far that fifth is from a just 3/2, in cents. */
+  fifthErrorCents: number;
+  /** Steps of a sharp (0: sharps don't move the pitch; negative: lower it). */
+  sharpSteps: number;
+  /** Sized by stacking fifths, or proportionally from 12-TET. */
+  spelling: "fifths" | "proportional";
+}
+
+export function edoInfo(edo: number): EdoInfo {
+  const profile = edoProfile(edo);
+  return {
+    fifthSteps: profile.fifth,
+    fifthCents: (profile.fifth * 1200) / edo,
+    fifthErrorCents: profile.fifthErrorCents,
+    sharpSteps: profile.sharp,
+    spelling: profile.spelling,
+  };
 }

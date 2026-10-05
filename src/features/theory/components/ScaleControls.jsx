@@ -55,6 +55,31 @@ function ScaleControls({ state, actions, meta }) {
   };
   const chordSymbol = (rootPc, type) =>
     `${nameForPc(rootPc)}${type === "M" ? "" : type}`;
+  // each degree's main chord (with its numeral), then the others
+  const mainChords = scaleChords.flatMap(
+    ({ degree, numeral, rootPc, types }) =>
+      types.length > 0 ? [{ degree, numeral, rootPc, type: types[0] }] : [],
+  );
+  const otherChords = scaleChords.flatMap(({ degree, rootPc, types }) =>
+    types.slice(1).map((type) => ({ degree, rootPc, type })),
+  );
+  const chordChip = (rootPc, type) => {
+    const symbol = chordSymbol(rootPc, type);
+    return (
+      <button
+        type="button"
+        className={clsx(
+          "tv-tone-chip",
+          "tv-tone-chip--button",
+          "tv-tone-chip--load",
+        )}
+        onClick={() => loadChord(rootPc, type)}
+        aria-label={t("theory.showChordAria", { chord: symbol })}
+      >
+        {symbol}
+      </button>
+    );
+  };
 
   const resolvedDefaultScale = useMemo(() => {
     if (
@@ -222,7 +247,7 @@ function ScaleControls({ state, actions, meta }) {
           </div>
         ) : null}
 
-        {scaleChords.some(({ types }) => types.length > 0) ? (
+        {mainChords.length > 0 ? (
           <div className="tv-field tv-field--scale-tones">
             <span className="tv-field__label">{t("theory.scaleChords")}</span>
             <div
@@ -230,36 +255,39 @@ function ScaleControls({ state, actions, meta }) {
               role="list"
               aria-label={t("theory.scaleChords")}
             >
-              {scaleChords.flatMap(({ degree, rootPc, types }) =>
-                types.map((type, index) => {
-                  const symbol = chordSymbol(rootPc, type);
-                  return (
-                    <div
-                      key={`${degree}-${type}`}
-                      className="tv-tone-list__item"
-                      role="listitem"
-                    >
-                      <button
-                        type="button"
-                        className={clsx(
-                          "tv-tone-chip",
-                          "tv-tone-chip--button",
-                          "tv-tone-chip--load",
-                        )}
-                        onClick={() => loadChord(rootPc, type)}
-                        aria-label={t("theory.showChordAria", {
-                          chord: symbol,
-                        })}
-                      >
-                        {symbol}
-                      </button>
-                      {index === 0 ? (
-                        <span className="tv-tone-degree">{degree}</span>
-                      ) : null}
-                    </div>
-                  );
-                }),
-              )}
+              {mainChords.map(({ degree, numeral, rootPc, type }) => (
+                <div
+                  key={degree}
+                  className="tv-tone-list__item"
+                  role="listitem"
+                >
+                  {chordChip(rootPc, type)}
+                  <span className="tv-tone-degree">{numeral}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {otherChords.length > 0 ? (
+          <div className="tv-field tv-field--scale-tones">
+            <span className="tv-field__label">
+              {t("theory.scaleChordsOther")}
+            </span>
+            <div
+              className="tv-tone-list"
+              role="list"
+              aria-label={t("theory.scaleChordsOther")}
+            >
+              {otherChords.map(({ degree, rootPc, type }) => (
+                <div
+                  key={`${degree}-${type}`}
+                  className="tv-tone-list__item"
+                  role="listitem"
+                >
+                  {chordChip(rootPc, type)}
+                </div>
+              ))}
             </div>
           </div>
         ) : null}

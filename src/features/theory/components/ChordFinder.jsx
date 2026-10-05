@@ -8,6 +8,7 @@ import {
   formatChordSymbol,
 } from "@domain/theory/chordIdentify";
 import { mod } from "@shared/lib/math";
+import { intervalLabel } from "@domain/theory/tonalAdapter";
 
 const MAX_ALTERNATIVES = 5;
 
@@ -105,10 +106,16 @@ function ChordFinder({ state, actions, meta }) {
     setChordFinderActive(false);
   };
 
+  // two notes: the interval from the first pick to the second
+  const interval =
+    pickedPcs.length === 2
+      ? intervalLabel(mod(pickedPcs[1] - pickedPcs[0], divisions), divisions)
+      : null;
+
   let status = null;
   if (pickedPcs.length === 1) {
     status = t("theory.finderOneMore");
-  } else if (pickedPcs.length > 1 && !best) {
+  } else if (pickedPcs.length > 2 && !best) {
     status = t("theory.finderNoMatch");
   }
 
@@ -187,6 +194,11 @@ function ChordFinder({ state, actions, meta }) {
       ) : null}
 
       <div aria-live="polite">
+        {interval ? (
+          <small className="tv-field__help">
+            {t("theory.finderInterval", { interval })}
+          </small>
+        ) : null}
         {best ? (
           <ul
             className="tv-chord-finder__matches"

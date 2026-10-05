@@ -15,6 +15,7 @@ import NumberField from "@shared/ui/NumberField";
 import SegmentedRadioGroup from "@shared/ui/SegmentedRadioGroup";
 import SafeLazyModal from "@shared/ui/SafeLazyModal";
 import { renderNoteName } from "@domain/theory/notation";
+import { edoInfo } from "@domain/theory/tonalAdapter";
 import { normalizeIntlNoteName } from "@domain/theory/notation";
 import {
   coerceNeckFilterMode,
@@ -32,8 +33,30 @@ const NECK_FILTER_LABEL_KEYS = {
   [NECK_FILTER_MODES.FRETLESS]: "instrument.neckFilterFretless",
 };
 
+// The EDO's fifth and sharp, e.g. "Fifth 14\24 (700.0¢, −2.0¢ from 3/2)"
+function edoSummary(t, language, divisions) {
+  const info = edoInfo(divisions);
+  const number = (value, options) =>
+    new Intl.NumberFormat(language, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+      ...options,
+    }).format(value);
+  return t(
+    info.spelling === "fifths"
+      ? "instrument.edoFifths"
+      : "instrument.edoProportional",
+    {
+      fifth: `${info.fifthSteps}\\${divisions}`,
+      cents: number(info.fifthCents),
+      error: number(info.fifthErrorCents, { signDisplay: "always" }),
+      sharp: `${info.sharpSteps}\\${divisions}`,
+    },
+  );
+}
+
 function InstrumentControls({ state, actions, meta }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { strings, frets, tuning, systemId, selectedPreset, neckFilterMode } =
     state;
   const {
@@ -54,6 +77,7 @@ function InstrumentControls({ state, actions, meta }) {
   const safeSystems = systems ?? {};
   const safeSysNames = Array.isArray(sysNames) ? sysNames : [];
   const safeTuning = Array.isArray(tuning) ? tuning : [];
+  const divisions = Number(safeSystems[systemId]?.divisions) || null;
 
   const optionEntries = Array.from(
     new Map(
@@ -119,6 +143,11 @@ function InstrumentControls({ state, actions, meta }) {
               </option>
             ))}
           </select>
+          {divisions && divisions !== 12 ? (
+            <small className="tv-field__help">
+              {edoSummary(t, i18n.resolvedLanguage, divisions)}
+            </small>
+          ) : null}
         </div>
 
         <div className="tv-controls__row--two">

@@ -85,3 +85,26 @@ test("chordFrequencies voices a chord upwards from its root", () => {
     [196, 246.9, 293.7],
   );
 });
+
+test("chordsInScale names each degree with a quality-aware numeral", () => {
+  const numerals = (options, label, edo) =>
+    chordsInScale(0, scale(options, label).pcs, edo).map((d) => d.numeral);
+  assert.deepEqual(
+    numerals(options12, "Major", 12),
+    "I ii iii IV V vi vii°".split(" "),
+  );
+  assert.deepEqual(
+    numerals(options12, "Minor", 12),
+    "i ii° ♭III iv v ♭VI ♭VII".split(" "),
+  );
+  // the augmented triad on the third, not m#5 (a major triad on E)
+  assert.deepEqual(
+    numerals(options12, "Harmonic Minor", 12),
+    "i ii° ♭III+ iv V ♭VI vii°".split(" "),
+  );
+  // rast's neutral degrees keep their arrows
+  assert.deepEqual(
+    numerals(options24, "Rast", 24),
+    "I ii ↑♭III IV V VI ↑♭VII".split(" "),
+  );
+});
