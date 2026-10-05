@@ -9,6 +9,8 @@ export type ScaleDef = {
   label: string;
   systemId: string;
   pcs: number[];
+  /** The theory engine's scale name (none for the chromatic scale). */
+  name?: string;
 };
 
 export const CHROMATIC_LABEL = "Chromatic";
@@ -36,10 +38,12 @@ export function scalesForSystem(
   ];
   const seen = new Set([chromatic.join(",")]);
   for (const { name, pcs } of scalesForEdo(divisions)) {
+    // Tonal's chromatic scale is its 12 notes; ours has every step
+    if (name === "chromatic") continue;
     const key = pcs.join(",");
     if (seen.has(key)) continue;
     seen.add(key);
-    scales.push({ label: titleCase(name), systemId, pcs });
+    scales.push({ label: titleCase(name), systemId, pcs, name });
   }
   return scales.sort((a, b) => a.label.localeCompare(b.label));
 }

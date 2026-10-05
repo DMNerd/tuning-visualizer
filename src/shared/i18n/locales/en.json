@@ -263,7 +263,7 @@
     "toneDegree": "deg {{degree}}",
     "toneOutside": "outside",
     "summarySelectScale": "Select a scale to analyze the chord.",
-    "finderTitle": "What's this chord?",
+    "finderTitle": "What's this chord or scale?",
     "finderToggle": "Pick notes on the fretboard",
     "finderHelpActive": "Click a note to add or remove it; the first pick is the bass.",
     "finderOneMore": "Pick at least one more note.",
@@ -278,7 +278,18 @@
     "chordNames": "Chord names",
     "showMatch": "Show",
     "showMatchAria": "Show {{chord}} on the fretboard",
-    "showMatchTitle": "Load into the chord controls and show the overlay"
+    "showMatchTitle": "Load into the chord controls and show the overlay",
+    "clickToPlay": "Click to play",
+    "modes": "Modes",
+    "showModeAria": "Show {{scale}}",
+    "scaleChords": "Chords in the scale",
+    "showChordAria": "Show {{chord}} on the fretboard",
+    "scaleNames": "Scales with these notes",
+    "scaleMatchExact": "exactly these notes",
+    "scaleMatchExtra_one": "{{count}} more note",
+    "scaleMatchExtra_other": "{{count}} more notes",
+    "showScaleMatchAria": "Show {{scale}}",
+    "showScaleMatchTitle": "Load into the scale controls"
   },
   "practice": {
     "title": "Metronome and Training",

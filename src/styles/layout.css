@@ -644,6 +644,12 @@ html.is-fs {
   text-decoration: line-through;
 }
 
+/* Chips that load something (modes, chords of the scale), not remove it */
+.tv-tone-chip--load:hover,
+.tv-tone-chip--load:focus-visible {
+  text-decoration: none;
+}
+
 .tv-controls--chord-finder {
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);

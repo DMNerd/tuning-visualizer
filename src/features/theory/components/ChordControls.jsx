@@ -3,6 +3,8 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { chordLabel, chordTypesFor } from "@domain/theory/chords";
 import { FiRotateCcw } from "react-icons/fi";
+import { ascendingFrequencies } from "@domain/theory/playback";
+import { playTones } from "@shared/lib/audio/tonePlayer";
 import {
   arrayRefAndLengthEqual,
   keysIdentical,
@@ -134,6 +136,9 @@ function ChordControls({ state, actions, meta }) {
   const capoRelativeId = useId();
   const ignoresScaleId = useId();
   const chordTypeLabel = chordLabels[type] ?? chordLabel(type, divisions);
+
+  const playTone = (pc) =>
+    playTones(ascendingFrequencies([pc], divisions, system?.refFreq));
   const capoChordDisplay = buildCapoChordDisplay({
     chordCapoRelative,
     capoFret,
@@ -226,6 +231,7 @@ function ChordControls({ state, actions, meta }) {
         chordSummary={chordSummary}
         showChord={showChord}
         chordOverlayPcs={chordOverlayPcs}
+        onPlayTone={playTone}
       />
 
       <SegmentedRadioGroup

@@ -27,32 +27,9 @@ export function useAppPanelModels({
   const { randomize, practiceActions, practicePanel, metronomeControlModel } =
     practiceDomain;
 
-  const { systemId, system, sysNames, nameForPc, rootIx, root, setRoot } =
-    theorySystem;
+  const { systemId, root, setRoot } = theorySystem;
   const { scale, setScale, scaleOptions, intervals, defaultScale } =
     theoryScale;
-  const {
-    chordRoot,
-    setChordRoot,
-    chordType,
-    setChordType,
-    showChord,
-    setShowChord,
-    hideNonChord,
-    setHideNonChord,
-    chordCapoRelative,
-    setChordCapoRelative,
-    chordIgnoresScale,
-    setChordIgnoresScale,
-    chordFinderActive,
-    setChordFinderActive,
-    pickedPcs,
-    togglePickedPc,
-    clearPickedPcs,
-    chordRootIx,
-    chordOverlayPcs,
-    chordTonePcs,
-  } = theoryChord;
   const { randomizeMode, setRandomizeMode } = randomize;
   const { randomizeScaleNow } = practiceActions;
 
@@ -69,43 +46,10 @@ export function useAppPanelModels({
   const theoryControlModel = useMemo(
     () =>
       buildTheoryControlModel({
-        system: {
-          systemId,
-          system,
-          sysNames,
-          nameForPc,
-          rootIx,
-        },
-        scale: {
-          root,
-          setRoot,
-          scale,
-          setScale,
-          scaleOptions,
-          intervals,
-        },
-        chord: {
-          chordRoot,
-          setChordRoot,
-          chordType,
-          setChordType,
-          showChord,
-          setShowChord,
-          hideNonChord,
-          setHideNonChord,
-          chordCapoRelative,
-          setChordCapoRelative,
-          chordIgnoresScale,
-          setChordIgnoresScale,
-          chordFinderActive,
-          setChordFinderActive,
-          pickedPcs,
-          togglePickedPc,
-          clearPickedPcs,
-          chordRootIx,
-          chordOverlayPcs,
-          chordTonePcs,
-        },
+        // the theory domain's groups carry every field the model reads
+        system: theorySystem,
+        scale: { root, setRoot, scale, setScale, scaleOptions, intervals },
+        chord: theoryChord,
         randomize: {
           randomizeMode,
           setRandomizeMode,
@@ -122,11 +66,8 @@ export function useAppPanelModels({
         },
       }),
     [
-      systemId,
-      system,
-      sysNames,
-      nameForPc,
-      rootIx,
+      theorySystem,
+      theoryChord,
       root,
       setRoot,
       scale,
@@ -134,26 +75,6 @@ export function useAppPanelModels({
       scaleOptions,
       intervals,
       defaultScale,
-      chordRoot,
-      setChordRoot,
-      chordType,
-      setChordType,
-      showChord,
-      setShowChord,
-      hideNonChord,
-      setHideNonChord,
-      chordCapoRelative,
-      setChordCapoRelative,
-      chordIgnoresScale,
-      setChordIgnoresScale,
-      chordFinderActive,
-      setChordFinderActive,
-      pickedPcs,
-      togglePickedPc,
-      clearPickedPcs,
-      chordRootIx,
-      chordOverlayPcs,
-      chordTonePcs,
       randomizeMode,
       setRandomizeMode,
       randomizeScaleNow,

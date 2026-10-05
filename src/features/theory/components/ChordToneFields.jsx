@@ -48,6 +48,7 @@ export function ChordToneField({
   chordSummary,
   showChord,
   chordOverlayPcs,
+  onPlayTone,
 }) {
   const { t } = useTranslation();
   return (
@@ -61,15 +62,23 @@ export function ChordToneField({
         >
           {chordTones.map((tone) => (
             <div key={tone.pc} className="tv-tone-list__item" role="listitem">
-              <span
-                className={clsx("tv-tone-chip", {
-                  "tv-tone-chip--in-scale": showChord && tone.inScale,
-                  "tv-tone-chip--outside": showChord && !tone.inScale,
-                  "tv-tone-chip--in-chord":
-                    chordOverlayPcs instanceof Set &&
-                    chordOverlayPcs.has(tone.pc),
-                })}
+              <button
+                type="button"
+                className={clsx(
+                  "tv-tone-chip",
+                  "tv-tone-chip--button",
+                  "tv-tone-chip--load",
+                  {
+                    "tv-tone-chip--in-scale": showChord && tone.inScale,
+                    "tv-tone-chip--outside": showChord && !tone.inScale,
+                    "tv-tone-chip--in-chord":
+                      chordOverlayPcs instanceof Set &&
+                      chordOverlayPcs.has(tone.pc),
+                  },
+                )}
                 aria-label={toneAriaLabel(t, tone, showChord)}
+                title={t("theory.clickToPlay")}
+                onClick={() => onPlayTone?.(tone.pc)}
               >
                 <span>{tone.noteName}</span>
                 {showChord ? (
@@ -79,7 +88,7 @@ export function ChordToneField({
                       : t("theory.toneOutside")}
                   </small>
                 ) : null}
-              </span>
+              </button>
             </div>
           ))}
         </div>

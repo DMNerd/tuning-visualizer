@@ -7,6 +7,7 @@ import ScaleControls from "@features/theory/components/ScaleControls";
 import ChordControls from "@features/theory/components/ChordControls";
 import ChordFinder from "@features/theory/components/ChordFinder";
 import { buildChordFit } from "@features/theory/model/theoryPanelModel";
+import { mod } from "@shared/lib/math";
 
 export default function TheoryPanelContainer({ controlModel, reset }) {
   const { t } = useTranslation();
@@ -14,6 +15,16 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
   const actions = controlModel?.actions ?? {};
   const meta = controlModel?.meta ?? {};
   const chordFit = buildChordFit(meta.scaleTonePcs, meta.chordTonePcs, t);
+  const divisions = meta.system?.divisions ?? 12;
+  // Loads a chord of the scale into the chord controls. Its root is a
+  // sounding pitch; a capo-relative chord root is a shape root.
+  const showChord = (rootPc, type) => {
+    actions.onRootChange(
+      meta.nameForPc(mod(rootPc - (meta.chordRootOffset ?? 0), divisions)),
+    );
+    actions.onTypeChange(type);
+    actions.setShowChord(true);
+  };
 
   return (
     <>
@@ -35,6 +46,7 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             setScale: actions.setScale,
             setRandomizeMode: actions.setRandomizeMode,
             onRandomize: actions.onRandomize,
+            showChord,
           }}
           meta={{
             sysNames: meta.sysNames,
@@ -42,6 +54,11 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
             scaleTonePcs: meta.scaleTonePcs,
             scaleToneLabels: meta.scaleToneLabels,
             chordTonePcs: meta.chordTonePcs,
+            scaleChords: meta.scaleChords,
+            scaleModes: meta.scaleModes,
+            nameForPc: meta.nameForPc,
+            divisions,
+            refFreq: meta.refFreq,
           }}
         />
       </ErrorBoundary>
@@ -112,11 +129,14 @@ export default function TheoryPanelContainer({ controlModel, reset }) {
               onRootChange: actions.onRootChange,
               onTypeChange: actions.onTypeChange,
               setShowChord: actions.setShowChord,
+              setRoot: actions.setRoot,
+              setScale: actions.setScale,
             }}
             meta={{
               nameForPc: meta.nameForPc,
               divisions: meta.system?.divisions,
               matches: meta.chordFinderMatches,
+              scaleMatches: meta.scaleFinderMatches,
               chordRootOffset: meta.chordRootOffset,
             }}
           />

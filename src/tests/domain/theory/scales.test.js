@@ -50,6 +50,15 @@ test("temperament scales in their EDOs", () => {
   );
 });
 
+test("labels are unique and the chromatic scale has every step", () => {
+  for (const edo of [12, 19, 24, 31]) {
+    const scales = scalesForSystem(`${edo}-TET`, edo);
+    const labels = scales.map(({ label }) => label);
+    assert.equal(new Set(labels).size, labels.length, `${edo}-TET`);
+    assert.equal(byLabel(scales)["Chromatic"].length, edo);
+  }
+});
+
 test("scales with the same notes are listed once", () => {
   for (const edo of [7, 12, 19, 24]) {
     const keys = scalesForSystem(`${edo}-TET`, edo).map(({ pcs }) =>

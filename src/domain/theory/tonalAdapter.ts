@@ -10,6 +10,7 @@ import {
   ChordType,
   Interval,
   Note,
+  Scale,
   ScaleType,
   edoProfile,
   setEdoSpelling,
@@ -121,12 +122,15 @@ export interface ChordTypeInfo {
   /** Full name, e.g. "major seventh" ("" for Tonal's unnamed chords). */
   name: string;
   intervals: string[];
+  /** How common the chord is: 0 core, 1 other named, 2 unnamed. */
+  tier: number;
 }
 
 const chordTypeInfoOf = (t: ReturnType<typeof ChordType.get>) => ({
   type: t.aliases[0],
   name: t.name,
   intervals: t.intervals,
+  tier: ChordType.tier(t),
 });
 
 /**
@@ -171,4 +175,45 @@ export function pcsForIntervals(
     intervals.map((interval) => mod(intervalSteps(interval, edo), edo)),
   );
   return [...pcs].sort((a, b) => a - b);
+}
+
+const pcName = (pc: number, edo: number) =>
+  Note.fromEdoSteps(pc, edo, { pitchClass: true });
+
+/**
+ * Scales of an EDO that contain these pitch classes, with `tonicPc` as their
+ * tonic: the exact match first, then larger scales.
+ */
+export function detectScales(
+  pcs: readonly number[],
+  edo: number,
+  tonicPc: number,
+): { name: string; exact: boolean }[] {
+  const notes = pcs.map((pc) => pcName(pc, edo));
+  const options = { edo, tonic: pcName(tonicPc, edo) };
+  const exact = Scale.detect(notes, { ...options, match: "exact" });
+  return Scale.detect(notes, { ...options, match: "fit" }).map((found) => ({
+    name: Scale.tokenize(found)[1],
+    exact: exact.includes(found),
+  }));
+}
+
+/** The named modes of a scale: the steps above its root each one starts on. */
+export function scaleModes(
+  name: string,
+  edo: number,
+): { steps: number; name: string }[] {
+  return Scale.modeNames(name, { edo }).map(([interval, mode]) => ({
+    steps: mod(intervalSteps(interval, edo), edo),
+    name: mode,
+  }));
+}
+
+/** Frequency of the pitch `steps` steps of the EDO above C0 (A4 = refFreq). */
+export function stepsFrequency(
+  steps: number,
+  edo: number,
+  refFreq = 440,
+): number | null {
+  return Note.edoFreq(Note.fromEdoSteps(steps, edo), edo, { refFreq });
 }

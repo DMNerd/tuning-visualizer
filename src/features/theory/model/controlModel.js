@@ -4,6 +4,8 @@ import {
   transposePitchClassSet,
 } from "@domain/theory/capoChords";
 import { identifyChord } from "@domain/theory/chordIdentify";
+import { identifyScales } from "@domain/theory/scaleIdentify";
+import { chordsInScale, modesOfScale } from "@domain/theory/scaleHarmony";
 import { supportsMicrotonal } from "@domain/theory/tonalAdapter";
 
 export function buildTheoryControlModel({
@@ -66,6 +68,20 @@ export function buildTheoryControlModel({
     ? identifyChord(pickedPcs, divisions)
     : [];
   const pickedPcSet = pickedPcs.length > 0 ? new Set(pickedPcs) : null;
+  const scaleOptions = scale?.scaleOptions ?? [];
+  const scaleFinderMatches = chordFinderActive
+    ? identifyScales(pickedPcs, divisions, scaleOptions)
+    : [];
+
+  // Chords and modes of the selected scale; the chromatic scale has neither
+  const scaleDef = scaleOptions.find((option) => option.label === scale?.scale);
+  const scaleHarmony = Boolean(scaleDef?.name);
+  const scaleChords = scaleHarmony
+    ? chordsInScale(safeRootIx, scaleIntervals, divisions)
+    : [];
+  const scaleModes = scaleHarmony
+    ? modesOfScale(scaleDef, safeRootIx, divisions, scaleOptions)
+    : [];
 
   const chordAsScale =
     !chordFinderActive &&
@@ -117,9 +133,12 @@ export function buildTheoryControlModel({
     },
     meta: {
       sysNames: system?.sysNames ?? [],
-      scaleOptions: scale?.scaleOptions ?? [],
+      scaleOptions,
       scaleTonePcs,
       scaleToneLabels,
+      scaleChords,
+      scaleModes,
+      refFreq: Number(system?.system?.refFreq) || 440,
       chordTonePcs,
       chordOverlayPcs,
       supportsMicrotonal: supportsMicrotonal(divisions),
@@ -139,6 +158,7 @@ export function buildTheoryControlModel({
         ? false
         : Boolean(chord?.hideNonChord),
       chordFinderMatches,
+      scaleFinderMatches,
       // Picked notes are sounding pitches; a capo-relative chord root is a
       // shape root, so applying a match must subtract this offset.
       chordRootOffset: transposeBy,

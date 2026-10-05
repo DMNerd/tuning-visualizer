@@ -39,6 +39,32 @@ function MatchRow({ match, nameForPc, onShow, primary = false }) {
   );
 }
 
+function ScaleMatchRow({ match, nameForPc, onShow }) {
+  const { t } = useTranslation();
+  const scale = `${nameForPc(match.rootPc)} ${match.label}`;
+  return (
+    <li className="tv-chord-finder__match">
+      <span className="tv-chord-finder__names">
+        <strong className="tv-chord-finder__symbol">{scale}</strong>
+        <small>
+          {match.exact
+            ? t("theory.scaleMatchExact")
+            : t("theory.scaleMatchExtra", { count: match.extraNotes })}
+        </small>
+      </span>
+      <button
+        type="button"
+        className="tv-button tv-button--ghost"
+        onClick={() => onShow(match)}
+        aria-label={t("theory.showScaleMatchAria", { scale })}
+        title={t("theory.showScaleMatchTitle")}
+      >
+        {t("theory.showMatch")}
+      </button>
+    </li>
+  );
+}
+
 function ChordFinder({ state, actions, meta }) {
   const { t } = useTranslation();
   const { chordFinderActive = false, pickedPcs = [] } = state;
@@ -49,11 +75,14 @@ function ChordFinder({ state, actions, meta }) {
     onRootChange,
     onTypeChange,
     setShowChord,
+    setRoot,
+    setScale,
   } = actions;
   const {
     nameForPc = (pc) => String(pc),
     divisions = 12,
     matches = [],
+    scaleMatches = [],
     chordRootOffset = 0,
   } = meta;
   const toggleId = useId();
@@ -67,6 +96,12 @@ function ChordFinder({ state, actions, meta }) {
     onRootChange(nameForPc(mod(match.rootPc - chordRootOffset, divisions)));
     onTypeChange(match.appType);
     setShowChord(true);
+    setChordFinderActive(false);
+  };
+
+  const showScale = (match) => {
+    setRoot?.(nameForPc(match.rootPc));
+    setScale?.(match.label);
     setChordFinderActive(false);
   };
 
@@ -174,6 +209,24 @@ function ChordFinder({ state, actions, meta }) {
           </ul>
         ) : status ? (
           <small className="tv-field__help">{status}</small>
+        ) : null}
+        {scaleMatches.length > 0 ? (
+          <span className="tv-field__label">{t("theory.scaleNames")}</span>
+        ) : null}
+        {scaleMatches.length > 0 ? (
+          <ul
+            className="tv-chord-finder__matches"
+            aria-label={t("theory.scaleNames")}
+          >
+            {scaleMatches.map((match) => (
+              <ScaleMatchRow
+                key={`${match.rootPc}-${match.label}`}
+                match={match}
+                nameForPc={nameForPc}
+                onShow={showScale}
+              />
+            ))}
+          </ul>
         ) : null}
       </div>
     </div>

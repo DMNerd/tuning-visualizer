@@ -2,6 +2,12 @@ import { useId, useMemo } from "react";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { FiShuffle, FiRotateCcw } from "react-icons/fi";
+import {
+  ascendingFrequencies,
+  chordFrequencies,
+} from "@domain/theory/playback";
+import { buildChordPCsFromPc } from "@domain/theory/chords";
+import { playTones } from "@shared/lib/audio/tonePlayer";
 import Section from "@shared/ui/Section";
 import { memoWithKeys } from "@shared/lib/memo";
 import ScalePicker from "@features/theory/components/ScalePicker";
@@ -17,14 +23,38 @@ function ScaleControls({ state, actions, meta }) {
     defaultRoot = "C",
     defaultScale,
   } = state;
-  const { setRoot, setScale, setRandomizeMode, onRandomize } = actions;
+  const { setRoot, setScale, setRandomizeMode, onRandomize, showChord } =
+    actions;
   const {
     sysNames,
     scaleOptions,
     scaleTonePcs = [],
     scaleToneLabels = [],
     chordTonePcs = null,
+    scaleChords = [],
+    scaleModes = [],
+    nameForPc = (pc) => String(pc),
+    divisions = 12,
+    refFreq = 440,
   } = meta;
+
+  const playTone = (pc) =>
+    playTones(ascendingFrequencies([pc], divisions, refFreq));
+  // loading a chord of the scale also plays it
+  const loadChord = (rootPc, type) => {
+    showChord?.(rootPc, type);
+    playTones(
+      chordFrequencies(
+        rootPc,
+        buildChordPCsFromPc(rootPc, type, divisions),
+        divisions,
+        refFreq,
+      ),
+      { together: true },
+    );
+  };
+  const chordSymbol = (rootPc, type) =>
+    `${nameForPc(rootPc)}${type === "M" ? "" : type}`;
 
   const resolvedDefaultScale = useMemo(() => {
     if (
@@ -131,20 +161,108 @@ function ScaleControls({ state, actions, meta }) {
                 className="tv-tone-list__item"
                 role="listitem"
               >
-                <span
-                  className={clsx("tv-tone-chip", {
-                    "tv-tone-chip--in-chord":
-                      chordTonePcs instanceof Set &&
-                      chordTonePcs.has(scaleTonePcs[index]),
-                  })}
+                <button
+                  type="button"
+                  className={clsx(
+                    "tv-tone-chip",
+                    "tv-tone-chip--button",
+                    "tv-tone-chip--load",
+                    {
+                      "tv-tone-chip--in-chord":
+                        chordTonePcs instanceof Set &&
+                        chordTonePcs.has(scaleTonePcs[index]),
+                    },
+                  )}
+                  title={t("theory.clickToPlay")}
+                  onClick={() => playTone(scaleTonePcs[index])}
                 >
                   {toneLabel}
-                </span>
+                </button>
                 <span className="tv-tone-degree">{index + 1}</span>
               </div>
             ))}
           </div>
         </div>
+
+        {scaleModes.length > 0 ? (
+          <div className="tv-field tv-field--scale-tones">
+            <span className="tv-field__label">{t("theory.modes")}</span>
+            <div
+              className="tv-tone-list"
+              role="list"
+              aria-label={t("theory.modes")}
+            >
+              {scaleModes.map(({ rootPc, label }) => {
+                const mode = `${nameForPc(rootPc)} ${label}`;
+                return (
+                  <div
+                    key={`${rootPc}-${label}`}
+                    className="tv-tone-list__item"
+                    role="listitem"
+                  >
+                    <button
+                      type="button"
+                      className={clsx(
+                        "tv-tone-chip",
+                        "tv-tone-chip--button",
+                        "tv-tone-chip--load",
+                      )}
+                      onClick={() => {
+                        setRoot(nameForPc(rootPc));
+                        setScale(label);
+                      }}
+                      aria-label={t("theory.showModeAria", { scale: mode })}
+                    >
+                      {mode}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {scaleChords.some(({ types }) => types.length > 0) ? (
+          <div className="tv-field tv-field--scale-tones">
+            <span className="tv-field__label">{t("theory.scaleChords")}</span>
+            <div
+              className="tv-tone-list"
+              role="list"
+              aria-label={t("theory.scaleChords")}
+            >
+              {scaleChords.flatMap(({ degree, rootPc, types }) =>
+                types.map((type, index) => {
+                  const symbol = chordSymbol(rootPc, type);
+                  return (
+                    <div
+                      key={`${degree}-${type}`}
+                      className="tv-tone-list__item"
+                      role="listitem"
+                    >
+                      <button
+                        type="button"
+                        className={clsx(
+                          "tv-tone-chip",
+                          "tv-tone-chip--button",
+                          "tv-tone-chip--load",
+                        )}
+                        onClick={() => loadChord(rootPc, type)}
+                        aria-label={t("theory.showChordAria", {
+                          chord: symbol,
+                        })}
+                      >
+                        {symbol}
+                      </button>
+                      {index === 0 ? (
+                        <span className="tv-tone-degree">{degree}</span>
+                      ) : null}
+                    </div>
+                  );
+                }),
+              )}
+            </div>
+          </div>
+        ) : null}
 
         <SegmentedRadioGroup
           className="tv-field--scale-tones"
