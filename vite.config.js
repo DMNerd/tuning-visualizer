@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
-import htmlMinifier from "vite-plugin-html-minifier-terser";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { VitePWA } from "vite-plugin-pwa";
 import { sri } from "vite-plugin-sri3";
@@ -33,35 +32,6 @@ function resolveAppVersion() {
 }
 
 const appVersion = resolveAppVersion();
-
-const productionTerserOptions = {
-  ecma: 2020,
-  compress: {
-    defaults: true,
-    ecma: 2020,
-    module: true,
-    toplevel: true,
-    passes: 3,
-    drop_console: ["log", "info", "debug"],
-    drop_debugger: true,
-    pure_getters: "strict",
-    keep_fargs: false,
-    unsafe: false,
-    unsafe_arrows: false,
-    unsafe_comps: false,
-    unsafe_math: false,
-  },
-  mangle: {
-    module: true,
-    toplevel: true,
-    safari10: true,
-  },
-  format: {
-    comments: false,
-    ecma: 2020,
-    safari10: true,
-  },
-};
 
 export default defineConfig(({ command, mode }) => {
   const isProductionBuild = command === "build" && mode === "production";
@@ -112,18 +82,6 @@ export default defineConfig(({ command, mode }) => {
       }),
       ...(isProductionBuild
         ? [
-            htmlMinifier({
-              minifyOptions: {
-                collapseWhitespace: true,
-                removeComments: true,
-                removeRedundantAttributes: true,
-                removeScriptTypeAttributes: true,
-                removeStyleLinkTypeAttributes: true,
-                useShortDoctype: true,
-                minifyCSS: true,
-                minifyJS: productionTerserOptions,
-              },
-            }),
             ViteImageOptimizer({
               png: { quality: 80 },
               jpeg: { quality: 80 },
@@ -155,11 +113,13 @@ export default defineConfig(({ command, mode }) => {
 
     build: {
       target: ["chrome109", "safari15", "firefox102", "edge109"],
-      minify: isProductionBuild ? "terser" : false,
-      terserOptions: productionTerserOptions,
+      minify: isProductionBuild ? "oxc" : false,
       cssMinify: "lightningcss",
       rolldownOptions: {
         output: {
+          ...(isProductionBuild
+            ? { minify: { compress: { dropConsole: true }, mangle: true } }
+            : {}),
           manualChunks(id) {
             if (id.includes("/vendor/microtonal/")) {
               return "theory";

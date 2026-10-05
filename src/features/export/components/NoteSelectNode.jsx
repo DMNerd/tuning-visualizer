@@ -8,16 +8,16 @@ export default function NoteSelectNode({
   value,
   setValue,
   handleEdit,
-  handleKeyPress,
+  onKeyDown,
   isEditing,
   canEdit,
   originalNode,
-  customNodeProps,
+  componentProps,
   getStyles,
   nodeData,
 }) {
   const { t } = useTranslation();
-  const { noteOptions = [], systemLabel } = customNodeProps ?? {};
+  const { noteOptions = [], systemLabel } = componentProps ?? {};
   const selectId = useId();
   const stringStyles = getStyles("string", nodeData);
   const currentValue = typeof value === "string" ? value : "";
@@ -51,7 +51,7 @@ export default function NoteSelectNode({
         className="tv-json-editor__note-select"
         value={currentValue || ""}
         onChange={handleChange}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
         autoFocus
       >
         <option value="" disabled>

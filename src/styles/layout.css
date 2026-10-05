@@ -1790,8 +1790,7 @@ svg {
 
 .tv-modal__editor .jer-select,
 .tv-modal__editor .jer-input-text,
-.tv-modal__editor .jer-input-number,
-.tv-modal__editor .jer-select-types {
+.tv-modal__editor .jer-input-number {
   background: var(--jer-select-bg);
   background-image: none !important;
   background-color: var(--jer-select-bg) !important;
@@ -1802,10 +1801,6 @@ svg {
   border: 1px dashed color-mix(in oklab, var(--accent) 45%, var(--line) 55%);
   background: color-mix(in oklab, var(--accent) 12%, transparent);
   border-radius: 0.3em;
-}
-
-.tv-modal__editor .jer-drop-target-bottom {
-  background: color-mix(in oklab, var(--accent) 15%, transparent);
 }
 
 .tv-modal__editor .jer-collection-item-count,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useLatest } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
 import { toast } from "react-hot-toast";
 import i18n from "@shared/i18n";
 

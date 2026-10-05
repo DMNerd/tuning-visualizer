@@ -1,45 +1,44 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import useThrottleFn from "react-use/esm/useThrottleFn.js";
+import { useCallback, useEffect, useRef } from "react";
+import { useLatest } from "@shared/hooks/stateHooks";
 
+// Leading + trailing throttle: the first trigger runs immediately, later
+// triggers inside the window collapse into one run when it ends.
 export function useThrottledTrigger({ callback, throttleMs = 150 }) {
-  const callbackRef = useRef(callback);
-  const skipNextThrottledCallRef = useRef(false);
-  const [triggerVersion, setTriggerVersion] = useState(0);
+  const callbackRef = useLatest(callback);
+  const timeoutRef = useRef(undefined);
+  const pendingRef = useRef(false);
+  const isThrottled = Number.isFinite(throttleMs) && throttleMs > 0;
 
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
-  useThrottleFn(
-    () => {
-      if (triggerVersion === 0) return;
-      if (skipNextThrottledCallRef.current) {
-        skipNextThrottledCallRef.current = false;
-        return;
+  const startWindow = useCallback(() => {
+    const tick = () => {
+      if (pendingRef.current) {
+        pendingRef.current = false;
+        callbackRef.current?.();
+        timeoutRef.current = setTimeout(tick, throttleMs);
+      } else {
+        timeoutRef.current = undefined;
       }
-      callbackRef.current?.();
-    },
-    throttleMs,
-    [triggerVersion],
-  );
+    };
+    timeoutRef.current = setTimeout(tick, throttleMs);
+  }, [callbackRef, throttleMs]);
 
   const trigger = useCallback(() => {
-    if (!Number.isFinite(throttleMs) || throttleMs <= 0) {
-      callbackRef.current?.();
+    if (isThrottled && timeoutRef.current !== undefined) {
+      pendingRef.current = true;
       return;
     }
-    setTriggerVersion((version) => version + 1);
-  }, [throttleMs]);
-
-  const runNow = useCallback(() => {
-    if (!Number.isFinite(throttleMs) || throttleMs <= 0) {
-      callbackRef.current?.();
-      return;
-    }
-    skipNextThrottledCallRef.current = true;
     callbackRef.current?.();
-    setTriggerVersion((version) => version + 1);
-  }, [throttleMs]);
+    if (isThrottled) startWindow();
+  }, [callbackRef, isThrottled, startWindow]);
+
+  // Runs now and absorbs any pending trailing run.
+  const runNow = useCallback(() => {
+    pendingRef.current = false;
+    callbackRef.current?.();
+    if (isThrottled && timeoutRef.current === undefined) startWindow();
+  }, [callbackRef, isThrottled, startWindow]);
 
   return { trigger, runNow };
 }

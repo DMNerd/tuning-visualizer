@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { JsonEditor } from "json-edit-react";
 import { useTranslation } from "react-i18next";
-import {
-  useDebounce,
-  useKey,
-  useLatest,
-  useToggle,
-  useWindowSize,
-} from "react-use";
+import { useDebounce, useLatest, useToggle } from "@shared/hooks/stateHooks";
+import { useKey, useWindowHeight } from "@shared/hooks/domHooks";
 import { parseTuningPack } from "@features/export/model/schema";
 import { confirm } from "@shared/ui/confirm";
 import { toast } from "react-hot-toast";
@@ -29,6 +24,13 @@ import {
   getSeedSnapshot,
   isTuningNoteNode,
 } from "@features/export/model/tuningPackNormalization";
+
+function toJsonPointer(path) {
+  const parts = path.map((part) =>
+    String(part).replace(/~/g, "~0").replace(/\//g, "~1"),
+  );
+  return `/${parts.join("/")}`;
+}
 
 function TuningPackEditorModal({
   isOpen,
@@ -149,8 +151,6 @@ function TuningPackEditorModal({
       event.preventDefault();
       handleSave();
     },
-    { event: "keydown" },
-    [handleSave, isOpen],
   );
 
   const title = useMemo(
@@ -187,27 +187,32 @@ function TuningPackEditorModal({
     [t],
   );
 
-  const handleEditEvent = useCallback((path, isKey) => {
-    if (!path) {
-      setPointer(null);
-      return;
+  const handleEditEvent = useCallback(({ event, path }) => {
+    switch (event) {
+      case "startEdit":
+        setPointer(toJsonPointer(path));
+        break;
+      case "startRename":
+        setPointer(`${toJsonPointer(path)} (key)`);
+        break;
+      // Add events describe the parent collection
+      case "startAdd":
+        setPointer(toJsonPointer([...path, "(new)"]));
+        break;
+      case "commitEdit":
+      case "commitRename":
+      case "commitAdd":
+      case "cancelEdit":
+      case "cancelRename":
+      case "cancelAdd":
+        setPointer(null);
+        break;
     }
-
-    const pointerParts = path
-      .filter((part) => part !== undefined)
-      .map((part) => {
-        if (part === null) return "(new)";
-        const value = String(part);
-        return value.replace(/~/g, "~0").replace(/\//g, "~1");
-      });
-
-    const pointerText = `/${pointerParts.join("/")}`;
-    setPointer(isKey ? `${pointerText} (key)` : pointerText);
   }, []);
 
   const isDark = themeMode === "dark";
   const editorTheme = useMemo(() => buildPackEditorTheme(isDark), [isDark]);
-  const icons = useMemo(() => buildPackEditorIcons(isDark), [isDark]);
+  const icons = useMemo(() => buildPackEditorIcons(), []);
 
   const noteMeta = useMemo(() => buildNoteOptionsForPack(draft), [draft]);
 
@@ -216,8 +221,8 @@ function TuningPackEditorModal({
     return [
       {
         condition: isTuningNoteNode,
-        element: NoteSelectNode,
-        customNodeProps: {
+        component: NoteSelectNode,
+        componentProps: {
           noteOptions: noteMeta.noteOptions,
           systemLabel: noteMeta.systemLabel,
         },
@@ -228,7 +233,7 @@ function TuningPackEditorModal({
     ];
   }, [noteMeta]);
 
-  const { height: winH } = useWindowSize();
+  const winH = useWindowHeight();
   const editorMaxH = Math.max(240, winH - 280);
   const isSaveDisabled = Boolean(validationMessage);
 
@@ -316,11 +321,11 @@ function TuningPackEditorModal({
               onError={handleError}
               onEditEvent={handleEditEvent}
               theme={editorTheme}
-              icons={icons}
               customNodeDefinitions={noteNodeDefinitions}
               className="tv-json-editor"
               showStringQuotes={false}
-              enableClipboard
+              showCollectionCount
+              collapse={false}
               indent={2}
             />
           </div>

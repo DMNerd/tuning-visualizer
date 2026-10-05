@@ -271,11 +271,6 @@ export function useMetronomePlayback({
   // cursor — otherwise every tempo nudge snaps the cursor back to beat
   // 1/bar 1 and fires a spurious real beat event for a boundary that never
   // happened.
-  //
-  // Deliberately a plain ref, not react-use's usePrevious: react-use ships
-  // as CJS, and `usePrevious` isn't resolved as a named export under
-  // Node's native ESM loader (only under a bundler like Vite) — it would
-  // crash any test that imports this module directly.
   const wasPlayingRef = useRef(false);
 
   useEffect(() => {

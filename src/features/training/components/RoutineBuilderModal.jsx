@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo } from "react";
-import { useLatest } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 

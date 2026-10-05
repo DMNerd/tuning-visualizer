@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
-import { useKey } from "react-use";
+import { useKey } from "@shared/hooks/domHooks";
 import { useTranslation } from "react-i18next";
 
 export default function ConfirmDialog({
@@ -41,9 +41,7 @@ export default function ConfirmDialog({
     onConfirm?.();
   }, [onConfirm]);
 
-  useKey((e) => e.key.toLowerCase() === "escape", handleCancel, undefined, [
-    handleCancel,
-  ]);
+  useKey((e) => e.key.toLowerCase() === "escape", handleCancel);
 
   // No JS handling for Enter/Space: Cancel is autoFocus'd as the safe
   // default, and a native <button> already activates (fires click) on

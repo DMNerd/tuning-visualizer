@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useClickAway, useKey, useLatest, useLockBodyScroll } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
+import { useClickAway, useKey, useLockBodyScroll } from "@shared/hooks/domHooks";
 import clsx from "clsx";
 
 const DEFAULT_CARD_CLASS = "tv-modal__card";
@@ -89,12 +90,11 @@ function ModalFrame({
   useKey(
     "Escape",
     (event) => {
-      if (!isOpen) return;
+      // An inner field (e.g. the JSON editor) already handled it as a cancel
+      if (!isOpen || event.defaultPrevented) return;
       event.preventDefault();
       close(event);
     },
-    { event: "keydown" },
-    [isOpen, close],
   );
 
   useKey(
@@ -113,8 +113,6 @@ function ModalFrame({
         close(event);
       }
     },
-    { event: "keydown" },
-    [isOpen, shortcuts, close],
   );
 
   useClickAway(

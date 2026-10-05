@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "react";
-import { usePrevious } from "react-use";
+import { usePrevious } from "@shared/hooks/stateHooks";
 import { FRETS_MIN, FRETS_MAX } from "@shared/config/appDefaults";
 import { clamp } from "@shared/lib/math";
 

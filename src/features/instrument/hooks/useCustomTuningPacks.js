@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { useLatest, useMountedState } from "react-use";
+import { useLatest, useMountedState } from "@shared/hooks/stateHooks";
 import { useShallow } from "zustand/react/shallow";
 import { slug } from "@features/export";
 import i18n from "@shared/i18n";

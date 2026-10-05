@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useLatest } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
 import { useShallow } from "zustand/react/shallow";
 import i18n from "@shared/i18n";
 import * as v from "valibot";

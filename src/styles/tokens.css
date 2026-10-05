@@ -151,7 +151,3 @@
   border-color: color-mix(in oklab, var(--accent) 50%, var(--line) 50%);
   background: color-mix(in oklab, var(--accent) 18%, transparent);
 }
-
-:root[data-theme="dark"] .tv-modal__editor .jer-drop-target-bottom {
-  background: color-mix(in oklab, var(--accent) 20%, transparent);
-}

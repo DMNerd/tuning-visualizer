@@ -1,4 +1,4 @@
-import { usePrevious } from "react-use";
+import { usePrevious } from "@shared/hooks/stateHooks";
 
 /**
  * Both useInstrumentConfig (the system/strings default-reset effect) and

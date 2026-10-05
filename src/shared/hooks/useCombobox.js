@@ -6,7 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { useClickAway, useLatest, useKey } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
+import { useClickAway, useKey } from "@shared/hooks/domHooks";
 
 const OPTION_KEY_FIELDS = ["value", "id", "key"];
 const hasOwn = (obj, name) => Object.prototype.hasOwnProperty.call(obj, name);

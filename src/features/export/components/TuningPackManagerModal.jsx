@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
-import { useLatest, useWindowSize } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
+import { useWindowHeight } from "@shared/hooks/domHooks";
 import { findSystemByEdo, getSystemLabel } from "@domain/theory/tuning";
 import { memoWithShallowPick } from "@shared/lib/memo";
 import ModalFrame from "@shared/ui/ModalFrame";
@@ -119,7 +120,7 @@ function TuningPackManagerModal({
     [onDeleteRef],
   );
 
-  const { height: winH } = useWindowSize();
+  const winH = useWindowHeight();
   const listMaxH = Math.max(240, winH - 320);
 
   const hasTunings = Array.isArray(tunings) && tunings.length > 0;

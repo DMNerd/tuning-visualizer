@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { usePrevious } from "react-use";
+import { usePrevious } from "@shared/hooks/stateHooks";
 import { useShallow } from "zustand/react/shallow";
 import { useTuningWasSetAtomically } from "@features/instrument/hooks/useTuningAtomicEpoch";
 import { useDrawFrets } from "@features/instrument/hooks/useDrawFrets";

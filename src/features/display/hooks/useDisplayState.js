@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useFullscreen, useToggle } from "react-use";
+import { useToggle } from "@shared/hooks/stateHooks";
+import { useFullscreen } from "@shared/hooks/domHooks";
 import { useShallow } from "zustand/react/shallow";
 import { useTheme } from "@features/display/hooks/useTheme";
 import {

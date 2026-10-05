@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useKey } from "react-use";
+import { useKey } from "@shared/hooks/domHooks";
 import {
   FRETS_MAX,
   FRETS_MIN,
@@ -128,5 +128,5 @@ export function useHotkeys(options) {
     [shortcutHandler],
   );
 
-  useKey(true, onKey, undefined, []);
+  useKey(true, onKey);
 }

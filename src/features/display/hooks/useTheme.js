@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useMedia } from "react-use";
+import { useMedia } from "@shared/hooks/domHooks";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -15,7 +15,7 @@ export function useTheme() {
       setTheme: selectSetTheme(state),
     })),
   );
-  const prefersDark = useMedia("(prefers-color-scheme: dark)", false);
+  const prefersDark = useMedia("(prefers-color-scheme: dark)");
 
   const effectiveTheme = useMemo(() => {
     if (theme === "dark" || theme === "light") return theme;

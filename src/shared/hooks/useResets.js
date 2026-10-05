@@ -6,7 +6,7 @@ import {
   SYSTEM_DEFAULT,
   getFactoryFrets,
 } from "@shared/config/appDefaults";
-import { useLatest } from "react-use";
+import { useLatest } from "@shared/hooks/stateHooks";
 import i18n from "@shared/i18n";
 import { resetAllStores } from "@shared/lib/resetAllStores";
 import { resetMusicalStateFromRefs } from "@features/theory/hooks/resetMusicalState";

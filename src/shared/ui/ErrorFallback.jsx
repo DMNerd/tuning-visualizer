@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { withToastPromise } from "@shared/lib/toast";
-import { useCopyToClipboard, useToggle } from "react-use";
+import { useToggle } from "@shared/hooks/stateHooks";
 import { useTranslation } from "react-i18next";
 import {
   FiAlertTriangle,
@@ -23,7 +23,6 @@ export default function ErrorFallback({
 }) {
   const { t } = useTranslation();
   const [open, toggleOpen] = useToggle(false);
-  const [, copy] = useCopyToClipboard();
 
   const summary = useMemo(() => {
     const name = error?.name || "Error";
@@ -46,10 +45,7 @@ export default function ErrorFallback({
   const copyDetails = () =>
     withToastPromise(
       async () => {
-        const success = await copy(details);
-        if (!success) {
-          throw new Error("Copy failed");
-        }
+        await navigator.clipboard.writeText(details);
       },
       {
         loading: t("errorFallback.copyLoading"),

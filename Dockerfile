@@ -1,8 +1,9 @@
 # ---------- Build (Vite) ----------
-FROM node:22-slim AS builder
+FROM node:26-slim AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml* ./
+# Node 25+ no longer bundles corepack; install the pnpm pinned in packageManager
+RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
 RUN pnpm install --frozen-lockfile
 COPY . .
 ARG BUILDTIME
