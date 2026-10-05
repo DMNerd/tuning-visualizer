@@ -27,7 +27,7 @@ const reactRules = {
 };
 
 export default defineConfig([
-  globalIgnores(["dist", "build", "vendor"]),
+  globalIgnores(["dist", "build"]),
   { linterOptions: { reportUnusedDisableDirectives: "error" } },
   {
     files: ["**/*.css"],
@@ -89,7 +89,7 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ["@vendor/microtonal", "@vendor/microtonal/*"],
+              group: ["@dmnerd/microtonal", "@dmnerd/microtonal/*"],
               message:
                 "Use @domain/theory/tonalAdapter instead of importing the fork directly.",
             },

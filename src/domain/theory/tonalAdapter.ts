@@ -1,5 +1,5 @@
 // The only module that talks to the microtonal fork of Tonal
-// (vendor/microtonal). gv's model is integer pitch classes 0..N-1; this
+// (@dmnerd/microtonal). gv's model is integer pitch classes 0..N-1; this
 // adapter converts between those and the fork's spelled names, so the rest
 // of the app never handles fork objects or note spellings directly.
 // See docs/microtonal-migration-plan.md.
@@ -15,7 +15,7 @@ import {
   ScaleType,
   edoProfile,
   setEdoSpelling,
-} from "@vendor/microtonal/index.mjs";
+} from "@dmnerd/microtonal";
 
 // Decision D1: EDOs whose fifths don't make a usable diatonic scale are
 // sized proportionally, so major and minor chords stay apart (the fork's

@@ -11,11 +11,14 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
 - **gv keeps integer pitch classes (`0..N-1`) as its internal model.**
   Fretboard, stores, share codec, presets and routines are unchanged. The fork
   is only called through one adapter, `src/domain/theory/tonalAdapter.ts`, and
-  an ESLint `no-restricted-imports` rule forbids `@vendor/microtonal` everywhere
-  else.
-- **Distribution stays as is:** the git-ignored vendored bundle, pinned by
-  `vendor/microtonal/SOURCE.json`. Each fork change: commit and push, run
-  `pnpm vendor:microtonal`, commit the pin.
+  an ESLint `no-restricted-imports` rule forbids `@dmnerd/microtonal`
+  everywhere else.
+- **Distribution:** the fork is published to npm as
+  [`@dmnerd/microtonal`](https://www.npmjs.com/package/@dmnerd/microtonal) and
+  gv depends on it like any other package. Each fork change: release a new
+  version (fork README, "Releasing"), then bump the dependency in gv. Until
+  2026-10-05 gv used a git-ignored vendored bundle pinned by
+  `vendor/microtonal/SOURCE.json`; the log below still says "re-vendor".
 - **12- and 24-TET behave exactly as today.** Characterization tests capture the
   current outputs before each module is replaced. Other EDOs follow the EDO
   policy (D1), and every changed value gets listed.
@@ -190,3 +193,8 @@ pin (`vendor/microtonal/SOURCE.json`) must be refreshed after that.
   default became "every EDO by fifths"; the adapter calls
   `setEdoSpelling("proportional-fallback")` to keep D1, and looks chord types
   up with the EDO. Changes: [microtonal-migration-changes.md](microtonal-migration-changes.md#fork-update-to-d232b5a8-2026-10-01).
+- **npm package (2026-10-05)** — gv switched from the vendored bundle to the
+  `@dmnerd/microtonal` dependency (0.1.0, fork `ac2bbb40`, which only adds
+  packaging on top of the last pin `18f05533`, so no behaviour change).
+  Removed `scripts/vendor-microtonal.mjs`, the `@vendor/*` alias, the pin and
+  the CI/Docker rebuild steps.

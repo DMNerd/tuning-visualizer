@@ -25,8 +25,7 @@
       "@features/*": ["./src/features/*"],
       "@shared/*": ["./src/shared/*"],
       "@domain/*": ["./src/domain/*"],
-      "@styles/*": ["./src/styles/*"],
-      "@vendor/*": ["./vendor/*"]
+      "@styles/*": ["./src/styles/*"]
     },
 
     "types": ["react", "react-dom", "node"]

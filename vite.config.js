@@ -121,7 +121,7 @@ export default defineConfig(({ command, mode }) => {
             ? { minify: { compress: { dropConsole: true }, mangle: true } }
             : {}),
           manualChunks(id) {
-            if (id.includes("/vendor/microtonal/")) {
+            if (id.includes("/@dmnerd/microtonal/")) {
               return "theory";
             }
 
@@ -170,7 +170,6 @@ export default defineConfig(({ command, mode }) => {
         { find: "@shared", replacement: resolve(__dirname, "src/shared") },
         { find: "@domain", replacement: resolve(__dirname, "src/domain") },
         { find: "@styles", replacement: resolve(__dirname, "src/styles") },
-        { find: "@vendor", replacement: resolve(__dirname, "vendor") },
         { find: "@", replacement: resolve(__dirname, "src") },
       ],
     },

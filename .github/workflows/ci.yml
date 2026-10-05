@@ -33,19 +33,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The bundle only changes when the pin does, so skip rebuilding the fork
-      - name: Restore vendored microtonal
-        uses: actions/cache@v6
-        with:
-          path: vendor/microtonal
-          key: microtonal-${{ hashFiles('vendor/microtonal/SOURCE.json') }}
-
-      - name: Build vendored microtonal (pinned in vendor/microtonal/SOURCE.json)
-        run: pnpm vendor:microtonal --ensure
-        env:
-          # Authenticated GitHub API call for the pinned-branch check
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Check dead code (jscpd)
         run: pnpm deadcode
 

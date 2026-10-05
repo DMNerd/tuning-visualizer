@@ -11,6 +11,9 @@ importers:
       '@chenglou/pretext':
         specifier: ^0.0.9
         version: 0.0.9
+      '@dmnerd/microtonal':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@tanstack/react-virtual':
         specifier: ^3.14.13
         version: 3.14.13(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -653,6 +656,9 @@ packages:
 
   '@chenglou/pretext@0.0.9':
     resolution: {integrity: sha512-vInlpC//3vjRfWTs78k2BBIq/0bUdpjIp8TIn9fXe0NvnChhTQZfjioVzERQQbkQvCVpPpw7PDOrTWMHpq27VA==}
+
+  '@dmnerd/microtonal@0.1.0':
+    resolution: {integrity: sha512-kZyXM0l7LMtV0Trr+SmCs0s79iaZQScxvlfAqQYLfnv6SPre5CLTEpUsp6CiLno9z6W/1uBbxcT6ER57IO4nLQ==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -4098,6 +4104,8 @@ snapshots:
       keyv: 5.6.0
 
   '@chenglou/pretext@0.0.9': {}
+
+  '@dmnerd/microtonal@0.1.0': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:

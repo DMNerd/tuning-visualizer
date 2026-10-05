@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/vendor-microtonal.mjs --ensure && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -16,11 +16,11 @@
     "test": "tsx --test",
     "dup": "jscpd",
     "dup:report": "jscpd --reporters console,html",
-    "deadcode": "jscpd --dead-code --exit-code",
-    "vendor:microtonal": "node scripts/vendor-microtonal.mjs"
+    "deadcode": "jscpd --dead-code --exit-code"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.9",
+    "@dmnerd/microtonal": "^0.1.0",
     "@tanstack/react-virtual": "^3.14.13",
     "clsx": "^2.1.1",
     "fuse.js": "^7.5.0",

@@ -5,7 +5,7 @@ import { detectChords } from "@domain/theory/tonalAdapter";
 
 /**
  * Chord naming for a user-picked pitch-class set, backed by the microtonal
- * fork of Tonal (vendor/microtonal). Tonal detects chords in any EDO, and in
+ * fork of Tonal (@dmnerd/microtonal). Tonal detects chords in any EDO, and in
  * EDOs where ups and downs are finer than a sharp (24-EDO and others) it also
  * knows microtonal chords such as the neutral triad, "C(↓3)".
  */

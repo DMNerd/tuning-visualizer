@@ -10,8 +10,6 @@ ARG BUILDTIME
 ARG VERSION
 ARG REVISION
 ENV VITE_BUILDTIME=$BUILDTIME VITE_VERSION=$VERSION VITE_REVISION=$REVISION
-# pnpm build also rebuilds the git-ignored microtonal bundle from the pinned
-# fork commit (vendor/microtonal/SOURCE.json)
 RUN pnpm build
 
 # ---------- Runtime (Static Web Server) ----------
