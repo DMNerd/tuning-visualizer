@@ -14,10 +14,11 @@ test("12-TET interval labels are unchanged", () => {
 });
 
 test("other EDOs name every step, quality first", () => {
-  // 24-EDO: the neutral third is an upminor third
-  assert.equal(intervalLabel(7, 24), "↑m3");
-  // 31-EDO: a step below the octave
-  assert.equal(intervalLabel(30, 31), "↓P8");
+  // 24-EDO: the neutral third is a mid third (Kite's notation)
+  assert.equal(intervalLabel(7, 24), "~3");
+  // a perfect interval with arrows has no quality: a step below the octave
+  assert.equal(intervalLabel(30, 31), "↓8");
+  assert.equal(intervalLabel(11, 24), "↑4");
   // 19-EDO needs no ups or downs
   assert.ok(labels(19).every((label) => !/[↑↓]/.test(label)));
 });

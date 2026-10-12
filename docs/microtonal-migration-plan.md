@@ -198,3 +198,11 @@ pin (`vendor/microtonal/SOURCE.json`) must be refreshed after that.
   packaging on top of the last pin `18f05533`, so no behaviour change).
   Removed `scripts/vendor-microtonal.mjs`, the `@vendor/*` alias, the pin and
   the CI/Docker rebuild steps.
+- **Fork update to 0.3.0 (2026-10-12)** — decision D6: the fork follows
+  Kite's notation and notation guide. gv's notation layer reads arrows on
+  either side and writes them first; `migrateChordType` maps the fork's
+  older chord symbols; microtonal chord types work wherever the EDO has
+  microtonal chords; degree numerals spell mid degrees as their notes. The
+  characterization test allows 24-TET names and chord symbols to change only
+  to other names of the same steps (D6). Changes:
+  [microtonal-migration-changes.md](microtonal-migration-changes.md#fork-update-to-030-kites-notation-decision-d6-2026-10-12).

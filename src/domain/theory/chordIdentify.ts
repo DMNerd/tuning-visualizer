@@ -7,13 +7,13 @@ import { detectChords } from "@domain/theory/tonalAdapter";
  * Chord naming for a user-picked pitch-class set, backed by the microtonal
  * fork of Tonal (@dmnerd/microtonal). Tonal detects chords in any EDO, and in
  * EDOs where ups and downs are finer than a sharp (24-EDO and others) it also
- * knows microtonal chords such as the neutral triad, "C(↓3)".
+ * knows microtonal chords such as the neutral triad, "C~" (Kite's mid).
  */
 export interface ChordMatch {
   rootPc: number;
   /** Lowest note; differs from rootPc for inversions (slash chords). */
   bassPc: number;
-  /** Tonal chord type symbol, e.g. "m7" or "(↓3)". */
+  /** Tonal chord type symbol, e.g. "m7" or "~". */
   id: string;
   /** Appended to the root name, e.g. "m7" → "Am7" ("" for major). */
   suffix: string;
@@ -70,7 +70,7 @@ export function identifyChord(
 
 type NameForPc = (pc: number) => string;
 
-/** Compact symbol, e.g. "Cmaj7", "C(↓3)", "Am7/C". */
+/** Compact symbol, e.g. "Cmaj7", "C~", "Am7/C". */
 export function formatChordSymbol(match: ChordMatch, nameForPc: NameForPc) {
   const slash =
     match.bassPc !== match.rootPc ? `/${nameForPc(match.bassPc)}` : "";

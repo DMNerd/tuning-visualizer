@@ -268,3 +268,39 @@ first: 24-EDO step 1 was `P1+` (sharp view) or `m2−` (flat view) and is now
 `↑P1`; the neutral third (step 7) was `m3+` or `M3−` and is now `↑m3`. The
 sharp/flat preference no longer affects interval labels, since each step has
 one name.
+
+## Fork update to 0.3.0: Kite's notation (decision D6, 2026-10-12)
+
+`@dmnerd/microtonal` 0.3.0 follows Kite's ups and downs notation and his
+notation guide. 12-TET is unchanged. The tables above show the spellings
+from before this update.
+
+- **Note names** write arrows first (`↑C`, not `C↑`), and a step with
+  arrows is spelled with a plain letter where it can (24-TET pitch class 3:
+  `C#↑`/`D↓` → `↓D`). The sharp and flat views often agree now, so the
+  "both" setting shows one name for those steps (German `Cih/Deseh` →
+  `Cih`). German and Czech names convert either arrow
+  position; names saved by older versions (`C#↑`) still parse.
+- **Chord symbols** are Kite's: the neutral triad is `~` (mid) where a sharp
+  is two steps (24-, 31-TET), downmajor `↓`, upminor `↑m`, downminor `↓m`,
+  `↓,7`, `↓7`, `,↓7`, `↓sus2`, `↑sus4`… Favourites and old chord types map
+  through `migrateChordType` (`(↓3)` → `↓`, `7(↓3)` → `↓,7`, gv's `neut` →
+  `↓`). A microtonal chord type works in every EDO with microtonal chords,
+  also where the picker lists the same notes under another name (24-TET
+  downmajor is listed as `~`). Where a chord type isn't offered, a mid plays
+  as major (Kite's closest 12-TET chord).
+- **Identified chords** in 24-TET: C ↓E G is `C~` (was `C(↓3)`), and chord
+  tone intervals use mids (`3~`).
+- **Interval labels**: the neutral third is `~3` (was `↑m3`), perfect
+  intervals with arrows have no quality (`↑4`, `↓8`, was `↓P8`).
+- **Scale degree numerals** name a mid degree as its note is spelled: rast
+  in 24-TET is `I ii ↓III IV V VI ↓VII` (was `↑♭III`, `↑♭VII`). gv spells
+  the degree with `edoPlainInterval` first, since a mid has no roman
+  numeral (0.3.0 threw on one; 0.3.1, which gv uses, returns an empty
+  numeral).
+
+Other EDOs (D1 allows changes): note names change in 57 EDOs (arrows first
+and the same respelling, e.g. 15-TET `C#↑` → `↓D`). Old favourites `maj↑3`
+and `min↓3` now sound as true upmajor and downminor in 17, 22, 27, 32, 37
+and 42-TET, where the picker lists them under a traditional chord with the
+same notes; before they fell back to major and minor.

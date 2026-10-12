@@ -17,6 +17,7 @@ import { TUNINGS, findSystemByEdo } from "@domain/theory/tuning";
 import { buildChordPCsFromPc, migrateChordType } from "@domain/theory/chords";
 import { migrateScaleLabel, scalesForSystem } from "@domain/theory/scales";
 import { formatChordSymbol, identifyChord } from "@domain/theory/chordIdentify";
+import { nameToPc } from "@domain/theory/tonalAdapter";
 import {
   buildNameToPcMap,
   nameForPcWithDisplayAccidentals,
@@ -72,6 +73,50 @@ const ALLOWED_CHANGES = [
   [["names", "24-TET/both/german", 3], "Cisih/Deh", D2],
   [["names", "24-TET/both/german", 7], "Disih/Eeh", D2],
 ];
+
+// D6: the theory engine follows Kite's notation guide (microtonal 0.3): a
+// note's arrows come first (↑C), and a step with arrows is spelled with a
+// plain letter where it can (24-TET C#↑ -> ↓D), so the sharp and flat views
+// often agree. A 24-TET name may change only to another spelling of the
+// same step.
+const D6_ARROWS = /[↑↓]|ih$|eh$/i;
+function respelledNames(recorded, current) {
+  const allowed = structuredClone(recorded);
+  for (const [key, names] of Object.entries(recorded)) {
+    const [id, accidental, naming] = key.split("/");
+    const system = TUNINGS[id];
+    const map = buildNameToPcMap(system, naming, accidental);
+    names.forEach((name, pc) => {
+      const now = current[key]?.[pc];
+      if (now === name || !name.split("/").some((n) => D6_ARROWS.test(n)))
+        return;
+      const samePc = now
+        .split("/")
+        .every((n) => resolvePcForName(map, n, system.divisions) === pc);
+      if (samePc) allowed[key][pc] = now;
+    });
+  }
+  return allowed;
+}
+// recorded chord symbols wrote arrows after the note ("A↑m7/E↑"); now the
+// root and bass may be respelled, but must name the same steps, and a
+// microtonal chord type may have Kite's name for the same notes ("(↓3)" is
+// "~" in 24-TET)
+const arrowsFirst = (symbol) =>
+  symbol.replace(/([A-G](?:#+|b+)?)([↑↓]+)/g, "$2$1");
+const NOTE = "[↑↓]*[A-G](?:#+|b+)?";
+const SYMBOL = new RegExp(`^(${NOTE})(.*?)(?:/(${NOTE}))?$`);
+function sameChordSymbol(now, recorded, edo) {
+  const a = SYMBOL.exec(now);
+  const b = SYMBOL.exec(arrowsFirst(recorded));
+  if (!a || !b) return now === recorded;
+  const pc = (name) => (name ? nameToPc(name, edo) : null);
+  const sameType = a[2] === b[2] || sameChordType(a[2], b[2], edo);
+  return sameType && pc(a[1]) === pc(b[1]) && pc(a[3]) === pc(b[3]);
+}
+const chordNotes = (type, edo) =>
+  sortedPcs(buildChordPCsFromPc(0, migrateChordType(type), edo)).join();
+const sameChordType = (a, b, edo) => chordNotes(a, edo) === chordNotes(b, edo);
 
 const systemFor = (edo) =>
   TUNINGS[`${edo}-TET`] ?? findSystemByEdo(TUNINGS, edo).system;
@@ -228,7 +273,11 @@ test("theory outputs for 12- and 24-TET are unchanged", () => {
     return;
   }
   const recorded = JSON.parse(fs.readFileSync(FIXTURE, "utf8"));
-  const expected = main12And24(applyAllowedChanges(recorded));
+  const allowed = applyAllowedChanges(recorded);
+  const expected = main12And24({
+    ...allowed,
+    names: respelledNames(allowed.names, current.names),
+  });
   const actual = main12And24({
     ...current,
     parse: reparse(recorded.parse),
@@ -239,6 +288,7 @@ test("theory outputs for 12- and 24-TET are unchanged", () => {
 });
 
 // D5: chord types are the fork's chord symbols. Detection is unchanged, but
+// (D6) roots and basses may be respelled as names of the same steps. And
 // the chord type a match loads into the controls is its symbol: recorded
 // gv types map through migrateChordType, and chords gv didn't have ("-")
 // may now be loadable. The added quartal triad (7sus4no5) is one more match.
@@ -251,8 +301,16 @@ test("12- and 24-TET chord detection is unchanged (D5)", () => {
     matches.forEach((match, i) => {
       const [symbol, type] = match.split(":");
       const [nowSymbol, nowType] = now[i].split(":");
-      assert.equal(nowSymbol, symbol, key);
-      if (type !== "-") assert.equal(nowType, migrateChordType(type), key);
+      const edo = Number(key.split("/")[0]);
+      assert.ok(
+        sameChordSymbol(nowSymbol, symbol, edo),
+        `${key}: ${nowSymbol}, recorded ${symbol}`,
+      );
+      if (type !== "-")
+        assert.ok(
+          sameChordType(nowType, type, edo),
+          `${key}: ${nowType}, recorded ${type}`,
+        );
     });
   }
 });

@@ -30,11 +30,13 @@ test("german parsing resolves aliases back to english spellings", () => {
 
 test("german microtonal suffixes map to arrows", () => {
   assert.equal(toGermanNoteName("C↑"), "Cih");
+  assert.equal(toGermanNoteName("↑C#"), "Cisih");
+  // arrows after the note (gv's older names) are read too
   assert.equal(toGermanNoteName("C#↑"), "Cisih");
   assert.equal(toGermanNoteName("Db↓"), "Deseh");
-  assert.equal(germanToEnglishNoteName("Hih"), "B↑");
-  assert.equal(germanToEnglishNoteName("Aisih"), "A#↑");
-  assert.equal(germanToEnglishNoteName("Aeh"), "A↓");
+  assert.equal(germanToEnglishNoteName("Hih"), "↑B");
+  assert.equal(germanToEnglishNoteName("Aisih"), "↑A#");
+  assert.equal(germanToEnglishNoteName("Aeh"), "↓A");
 });
 
 test("renderNoteName keeps english by default and supports german", () => {
@@ -49,7 +51,7 @@ test("buildNoteAliases includes english and german variants", () => {
 });
 
 test("buildNoteAliases includes microtonal german variants", () => {
-  const aliases = buildNoteAliases("C#↑");
-  assert.equal(aliases.has("C#↑"), true);
+  const aliases = buildNoteAliases("↑C#");
+  assert.equal(aliases.has("↑C#"), true);
   assert.equal(aliases.has("Cisih"), true);
 });

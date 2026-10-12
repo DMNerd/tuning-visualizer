@@ -34,7 +34,7 @@ test("normalizeIntlNoteName trims input and preserves token when translation is 
 test("normalizeIntlNoteName translates germanic/czech spellings when enabled", () => {
   assert.equal(normalizeIntlNoteName("H", { translateGerman: true }), "B");
   assert.equal(normalizeIntlNoteName("B", { translateGerman: true }), "Bb");
-  assert.equal(normalizeIntlNoteName("Hih", { translateGerman: true }), "B↑");
+  assert.equal(normalizeIntlNoteName("Hih", { translateGerman: true }), "↑B");
 });
 
 test("normalizeIntlNoteName falls back to trimmed unknown token", () => {

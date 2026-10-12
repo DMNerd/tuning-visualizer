@@ -45,7 +45,7 @@ test("coerceAnyTuning translates germanic microtonal suffixes when spelling is c
     },
   };
 
-  assert.deepEqual(coerceAnyTuning(pack), ["B↑", "A#↑", "A↓"]);
+  assert.deepEqual(coerceAnyTuning(pack), ["↑B", "↑A#", "↓A"]);
 });
 
 test("coerceAnyTuning keeps mixed standard and microtonal entries stable under spelling hint", () => {
@@ -62,7 +62,7 @@ test("coerceAnyTuning keeps mixed standard and microtonal entries stable under s
     },
   };
 
-  assert.deepEqual(coerceAnyTuning(pack), ["B", "Bb", "F#", "A#↑", "A↓"]);
+  assert.deepEqual(coerceAnyTuning(pack), ["B", "Bb", "F#", "↑A#", "↓A"]);
 });
 
 test("coerceAnyTuning does not translate germanic microtonal tokens without spelling hint", () => {
@@ -86,10 +86,10 @@ test("coerceAnyTuning recognizes spelling aliases with separator normalization",
   };
   const deSpacedPack = { spelling: "de h b", tuning: { strings: baseStrings } };
 
-  assert.deepEqual(coerceAnyTuning(czPack), ["B", "Bb", "A↓"]);
-  assert.deepEqual(coerceAnyTuning(deDashPack), ["B", "Bb", "A↓"]);
-  assert.deepEqual(coerceAnyTuning(deUnderscorePack), ["B", "Bb", "A↓"]);
-  assert.deepEqual(coerceAnyTuning(deSpacedPack), ["B", "Bb", "A↓"]);
+  assert.deepEqual(coerceAnyTuning(czPack), ["B", "Bb", "↓A"]);
+  assert.deepEqual(coerceAnyTuning(deDashPack), ["B", "Bb", "↓A"]);
+  assert.deepEqual(coerceAnyTuning(deUnderscorePack), ["B", "Bb", "↓A"]);
+  assert.deepEqual(coerceAnyTuning(deSpacedPack), ["B", "Bb", "↓A"]);
 });
 
 test("coerceAnyTuning shares note-token trim semantics with UI normalization", () => {
@@ -100,5 +100,5 @@ test("coerceAnyTuning shares note-token trim semantics with UI normalization", (
     },
   };
 
-  assert.deepEqual(coerceAnyTuning(pack), ["B↑", "Bb"]);
+  assert.deepEqual(coerceAnyTuning(pack), ["↑B", "Bb"]);
 });

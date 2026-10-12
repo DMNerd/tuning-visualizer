@@ -13,6 +13,7 @@ import {
   RomanNumeral,
   Scale,
   ScaleType,
+  edoPlainInterval,
   edoProfile,
   setEdoSpelling,
 } from "@dmnerd/microtonal";
@@ -32,24 +33,24 @@ export function intervalSteps(interval: string, edo: number): number {
 
 /**
  * Label of an interval of `steps` steps above a root, quality first as gv
- * shows it: 7 in 24-EDO => "↑m3", 16 in 22-EDO => "↓M6". 12-TET's tritone
- * keeps its usual "TT".
+ * shows it (Kite's notation): 7 in 24-EDO => "~3", 16 in 22-EDO => "↓M6",
+ * 11 in 24-EDO => "↑4". 12-TET's tritone keeps its usual "TT".
  */
 export function intervalLabel(steps: number, edo: number): string {
   if (edo === 12 && mod(steps, 12) === 6) return "TT";
   const name = Interval.fromEdoSteps(steps, edo);
-  const m = /^(-?)([↑↓]*)(\d+)(.+)$/.exec(name);
+  const m = /^(-?)([↑↓]*)(\d+)(.*)$/.exec(name);
   return m ? `${m[1]}${m[2]}${m[4]}${m[3]}` : name;
 }
 
 export interface DetectedChord {
   rootPc: number;
   bassPc: number;
-  /** Chord type symbol, e.g. "m7" or "(↓3)". */
+  /** Chord type symbol, e.g. "m7" or "↓" (Kite's notation). */
   symbol: string;
   /** Chord type name, e.g. "minor seventh" ("" when the type has none). */
   name: string;
-  /** Chord tone intervals by pitch class, e.g. { 0: "1P", 7: "↓3M" }. */
+  /** Chord tone intervals by pitch class, e.g. { 0: "1P", 7: "3~" }. */
   intervalsByPc: Record<number, string>;
 }
 
@@ -87,7 +88,7 @@ export function detectChords(
 
 export type Accidental = "sharp" | "flat";
 
-/** Name of a pitch class in an EDO, e.g. 3 in 24-EDO => "C#↑" or "D↓". */
+/** Name of a pitch class in an EDO, e.g. 3 in 24-EDO => "↓D". */
 export function pcToName(
   pc: number,
   edo: number,
@@ -98,7 +99,7 @@ export function pcToName(
 
 /**
  * Pitch class of a note name in an EDO, or null when it isn't a note.
- * Accepts any spelling the fork parses: "Db↑", "^C#", "vE", "C##", "E4".
+ * Accepts any spelling the fork parses: "↑Db", "Db↑", "^C#", "vE", "C##".
  */
 export function nameToPc(name: string, edo: number): number | null {
   const pc = Note.edoChroma(name, edo);
@@ -106,7 +107,7 @@ export function nameToPc(name: string, edo: number): number | null {
 }
 
 export interface ChordTypeInfo {
-  /** The chord symbol, e.g. "M", "m7", "(↓3)" */
+  /** The chord symbol, e.g. "M", "m7", "↓" */
   type: string;
   /** Full name, e.g. "major seventh" ("" for Tonal's unnamed chords). */
   name: string;
@@ -200,11 +201,17 @@ export function stepsFrequency(
 
 /**
  * Roman numeral of a scale degree `steps` steps above the tonic, e.g. 5 in
- * 12-EDO => "IV", 3 => "♭III", 7 in 24-EDO => "↓III".
+ * 12-EDO => "IV", 3 => "♭III", 7 in 24-EDO => "↓III" (a mid degree is named
+ * as its note is spelled, here ↓E).
  */
 export function degreeNumeral(steps: number, edo: number): string {
-  const interval = Interval.get(Interval.fromEdoSteps(mod(steps, edo), edo));
-  return RomanNumeral.get(interval).name.replace(/b/g, "♭").replace(/#/g, "♯");
+  const name = edoPlainInterval(
+    Interval.fromEdoSteps(mod(steps, edo), edo),
+    edo,
+  );
+  return RomanNumeral.get(Interval.get(name))
+    .name.replace(/b/g, "♭")
+    .replace(/#/g, "♯");
 }
 
 export interface EdoInfo {

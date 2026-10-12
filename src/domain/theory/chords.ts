@@ -1,19 +1,26 @@
 // Chord types come from the theory engine (see tonalAdapter.ts): a chord
-// type is its chord symbol there, e.g. "M", "m7", "(↓3)" or "har7".
-// Favourites store chord types; ones saved by older versions are mapped by
-// `migrateChordType`.
+// type is its chord symbol there, in Kite's notation, e.g. "M", "m7", "↓",
+// "~" or "har7". Favourites store chord types; ones saved by older versions
+// are mapped by `migrateChordType`.
 
 import { mod } from "@shared/lib/math";
 import {
   chordTypeInfo,
   chordTypesForEdo,
+  edoInfo,
   intervalSteps,
 } from "@domain/theory/tonalAdapter";
 
 export type ChordType = string;
 
 const hasArrows = (intervals: readonly string[]) =>
-  intervals.some((ivl) => /[↑↓]/.test(ivl));
+  intervals.some((ivl) => /[↑↓~]/.test(ivl));
+
+// EDOs with ups and downs finer than a sharp have microtonal chords
+const hasMicrotonalChords = (divisions: number) => {
+  const { spelling, sharpSteps } = edoInfo(divisions);
+  return spelling === "fifths" && sharpSteps >= 2;
+};
 
 // "major seventh" => "Major Seventh"
 const titleCase = (name: string) =>
@@ -32,9 +39,17 @@ function offeredIn(divisions: number): Set<ChordType> {
   return offered;
 }
 
-/** Whether a chord type is offered in an EDO (it may not be in every EDO). */
-export const isChordTypeOffered = (type: ChordType, divisions: number) =>
-  offeredIn(divisions).has(type);
+/**
+ * Whether a chord type is offered in an EDO (it may not be in every EDO).
+ * The picker lists one name per set of notes (24-EDO's downmajor triad is
+ * listed as mid, "~"), but every microtonal chord type works where there
+ * are microtonal chords.
+ */
+export function isChordTypeOffered(type: ChordType, divisions: number) {
+  if (offeredIn(divisions).has(type)) return true;
+  const info = chordTypeInfo(type);
+  return !!info && hasArrows(info.intervals) && hasMicrotonalChords(divisions);
+}
 
 /** Label for menus, e.g. "Major Seventh · maj7", or the bare symbol. */
 export function chordLabel(type: ChordType, divisions?: number): string {
@@ -67,9 +82,17 @@ export function buildChordPCsFromPc(
 ): Set<number> {
   const info = chordTypeInfo(type, divisions);
   if (!info) return new Set();
+  // without ups and downs, a mid is major (or perfect): Kite's closest
+  // 12-TET chord
   const intervals = isChordTypeOffered(type, divisions)
     ? info.intervals
-    : info.intervals.map((ivl) => ivl.replace(/[↑↓]/g, ""));
+    : info.intervals.map((ivl) =>
+        ivl
+          .replace(/[↑↓]/g, "")
+          .replace(/(\d+)~$/, (_, n) =>
+            [1, 4, 5].includes(((+n - 1) % 7) + 1) ? `${n}P` : `${n}M`,
+          ),
+      );
   return new Set(
     intervals.map((ivl) =>
       mod(rootPc + intervalSteps(ivl, divisions), divisions),
@@ -83,15 +106,25 @@ const RENAMED: Record<string, ChordType> = {
   maj: "M",
   min: "m",
   add9: "Madd9",
-  neut: "(↓3)",
-  neut7: "7(↓3)",
-  "sus2↓": "sus↓2",
-  "sus4↑": "sus↑4",
-  "maj↑3": "(↑3)",
-  "min↓3": "m(↓3)",
+  neut: "↓",
+  neut7: "↓,7",
+  "sus2↓": "↓sus2",
+  "sus4↑": "↑sus4",
+  "maj↑3": "↑",
+  "min↓3": "↓m",
   quartal: "7sus4no5",
+  // the engine's symbols before Kite's chord names that it reads otherwise
+  "sus↓2": "↓sus2",
+  "sus↑4": "↑sus4",
+  "m(↓maj7)": "m↓M7",
 };
 
-/** Maps a chord type saved by an older version to its current symbol. */
-export const migrateChordType = (type: string): ChordType =>
-  RENAMED[type] ?? type;
+/**
+ * Maps a chord type saved by an older version to its current symbol: gv's
+ * old chord list, and the engine's older symbols ("(↓3)" is now "↓", read by
+ * the engine as major with a downed 3rd).
+ */
+export function migrateChordType(type: string): ChordType {
+  const renamed = RENAMED[type] ?? type;
+  return chordTypeInfo(renamed)?.type ?? renamed;
+}

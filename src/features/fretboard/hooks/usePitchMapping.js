@@ -69,7 +69,7 @@ const LEGACY_PC_NAME = /^N(\d+)$/;
 /**
  * Pitch class of a note name: the display names first (they settle the
  * German/English B ambiguity for the current naming), then any spelling the
- * theory engine parses ("Db↑", "^C", "C##", German "Desih"), then the legacy
+ * theory engine parses ("↑Db", "Db↑", "^C", "C##", German "Desih"), then the legacy
  * "N<pc>" names. Unknown names are pitch class 0.
  */
 export function resolvePcForName(nameToPcMap, name, divisions) {

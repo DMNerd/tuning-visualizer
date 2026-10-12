@@ -9,6 +9,8 @@ function normalizeToken(token: unknown): string {
     .replace(FLAT_EQUIVALENTS, "b");
 }
 
+// Ups and downs come before the note ("↑C#", Kite's notation, as the theory
+// engine writes them); "C#↑" is read too
 function splitArrowDecorations(note: unknown): {
   core: string;
   suffix: string;
@@ -16,11 +18,10 @@ function splitArrowDecorations(note: unknown): {
   if (typeof note !== "string" || note.length === 0) {
     return { core: "", suffix: "" };
   }
-  const match = note.match(/[↑↓]+$/u);
-  if (!match) return { core: note, suffix: "" };
-  const suffix = match[0] ?? "";
-  const core = note.slice(0, -suffix.length);
-  return { core, suffix };
+  const match = note.match(/^([↑↓]*)(.*?)([↑↓]*)$/u);
+  const arrows = (match?.[1] ?? "") + (match?.[3] ?? "");
+  if (!arrows) return { core: note, suffix: "" };
+  return { core: match?.[2] ?? "", suffix: arrows };
 }
 
 function splitGermanMicroDecorations(note: unknown): {
@@ -137,12 +138,12 @@ export function toGermanNoteName(note: unknown): string {
 export function germanToEnglishNoteName(note: unknown): string {
   const withArrows = splitArrowDecorations(note);
   if (withArrows.suffix) {
-    return `${fromGermanCore(withArrows.core)}${withArrows.suffix}`;
+    return `${withArrows.suffix}${fromGermanCore(withArrows.core)}`;
   }
 
   const { core, suffix } = splitGermanMicroDecorations(note);
-  const arrowSuffix = toArrowSuffixFromGerman(suffix.toUpperCase());
-  return `${fromGermanCore(core)}${arrowSuffix}`;
+  const arrows = toArrowSuffixFromGerman(suffix.toUpperCase());
+  return `${arrows}${fromGermanCore(core)}`;
 }
 
 export function renderNoteName(note: string, noteNaming = "english"): string {

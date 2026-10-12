@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.9",
-    "@dmnerd/microtonal": "^0.1.0",
+    "@dmnerd/microtonal": "^0.3.1",
     "@tanstack/react-virtual": "^3.14.13",
     "clsx": "^2.1.1",
     "fuse.js": "^7.5.0",

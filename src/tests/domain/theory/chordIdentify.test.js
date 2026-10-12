@@ -72,12 +72,13 @@ test("identifyChord dedupes and wraps pitch classes", () => {
 test("identifyChord finds microtonal chords in 24-EDO", () => {
   const names24 = (pc) => `pc${pc}`;
   const [neutral] = identifyChord([0, 7, 14], 24);
-  assert.equal(neutral.appType, "(↓3)");
-  assert.equal(formatChordSymbol(neutral, names24), "pc0(↓3)");
-  assert.equal(neutral.name, "downmajor");
-  assert.equal(identifyChord([0, 7, 14, 20], 24)[0].appType, "7(↓3)");
-  assert.equal(identifyChord([0, 9, 14], 24)[0].appType, "(↑3)");
-  assert.equal(identifyChord([0, 5, 14], 24)[0].appType, "m(↓3)");
+  // a sharp is two steps: the neutral triad is mid (Kite's notation)
+  assert.equal(neutral.appType, "~");
+  assert.equal(formatChordSymbol(neutral, names24), "pc0~");
+  assert.equal(neutral.name, "mid");
+  assert.equal(identifyChord([0, 7, 14, 20], 24)[0].appType, "~,7");
+  assert.equal(identifyChord([0, 9, 14], 24)[0].appType, "↑");
+  assert.equal(identifyChord([0, 5, 14], 24)[0].appType, "↓m");
   const [major] = identifyChord([0, 8, 14], 24);
   assert.equal(major.appType, "M");
 });
@@ -94,7 +95,7 @@ test("identifyChord works in other EDOs", () => {
   assert.equal(best.appType, "M");
   // 31-EDO neutral triad: 0, 9, 18
   const [neutral] = identifyChord([0, 9, 18], 31);
-  assert.equal(neutral.id, "(↓3)");
+  assert.equal(neutral.id, "~");
 });
 
 test("identifyChord names harmonic chords built for the EDO", () => {
@@ -116,7 +117,7 @@ test("identifyChord rejects invalid divisions", () => {
 
 test("identifyChord spells each chord tone as an interval above the root", () => {
   const [neutral] = identifyChord([0, 7, 14], 24);
-  assert.deepEqual(neutral.degrees, { 0: "1P", 7: "↓3M", 14: "5P" });
+  assert.deepEqual(neutral.degrees, { 0: "1P", 7: "3~", 14: "5P" });
   const [firstInversion] = identifyChord(pcs("E", "C", "G"), 12);
   assert.deepEqual(firstInversion.degrees, { 0: "1P", 4: "3M", 7: "5P" });
 });

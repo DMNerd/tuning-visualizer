@@ -102,9 +102,9 @@ test("chordsInScale names each degree with a quality-aware numeral", () => {
     numerals(options12, "Harmonic Minor", 12),
     "i ii° ♭III+ iv V ♭VI vii°".split(" "),
   );
-  // rast's neutral degrees keep their arrows
+  // rast's neutral degrees are named as their notes are spelled (↓E, ↓B)
   assert.deepEqual(
     numerals(options24, "Rast", 24),
-    "I ii ↑♭III IV V VI ↑♭VII".split(" "),
+    "I ii ↓III IV V VI ↓VII".split(" "),
   );
 });
