@@ -4,7 +4,8 @@ const toSetterName = (key: string) =>
 type SetFn<State> = (updater: (draft: State) => void) => void;
 
 type SetterValue<State, K extends keyof State> =
-  State[K] | ((prev: State[K]) => State[K]);
+  | State[K]
+  | ((prev: State[K]) => State[K]);
 
 type SetterFunction<State, K extends keyof State> = (
   value: SetterValue<State, K>,
@@ -54,7 +55,8 @@ function createSetter<State, K extends keyof State & string>(
 
 function isKeyArray<State>(
   value:
-    ReadonlyArray<keyof State & string> | Record<keyof State & string, string>,
+    | ReadonlyArray<keyof State & string>
+    | Record<keyof State & string, string>,
 ): value is ReadonlyArray<keyof State & string> {
   return Array.isArray(value);
 }
@@ -70,7 +72,8 @@ export function makeImmerSetters<
 export function makeImmerSetters<
   State,
   KeysOrMap extends
-    ReadonlyArray<keyof State & string> | Record<keyof State & string, string>,
+    | ReadonlyArray<keyof State & string>
+    | Record<keyof State & string, string>,
 >(
   setFn: SetFn<State>,
   keysOrMap: KeysOrMap,

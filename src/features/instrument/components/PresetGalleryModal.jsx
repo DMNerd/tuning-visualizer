@@ -155,7 +155,7 @@ export default function PresetGalleryModal({
                     </span>
                     <span className="tv-preset-gallery__notes">
                       {renderTuning(entry.tuning).map((note, idx) => (
-                        // eslint-disable-next-line @eslint-react/no-array-index-key -- strings are identified by position
+                        // oxlint-disable-next-line react/no-array-index-key -- strings are identified by position
                         <span key={idx} className="tv-preset-gallery__note">
                           {note}
                         </span>

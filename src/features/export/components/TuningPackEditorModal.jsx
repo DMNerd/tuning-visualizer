@@ -334,7 +334,7 @@ function TuningPackEditorModal({
           {pointer ? (
             <span>{t("editor.focused", { pointer })}</span>
           ) : (
-            <span>&nbsp;</span>
+            <span>{"\u00A0"}</span>
           )}
           {validationMessage ? (
             <span className="tv-modal__error">{validationMessage}</span>

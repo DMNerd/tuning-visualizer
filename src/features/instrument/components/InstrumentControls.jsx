@@ -181,7 +181,7 @@ function InstrumentControls({ state, actions, meta }) {
             );
             return (
               <div
-                // eslint-disable-next-line @eslint-react/no-array-index-key -- strings are identified by position
+                // oxlint-disable-next-line react/no-array-index-key -- strings are identified by position
                 key={i}
                 className="tv-field"
               >

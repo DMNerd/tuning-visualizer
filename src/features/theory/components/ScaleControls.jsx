@@ -181,7 +181,7 @@ function ScaleControls({ state, actions, meta }) {
           >
             {scaleToneLabels.map((toneLabel, index) => (
               <div
-                // eslint-disable-next-line @eslint-react/no-array-index-key -- tones are identified by scale degree
+                // oxlint-disable-next-line react/no-array-index-key -- tones are identified by scale degree
                 key={`${scaleTonePcs[index] ?? toneLabel}-${index}`}
                 className="tv-tone-list__item"
                 role="listitem"

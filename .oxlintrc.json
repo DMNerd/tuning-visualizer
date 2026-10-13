@@ -1,0 +1,178 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "options": {
+    "typeAware": true,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "env": {
+    "browser": true,
+    "builtin": true,
+    "es2024": true
+  },
+  "ignorePatterns": ["dist", "build", "coverage", "reports"],
+  "rules": {
+    "eqeqeq": ["error", "smart"],
+    "no-var": "error",
+    "prefer-const": "error",
+    "object-shorthand": "error",
+    "no-console": [
+      "warn",
+      {
+        "allow": ["warn", "error"]
+      }
+    ],
+    "no-restricted-globals": ["error", "event", "name"],
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^[A-Z_]",
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/jsx-key": "error",
+    "react/no-array-index-key": "warn",
+    "react/no-direct-mutation-state": "error",
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ],
+    "react/set-state-in-effect": "off",
+    "react/refs": "off",
+    "react/use-memo": "off",
+    "react/purity": "off",
+    "react/incompatible-library": "off",
+    "unicorn/no-useless-fallback-in-spread": "off",
+    "unicorn/no-new-array": "off",
+    "typescript/no-misused-spread": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{js,jsx,mjs,cjs}"],
+      "rules": {
+        "typescript/no-floating-promises": "off",
+        "typescript/restrict-template-expressions": "off",
+        "typescript/unbound-method": "off",
+        "typescript/no-misused-spread": "off",
+        "typescript/require-array-sort-compare": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/await-thenable": "off",
+        "typescript/no-base-to-string": "off",
+        "typescript/no-redundant-type-constituents": "off",
+        "typescript/no-duplicate-type-constituents": "off",
+        "typescript/no-implied-eval": "off",
+        "typescript/no-array-delete": "off",
+        "typescript/no-for-in-array": "off",
+        "typescript/no-unsafe-unary-minus": "off",
+        "typescript/no-unsafe-enum-comparison": "off",
+        "typescript/restrict-plus-operands": "off",
+        "typescript/no-meaningless-void-operator": "off",
+        "typescript/no-unnecessary-boolean-literal-compare": "off",
+        "typescript/no-unnecessary-template-expression": "off",
+        "typescript/no-unnecessary-type-arguments": "off",
+        "typescript/prefer-promise-reject-errors": "off",
+        "typescript/only-throw-error": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "typescript/switch-exhaustiveness-check": "off",
+        "typescript/return-await": "off",
+        "typescript/no-misused-promises": "off"
+      }
+    },
+    {
+      "files": ["**/*.{ts,tsx}"],
+      "rules": {
+        "typescript/consistent-type-imports": [
+          "error",
+          {
+            "fixStyle": "inline-type-imports"
+          }
+        ],
+        "typescript/no-floating-promises": "error",
+        "typescript/no-misused-promises": [
+          "error",
+          {
+            "checksVoidReturn": {
+              "attributes": false
+            }
+          }
+        ],
+        "typescript/no-import-type-side-effects": "error",
+        "typescript/no-unsafe-assignment": "error",
+        "typescript/no-unsafe-call": "error",
+        "typescript/no-unsafe-member-access": "error",
+        "typescript/no-unsafe-return": "error",
+        "typescript/no-unsafe-argument": "error",
+        "typescript/await-thenable": "error",
+        "typescript/require-await": "error",
+        "typescript/restrict-template-expressions": "error",
+        "typescript/no-unnecessary-type-assertion": "error",
+        "no-shadow": "error"
+      }
+    },
+    {
+      "files": ["src/**/*.{js,jsx,ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@dmnerd/microtonal", "@dmnerd/microtonal/*"],
+                "message": "Use @domain/theory/tonalAdapter instead of importing the fork directly."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/domain/theory/tonalAdapter.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["src/**/*.{jsx,tsx}"],
+      "jsPlugins": ["eslint-plugin-i18next"],
+      "rules": {
+        "i18next/no-literal-string": [
+          "error",
+          {
+            "mode": "jsx-text-only",
+            "jsx-attributes": {
+              "include": ["aria-label", "title", "placeholder", "label", "alt"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/tests/**"],
+      "rules": {
+        "i18next/no-literal-string": "off"
+      }
+    },
+    {
+      "files": ["*.config.js", "scripts/**"],
+      "env": {
+        "browser": false,
+        "node": true
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

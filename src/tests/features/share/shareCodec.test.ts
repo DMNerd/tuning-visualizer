@@ -185,7 +185,10 @@ void test("parseSharePayload ignores unknown/unsupported keys", () => {
   assert.equal(parsed?.values.systemId, undefined);
   assert.equal(parsed?.values.strings, 4);
   assert.equal(parsed?.values.frets, 30);
-  assert.equal((parsed?.values as Record<string, unknown>).lefty, undefined);
+  assert.equal(
+    (parsed?.values as Record<string, unknown> | undefined)?.lefty,
+    undefined,
+  );
 });
 
 void test("parseSharePayload resolves canonical nm=fretless", () => {

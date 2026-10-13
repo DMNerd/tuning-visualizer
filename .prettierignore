@@ -1,6 +1,0 @@
-node_modules
-dist
-build
-pnpm-lock.yaml
-reports
-src/tests/fixtures

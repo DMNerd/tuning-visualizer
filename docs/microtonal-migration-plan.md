@@ -11,7 +11,7 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
 - **gv keeps integer pitch classes (`0..N-1`) as its internal model.**
   Fretboard, stores, share codec, presets and routines are unchanged. The fork
   is only called through one adapter, `src/domain/theory/tonalAdapter.ts`, and
-  an ESLint `no-restricted-imports` rule forbids `@dmnerd/microtonal`
+  a `no-restricted-imports` lint rule (oxlint) forbids `@dmnerd/microtonal`
   everywhere else.
 - **Distribution:** the fork is published to npm as
   [`@dmnerd/microtonal`](https://www.npmjs.com/package/@dmnerd/microtonal) and
@@ -75,7 +75,7 @@ Status: in progress. Decisions D1–D3 accepted as recommended (2026-09-27).
 ## Fork work (F) — each with tests and a README entry
 
 - **F1: spelling with accidental preference.** `Note.fromEdoSteps(steps, edo,
-{ accidental: "sharp" | "flat", pitchClass })`, plus
+  { accidental: "sharp" | "flat", pitchClass })`, plus
   `Note.edoNames(edo, accidental)`. Sharp: nearest sharp-or-natural at or
   below, plus ups. Flat: nearest flat-or-natural at or above, minus downs.
   Tests: 12-TET both views, 24-TET both views (per D2), and a round trip

@@ -459,7 +459,7 @@ function Fretboard({
 
           return (
             <g
-              // eslint-disable-next-line @eslint-react/no-array-index-key -- strings are identified by position
+              // oxlint-disable-next-line react/no-array-index-key -- strings are identified by position
               key={`string-${s}`}
             >
               {hasGreyStub && (

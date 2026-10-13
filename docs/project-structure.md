@@ -33,9 +33,9 @@ Use scoped aliases for ownership boundaries:
   formulas) comes from the microtonal fork of Tonal, and only through
   `src/domain/theory/tonalAdapter.ts`. The adapter converts between gv's
   integer pitch classes (`0..N-1`) and the fork's spelled names; nothing else
-  imports `@dmnerd/microtonal` (ESLint `no-restricted-imports` enforces this).
+  imports `@dmnerd/microtonal` (oxlint's `no-restricted-imports` enforces this).
   The fork is an ordinary npm dependency; to pick up fork changes, release a
   new version of it and bump the version in `package.json`.
   See [microtonal-migration-plan.md](microtonal-migration-plan.md).
 
-The other boundaries are enforced during code review rather than by an ESLint boundary plugin.
+The other boundaries are enforced during code review rather than by a lint boundary plugin.

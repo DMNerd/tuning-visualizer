@@ -1,6 +1,11 @@
 import { useMemo, useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useLatest, useMountedState, usePrevious, useUpdateEffect } from "@shared/hooks/stateHooks";
+import {
+  useLatest,
+  useMountedState,
+  usePrevious,
+  useUpdateEffect,
+} from "@shared/hooks/stateHooks";
 import { normalizePresetMeta } from "@domain/meta/meta";
 import {
   applyNeckFilterModeToBoardMeta,

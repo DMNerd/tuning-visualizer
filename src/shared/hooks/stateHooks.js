@@ -37,7 +37,7 @@ export function useUpdateEffect(effect, deps) {
       return undefined;
     }
     return effect();
-    // eslint-disable-next-line @eslint-react/exhaustive-deps -- caller owns deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- caller owns deps
   }, deps);
 
   useEffect(
@@ -64,6 +64,6 @@ export function useDebounce(fn, ms, deps) {
   useEffect(() => {
     const id = setTimeout(() => fnRef.current(), ms);
     return () => clearTimeout(id);
-    // eslint-disable-next-line @eslint-react/exhaustive-deps -- caller owns deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- caller owns deps
   }, [...deps, ms]);
 }
