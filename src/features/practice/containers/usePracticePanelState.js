@@ -198,10 +198,22 @@ export default function usePracticePanelState({
     ],
   );
 
+  // a new bar count, or turning auto-advance on or off, restarts the count
+  const [barsResetFor, setBarsResetFor] = useState([
+    safeBarsPerScale,
+    autoAdvanceEnabled,
+  ]);
+  if (
+    barsResetFor[0] !== safeBarsPerScale ||
+    barsResetFor[1] !== autoAdvanceEnabled
+  ) {
+    setBarsResetFor([safeBarsPerScale, autoAdvanceEnabled]);
+    setBarsRemaining(safeBarsPerScale);
+  }
+
   useEffect(() => {
     pendingRandomizedScaleRef.current = null;
     barsRemainingRef.current = safeBarsPerScale;
-    setBarsRemaining(safeBarsPerScale);
   }, [safeBarsPerScale, autoAdvanceEnabled]);
 
   const metronomeEngine = useMetronomePlayback({
@@ -237,11 +249,24 @@ export default function usePracticePanelState({
   // ordering dependency (one nulled it, the other had to be re-triggered by
   // an unrelated-looking dependency to notice), which is exactly the kind
   // of thing that silently breaks if either effect's deps ever change.
+  // The displayed remaining time restarts with the effect below: when the
+  // duration changes or a session starts or stops
+  const sessionResetFor = [
+    sessionDurationSeconds,
+    isMetronomePlaying,
+    isRoutinePlaying,
+    timedPracticeEnabled,
+  ];
+  const [secondsResetFor, setSecondsResetFor] = useState(sessionResetFor);
+  if (sessionResetFor.some((value, i) => value !== secondsResetFor[i])) {
+    setSecondsResetFor(sessionResetFor);
+    setSecondsRemaining(sessionDurationSeconds);
+  }
+
   useEffect(() => {
     const nextSecondsRemaining = sessionDurationSeconds;
     secondsRemainingRef.current = nextSecondsRemaining;
     practiceSessionEndTimeRef.current = null;
-    setSecondsRemaining(nextSecondsRemaining);
     setPracticeSecondsRemaining(
       timedPracticeEnabled ? nextSecondsRemaining : null,
     );

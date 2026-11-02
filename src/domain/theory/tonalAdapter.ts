@@ -154,7 +154,7 @@ export function chordTypeInfo(
 export function scalesForEdo(edo: number): { name: string; pcs: number[] }[] {
   return ScaleType.forEdo(edo).map(({ name, chroma }) => ({
     name,
-    pcs: [...chroma].flatMap((bit, pc) => (bit === "1" ? [pc] : [])),
+    pcs: chroma.split("").flatMap((bit, pc) => (bit === "1" ? [pc] : [])),
   }));
 }
 

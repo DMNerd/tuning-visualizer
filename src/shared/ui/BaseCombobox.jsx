@@ -400,6 +400,7 @@ export default function BaseCombobox({
     listViewportHeight > 0 &&
     listViewportWidth > 0;
 
+  // oxlint-disable-next-line react/incompatible-library -- TanStack Virtual can't be memoized by the React Compiler, which gv doesn't use
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
     getScrollElement: () => listElementRef.current,

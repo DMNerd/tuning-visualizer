@@ -20,8 +20,22 @@ test("identifyScales lists exact matches first", () => {
     label: "Major",
     exact: true,
     extraNotes: 0,
+    extraPcs: [],
   });
   assert.ok(rest.every((match) => match.exact));
+});
+
+test("identifyScales names the notes a scale adds", () => {
+  // C E G B: C major adds D, F and A
+  const [best] = identifyScales([0, 4, 7, 11], 12, options12);
+  assert.equal(best.label, "Major");
+  assert.deepEqual(best.extraPcs, [2, 5, 9]);
+  assert.equal(best.extraNotes, 3);
+  // from another root, the pitch classes are absolute: A minor adds B, D, F
+  const aMinor = identifyScales([9, 0, 4, 7], 12, options12).find(
+    (match) => match.rootPc === 9 && match.label === "Minor",
+  );
+  assert.deepEqual(aMinor?.extraPcs, [11, 2, 5]);
 });
 
 test("identifyScales prefers seven-note scales on the first pick", () => {

@@ -224,8 +224,8 @@ function buildPresetTunings(
 
     for (const n of STRING_COUNTS) {
       const group: Record<string, TuningArray> = {
-        ...(common[n] ?? {}),
-        ...(sysOverrides[n] ?? {}),
+        ...common[n],
+        ...sysOverrides[n],
       };
       if (Object.keys(group).length > 0) byCount[n] = group;
     }

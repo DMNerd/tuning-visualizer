@@ -22,7 +22,10 @@ const SUPERSCRIPT_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 const SUBSCRIPT_DIGITS = "₀₁₂₃₄₅₆₇₈₉";
 
 function mapDigits(value: number, digits: string): string {
-  return [...String(value)].map((c) => digits[Number(c)]).join("");
+  return String(value)
+    .split("")
+    .map((c) => digits[Number(c)])
+    .join("");
 }
 
 // Single glyph when Unicode has one (½), otherwise ⁵⁄₁₂
@@ -99,9 +102,9 @@ function labelLetters(fret: number, divisions: number): string {
 
   // Non-12-multiple: bucket by *rounded boundaries* round(n*div/12)
   // This matches UI tick placement and makes boundary frets integers.
-  const boundaries = new Array(13)
-    .fill(0)
-    .map((_, n) => Math.round((n * divisions) / 12));
+  const boundaries = Array.from({ length: 13 }, (_, n) =>
+    Math.round((n * divisions) / 12),
+  );
   // Find semitone n such that B[n] <= fret < B[n+1]
   let n = 0;
   while (n < 12 && !(boundaries[n] <= fret && fret < boundaries[n + 1])) n++;

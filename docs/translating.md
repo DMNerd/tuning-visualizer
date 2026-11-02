@@ -29,23 +29,23 @@ English is the source language. Every other file has the same keys as
 `en.json`, with the values translated. Keys are grouped by the part of the app
 they belong to:
 
-| Group                                                 | Where it appears                                       |
-| ----------------------------------------------------- | ------------------------------------------------------ |
-| `common`                                              | Words used everywhere (Cancel, Close, Off…)            |
-| `header`                                              | Top bar: theme and language switchers                  |
-| `stageHud`                                            | Buttons and badges over the fretboard                  |
-| `display`                                             | Display panel                                          |
-| `instrument`                                          | Instrument panel, preset picker and preset gallery     |
-| `packs`                                               | Messages about custom tunings (toasts, validation)     |
-| `theory`                                              | Scale and Chord panels, including "What's this chord?" |
-| `practice`                                            | Metronome                                              |
-| `training`                                            | Training routine builder and the routine overlay       |
-| `export`                                              | Export / Import panel                                  |
-| `manager`                                             | "Manage custom tunings" window                         |
-| `editor`                                              | Custom tuning JSON editor and its helper panel         |
-| `share`                                               | Quickshare window                                      |
-| `hotkeys`                                             | Keyboard shortcut cheatsheet (press F1)                |
-| `errorFallback`, `resets`, `numberField`, `fretboard` | Errors, reset dialogs, number inputs, empty fretboard  |
+| Group                                                 | Where it appears                                                |
+| ----------------------------------------------------- | --------------------------------------------------------------- |
+| `common`                                              | Words used everywhere (Cancel, Close, Off…)                     |
+| `header`                                              | Top bar: theme and language switchers                           |
+| `stageHud`                                            | Buttons and badges over the fretboard                           |
+| `display`                                             | Display panel                                                   |
+| `instrument`                                          | Instrument panel, preset picker and preset gallery              |
+| `packs`                                               | Messages about custom tunings (toasts, validation)              |
+| `theory`                                              | Scale and Chord panels, including "What's this chord or scale?" |
+| `practice`                                            | Metronome                                                       |
+| `training`                                            | Training routine builder and the routine overlay                |
+| `export`                                              | Export / Import panel                                           |
+| `manager`                                             | "Manage custom tunings" window                                  |
+| `editor`                                              | Custom tuning JSON editor and its helper panel                  |
+| `share`                                               | Quickshare window                                               |
+| `hotkeys`                                             | Keyboard shortcut cheatsheet (press F1)                         |
+| `errorFallback`, `resets`, `numberField`, `fretboard` | Errors, reset dialogs, number inputs, empty fretboard           |
 
 Keys ending in `Aria` (and some others) are never shown on screen: screen
 readers read them aloud. Translate them like any other text.

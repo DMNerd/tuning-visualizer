@@ -10,6 +10,8 @@ export interface ScaleMatch {
   exact: boolean;
   /** Notes of the scale that weren't picked. */
   extraNotes: number;
+  /** Those notes, as pitch classes in scale order from the root. */
+  extraPcs: number[];
 }
 
 /**
@@ -38,11 +40,15 @@ export function identifyScales(
     for (const { name, exact } of detectScales(picked, divisions, rootPc)) {
       const option = labelOf.get(name);
       if (!option) continue;
+      const extraPcs = option.pcs
+        .map((pc) => mod(rootPc + pc, divisions))
+        .filter((pc) => !picked.includes(pc));
       matches.push({
         rootPc,
         label: option.label,
         exact,
-        extraNotes: option.pcs.length - picked.length,
+        extraNotes: extraPcs.length,
+        extraPcs,
       });
     }
   }

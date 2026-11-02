@@ -105,7 +105,7 @@ export const useMetronomePrefsStore = create(
             : RANDOMIZE_MODE_DEFAULT,
           prefs: {
             ...METRONOME_DEFAULTS,
-            ...(normalized?.prefs || {}),
+            ...normalized?.prefs,
           },
         };
       },

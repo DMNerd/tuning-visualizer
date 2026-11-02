@@ -18,13 +18,10 @@ export default function FloatingListbox({
   style: styleProp,
   onMeasure,
 }) {
-  const [mounted, setMounted] = useState(false);
+  // gv renders only in the browser, where the portal target exists
+  const mounted = typeof document !== "undefined";
   const [position, setPosition] = useState(null);
   const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const updatePosition = useCallback(() => {
     if (typeof window === "undefined") {
@@ -47,6 +44,7 @@ export default function FloatingListbox({
 
   useLayoutEffect(() => {
     if (!isOpen) return undefined;
+    // oxlint-disable-next-line react/set-state-in-effect -- measures the anchor after layout, before paint
     updatePosition();
   }, [isOpen, updatePosition]);
 
@@ -74,12 +72,10 @@ export default function FloatingListbox({
     };
   }, [isOpen, updatePosition]);
 
+  // a closed listbox renders nothing; its position is measured again on open
   useEffect(() => {
-    if (!isOpen) {
-      setPosition(null);
-      if (typeof onMeasure === "function") {
-        onMeasure({ width: 0, height: 0 });
-      }
+    if (!isOpen && typeof onMeasure === "function") {
+      onMeasure({ width: 0, height: 0 });
     }
   }, [isOpen, onMeasure]);
 

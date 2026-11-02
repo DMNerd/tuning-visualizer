@@ -16,7 +16,7 @@ export function buildDegreePalette(
     rotate = 0,
   } = options;
 
-  const palette = new Array<string | undefined>(k + 1);
+  const palette = Array.from<string | undefined>({ length: k + 1 });
 
   palette[1] = rootColor;
 

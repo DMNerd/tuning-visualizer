@@ -44,7 +44,7 @@ export default function useCombobox({
   const selectedTextRef = useLatest(selectedText ?? "");
 
   const [inputValue, setInputValue] = useState(
-    initialInputValue ?? selectedTextRef.current ?? "",
+    initialInputValue ?? selectedText ?? "",
   );
   const [isOpen, setIsOpen] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -141,11 +141,15 @@ export default function useCombobox({
     [selectedKeyRef, syncActiveIndex],
   );
 
+  // closing resets the active option
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setActiveIndex(-1);
+  }
+
   useEffect(() => {
-    if (!isOpen) {
-      setActiveIndex(-1);
-      return;
-    }
+    if (!isOpen) return;
     syncActiveIndex(optionsRef.current, selectedKeyRef.current);
   }, [isOpen, selectedKeyRef, syncActiveIndex]);
 

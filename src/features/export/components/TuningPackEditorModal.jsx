@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { JsonEditor } from "json-edit-react";
 import { useTranslation } from "react-i18next";
 import { useDebounce, useLatest, useToggle } from "@shared/hooks/stateHooks";
@@ -64,7 +64,14 @@ function TuningPackEditorModal({
   const onCancelRef = useLatest(onCancel);
   const onSubmitRef = useLatest(onSubmit);
 
-  useEffect(() => {
+  // opening (or a new pack or mode while open) starts from a fresh draft
+  const [seeded, setSeeded] = useState({ isOpen, initialPack, mode });
+  const reseed =
+    seeded.isOpen !== isOpen ||
+    seeded.initialPack !== initialPack ||
+    seeded.mode !== mode;
+  if (reseed) {
+    setSeeded({ isOpen, initialPack, mode });
     if (isOpen) {
       const snapshot = getSeedSnapshot(initialPack, mode);
       const snapshotString = JSON.stringify(snapshot);
@@ -76,7 +83,7 @@ function TuningPackEditorModal({
       setPointer(null);
       setValidationMessage("");
     }
-  }, [isOpen, initialPack, mode]);
+  }
 
   const hasUnsavedChanges = useMemo(
     () => isOpen && baselineSnapshotString !== draftString,

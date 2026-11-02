@@ -5,6 +5,9 @@ import {
 } from "@domain/theory/capoChords";
 import { identifyChord } from "@domain/theory/chordIdentify";
 import { identifyScales } from "@domain/theory/scaleIdentify";
+
+// the finder shows a few scales and the rest on request
+const MAX_SCALE_MATCHES = 24;
 import { chordsInScale, modesOfScale } from "@domain/theory/scaleHarmony";
 
 export function buildTheoryControlModel({
@@ -69,7 +72,7 @@ export function buildTheoryControlModel({
   const pickedPcSet = pickedPcs.length > 0 ? new Set(pickedPcs) : null;
   const scaleOptions = scale?.scaleOptions ?? [];
   const scaleFinderMatches = chordFinderActive
-    ? identifyScales(pickedPcs, divisions, scaleOptions)
+    ? identifyScales(pickedPcs, divisions, scaleOptions, MAX_SCALE_MATCHES)
     : [];
 
   // Chords and modes of the selected scale; the chromatic scale has neither

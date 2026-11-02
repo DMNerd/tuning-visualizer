@@ -37,6 +37,7 @@ export default function ErrorFallback({
       stack: error?.stack,
       url: typeof window !== "undefined" ? window.location.href : "",
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      // oxlint-disable-next-line react/purity -- when the error was shown; recomputed per error
       time: new Date().toISOString(),
     };
     return JSON.stringify(info, null, 2);

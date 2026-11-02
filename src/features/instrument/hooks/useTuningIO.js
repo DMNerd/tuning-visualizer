@@ -66,7 +66,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
     return Array.isArray(existing) ? existing : [];
   }, [latestCustomTuningsRef]);
 
-  const parsePack = useCallback(parseTuningPack, []);
+  const parsePack = parseTuningPack;
 
   const getCurrentTuningPack = useCallback(
     (tuning, stringMeta = null, boardMeta = null) => {
@@ -85,7 +85,7 @@ export function useTuningIO({ systemId, strings, TUNINGS }) {
         stringMeta: cleanStringMeta ?? undefined,
       });
 
-      const meta = { ...(pack.meta || {}) };
+      const meta = { ...pack.meta };
       if (cleanStringMeta && cleanStringMeta.length) {
         meta.stringMeta = cleanStringMeta;
       }

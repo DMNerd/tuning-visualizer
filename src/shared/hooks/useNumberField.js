@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@shared/i18n";
 import { clamp } from "@shared/lib/math";
@@ -36,7 +36,12 @@ export function useNumberField({ value, min, max, onSubmit }) {
   const [text, setText] = useState(String(value));
   const [error, setError] = useState("");
 
-  useEffect(() => setText(String(value)), [value]);
+  // a new value replaces the text being edited
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (!Object.is(syncedValue, value)) {
+    setSyncedValue(value);
+    setText(String(value));
+  }
 
   const commit = useCallback(
     (rawOverride) =>

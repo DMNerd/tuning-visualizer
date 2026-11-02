@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef } from "react";
 // Ref that always holds the latest render's value, for stable callbacks.
 export function useLatest(value) {
   const ref = useRef(value);
+  // oxlint-disable-next-line react/refs -- the point of the hook: updated during render
   ref.current = value;
   return ref;
 }
@@ -12,6 +13,7 @@ export function usePrevious(value) {
   useEffect(() => {
     ref.current = value;
   });
+  // oxlint-disable-next-line react/refs -- the last render's value, read during render
   return ref.current;
 }
 

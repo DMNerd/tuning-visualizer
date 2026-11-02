@@ -115,6 +115,7 @@ export function useHotkeys(options) {
     toggleFs,
   ]);
 
+  // oxlint-disable-next-line react/refs -- the table reads the ref in its handlers
   const shortcuts = useMemo(() => buildShortcutTableFromRefs(liveRef), []);
   const shortcutHandler = useMemo(
     () => createShortcutHandler(shortcuts, { enabled: true }),

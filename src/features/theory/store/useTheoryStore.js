@@ -154,7 +154,7 @@ export const useTheoryStore = create(
         legacyTheoryKeyCleanup.mark();
 
         return {
-          ...(persistedState || {}),
+          ...persistedState,
           systemId: legacy.systemId,
           root: legacy.root,
         };

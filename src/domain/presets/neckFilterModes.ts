@@ -140,7 +140,7 @@ export const NECK_FILTER_MODE_DEFS: readonly NeckFilterModeDef[] =
           return stripHiddenFretsIfKg(normalizedBoardMeta);
         }
         return {
-          ...(stripHiddenFrets(normalizedBoardMeta) ?? {}),
+          ...stripHiddenFrets(normalizedBoardMeta),
           hiddenFrets: [...KG_NECK_HIDDEN_FRETS],
         };
       },
@@ -151,7 +151,7 @@ export const NECK_FILTER_MODE_DEFS: readonly NeckFilterModeDef[] =
       label: "Fretless",
       isApplicable: () => true,
       apply: (boardMeta) => ({
-        ...(stripHiddenFrets(stripFretlessStyle(boardMeta)) ?? {}),
+        ...stripHiddenFrets(stripFretlessStyle(boardMeta)),
         ...FRETLESS_BOARD_META,
       }),
       detectFromPreset: isFretlessBoardMeta,

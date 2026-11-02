@@ -44,15 +44,7 @@
       {
         "allowConstantExport": true
       }
-    ],
-    "react/set-state-in-effect": "off",
-    "react/refs": "off",
-    "react/use-memo": "off",
-    "react/purity": "off",
-    "react/incompatible-library": "off",
-    "unicorn/no-useless-fallback-in-spread": "off",
-    "unicorn/no-new-array": "off",
-    "typescript/no-misused-spread": "off"
+    ]
   },
   "overrides": [
     {

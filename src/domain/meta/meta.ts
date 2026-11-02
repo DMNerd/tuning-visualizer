@@ -61,7 +61,7 @@ export function toStringMetaMap(meta: unknown): Map<number, StringMeta> {
         : norm.index;
 
     const value: Record<string, unknown> = {
-      ...(originalObj ?? {}),
+      ...originalObj,
       index,
     };
 

@@ -187,6 +187,7 @@ function ModalFrame({
 
   const mergedClassName = clsx(DEFAULT_CARD_CLASS, cardClassName);
   const content =
+    // oxlint-disable-next-line react/refs -- passes the ref, doesn't read it
     typeof children === "function" ? children({ close, cardRef }) : children;
 
   return createPortal(

@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { FiX } from "react-icons/fi";
@@ -11,6 +11,7 @@ import { mod } from "@shared/lib/math";
 import { intervalLabel } from "@domain/theory/tonalAdapter";
 
 const MAX_ALTERNATIVES = 5;
+const SCALES_SHOWN = 6;
 
 function MatchRow({ match, nameForPc, onShow, primary = false }) {
   const { t } = useTranslation();
@@ -50,7 +51,9 @@ function ScaleMatchRow({ match, nameForPc, onShow }) {
         <small>
           {match.exact
             ? t("theory.scaleMatchExact")
-            : t("theory.scaleMatchExtra", { count: match.extraNotes })}
+            : t("theory.scaleMatchAdds", {
+                notes: match.extraPcs.map(nameForPc).join(", "),
+              })}
         </small>
       </span>
       <button
@@ -88,8 +91,12 @@ function ChordFinder({ state, actions, meta }) {
   } = meta;
   const toggleId = useId();
   const headingId = useId();
+  const [showAllScales, setShowAllScales] = useState(false);
 
   const [best, ...alternatives] = matches;
+  const shownScales = showAllScales
+    ? scaleMatches
+    : scaleMatches.slice(0, SCALES_SHOWN);
 
   const showMatch = (match) => {
     // Matches are named from sounding pitches; a capo-relative chord root is
@@ -116,7 +123,9 @@ function ChordFinder({ state, actions, meta }) {
   if (pickedPcs.length === 1) {
     status = t("theory.finderOneMore");
   } else if (pickedPcs.length > 2 && !best) {
-    status = t("theory.finderNoMatch");
+    status = scaleMatches.length
+      ? t("theory.finderNoMatch")
+      : t("theory.finderNoMatchAny");
   }
 
   return (
@@ -200,6 +209,9 @@ function ChordFinder({ state, actions, meta }) {
           </small>
         ) : null}
         {best ? (
+          <span className="tv-field__label">{t("theory.chordNames")}</span>
+        ) : null}
+        {best ? (
           <ul
             className="tv-chord-finder__matches"
             aria-label={t("theory.chordNames")}
@@ -230,7 +242,7 @@ function ChordFinder({ state, actions, meta }) {
             className="tv-chord-finder__matches"
             aria-label={t("theory.scaleNames")}
           >
-            {scaleMatches.map((match) => (
+            {shownScales.map((match) => (
               <ScaleMatchRow
                 key={`${match.rootPc}-${match.label}`}
                 match={match}
@@ -239,6 +251,18 @@ function ChordFinder({ state, actions, meta }) {
               />
             ))}
           </ul>
+        ) : null}
+        {scaleMatches.length > SCALES_SHOWN ? (
+          <button
+            type="button"
+            className="tv-button tv-button--ghost"
+            onClick={() => setShowAllScales((shown) => !shown)}
+            aria-expanded={showAllScales}
+          >
+            {showAllScales
+              ? t("theory.scaleMatchesFewer")
+              : t("theory.scaleMatchesAll", { count: scaleMatches.length })}
+          </button>
         ) : null}
       </div>
     </div>

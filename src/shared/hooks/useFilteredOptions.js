@@ -85,6 +85,7 @@ export default function useFilteredOptions({
     const weakCache = termCacheRef.current.weak;
     const strongCache = termCacheRef.current.strong;
 
+    // oxlint-disable-next-line react/refs -- a mutable cache that outlives renders
     return options.map((option, index) => {
       const identity = getOptionIdentity(option, index);
       const isObjectIdentity = identity && typeof identity === "object";
